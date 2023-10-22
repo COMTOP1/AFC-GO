@@ -9,7 +9,7 @@ import (
 
 func (s *Store) getSponsors(ctx context.Context) ([]Sponsor, error) {
 	var s1 []Sponsor
-	builder := sq.Select("id", "name", "file_name", "date_of_sponsor", "sponsor_season_id").
+	builder := sq.Select("id", "name", "website", "image", "file_name", "purpose", "team_id").
 		From("afc.sponsors").
 		OrderBy("id")
 	sql, _, err := builder.ToSql()
@@ -41,7 +41,7 @@ func (s *Store) getSponsorsIDWebsite(ctx context.Context) ([]Sponsor, error) {
 
 func (s *Store) getSponsorsTeam(ctx context.Context, teamID string) ([]Sponsor, error) {
 	var s1 []Sponsor
-	builder := sq.Select("id", "name", "file_name", "date_of_sponsor", "sponsor_season_id").
+	builder := sq.Select("id", "name", "website", "image", "file_name", "purpose", "team_id").
 		From("afc.sponsors").
 		Where(sq.Eq{"sponsor_season_id": teamID}).
 		OrderBy("name")
@@ -58,7 +58,7 @@ func (s *Store) getSponsorsTeam(ctx context.Context, teamID string) ([]Sponsor, 
 
 func (s *Store) getSponsor(ctx context.Context, s1 Sponsor) (Sponsor, error) {
 	var s2 Sponsor
-	builder := sq.Select("id", "name", "file_name", "date_of_sponsor", "sponsor_season_id").
+	builder := sq.Select("id", "name", "website", "image", "file_name", "purpose", "team_id").
 		From("afc.sponsors").
 		Where(sq.Eq{"id": s1.ID})
 	sql, _, err := builder.ToSql()
