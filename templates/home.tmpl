@@ -1,0 +1,194 @@
+{{define "cssFile"}}public/styleHome.css{{end}}
+{{define "title"}}Home{{end}}
+{{define "header-style"}}
+    <style>
+        .listItemAffiliation {
+            padding: 10px;
+            height: {{if and (ne .PageData.User.Id 0) (ne .PageData.User.Role "Manager")}}150{{else}}100{{end}}px;
+            width: 150px;
+            display: inline-flex;
+            flex-wrap: wrap;
+        }
+
+        .photoContainer {
+            width: 100%;
+            height: 270px;
+            overflow: hidden;
+            margin: 50px auto;
+            background: white;
+            text-align: left;
+        }
+
+        /*photoBanner*/
+
+        .photoBanner {
+            height: 250px;
+            width: {{mul (add (len .PageData.Sponsors) 4) 354}}px;
+            padding: 20px 0 20px 0;
+        }
+
+        .photoBanner img {
+            -webkit-transition: all 0.5s ease;
+            -moz-transition: all 0.5s ease;
+            -o-transition: all 0.5s ease;
+            -ms-transition: all 0.5s ease;
+            transition: all 0.5s ease;
+        }
+
+        .photoBanner img:hover {
+            -webkit-transform: scale(1.1);
+            -moz-transform: scale(1.1);
+            -o-transform: scale(1.1);
+            -ms-transform: scale(1.1);
+            transform: scale(1.1);
+            cursor: pointer;
+            -webkit-box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+            -moz-box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .main {
+            text-align: center;
+        }
+
+        /*keyframe animations*/
+
+        .first {
+            -webkit-animation: bannerMove {{div (mul (len .PageData.Sponsors) 15) 7}}s linear infinite;
+            -moz-animation: bannerMove {{div (mul (len .PageData.Sponsors) 15) 7}}s linear infinite;
+            -ms-animation: bannerMove {{div (mul (len .PageData.Sponsors) 15) 7}}s linear infinite;
+            animation: bannerMove {{div (mul (len .PageData.Sponsors) 15) 7}}s linear infinite;
+        }
+
+        @keyframes bannerMove {
+            0% {
+                margin-left: 0;
+            }
+            100% {
+                margin-left: {{mul (len .PageData.Sponsors) -355}}px;
+            }
+
+        }
+
+        @-moz-keyframes bannerMove {
+            0% {
+                margin-left: 0;
+            }
+            100% {
+                margin-left: {{mul (len .PageData.Sponsors) -355}}px;
+            }
+
+        }
+
+        @-webkit-keyframes bannerMove {
+            0% {
+                margin-left: 0;
+            }
+            100% {
+                margin-left: {{mul (len .PageData.Sponsors) -355}}px;
+            }
+
+        }
+
+        @-ms-keyframes bannerMove {
+            0% {
+                margin-left: 0;
+            }
+            100% {
+                margin-left: {{mul (len .PageData.Sponsors) -355}}px;
+            }
+
+        }
+
+        @-o-keyframes bannerMove {
+            0% {
+                margin-left: 0;
+            }
+            100% {
+                margin-left: {{mul (len .PageData.Sponsors) -355}}px;
+            }
+
+        }
+    </style>
+{{end}}
+{{define "content"}}
+    <div class="welcomeBackground">
+        <h2 class="welcomeHeader">Welcome</h2>
+        <p class="welcome">AFC Aldermaston is a Chartered Standard club based in West Berkshire which is run by a group of
+            volunteers. We have over 20 teams with age groups registered from U6’s to U18’s and onto Adult
+            Football.<br><br><br></p>
+        {{if ne .PageData.NewsLatest.Id 0}}
+            <div class="listItem latest"
+                 style="position: absolute; bottom: 0; background-color: white; left: 0; text-align: center; cursor: pointer;"
+                 onclick="location.href='news/{{ .PageData.NewsLatest.Id }}';">
+                Latest from news
+                <img data-src="download/n/{{ .PageData.NewsLatest.Id }}" alt="public/default.png"
+                     onerror="this.onerror=null;this.src='public/default.png';"
+                     class="latestImage lazy" src="public/AFC.png">
+                <span style="margin: 0.83em 0 0.83em 0; display: block; font-size: 1.5em; font-weight: bold;">{{ .PageData.NewsLatest.Title }}</span>
+                <p style="text-align: left; padding: 10px 10px 10px 0;">{{ call .PageData.GetDate .PageData.NewsLatest.Date }}
+                </p>
+            </div>
+        {{end}}
+        {{if ne .PageData.WhatsOnLatest.Id 0}}
+            <div class="listItem latest"
+                 style="position: absolute; bottom: 0; background-color: white; left: 190px; text-align: center; cursor: pointer;" onclick="location.href='whatson/{{ .PageData.WhatsOnLatest.Id }}';">
+                Latest from what's on
+                <img data-src="download/w/{{ .PageData.WhatsOn.Id }}" alt="public/default.png"
+                     onerror="this.onerror=null;this.src='public/default.png';"
+                     class="latestImage lazy" src="public/AFC.png">
+                <span style="margin: 0.83em 0 0.83em 0; display: block; font-size: 1.5em; font-weight: bold;">{{ .PageData.WhatsOnLatest.Title}}</span>
+                <p style="text-align: left; padding: 10px 10px 10px 0;">{{ call .PageData.GetDate .PageData.WhatsOnLatest.Date }}<br>
+                    Date of Event - {{ call .PageData.GetDate .PageData.WhatsOnLatest.DateOfEvent }}
+                </p>
+            </div>
+        {{end}}
+    </div>
+    <main class="main">
+        <div class="photoContainer">
+            <div class="photoBanner">
+                {{ $i := 0 }}
+                {{ range .PageData.Sponsors }}
+                    <a href="{{ .Website }}" target="_blank" class="sponsorImage">
+                        <img data-src="download/s/{{ .Id }}" alt="public/default.png" src="public/AFC.png"
+                             onerror="this.onerror=null;this.src='public/default.png';" class="{{if eq $i 0}}first {{end}}lazy sponsorImage">
+                    </a>
+                    {{ $i = inc $i }}
+                {{end}}
+                {{range .PageData.Sponsors}}
+                    <a href="{{ .Website }}" target="_blank" class="sponsorImage">
+                        <img data-src="download/s/{{ .Id }}" alt="public/default.png" src="public/AFC.png"
+                             onerror="this.onerror=null;this.src='public/default.png';" class="lazy sponsorImage">
+                    </a>
+                {{end}}
+            </div>
+        </div>
+        <div style="background-color: white; margin: 10px 0 0 0; padding: 5px 0 0 0;">
+            <h2 style="text-decoration: underline; text-decoration-color: red; width: 100%; text-align: center;">
+                AFFILIATIONS</h2>
+            <div class="affiliationContainer">
+                {{range .PageData.Affiliations}}
+                    <div class="listItemAffiliation">
+                        <div class="imgContainer">
+                            {{if .Website}}
+                            <a href="{{ .Website }}" target="_blank">{{end}}
+                                <img class="affiliationImage lazy" data-src="download/a/{{ .Id }}" alt="public/default.png"
+                                     onerror="this.onerror=null;this.src='public/default.png';" src="public/AFC.png">
+                                {{if .Website }}</a>{{end}}
+                            {{if and (ne $.PageData.User.Id 0) (ne $.PageData.User.Role "Manager")}}
+                                <p style="padding: 0; margin: 0;">
+                                    <a href="affiliation/{{ .Id }}/delete">Delete</a>
+                                </p>
+                            {{end}}
+                        </div>
+                    </div>
+                {{end}}
+            </div>
+            {{if and (ne .PageData.User.Id 0) (ne .PageData.User.Role "Manager")}}
+                <p style="text-align: center;">
+                    <a href="affiliation/add">Add affiliation</a>
+                </p>
+            {{end}}
+        </div><p style="z-index: -1; opacity: 0; float: left; width: 96%;">AFC</p>
+    </main>
+{{end}}

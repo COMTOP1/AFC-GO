@@ -1,0 +1,74 @@
+{{define "title"}}Users{{end}}
+{{define "content"}}
+    <main class="main" style="text-align: center;">
+        <p style="color: green; padding: 0; margin: 0;" id="error">${success}</p><br>
+        <table style="align-items: center;">
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Team</th>
+                <th>Role</th>
+                <th>Image</th>
+                {{if or (eq .PageData.User.Role "Secretary") (or (eq .PageData.User.Role "Chairperson") (eq .PageData.User.Role "Webmaster"))}}
+                    <th>Edit</th>
+                    <th>Delete</th>
+                    <th>Reset password</th>
+                {{end}}
+            </tr>
+            {{range .PageData.Users}}
+                <tr>
+                    <th>{{ .Id }}
+                    </th>
+                    <th>{{ .Name }}
+                    </th>
+                    <th>{{ .Email }}
+                    </th>
+                    <th>{{ .Phone }}
+                    </th>
+                    {{ $team := ""}}
+                    {{if ne .Team 0}}
+                        {{ $team = $.PageData.GetTeamName .Team }}
+                    {{else}}
+                        {{ $team = "Not Related to team" }}
+                    {{end}}
+                    <th>{{ $team }}
+                    </th>
+                    <th>{{ .Role }}
+                    </th>
+                    <th><img data-src="download?s=u&id={{ .Id }}" alt=""
+                             onerror="this.onerror=null;this.src='images/default.png';"
+                             style="border: 5px; max-height: 200px; max-width: 200px;" class="lazy"></th>
+                    {{if or (and (or (eq $.PageData.User.Role "Secretary") (eq $.PageData.User.Role "Chairperson")) (eq .Role "Webmaster"))  (eq $.PageData.User.Role "Webmaster")}}
+                        <th>
+                            <div class="button" id="container">
+                                <div id="translate"></div>
+                                <a href="edituser?id={{ .Id }}">Edit</a>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="button" id="container">
+                                <div id="translate"></div>
+                                <a href="deleteuser?id={{ .Id }}">Delete</a>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="button" id="container">
+                                <div id="translate"></div>
+                                <a href="resetpassword?id={{ .Id }}">Reset password</a>
+                            </div>
+                        </th>
+                    {{end}}
+                </tr>
+            {{end}}
+        </table>
+        <br>
+        <p style="z-index: -1; opacity: 0; float: left; width: 96%;">AFC</p>
+    </main>
+    {{if or (eq .PageData.User.Role "Secretary") (or (eq .PageData.User.Role "Chairperson") (eq .PageData.User.Role "Webmaster"))}}
+        <p style="width: 96%">
+            <a href="adduser">Add user</a>
+        </p>
+    {{end}}
+{{end}}

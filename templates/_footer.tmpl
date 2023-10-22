@@ -1,0 +1,17 @@
+{{define "footer"}}
+    <div id="socialBar">
+        <a href="https://www.facebook.com/AFC-Aldermaston-114651238068/" class="fa fa-facebook"></a>
+        <a href="https://twitter.com/afcaldermaston?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor"
+           class="fa fa-twitter"></a>
+    </div>
+    {{with .PageData }}
+        {{with .MyUtils }}
+            <footer>
+                <small>&copy; Copyright 2020 - {{call .GetYear}}, AFC Aldermaston, website provided by <a
+                            href="https://bswdi.co.uk"
+                            style="text-decoration: underline; font-weight: 900;"
+                            target="_blank">BSWDI</a></small>
+            </footer>
+        {{end}}
+    {{end}}
+{{end}}

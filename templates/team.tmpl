@@ -1,0 +1,87 @@
+{{define "title"}}Team - {{ .PageData.Team.Name }}{{end}}
+{{define "content"}}
+    <main class="main" style="padding: 0 10px;">
+        <div style="width: 100%; overflow: auto;">
+            <div style="float:left; width: 50%">
+                <h2>{{ .PageData.Team.Name }}
+                </h2>
+                <h3>Team Manager(s)</h3>
+                {{range .PageData.Managers}}
+                {{ .Name }}<br>
+                {{end}}<br><br>
+                <h3>Team Coach</h3>
+                {{if .PageData.Team.Coach}}{{ .PageData.Team.Coach }}{{else}}Ask the webmaster to add this information{{end}}
+                <br><br>
+                <h3>Physio</h3>
+                {{if .PageData.Team.Physio}}{{ .PageData.Team.Physio }}{{else}}Ask the webmaster to add this information{{end}}
+                <br><br>
+                <h3>Training Location</h3>
+                Aldermaston Recreational Society<br><br>
+                {{if ge .PageData.Team.Ages 13}}
+                    <h3>League</h3>
+                    {{if .PageData.Team.League}}{{ .PageData.Team.League }}{{else}}Ask the webmaster to add this information{{end}}
+                    <br><br>
+                    <h3>Division</h3>
+                    {{if .PageData.Team.Division}}{{ .PageData.Team.Division }}{{else}}Ask the webmaster to add this information{{end}}
+                    <br><br>
+                    {{if .PageData.Team.LeagueTable}}<h3>League Table</h3>
+                    <a href="{{ .PageData.Team.LeagueTable }}" target="_blank" style="text-decoration: underline;">League
+                        Table</a><br><br>{{end}}
+                    {{if .PageData.Team.Fixtures}}<h3>Fixtures</h3>
+                    <a href="{{ .PageData.Team.Fixtures }}" target="_blank" style="text-decoration: underline;">Fixtures</a><br>
+                    <br>{{end}}
+                {{end}}
+            </div>
+            {{if .PageData.Team.FileName }}
+                <div style="float:right; text-align: right; width: 50%;">
+                    <h2>Team photo</h2>
+                    <img data-src="download?s=t&id={{ .PageData.Team.Id }}" alt="public/default.png"
+                         onerror="this.onerror=null;this.src='public/default.png';"
+                         style="padding: 5px; max-height: 1000px; max-width: 700px; width: 100%;" class="lazy">
+                </div>
+            {{end}}
+        </div>
+        <p></p>
+        <div style="width: 100%; display: inline-block;<%if (list1.size() > 0) {%> height: 300px;<%}%>">
+            {{range .PaeData.Sponsors}}
+                <div id="listItem">
+                    <div>
+                        <a href="{{ .Website }}" target="_blank">
+                            <img data-src="download?s=s&id={{ .Id }}" alt="public/default.png"
+                                 onerror="this.onerror=null;this.src='public/default.png';" style="padding: 5px;"
+                                 class="lazy">
+                            {{ .Name }}<br></br><br>
+                            {{ .Purpose }}
+                        </a></div>
+                </div>
+            {{end}}
+        </div>
+        <br><br><br>
+        {{if not .PageData.Team.Youth}}
+            <h3>Players</h3><br>
+            <div style="width: 100%; display: inline-block;<%if (list2.size() > 0) {%> height: 300px;<%}%>">
+                {{range .PageData.Players}}
+                    <div id="listItem" style="height: 200px;">
+                        <div>
+                            <img data-src="download?s=l&id={{ .Id }}" alt="public/default.png"
+                                 onerror="this.onerror=null;this.src='public/default.png';" style="padding: 5px;" class="lazy">
+                            {{ .Name }}<br>
+                            {{ .Position }}<br>
+                            {{if .Captain}}Captain{{end}}
+                        </div>
+                    </div>
+                {{end}}
+            </div>
+        {{end}}
+        <p></p>
+        <p style="z-index: -1; opacity: 0; float: left; width: 98%;">AFC</p>
+        {{if and (ne $.PageData.User.Id 0) (ne $.PageData.User.Role "Manager")}}
+            <p style="width: 96%;">
+                <a href="team/{{ .PageData.Team.Id }}/edit">Edit team</a>
+            </p>
+            <p style="width: 96%;">
+                <a href="team/{{ .PageData.Team.Id }}/delete">Delete team</a>
+            </p>
+        {{end}}
+    </main>
+{{end}}
