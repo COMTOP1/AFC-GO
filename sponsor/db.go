@@ -23,6 +23,22 @@ func (s *Store) getSponsors(ctx context.Context) ([]Sponsor, error) {
 	return s1, nil
 }
 
+func (s *Store) getSponsorsIDWebsite(ctx context.Context) ([]Sponsor, error) {
+	var s1 []Sponsor
+	builder := sq.Select("id", "name", "website").
+		From("afc.sponsors").
+		OrderBy("id")
+	sql, _, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getSponsors: %w", err))
+	}
+	err = s.db.SelectContext(ctx, &s1, sql)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sponsors: %w", err)
+	}
+	return s1, nil
+}
+
 func (s *Store) getSponsorsTeam(ctx context.Context, teamID string) ([]Sponsor, error) {
 	var s1 []Sponsor
 	builder := sq.Select("id", "name", "file_name", "date_of_sponsor", "sponsor_season_id").
