@@ -83,8 +83,9 @@ func (r *TeamsRepo) Teams(c echo.Context) error {
 		//	return team.Name
 		//},
 	}
+	_ = data
 
-	err = r.controller.Template.RenderTemplate(c.Response().Writer, page, data, "teams.tmpl")
+	//err = r.controller.Template.RenderTemplate(c.Response().Writer, page, data, "teams.tmpl")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -151,7 +152,7 @@ func (r *TeamsRepo) Team(c echo.Context) error {
 		}
 	}
 
-	players, err := r.controller.Session.ListAllPlayersByTeam("", id)
+	players, err := r.controller.Session.ListAllPlayersByTeam(id)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -182,7 +183,9 @@ func (r *TeamsRepo) Team(c echo.Context) error {
 		User:     user,
 	}
 
-	err = r.controller.Template.RenderTemplate(c.Response().Writer, page, data, "team.tmpl")
+	_ = data
+
+	//err = r.controller.Template.RenderTemplate(c.Response().Writer, page, data, "team.tmpl")
 	if err != nil {
 		fmt.Println(err)
 	}
