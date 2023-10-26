@@ -49,18 +49,20 @@ func (s *Store) GetUsersManagersTeam(ctx context.Context, teamID int) ([]User, e
 	return s.getUsersManagersTeam(ctx, teamID)
 }
 
-func (s *Store) GetUser(ctx context.Context, p User) (User, error) {
-	return s.getUser(ctx, p)
+func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
+	return s.getUser(ctx, u)
 }
 
 func (s *Store) AddUser(ctx context.Context, p User) (User, error) {
 	return s.addUser(ctx, p)
+func (s *Store) AddUser(ctx context.Context, u User) (User, error) {
+	return s.addUser(ctx, u)
 }
 
-func (s *Store) EditUser(ctx context.Context, p User) (User, error) {
-	return s.editUser(ctx, p)
+func (s *Store) EditUser(ctx context.Context, u User, emailOld string) (User, error) {
+	return s.editUser(ctx, u, emailOld)
 }
 
-func (s *Store) DeleteUser(ctx context.Context, p User) error {
-	return s.deleteUser(ctx, p)
+func (s *Store) DeleteUser(ctx context.Context, u User) error {
+	return s.deleteUser(ctx, u)
 }
