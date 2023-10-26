@@ -32,6 +32,10 @@ func (s *Store) GetAffiliations(ctx context.Context) ([]Affiliation, error) {
 	return s.getAffiliations(ctx)
 }
 
+func (s *Store) GetAffiliationsMinimal(ctx context.Context) ([]Affiliation, error) {
+	return s.getAffiliationsMinimal(ctx)
+}
+
 func (s *Store) GetAffiliation(ctx context.Context, a Affiliation) (Affiliation, error) {
 	return s.getAffiliation(ctx, a)
 }
