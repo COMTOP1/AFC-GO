@@ -27,11 +27,11 @@ import (
 
 type (
 	Config struct {
-		Address           string
-		DatabaseURL       string
-		BaseDomainName    string
-		DomainName        string
-		LogoutEndpoint    string
+		Address     string
+		DatabaseURL string
+		//BaseDomainName    string
+		//DomainName        string
+		//LogoutEndpoint    string
 		SessionCookieName string
 		//Mail              SMTPConfig
 		Security SecurityConfig
@@ -50,7 +50,9 @@ type (
 	SecurityConfig struct {
 		EncryptionKey     string
 		AuthenticationKey string
-		SigningKey        string
+		//SigningKey        string
+		Iterations int
+		KeyLength  int
 	}
 
 	// Views encapsulates our view dependencies
@@ -97,15 +99,6 @@ func New(conf *Config, host string) *Views {
 
 	// Initialising cache
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)
-
-	// Initialise mailer
-	//v.mailer = mail.NewMailer(mail.Config{
-	//	Host:       conf.Mail.Host,
-	//	Port:       conf.Mail.Port,
-	//	Username:   conf.Mail.Username,
-	//	Password:   conf.Mail.Password,
-	//	DomainName: conf.Mail.DomainName,
-	//})
 
 	// Initialising session cookie
 	authKey, _ := hex.DecodeString(conf.Security.AuthenticationKey)
