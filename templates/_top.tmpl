@@ -58,30 +58,35 @@
             </div>
 
             <div class="navbar-end">
-                <!--            <div class="navbar-item has-dropdown is-hoverable">-->
-                <!--                <a class="navbar-link">-->
-                <!--                    More-->
-                <!--                </a>-->
+                {{if and (gt (len .User.Email) 2) (ne .User.Role "Manager")}}
+                    <div class="navbar-item has-dropdown is-hoverable">
+                        <a class="navbar-link">
+                            More
+                        </a>
 
-                <!--                <div class="navbar-dropdown">-->
-                <!--                    <a class="navbar-item">-->
-                <!--                        Users-->
-                <!--                    </a>-->
-                <!--                    <a class="navbar-item">-->
-                <!--                        Players-->
-                <!--                    </a>-->
-                <!--                    <a class="navbar-item">-->
-                <!--                        Account-->
-                <!--                    </a>-->
-                <!--                    <hr class="navbar-divider">-->
-                <!--                    <a class="navbar-item">-->
-                <!--                        Logout-->
-                <!--                    </a>-->
-                <!--                </div>-->
-                <!--            </div>-->
-                <a class="navbar-item">
-                    Login
-                </a>
+                        <div class="navbar-dropdown">
+                            <a class="navbar-item">
+                                Users
+                            </a>
+                            <a class="navbar-item">
+                                Players
+                            </a>
+                            <a class="navbar-item">
+                                Account
+                            </a>
+                            <hr class="navbar-divider">
+                            <a class="navbar-item" onclick="logoutModal()">
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                    {{template "logoutModal" .}}
+                {{else}}
+                    <a class="navbar-item" onclick="loginModal()">
+                        Login
+                    </a>
+                    {{template "loginModal" .}}
+                {{end}}
             </div>
         </div>
     </nav>
