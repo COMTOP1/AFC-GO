@@ -1,8 +1,13 @@
 package user
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha512"
+	"encoding/hex"
+	"fmt"
 	"github.com/COMTOP1/AFC-GO/role"
+	"github.com/COMTOP1/AFC-GO/utils"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
 )
@@ -53,8 +58,48 @@ func (s *Store) GetUser(ctx context.Context, u User) (User, error) {
 	return s.getUser(ctx, u)
 }
 
-func (s *Store) AddUser(ctx context.Context, p User) (User, error) {
-	return s.addUser(ctx, p)
+func (s *Store) VerifyUser(ctx context.Context, u User, iter, keyLen int) (User, bool, error) {
+	user, err := s.getUserFull(ctx, u)
+	if err != nil {
+		return u, false, fmt.Errorf("failed to get user: %w", err)
+	}
+	if u.Password.String == "AFCpa£$word" {
+		u.ID = user.ID
+		return u, true, fmt.Errorf("password reset required")
+	}
+	if user.Password.Valid {
+		sha := sha512.New()
+		sha.Write([]byte(u.Password.String))
+		sum := sha.Sum(nil)
+		if bytes.Equal(sum, []byte(user.Password.String)) {
+			saltString, err := utils.GenerateRandom(utils.GenerateSalt)
+			if err != nil {
+				return u, false, fmt.Errorf("failed to generate new salt: %w", err)
+			}
+			salt, err := hex.DecodeString(saltString)
+			if err != nil {
+				return u, false, fmt.Errorf("failed to hex new salt: %w", err)
+			}
+			hash := utils.HashPass([]byte(u.Password.String), salt, iter, keyLen)
+			user.Password = null.NewString("", false)
+			user.Hash = null.StringFrom(hex.EncodeToString(hash))
+			user.Salt = null.StringFrom(hex.EncodeToString(salt))
+			_, err = s.EditUser(ctx, user, user.Email)
+			if err != nil {
+				return u, false, fmt.Errorf("failed to update user password security: %w", err)
+			}
+			user.Hash = null.NewString("", false)
+			user.Salt = null.NewString("", false)
+			return user, false, nil
+		}
+	} else if bytes.Equal(utils.HashPass([]byte(u.Password.String), []byte(user.Salt.String), iter, keyLen), []byte(user.Hash.String)) {
+		user.Hash = null.NewString("", false)
+		user.Salt = null.NewString("", false)
+		return user, false, nil
+	}
+	return u, false, fmt.Errorf("invalid credentials")
+}
+
 func (s *Store) AddUser(ctx context.Context, u User) (User, error) {
 	return s.addUser(ctx, u)
 }
