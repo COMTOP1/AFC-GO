@@ -101,11 +101,17 @@ func New(conf *Config, host string) *Views {
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)
 
 	// Initialising session cookie
-	authKey, _ := hex.DecodeString(conf.Security.AuthenticationKey)
+	authKey, err := hex.DecodeString(conf.Security.AuthenticationKey)
+	if err != nil {
+		log.Printf("failed to decode authentication key: %+v", err)
+	}
 	if len(authKey) == 0 {
 		authKey = securecookie.GenerateRandomKey(64)
 	}
-	encryptionKey, _ := hex.DecodeString(conf.Security.EncryptionKey)
+	encryptionKey, err := hex.DecodeString(conf.Security.EncryptionKey)
+	if err != nil {
+		log.Printf("failed to decode encryption key: %+v", err)
+	}
 	if len(encryptionKey) == 0 {
 		encryptionKey = securecookie.GenerateRandomKey(32)
 	}
