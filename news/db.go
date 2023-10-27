@@ -25,7 +25,7 @@ func (s *Store) getNewsS(ctx context.Context) ([]News, error) {
 
 func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 	temp := make([]News, 1)
-	builder := sq.Select("id", "title", "image", "file_name", "content", "date").
+	builder := sq.Select("id", "title", "date").
 		From("afc.news").
 		OrderBy("id DESC").
 		Limit(1)
