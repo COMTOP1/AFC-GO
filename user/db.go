@@ -42,9 +42,8 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 }
 
 func (s *Store) getUsersManagersTeam(ctx context.Context, teamID int) ([]User, error) {
-	var p []User
-	builder := sq.Select("id", "name", "image", "file_name").
 	var u []User
+	builder := sq.Select("id", "name" /*"image",*/, "file_name").
 		From("afc.users").
 		Where(sq.Eq{"team_id": strconv.FormatUint(uint64(teamID), 10)}).
 		OrderBy("id")
@@ -73,7 +72,24 @@ func (s *Store) getUser(ctx context.Context, u User) (User, error) {
 	if err != nil {
 		return User{}, fmt.Errorf("failed to get user: %w", err)
 	}
-	return p1, nil
+	return u1, nil
+}
+
+func (s *Store) getUserFull(ctx context.Context, u User) (User, error) {
+	var u1 User
+	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name", "password", "hash", "salt").
+		From("afc.users").
+		Where(sq.And{sq.Eq{"email": u.Email}},
+			sq.Eq{"id": u.ID})
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for getUser: %w", err))
+	}
+	err = s.db.GetContext(ctx, &u1, sql, args...)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to get user: %w", err)
+	}
+	return u1, nil
 }
 
 func (s *Store) addUser(ctx context.Context, u User) (User, error) {
