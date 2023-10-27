@@ -50,28 +50,8 @@ func (r *Router) Start() error {
 
 // middleware initialises web server middleware
 func (r *Router) middleware() {
-	config := middleware.CORSConfig{
-		AllowCredentials: true,
-		Skipper:          middleware.DefaultSkipper,
-		AllowOrigins: []string{
-			"https://" + r.config.DomainName,
-			"https://" + r.config.BaseDomainName,
-			"https://creator." + r.config.BaseDomainName,
-			"https://my." + r.config.BaseDomainName,
-			"https://cobra." + r.config.BaseDomainName,
-			"https://api." + r.config.BaseDomainName,
-			"https://internal." + r.config.BaseDomainName,
-			"https://docs." + r.config.BaseDomainName,
-			"https://history." + r.config.BaseDomainName,
-			"http://localhost:*",
-		},
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAccessControlAllowCredentials, echo.HeaderAccessControlAllowOrigin, echo.HeaderAuthorization},
-		AllowMethods: []string{http.MethodGet, http.MethodPost},
-	}
-
 	r.router.Pre(middleware.RemoveTrailingSlash())
 	r.router.Use(middleware.Recover())
-	r.router.Use(middleware.CORSWithConfig(config))
 	r.router.Use(middleware.BodyLimit("15M"))
 	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
