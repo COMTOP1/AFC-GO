@@ -29,19 +29,16 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 		if !c1.User.Authenticated {
 			return c.Redirect(http.StatusFound, "/")
 		}
-		userFromDB, err := v.user.GetUser(c.Request().Context(), c1.User)
+		c1.User, err = v.user.GetUser(c.Request().Context(), c1.User)
 		if err != nil {
 			log.Printf("failed to get user from db: %+v", err)
 			return c.Redirect(http.StatusFound, "/")
 		}
-		if userFromDB.DeletedBy.Valid || !c1.User.Enabled {
-			session.Values["user"] = &user.User{}
-			session.Options.MaxAge = -1
-			err = session.Save(c.Request(), c.Response())
-			if err != nil {
-				return fmt.Errorf("failed to save session for requiresLogin: %w", err)
-			}
-			return c.Redirect(http.StatusFound, "/")
+		c1.User.Authenticated = true
+		session.Values["user"] = c1.User
+		err = session.Save(c.Request(), c.Response())
+		if err != nil {
+			log.Printf("failed to save session for logout: %+v", err)
 		}
 		return next(c)
 	}
