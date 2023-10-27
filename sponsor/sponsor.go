@@ -34,8 +34,8 @@ func (s *Store) GetSponsors(ctx context.Context) ([]Sponsor, error) {
 	return s.getSponsors(ctx)
 }
 
-func (s *Store) GetSponsorsIDWebsite(ctx context.Context) ([]Sponsor, error) {
-	return s.getSponsorsIDWebsite(ctx)
+func (s *Store) GetSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
+	return s.getSponsorsMinimal(ctx)
 }
 
 func (s *Store) GetSponsorsTeam(ctx context.Context, teamID string) ([]Sponsor, error) {

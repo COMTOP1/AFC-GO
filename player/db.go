@@ -12,11 +12,11 @@ func (s *Store) getPlayers(ctx context.Context) ([]Player, error) {
 	builder := sq.Select("id", "name", "image", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("afc.players").
 		OrderBy("id")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getPlayers: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql)
+	err = s.db.SelectContext(ctx, &p, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get player: %w", err)
 	}
@@ -29,11 +29,11 @@ func (s *Store) getPlayersTeam(ctx context.Context, teamID int) ([]Player, error
 		From("afc.players").
 		Where(sq.Eq{"team_id": teamID}).
 		OrderBy("name")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getPlayersTeam: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql)
+	err = s.db.SelectContext(ctx, &p, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get player: %w", err)
 	}
@@ -45,11 +45,11 @@ func (s *Store) getPlayer(ctx context.Context, p Player) (Player, error) {
 	builder := sq.Select("id", "name", "image", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("afc.players").
 		Where(sq.Eq{"id": p.ID})
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getPlayer: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p1, sql)
+	err = s.db.GetContext(ctx, &p1, sql, args...)
 	if err != nil {
 		return Player{}, fmt.Errorf("failed to get player: %w", err)
 	}

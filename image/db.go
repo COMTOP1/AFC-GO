@@ -12,11 +12,11 @@ func (s *Store) getImages(ctx context.Context) ([]Image, error) {
 	builder := sq.Select("id", "image", "file_name", "caption").
 		From("afc.images").
 		OrderBy("id")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getImages: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &i, sql)
+	err = s.db.SelectContext(ctx, &i, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get images: %w", err)
 	}
@@ -28,11 +28,11 @@ func (s *Store) getImage(ctx context.Context, i Image) (Image, error) {
 	builder := sq.Select("id", "image", "file_name", "caption").
 		From("afc.images").
 		Where(sq.Eq{"id": i.ID})
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getImage: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &i1, sql)
+	err = s.db.GetContext(ctx, &i1, sql, args...)
 	if err != nil {
 		return Image{}, fmt.Errorf("failed to get image: %w", err)
 	}

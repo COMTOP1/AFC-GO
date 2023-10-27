@@ -13,11 +13,11 @@ func (s *Store) getWhatsOnS(ctx context.Context) ([]WhatsOn, error) {
 	builder := sq.Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		OrderBy("id")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getWhatsOns: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &w, sql)
+	err = s.db.SelectContext(ctx, &w, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get what's on: %w", err)
 	}
@@ -30,11 +30,11 @@ func (s *Store) getWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
 		From("afc.whatson").
 		Where(sq.GtOrEq{"date_of_event": time.Now().UnixMilli()}).
 		OrderBy("name")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getWhatsOnsSeason: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &w, sql)
+	err = s.db.SelectContext(ctx, &w, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get what's on: %w", err)
 	}
@@ -47,11 +47,11 @@ func (s *Store) getWhatsOnPast(ctx context.Context) ([]WhatsOn, error) {
 		From("afc.whatson").
 		Where(sq.Lt{"date_of_event": time.Now().UnixMilli()}).
 		OrderBy("name")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getWhatsOnsSeason: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &w, sql)
+	err = s.db.SelectContext(ctx, &w, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get what's on: %w", err)
 	}
@@ -59,23 +59,22 @@ func (s *Store) getWhatsOnPast(ctx context.Context) ([]WhatsOn, error) {
 }
 
 func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
-	temp := make([]WhatsOn, 1)
-	builder := sq.Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
-		From("afc.whatsOn").
+	var w WhatsOn
+	builder := sq.Select("id", "title", "date", "date_of_event").
+		From("afc.whatson").
+		Where(sq.GtOrEq{"date_of_event": time.Now().UnixMilli()}).
 		OrderBy("id DESC").
 		Limit(1)
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getWhatsOn: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &temp, sql)
+	err = s.db.GetContext(ctx, &w, sql, args...)
 	if err != nil {
 		return WhatsOn{}, fmt.Errorf("failed to get what's on latest: %w", err)
 	}
 
-	var n1 WhatsOn
-	n1 = temp[0]
-	return n1, nil
+	return w, nil
 }
 
 func (s *Store) getWhatsOn(ctx context.Context, w WhatsOn) (WhatsOn, error) {
@@ -83,11 +82,11 @@ func (s *Store) getWhatsOn(ctx context.Context, w WhatsOn) (WhatsOn, error) {
 	builder := sq.Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.Eq{"id": w.ID})
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getWhatsOn: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &w1, sql)
+	err = s.db.GetContext(ctx, &w1, sql, args...)
 	if err != nil {
 		return WhatsOn{}, fmt.Errorf("failed to get what's on: %w", err)
 	}

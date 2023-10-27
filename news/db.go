@@ -12,11 +12,11 @@ func (s *Store) getNewsS(ctx context.Context) ([]News, error) {
 	builder := sq.Select("id", "title", "image", "file_name", "content", "date").
 		From("afc.news").
 		OrderBy("id")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getNewsS: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &n, sql)
+	err = s.db.SelectContext(ctx, &n, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get news: %w", err)
 	}
@@ -29,11 +29,11 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 		From("afc.news").
 		OrderBy("id DESC").
 		Limit(1)
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getNews: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &temp, sql)
+	err = s.db.GetContext(ctx, &temp, sql, args...)
 	if err != nil {
 		return News{}, fmt.Errorf("failed to get news: %w", err)
 	}
@@ -48,11 +48,11 @@ func (s *Store) getNews(ctx context.Context, n News) (News, error) {
 	builder := sq.Select("id", "title", "image", "file_name", "content", "date").
 		From("afc.news").
 		Where(sq.Eq{"id": n.ID})
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getNews: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &n1, sql)
+	err = s.db.GetContext(ctx, &n1, sql, args...)
 	if err != nil {
 		return News{}, fmt.Errorf("failed to get news: %w", err)
 	}

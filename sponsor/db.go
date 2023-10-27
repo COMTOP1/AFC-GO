@@ -12,27 +12,27 @@ func (s *Store) getSponsors(ctx context.Context) ([]Sponsor, error) {
 	builder := sq.Select("id", "name", "website", "image", "file_name", "purpose", "team_id").
 		From("afc.sponsors").
 		OrderBy("id")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getSponsors: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &s1, sql)
+	err = s.db.SelectContext(ctx, &s1, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get sponsors: %w", err)
 	}
 	return s1, nil
 }
 
-func (s *Store) getSponsorsIDWebsite(ctx context.Context) ([]Sponsor, error) {
+func (s *Store) getSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
 	var s1 []Sponsor
-	builder := sq.Select("id", "name", "website").
+	builder := sq.Select("id", "website").
 		From("afc.sponsors").
 		OrderBy("id")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getSponsors: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &s1, sql)
+	err = s.db.SelectContext(ctx, &s1, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get sponsors: %w", err)
 	}
@@ -45,11 +45,11 @@ func (s *Store) getSponsorsTeam(ctx context.Context, teamID string) ([]Sponsor, 
 		From("afc.sponsors").
 		Where(sq.Eq{"sponsor_season_id": teamID}).
 		OrderBy("name")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getSponsorsSeason: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &s1, sql)
+	err = s.db.SelectContext(ctx, &s1, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get sponsors: %w", err)
 	}
@@ -61,11 +61,11 @@ func (s *Store) getSponsor(ctx context.Context, s1 Sponsor) (Sponsor, error) {
 	builder := sq.Select("id", "name", "website", "image", "file_name", "purpose", "team_id").
 		From("afc.sponsors").
 		Where(sq.Eq{"id": s1.ID})
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getSponsor: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &s2, sql)
+	err = s.db.GetContext(ctx, &s2, sql, args...)
 	if err != nil {
 		return Sponsor{}, fmt.Errorf("failed to get sponsor: %w", err)
 	}

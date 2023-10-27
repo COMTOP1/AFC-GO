@@ -12,11 +12,11 @@ func (s *Store) getTeams(ctx context.Context) ([]Team, error) {
 	builder := sq.Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "image", "file_name", "active", "youth", "ages").
 		From("afc.teams").
 		OrderBy("id")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getTeams: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &t, sql)
+	err = s.db.SelectContext(ctx, &t, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get teams: %w", err)
 	}
@@ -29,11 +29,11 @@ func (s *Store) getTeamsActive(ctx context.Context) ([]Team, error) {
 		From("afc.teams").
 		Where(sq.Eq{"active": true}).
 		OrderBy("name")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getTeamsSeason: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &t, sql)
+	err = s.db.SelectContext(ctx, &t, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get teams: %w", err)
 	}
@@ -45,11 +45,11 @@ func (s *Store) getTeam(ctx context.Context, t Team) (Team, error) {
 	builder := sq.Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "image", "file_name", "active", "youth", "ages").
 		From("afc.teams").
 		Where(sq.Eq{"id": t.ID})
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getTeam: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &t1, sql)
+	err = s.db.GetContext(ctx, &t1, sql, args...)
 	if err != nil {
 		return Team{}, fmt.Errorf("failed to get team: %w", err)
 	}

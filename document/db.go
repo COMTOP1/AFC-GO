@@ -12,11 +12,11 @@ func (s *Store) getDocuments(ctx context.Context) ([]Document, error) {
 	builder := sq.Select("id", "name", "file_name").
 		From("afc.documents").
 		OrderBy("name")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getDocuments: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &d, sql)
+	err = s.db.SelectContext(ctx, &d, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get documents: %w", err)
 	}
@@ -28,11 +28,11 @@ func (s *Store) getDocument(ctx context.Context, d Document) (Document, error) {
 	builder := sq.Select("id", "name", "file_name").
 		From("afc.documents").
 		Where(sq.Eq{"id": d.ID})
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getDocument: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &d1, sql)
+	err = s.db.GetContext(ctx, &d1, sql, args...)
 	if err != nil {
 		return Document{}, fmt.Errorf("failed to get document: %w", err)
 	}

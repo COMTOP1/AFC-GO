@@ -9,65 +9,67 @@ import (
 )
 
 func (s *Store) getUsers(ctx context.Context) ([]User, error) {
-	var p []User
-	builder := sq.Select("id", "name", "email", "phone", "team_id", "role", "image", "file_name").
+	var u []User
+	builder := sq.Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name").
 		From("afc.users").
 		OrderBy("id")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUsers: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql)
+	err = s.db.SelectContext(ctx, &u, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
-	return p, nil
+	return u, nil
 }
 
 func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
-	var p []User
+	var u []User
 	builder := sq.Select("id", "name", "email", "role").
 		From("afc.users").
 		Where("role IN ('PROGRAMME_EDITOR', 'LEAGUE_SECRETARY', 'TREASURER', 'SAFEGUARDING_OFFICER', 'CLUB_SECRETARY', 'CHAIRPERSON')").
 		OrderBy("FIELD(role, 'PROGRAMME_EDITOR', 'LEAGUE_SECRETARY', 'TREASURER', 'SAFEGUARDING_OFFICER', 'CLUB_SECRETARY', 'CHAIRPERSON') DESC")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUsersContact: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql)
+	err = s.db.SelectContext(ctx, &u, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
-	return p, nil
+	return u, nil
 }
 
 func (s *Store) getUsersManagersTeam(ctx context.Context, teamID int) ([]User, error) {
 	var p []User
 	builder := sq.Select("id", "name", "image", "file_name").
+	var u []User
 		From("afc.users").
 		Where(sq.Eq{"team_id": strconv.FormatUint(uint64(teamID), 10)}).
-		OrderBy("name")
-	sql, _, err := builder.ToSql()
+		OrderBy("id")
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUsersManagersTeam: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql)
+	err = s.db.SelectContext(ctx, &u, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
-	return p, nil
+	return u, nil
 }
 
-func (s *Store) getUser(ctx context.Context, p User) (User, error) {
-	var p1 User
-	builder := sq.Select("id", "name", "email", "phone", "team_id", "role", "image", "file_name").
+func (s *Store) getUser(ctx context.Context, u User) (User, error) {
+	var u1 User
+	builder := sq.Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name").
 		From("afc.users").
-		Where(sq.Eq{"id": p.ID})
-	sql, _, err := builder.ToSql()
+		Where(sq.And{sq.Eq{"email": u.Email}, sq.NotEq{"email": ""}},
+			sq.Eq{"id": u.ID})
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUser: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p1, sql)
+	err = s.db.GetContext(ctx, &u1, sql, args...)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -76,7 +78,7 @@ func (s *Store) getUser(ctx context.Context, p User) (User, error) {
 
 func (s *Store) addUser(ctx context.Context, u User) (User, error) {
 	builder := utils.MySQL().Insert("afc.users").
-		Columns("name", "email", "phone", "team_id", "role", "image", "file_name").
+		Columns("name", "email", "phone", "team_id", "role" /*"image",*/, "file_name").
 		Values(u.Name, u.Email, u.Phone, u.TeamID, u.Role.DBString(), u.Image, u.FileName)
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -115,7 +117,7 @@ func (s *Store) editUser(ctx context.Context, u User) (User, error) {
 			"hash":      u.Hash,
 			"salt":      u.Salt,
 		}).
-		Where(sq.Eq{"id": u.ID})
+		Where(sq.Eq{"email": emailOld})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for editUser: %w", err))
@@ -129,14 +131,14 @@ func (s *Store) editUser(ctx context.Context, u User) (User, error) {
 		return User{}, fmt.Errorf("failed to edit user: %w", err)
 	}
 	if rows < 1 {
-		return User{}, fmt.Errorf("failed to edit user: invalid rows affected: %d, this user may not exist: %d", rows, u.ID)
+		return User{}, fmt.Errorf("failed to edit user: invalid rows affected: %d, this user may not exist: %s", rows, emailOld)
 	}
 	return u, nil
 }
 
 func (s *Store) deleteUser(ctx context.Context, u User) error {
 	builder := utils.MySQL().Delete("afc.users").
-		Where(sq.Eq{"id": u.ID})
+		Where(sq.Eq{"email": u.Email})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for deleteUser: %w", err))

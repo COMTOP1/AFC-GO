@@ -12,11 +12,11 @@ func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {
 	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programmes").
 		OrderBy("id")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getProgrammes: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql)
+	err = s.db.SelectContext(ctx, &p, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get programmes: %w", err)
 	}
@@ -29,11 +29,11 @@ func (s *Store) getProgrammesSeason(ctx context.Context, seasonID int) ([]Progra
 		From("afc.programmes").
 		Where(sq.Eq{"programme_season_id": seasonID}).
 		OrderBy("name")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getProgrammesSeason: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql)
+	err = s.db.SelectContext(ctx, &p, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get programmes: %w", err)
 	}
@@ -45,11 +45,11 @@ func (s *Store) getProgramme(ctx context.Context, p Programme) (Programme, error
 	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programmes").
 		Where(sq.Eq{"id": p.ID})
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getProgramme: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p1, sql)
+	err = s.db.GetContext(ctx, &p1, sql, args...)
 	if err != nil {
 		return Programme{}, fmt.Errorf("failed to get programme: %w", err)
 	}
@@ -129,11 +129,11 @@ func (s *Store) getSeasons(ctx context.Context) ([]Season, error) {
 	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programme_seasons").
 		OrderBy("id")
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getSeasons: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &s1, sql)
+	err = s.db.SelectContext(ctx, &s1, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get seasons: %w", err)
 	}
@@ -145,11 +145,11 @@ func (s *Store) getSeason(ctx context.Context, s1 Season) (Season, error) {
 	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programme_seasons").
 		Where(sq.Eq{"id": s1.ID})
-	sql, _, err := builder.ToSql()
+	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getSeason: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &s2, sql)
+	err = s.db.GetContext(ctx, &s2, sql, args...)
 	if err != nil {
 		return Season{}, fmt.Errorf("failed to get season: %w", err)
 	}
