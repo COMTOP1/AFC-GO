@@ -30,12 +30,12 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 		Code:  status,
 		Error: message,
 	}
-	err1 := v.template.RenderTemplate(c.Response().Writer, data, templates.ErrorTemplate, templates.NoNavType)
+	err1 := v.template.RenderTemplate(c.Response().Writer, data, templates.ErrorTemplate, templates.RegularType)
 	if err1 != nil {
 		log.Printf("failed to render error page: %+v", err1)
 	}
 }
 
 func (v *Views) Error404(c echo.Context) error {
-	return v.template.RenderTemplate(c.Response().Writer, nil, templates.NotFound404Template, templates.NoNavType)
+	return v.template.RenderTemplate(c.Response().Writer, nil, templates.NotFound404Template, templates.RegularType)
 }
