@@ -22,8 +22,8 @@ type (
 		Message string
 		// MsgType is the bulma.io class used to indicate what should be displayed
 		MsgType string
-		// Callback is the address to redirect the user to
-		Callback string
+		//// Callback is the address to redirect the user to
+		//Callback string
 		// User is the stored logged-in user
 		User user.User
 	}
@@ -48,7 +48,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 			TitleText: i.TitleText,
 			Message:   i.Message,
 			MsgType:   i.MesType,
-			Callback:  "/internal",
+			//Callback:  "/internal",
 		}
 		return c
 	}
@@ -69,8 +69,8 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		TitleText: i.TitleText,
 		Message:   i.Message,
 		MsgType:   i.MesType,
-		Callback:  "/internal",
-		User:      u,
+		//Callback:  "/internal",
+		User: u,
 	}
 	return c
 }
