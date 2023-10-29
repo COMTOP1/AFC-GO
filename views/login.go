@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	emailParser "github.com/mcnijman/go-emailaddress"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/guregu/null.v4"
 
-	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
 )
 
@@ -23,23 +20,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 	// We're ignoring the error here since sometimes the cookies keys change, and then we
 	// can overwrite it instead, it does need to stay as it is written to here
 
-	switch c.Request().Method {
-	case "GET":
-		// Data for our HTML template
-		context := v.getSessionData(c)
-
-		// Check if there is a callback request
-		callbackURL, err := url.Parse(c.QueryParam("callback"))
-		if err == nil && /*strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName) &&*/ callbackURL.String() != "" {
-			context.Callback = callbackURL.String()
-		}
-		// Check if authenticated
-		if context.User.Authenticated {
-			return c.Redirect(http.StatusFound, context.Callback)
-		}
-
-		return v.template.RenderTemplate(c.Response(), context, templates.LoginTemplate, templates.NoNavType)
-	case "POST":
+	if c.Request().Method == http.MethodPost {
 		// Parsing form to struct
 		email := c.FormValue("email")
 		password := c.FormValue("password")
@@ -48,20 +29,16 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		u.Email = email
 		u.Password = null.StringFrom(password)
 
-		callback := "/internal"
-		callbackURL, err := url.Parse(c.QueryParam("callback"))
-		if err == nil /*&& strings.HasSuffix(callbackURL.Host, v.conf.BaseDomainName)*/ && callbackURL.String() != "" {
-			callback = callbackURL.String()
+		var message struct {
+			Error error `json:"error"`
 		}
+
+		_ = message
+
 		// Authentication
-		u, resetPw, err := v.user.VerifyUser(c.Request().Context(), u)
+		u, resetPw, err := v.user.VerifyUser(c.Request().Context(), u, v.conf.Security.Iterations, v.conf.Security.KeyLength)
 		if err != nil {
-			address, _ := emailParser.Parse(username)
-			if address != nil {
-				u.LDAPUsername = null.StringFrom(address.LocalPart)
-				_, err = v.user.GetUser(c.Request().Context(), u)
-			}
-			log.Printf("failed login for \"%s\": %v", u.Username, err)
+			log.Printf("failed login for \"%s\": %v", u.Email, err)
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
 				return fmt.Errorf("failed to save session for login: %w", err)
@@ -69,7 +46,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 			if resetPw {
 				ctx := v.getSessionData(c)
-				ctx.Callback = callback
+				//ctx.Callback = callback
 				ctx.Message = "Password reset required"
 				ctx.MsgType = "is-danger"
 
@@ -79,12 +56,12 @@ func (v *Views) LoginFunc(c echo.Context) error {
 				}
 
 				url1 := uuid.NewString()
-				v.cache.Set(url1, u.UserID, cache.DefaultExpiration)
+				v.cache.Set(url1, u.ID, cache.DefaultExpiration)
 
-				return c.Redirect(http.StatusFound, fmt.Sprintf("https://%s/reset/%s", v.conf.DomainName, url1))
+				return c.Redirect(http.StatusFound, fmt.Sprintf("https://afcaldermaston.co.uk/reset/%s", url1))
 			}
 			ctx := v.getSessionData(c)
-			ctx.Callback = callback
+			//ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
 			err = v.setMessagesInSession(c, ctx)
@@ -94,15 +71,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 			return c.Redirect(http.StatusFound, "/login")
 		}
-		prevLogin := u.LastLogin
-		// Update last logged in
-		err = v.user.SetUserLoggedIn(c.Request().Context(), u)
-		if err != nil {
-			return fmt.Errorf("failed to set user logged in for login: %w", err)
-		}
 		u.Authenticated = true
-		// This is a bit of a cheat, just so we can have the last login displayed for internal
-		u.LastLogin = prevLogin
 
 		err = v.clearMessagesInSession(c)
 		if err != nil {
@@ -128,8 +97,8 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			return fmt.Errorf("failed to save user session for login: %w", err)
 		}
 
-		log.Printf("user \"%s\" is authenticated", u.Username)
-		return c.Redirect(http.StatusFound, callback)
+		log.Printf("user \"%s\" is authenticated", u.Email)
+		return c.Redirect(http.StatusFound, "/")
 	}
 	return fmt.Errorf("failed to parse method")
 }
