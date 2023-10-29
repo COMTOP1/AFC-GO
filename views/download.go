@@ -51,7 +51,7 @@ func (v *Views) Download(c echo.Context) error {
 			return fmt.Errorf("download failed to get affiliation file name: no file name is present")
 		}
 		return c.Inline("files/"+affiliation.FileName, affiliation.FileName)
-	case "d": //Document
+	case "d": // Document
 		var document document1.Document
 		document, err = v.document.GetDocument(c.Request().Context(), document1.Document{ID: id})
 		if err != nil {
