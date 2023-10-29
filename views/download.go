@@ -44,10 +44,10 @@ func (v *Views) Download(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("download failed to get affiliation: %w", err)
 		}
-		if len(affiliation.FileName) == 0 {
+		if len(affiliation.FileName.String) == 0 || !affiliation.FileName.Valid {
 			return fmt.Errorf("download failed to get affiliation file name: no file name is present")
 		}
-		return c.Inline("files/"+affiliation.FileName, affiliation.FileName)
+		return c.Inline(filepath.Join(v.conf.FileDir, affiliation.FileName.String), affiliation.FileName.String)
 	case "d": // Document
 		var document document1.Document
 		document, err = v.document.GetDocument(c.Request().Context(), document1.Document{ID: id})
@@ -57,37 +57,40 @@ func (v *Views) Download(c echo.Context) error {
 		if len(document.FileName) == 0 {
 			return fmt.Errorf("download failed to get document file name: no file name is present")
 		}
-		return c.Inline("files/"+document.FileName, document.FileName)
+		if len(document.FileName) == 0 {
+			return fmt.Errorf("download failed to get document file name: no file name is present")
+		}
+		return c.Inline(filepath.Join(v.conf.FileDir, document.FileName), document.FileName)
 	case "g": // Gallery
 		var image image1.Image
 		image, err = v.image.GetImage(c.Request().Context(), image1.Image{ID: id})
 		if err != nil {
 			return fmt.Errorf("download failed to get image: %w", err)
 		}
-		if len(image.FileName) == 0 {
+		if len(image.FileName.String) == 0 {
 			return fmt.Errorf("download failed to get image file name: no file name is present")
 		}
-		return c.Inline("files/"+image.FileName, image.FileName)
+		return c.Inline(filepath.Join(v.conf.FileDir, image.FileName.String), image.FileName.String)
 	case "l": // Player
 		var player player1.Player
-		player, err = v.player.GetPlayer(c.Request().Context(), news1.News{ID: id})
+		player, err = v.player.GetPlayer(c.Request().Context(), player1.Player{ID: id})
 		if err != nil {
 			return fmt.Errorf("download failed to get player: %w", err)
 		}
-		if len(player.FileName) == 0 {
+		if len(player.FileName.String) == 0 || !player.FileName.Valid {
 			return fmt.Errorf("download failed to get player file name: no file name is present")
 		}
-		return c.Inline("files/"+player.FileName, player.FileName)
+		return c.Inline(filepath.Join(v.conf.FileDir, player.FileName.String), player.FileName.String)
 	case "n": // News
 		var news news1.News
-		news, err = v.news.GetNews(c.Request().Context(), news1.News{ID: id})
+		news, err = v.news.GetNewsArticle(c.Request().Context(), news1.News{ID: id})
 		if err != nil {
 			return fmt.Errorf("download failed to get news: %w", err)
 		}
-		if len(news.FileName) == 0 {
+		if len(news.FileName.String) == 0 || !news.FileName.Valid {
 			return fmt.Errorf("download failed to get news file name: no file name is present")
 		}
-		return c.Inline("files/"+news.FileName, news.FileName)
+		return c.Inline(filepath.Join(v.conf.FileDir, news.FileName.String), news.FileName.String)
 	case "p": // Programme
 		var programme programme1.Programme
 		programme, err = v.programme.GetProgramme(c.Request().Context(), programme1.Programme{ID: id})
@@ -97,47 +100,47 @@ func (v *Views) Download(c echo.Context) error {
 		if len(programme.FileName) == 0 {
 			return fmt.Errorf("download failed to get programme file name: no file name is present")
 		}
-		return c.Inline("files/"+programme.FileName, programme.FileName)
+		return c.Inline(filepath.Join(v.conf.FileDir, programme.FileName), programme.FileName)
 	case "s": // Sponsor
 		var sponsor sponsor1.Sponsor
 		sponsor, err = v.sponsor.GetSponsor(c.Request().Context(), sponsor1.Sponsor{ID: id})
 		if err != nil {
 			return fmt.Errorf("download failed to get sponsor: %w", err)
 		}
-		if len(sponsor.FileName) == 0 {
+		if len(sponsor.FileName.String) == 0 || !sponsor.FileName.Valid {
 			return fmt.Errorf("download failed to get sponsor file name: no file name is present")
 		}
-		return c.Inline("files/"+sponsor.FileName, sponsor.FileName)
+		return c.Inline(filepath.Join(v.conf.FileDir, sponsor.FileName.String), sponsor.FileName.String)
 	case "t": // Team
 		var team team1.Team
 		team, err = v.team.GetTeam(c.Request().Context(), team1.Team{ID: id})
 		if err != nil {
 			return fmt.Errorf("download failed to get team: %w", err)
 		}
-		if len(team.FileName) == 0 {
+		if len(team.FileName.String) == 0 || !team.FileName.Valid {
 			return fmt.Errorf("download failed to get team file name: no file name is present")
 		}
-		return c.Inline("files/"+team.FileName, team.FileName)
+		return c.Inline(filepath.Join(v.conf.FileDir, team.FileName.String), team.FileName.String)
 	case "u": // User
 		var user user1.User
 		user, err = v.user.GetUser(c.Request().Context(), user1.User{ID: id})
 		if err != nil {
 			return fmt.Errorf("download failed to get user: %w", err)
 		}
-		if len(user.FileName) == 0 {
+		if len(user.FileName.String) == 0 || !user.FileName.Valid {
 			return fmt.Errorf("download failed to get user file name: no file name is present")
 		}
-		return c.Inline("files/"+user.FileName, user.FileName)
+		return c.Inline(filepath.Join(v.conf.FileDir, user.FileName.String), user.FileName.String)
 	case "w": // WhatsOn
 		var whatsOn whatson1.WhatsOn
-		whatsOn, err = v.user.GetUser(c.Request().Context(), whatson1.WhatsOn{ID: id})
+		whatsOn, err = v.whatsOn.GetWhatsOnArticle(c.Request().Context(), whatson1.WhatsOn{ID: id})
 		if err != nil {
 			return fmt.Errorf("download failed to get what's on: %w", err)
 		}
-		if len(whatsOn.FileName) == 0 {
+		if len(whatsOn.FileName.String) == 0 || !whatsOn.FileName.Valid {
 			return fmt.Errorf("download failed to get what's on file name: no file name is present")
 		}
-		return c.Inline("files/"+whatsOn.FileName, whatsOn.FileName)
+		return c.Inline(filepath.Join(v.conf.FileDir, whatsOn.FileName.String), whatsOn.FileName.String)
 	default:
 		return fmt.Errorf("download failed to get source: source format does not conform")
 	}
