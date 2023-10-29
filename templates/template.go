@@ -18,9 +18,6 @@ import (
 var tmpls embed.FS
 
 type Templater struct {
-	//Permission *permission.Store
-	//Role       *role.Store
-	//User       *user.Store
 }
 
 type Template string
@@ -52,17 +49,12 @@ type TemplateType int
 
 const (
 	NoNavType TemplateType = iota
-	PaginationType
 	RegularType
 )
 
 // NewTemplate returns the template format to be used
-func NewTemplate( /*p *permission.Store , r *role.Store, u *user.Store*/ ) *Templater {
-	return &Templater{
-		//Permission: p,
-		//Role:       r,
-		//User:       u,
-	}
+func NewTemplate() *Templater {
+	return &Templater{}
 }
 
 // String returns the string equivalent of Template
@@ -80,10 +72,8 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 	switch templateType {
 	case NoNavType:
 		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_bodyNoNavs.tmpl", "_head.tmpl", "_footer.tmpl", mainTmpl.String())
-	case PaginationType:
-		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", "_pagination.tmpl", mainTmpl.String())
 	case RegularType:
-		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_body.tmpl", "_head.tmpl", "_footer.tmpl", "_navbar.tmpl", "_sidebar.tmpl", mainTmpl.String())
+		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_top.tmpl", "_footer.tmpl", "_logoutModal.tmpl", "_loginModal.tmpl" /*"_navbar.tmpl", "_sidebar.tmpl",*/, mainTmpl.String())
 	default:
 		return fmt.Errorf("unable to parse template, invalid type: %d", templateType)
 	}
@@ -107,6 +97,12 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		},
 		"inc": func(a int) int {
 			return a + 1
+		},
+		"mul": func(a, b int) int {
+			return a * b
+		},
+		"div": func(a, b int) float64 {
+			return float64(a) / float64(b)
 		},
 		"dec": func(a int) int {
 			return a - 1
