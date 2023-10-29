@@ -24,21 +24,18 @@ func (v *Views) Download(c echo.Context) error {
 
 	temp := c.Param("id")
 
-	temp1 := []rune(temp)
-	for _, r2 := range temp1 {
-		if !unicode.IsNumber(r2) {
-			return fmt.Errorf("id expects a positive number, the provided is not a positive number")
-		}
-	}
-	id64, err := strconv.ParseUint(temp, 10, 64)
+	id, err := strconv.Atoi(temp)
 	if err != nil {
-		return fmt.Errorf("download failed to get id: %w", err)
+		return fmt.Errorf("id must be a positive integer: %w", err)
 	}
+
+	if id < 1 {
+		return fmt.Errorf("id must be a positive integer")
+	}
+
 	if len(source) != 1 {
 		return fmt.Errorf("download failed to get source: source format does not conform: %s", source)
 	}
-
-	id := int(id64)
 
 	switch source {
 	case "a": // Affiliation
