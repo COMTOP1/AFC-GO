@@ -32,16 +32,16 @@ func NewNewsRepo(db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) GetNewsS(ctx context.Context) ([]News, error) {
-	return s.getNewsS(ctx)
+func (s *Store) GetNews(ctx context.Context) ([]News, error) {
+	return s.getNews(ctx)
 }
 
 func (s *Store) GetNewsLatest(ctx context.Context) (News, error) {
 	return s.getNewsLatest(ctx)
 }
 
-func (s *Store) GetNews(ctx context.Context, n News) (News, error) {
-	return s.getNews(ctx, n)
+func (s *Store) GetNewsArticle(ctx context.Context, n News) (News, error) {
+	return s.getNewsArticle(ctx, n)
 }
 
 func (s *Store) AddNews(ctx context.Context, n News) (News, error) {

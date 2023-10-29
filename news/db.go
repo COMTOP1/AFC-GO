@@ -10,14 +10,14 @@ import (
 	"github.com/COMTOP1/AFC-GO/utils"
 )
 
-func (s *Store) getNewsS(ctx context.Context) ([]News, error) {
+func (s *Store) getNews(ctx context.Context) ([]News, error) {
 	var n []News
 	builder := sq.Select("id", "title", "image", "file_name", "content", "date").
 		From("afc.news").
 		OrderBy("date DESC")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getNewsS: %w", err))
+		panic(fmt.Errorf("failed to build sql for getNews: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &n, sql, args...)
 	if err != nil {
@@ -49,14 +49,14 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 	return n1, nil
 }
 
-func (s *Store) getNews(ctx context.Context, n News) (News, error) {
+func (s *Store) getNewsArticle(ctx context.Context, n News) (News, error) {
 	var n1 News
 	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date").
 		From("afc.news").
 		Where(sq.Eq{"id": n.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getNews: %w", err))
+		panic(fmt.Errorf("failed to build sql for getNewsArticle: %w", err))
 	}
 	err = s.db.GetContext(ctx, &n1, sql, args...)
 	if err != nil {

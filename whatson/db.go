@@ -11,14 +11,14 @@ import (
 	"github.com/COMTOP1/AFC-GO/utils"
 )
 
-func (s *Store) getWhatsOnS(ctx context.Context) ([]WhatsOn, error) {
+func (s *Store) getWhatsOn(ctx context.Context) ([]WhatsOn, error) {
 	var w []WhatsOn
 	builder := sq.Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getWhatsOns: %w", err))
+		panic(fmt.Errorf("failed to build sql for getWhatsOn: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &w, sql, args...)
 	if err != nil {
@@ -83,14 +83,14 @@ func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 	return w, nil
 }
 
-func (s *Store) getWhatsOn(ctx context.Context, w WhatsOn) (WhatsOn, error) {
+func (s *Store) getWhatsOnArticle(ctx context.Context, w WhatsOn) (WhatsOn, error) {
 	var w1 WhatsOn
 	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.Eq{"id": w.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getWhatsOn: %w", err))
+		panic(fmt.Errorf("failed to build sql for getWhatsOnArticle: %w", err))
 	}
 	err = s.db.GetContext(ctx, &w1, sql, args...)
 	if err != nil {

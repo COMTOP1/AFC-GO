@@ -34,8 +34,8 @@ func NewWhatsOnRepo(db *sqlx.DB) *Store {
 	}
 }
 
-func (s *Store) GetWhatsOnS(ctx context.Context) ([]WhatsOn, error) {
-	return s.getWhatsOnS(ctx)
+func (s *Store) GetWhatsOn(ctx context.Context) ([]WhatsOn, error) {
+	return s.getWhatsOn(ctx)
 }
 
 func (s *Store) GetWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
@@ -50,8 +50,8 @@ func (s *Store) GetWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 	return s.getWhatsOnLatest(ctx)
 }
 
-func (s *Store) GetWhatsOn(ctx context.Context, i WhatsOn) (WhatsOn, error) {
-	return s.getWhatsOn(ctx, i)
+func (s *Store) GetWhatsOnArticle(ctx context.Context, i WhatsOn) (WhatsOn, error) {
+	return s.getWhatsOnArticle(ctx, i)
 }
 
 func (s *Store) AddWhatsOn(ctx context.Context, i WhatsOn) (WhatsOn, error) {
