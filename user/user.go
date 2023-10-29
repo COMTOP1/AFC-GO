@@ -115,7 +115,53 @@ func (s *Store) AddUser(ctx context.Context, u User) (User, error) {
 }
 
 func (s *Store) EditUser(ctx context.Context, u User, emailOld string) (User, error) {
+	user, err := s.GetUser(ctx, u)
+	if err != nil {
+		return u, fmt.Errorf("failed to get user for editUser: %w", err)
+	}
+	if u.Email != user.Email && len(u.Email) > 0 {
+		user.Email = u.Email
+	}
+	if u.Name != user.Name && len(u.Name) > 0 {
+		user.Name = u.Name
+	}
+	if u.Phone != user.Phone && len(u.Phone) > 0 {
+		user.Phone = u.Phone
+	}
+	if u.TeamID.Int64 != user.TeamID.Int64 {
+		user.TeamID = u.TeamID
+	}
+	// TODO add role
+	if u.Image.String != user.Image.String {
+		user.Image = u.Image
+	}
+	if u.FileName.String != user.FileName.String {
+		user.FileName = u.FileName
+	}
+	if u.ResetPassword != user.ResetPassword {
+		user.ResetPassword = u.ResetPassword
+	}
+	_, err = s.editUser(ctx, user, emailOld)
+	if err != nil {
+		return u, fmt.Errorf("failed to edit user: %w", err)
+	}
+	// return nil
+
 	return s.editUser(ctx, u, emailOld)
+}
+
+func (s *Store) EditUserPassword(ctx context.Context, u User, iter, keyLen int) error {
+	user, err := s.GetUser(ctx, u)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+	user.Hash = null.StringFrom(hex.EncodeToString(utils.HashPass([]byte(u.Password.String), []byte(user.Salt.String), iter, keyLen)))
+	user.ResetPassword = false
+	_, err = s.editUser(ctx, user, user.Email)
+	if err != nil {
+		return fmt.Errorf("failed to edit user for editUserPassword: %w", err)
+	}
+	return nil
 }
 
 func (s *Store) DeleteUser(ctx context.Context, u User) error {
