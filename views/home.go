@@ -31,9 +31,6 @@ type (
 
 func (v *Views) HomeFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
-	//page := structs.PageParams{
-	//	MyUtils: myUtils.MyUtils{},
-	//}
 
 	affiliations, err := v.affiliation.GetAffiliationsMinimal(c.Request().Context())
 	if err != nil {
@@ -55,51 +52,24 @@ func (v *Views) HomeFunc(c echo.Context) error {
 		fmt.Println(err)
 	}
 
-	//token, err := r.controller.Access.GetAFCToken(c.Request())
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-
-	//user1, err := r.controller.Session.GetUserByToken(token)
-	//if err != nil {
-	//	if strings.Contains(err.Error(), "invalid token") {
-	//		fmt.Println(err)
-	//	} else {
-	//		fmt.Println(err)
-	//	}
-	//}
-
 	year, _, _ := time.Now().Date()
 
 	_ = c1.User
 
 	data := struct {
-		Year int
-		//GetTime       int64
-		//GetDate       func(Time int64) string
+		Year          int
 		Affiliations  []affiliation.Affiliation
 		Sponsors      []sponsor.Sponsor
 		NewsLatest    NewsTemplate
 		WhatsOnLatest WhatsOnTemplate
 		User          user.User
-		//GetTeamName   func(id uint64) string
 	}{
-		Year: year,
-		//GetTime:       page.MyUtils.GetTime,
-		//GetDate:       page.MyUtils.GetDay,
+		Year:          year,
 		Affiliations:  affiliations,
 		Sponsors:      sponsors,
 		NewsLatest:    DBNewsLatestToTemplateFormat(newsLatest),
 		WhatsOnLatest: DBWhatsOnLatestToTemplateFormat(whatsOnLatest),
 		User:          c1.User,
-		//GetTeamName: func(id uint64) string {
-		//	team, err := v.team.GetTeamById(id)
-		//	if err != nil {
-		//		fmt.Println(err)
-		//		return "TEAM NOT FOUND!"
-		//	}
-		//	return team.Name
-		//},
 	}
 
 	err = v.template.RenderTemplate(c.Response().Writer, data, templates.HomeTemplate, templates.RegularType)
