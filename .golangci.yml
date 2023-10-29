@@ -1,0 +1,21 @@
+linters:
+  presets:
+    - bugs
+    - error
+    - unused
+    - comment
+    - format
+    - import
+    - metalinter
+    - module
+    - performance
+    - sql
+  disable:
+    - wrapcheck
+    - goerr113
+    - depguard
+    - tagalign
+    - godot
+    - gci
+    - gofumpt
+    - musttag

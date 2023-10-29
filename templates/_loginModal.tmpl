@@ -1,0 +1,81 @@
+{{define "loginModal"}}
+    <div id="loginModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Are you sure you want to login?</p>
+                            <form method="post" id="loginModalForm" action="login">
+                                <div class="field">
+                                    <label class="label" for="username">Email</label>
+                                    <div class="control has-icons-left">
+                                        <input
+                                                id="email"
+                                                class="input"
+                                                type="text"
+                                                name="email"
+                                                placeholder="example@example.com"
+                                        />
+                                        <span class="icon is-small is-left"><i class="fa fa-user"></i></span>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="password">Password</label>
+                                    <div class="control has-icons-left">
+                                        <input
+                                                id="password"
+                                                class="input"
+                                                type="password"
+                                                name="password"
+                                                placeholder="********"
+                                        />
+                                        <span class="icon is-small is-left"><i class="fa fa-lock"></i></span>
+                                    </div>
+                                </div>
+                                <a class="button is-danger" onclick="login()" id="loginButton">Login</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function loginModal() {
+            document.getElementById("loginModal").classList.add("is-active");
+        }
+
+        function login() {
+            document.getElementById("loginButton").disabled = true;
+            $.ajax({
+                url: '/login',
+                type: 'post',
+                dataType: 'json',
+                contentType: 'application/x-www-form-urlencoded',
+                data: $('#loginModalForm').serialize(),
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#error").html(data.error);
+                        document.getElementById("email").value = "";
+                        document.getElementById("password").value = "";
+                    } else {
+                        window.location.href = "https://afcaldermaston.co.uk";
+                    }
+                },
+            })
+        }
+        {{/* TODO add change password */}}
+    </script>
+{{end}}

@@ -1,0 +1,93 @@
+{{define "top"}}
+    <div class="topPage">
+        <img class="faImage mainImage" style="float: right; height: 125px; width: 150px;" src="public/facs.jpeg"
+             onerror="this.onerror=null;this.src='public/default.png';"
+             alt="public/default.png">
+        <img class="mainImage" src="public/AFC.png" alt="public/AFC.png"
+             onerror="this.onerror=null;this.src='public/default.png';">
+        <header><h1>AFC ALDERMASTON</h1></header>
+    </div>
+    <nav class="navbar is-danger" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a role="button" class="navbar-burger is-hoverable" aria-label="menu" aria-expanded="false"
+               data-target="navbarBasicExample">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+
+        <div id="navbarBasicExample" class="navbar-menu">
+            <div class="navbar-start">
+                <a class="navbar-item">
+                    Home
+                </a>
+                <a class="navbar-item">
+                    Teams
+                </a>
+                <a class="navbar-item">
+                    News
+                </a>
+                <a class="navbar-item">
+                    What's On
+                </a>
+
+                <a class="navbar-item">
+                    Gallery
+                </a>
+
+                <a class="navbar-item">
+                    Documents
+                </a>
+
+                <a class="navbar-item">
+                    Programmes
+                </a>
+
+                <a class="navbar-item">
+                    Sponsors
+                </a>
+
+                <a class="navbar-item">
+                    Info
+                </a>
+
+                <a class="navbar-item">
+                    Contact
+                </a>
+            </div>
+
+            <div class="navbar-end">
+                {{if and (gt (len .User.Email) 2) (ne .User.Role "Manager")}}
+                    <div class="navbar-item has-dropdown is-hoverable">
+                        <a class="navbar-link">
+                            More
+                        </a>
+
+                        <div class="navbar-dropdown">
+                            <a class="navbar-item">
+                                Users
+                            </a>
+                            <a class="navbar-item">
+                                Players
+                            </a>
+                            <a class="navbar-item">
+                                Account
+                            </a>
+                            <hr class="navbar-divider">
+                            <a class="navbar-item" onclick="logoutModal()">
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                    {{template "logoutModal" .}}
+                {{else}}
+                    <a class="navbar-item" onclick="loginModal()">
+                        Login
+                    </a>
+                    {{template "loginModal" .}}
+                {{end}}
+            </div>
+        </div>
+    </nav>
+{{end}}

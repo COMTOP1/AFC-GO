@@ -1,0 +1,34 @@
+{{define "logoutModal"}}
+    <div id="logoutModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Are you sure you want to logout?</p>
+                            <form method="post" id="logoutModalForm" action="logout">
+                                <button class="button is-danger">Logout</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function logoutModal() {
+            document.getElementById("logoutModal").classList.add("is-active");
+        }
+    </script>
+{{end}}
