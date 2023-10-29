@@ -31,7 +31,7 @@ func (s *Store) getWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
 	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.GtOrEq{"date_of_event": time.Now().UnixMilli()}).
-		OrderBy("name")
+		OrderBy("date_of_event")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getWhatsOnsSeason: %w", err))
@@ -48,7 +48,7 @@ func (s *Store) getWhatsOnPast(ctx context.Context) ([]WhatsOn, error) {
 	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.Lt{"date_of_event": time.Now().UnixMilli()}).
-		OrderBy("name")
+		OrderBy("date_of_event DESC")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getWhatsOnsSeason: %w", err))
