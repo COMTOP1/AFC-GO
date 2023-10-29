@@ -14,7 +14,7 @@ func (s *Store) getNewsS(ctx context.Context) ([]News, error) {
 	var n []News
 	builder := sq.Select("id", "title", "image", "file_name", "content", "date").
 		From("afc.news").
-		OrderBy("id")
+		OrderBy("date DESC")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getNewsS: %w", err))
@@ -30,7 +30,7 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 	temp := make([]News, 1)
 	builder := sq.Select("id", "title", "date").
 		From("afc.news").
-		OrderBy("id DESC").
+		OrderBy("date DESC").
 		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
