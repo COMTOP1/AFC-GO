@@ -30,6 +30,7 @@ type (
 		Role          role.Role
 		Image         null.String `db:"image" json:"image"`
 		FileName      null.String `db:"file_name" json:"file_name"`
+		ResetPassword bool        `db:"reset_password" json:"reset_password"`
 		Password      null.String `db:"password" json:"password"`
 		Hash          null.String `db:"hash" json:"hash"`
 		Salt          null.String `db:"salt" json:"salt"`
@@ -74,6 +75,9 @@ func (s *Store) VerifyUser(ctx context.Context, u User, iter, keyLen int) (User,
 		sha.Write([]byte(u.Password.String))
 		sum := sha.Sum(nil)
 		if bytes.Equal(sum, []byte(user.Password.String)) {
+			if user.ResetPassword {
+				return user, true, fmt.Errorf("password reset required")
+			}
 			saltString, err := utils.GenerateRandom(utils.GenerateSalt)
 			if err != nil {
 				return u, false, fmt.Errorf("failed to generate new salt: %w", err)
@@ -97,6 +101,9 @@ func (s *Store) VerifyUser(ctx context.Context, u User, iter, keyLen int) (User,
 	} else if bytes.Equal(utils.HashPass([]byte(u.Password.String), []byte(user.Salt.String), iter, keyLen), []byte(user.Hash.String)) {
 		user.Hash = null.NewString("", false)
 		user.Salt = null.NewString("", false)
+		if user.ResetPassword {
+			return user, true, fmt.Errorf("password reset required")
+		}
 		return user, false, nil
 	}
 	return u, false, fmt.Errorf("invalid credentials")

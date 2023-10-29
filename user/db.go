@@ -12,7 +12,7 @@ import (
 
 func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 	var u []User
-	builder := sq.Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name").
+	builder := sq.Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name", "reset_password").
 		From("afc.users").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
@@ -62,7 +62,7 @@ func (s *Store) getUsersManagersTeam(ctx context.Context, teamID int) ([]User, e
 
 func (s *Store) getUser(ctx context.Context, u User) (User, error) {
 	var u1 User
-	builder := sq.Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name").
+	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name", "reset_password").
 		From("afc.users").
 		Where(sq.And{sq.Eq{"email": u.Email}, sq.NotEq{"email": ""}},
 			sq.Eq{"id": u.ID})
@@ -79,7 +79,7 @@ func (s *Store) getUser(ctx context.Context, u User) (User, error) {
 
 func (s *Store) getUserFull(ctx context.Context, u User) (User, error) {
 	var u1 User
-	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name", "password", "hash", "salt").
+	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name", "reset_password", "password", "hash", "salt").
 		From("afc.users").
 		Where(sq.And{sq.Eq{"email": u.Email}},
 			sq.Eq{"id": u.ID})
@@ -96,8 +96,8 @@ func (s *Store) getUserFull(ctx context.Context, u User) (User, error) {
 
 func (s *Store) addUser(ctx context.Context, u User) (User, error) {
 	builder := utils.MySQL().Insert("afc.users").
-		Columns("name", "email", "phone", "team_id", "role" /*"image",*/, "file_name").
-		Values(u.Name, u.Email, u.Phone, u.TeamID, u.Role.DBString(), u.Image, u.FileName)
+		Columns("name", "email", "phone", "team_id", "role" /*"image",*/, "file_name", "reset_password", "hash", "salt").
+		Values(u.Name, u.Email, u.Phone, u.TeamID, u.Role.DBString(), u.Image, u.FileName, u.ResetPassword, u.Hash, u.Salt)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addUser: %w", err))
@@ -121,19 +121,19 @@ func (s *Store) addUser(ctx context.Context, u User) (User, error) {
 	return u, nil
 }
 
-func (s *Store) editUser(ctx context.Context, u User) (User, error) {
+func (s *Store) editUser(ctx context.Context, u User, emailOld string) (User, error) {
 	builder := utils.MySQL().Update("afc.users").
 		SetMap(map[string]interface{}{
-			"name":      u.Name,
-			"email":     u.Email,
-			"phone":     u.Phone,
-			"team_id":   u.TeamID,
-			"role":      u.Role.DBString(),
-			"image":     u.Image,
-			"file_name": u.FileName,
-			"password":  u.Password,
-			"hash":      u.Hash,
-			"salt":      u.Salt,
+			"name":           u.Name,
+			"email":          u.Email,
+			"phone":          u.Phone,
+			"team_id":        u.TeamID,
+			"role":           u.Role.DBString(),
+			"file_name":      u.FileName,
+			"reset_password": u.ResetPassword,
+			"password":       u.Password,
+			"hash":           u.Hash,
+			"salt":           u.Salt,
 		}).
 		Where(sq.Eq{"email": emailOld})
 	sql, args, err := builder.ToSql()
