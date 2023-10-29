@@ -172,6 +172,7 @@ func (r *Router) loadRoutes() {
 	base.GET("", r.views.HomeFunc)
 	base.Match(validMethods, "login", r.views.LoginFunc)
 	base.Match(validMethods, "logout", r.views.LogoutFunc, r.views.RequiresLogin)
+	base.Match(validMethods, "download/:source/:id", r.views.Download)
 	//base.Match(validMethods, "signup", r.views.SignUpFunc)
 	//base.Match(validMethods, "forgot", r.views.ForgotFunc)
 	//base.Match(validMethods, "reset/:url", r.views.ResetURLFunc)
