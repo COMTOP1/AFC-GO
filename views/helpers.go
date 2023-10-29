@@ -2,12 +2,17 @@ package views
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
+	"os"
+	"path/filepath"
 	"regexp"
 
 	// importing time zones in case the system doesn't have them
 	_ "time/tzdata"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	"github.com/COMTOP1/AFC-GO/user"
@@ -161,4 +166,58 @@ func minRequirementsMet(password string) (errString string) {
 		}
 	}
 	return errString
+}
+
+func (v *Views) fileUpload(file *multipart.FileHeader) (string, error) {
+	var fileName, fileType string
+	switch file.Header.Get("content-type") {
+	case "application/pdf":
+		fileType = ".pdf"
+		break
+	case "image/apng":
+		fileType = ".apng"
+		break
+	case "image/avif":
+		fileType = ".avif"
+		break
+	case "image/gif":
+		fileType = ".gif"
+		break
+	case "image/jpeg":
+		fileType = ".jpg"
+		break
+	case "image/png":
+		fileType = ".png"
+		break
+	case "image/svg+xml":
+		fileType = ".svg"
+		break
+	case "image/webp":
+		fileType = ".webp"
+		break
+	default:
+		return "", fmt.Errorf("invalid image type: %s", file.Header.Get("content-type"))
+	}
+
+	fileName = uuid.NewString() + fileType
+
+	src, err := file.Open()
+	if err != nil {
+		return "", fmt.Errorf("failed to open file for fileUpload: %w", err)
+	}
+	defer src.Close()
+
+	// Destination
+	dst, err := os.Create(filepath.Join(v.conf.FileDir, fileName))
+	if err != nil {
+		return "", fmt.Errorf("failed to create file for fileUpload: %w", err)
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return "", fmt.Errorf("failed to copy contents to file for fileUpload: %w", err)
+	}
+
+	return fileName, nil
 }
