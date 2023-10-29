@@ -23,7 +23,7 @@ type (
 		Coach       string      `db:"coach" json:"coach"`
 		Physio      null.String `db:"physio" json:"physio"`
 		Image       null.String `db:"team_photo" json:"image"`
-		FileName    string      `db:"file_name" json:"file_name"`
+		FileName    null.String `db:"file_name" json:"file_name"`
 		IsActive    bool        `db:"active" json:"is_active"`
 		IsYouth     bool        `db:"youth" json:"is_youth"`
 		Ages        int         `db:"ages" json:"ages"`

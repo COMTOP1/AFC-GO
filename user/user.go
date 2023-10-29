@@ -20,6 +20,7 @@ type (
 		db *sqlx.DB
 	}
 
+	// User represents relevant user fields
 	User struct {
 		ID            int      `db:"id" json:"id"`
 		Name          string   `db:"name" json:"name"`

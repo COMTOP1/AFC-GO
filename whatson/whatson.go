@@ -14,6 +14,7 @@ type (
 		db *sqlx.DB
 	}
 
+	// WhatsOn represents relevant whatsOn fields
 	WhatsOn struct {
 		ID          int         `db:"id" json:"id"`
 		Title       string      `db:"title" json:"title"`
