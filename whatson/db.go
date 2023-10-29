@@ -35,7 +35,7 @@ func (s *Store) getWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
 		OrderBy("date_of_event")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getWhatsOnsSeason: %w", err))
+		panic(fmt.Errorf("failed to build sql for getWhatsOnFuture: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &w, sql, args...)
 	if err != nil {
@@ -52,7 +52,7 @@ func (s *Store) getWhatsOnPast(ctx context.Context) ([]WhatsOn, error) {
 		OrderBy("date_of_event DESC")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getWhatsOnsSeason: %w", err))
+		panic(fmt.Errorf("failed to build sql for getWhatsOnPast: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &w, sql, args...)
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getWhatsOn: %w", err))
+		panic(fmt.Errorf("failed to build sql for getWhatsOnLatest: %w", err))
 	}
 	err = s.db.GetContext(ctx, &w, sql, args...)
 	if err != nil {

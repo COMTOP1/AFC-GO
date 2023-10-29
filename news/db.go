@@ -34,7 +34,7 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getNews: %w", err))
+		panic(fmt.Errorf("failed to build sql for getNewsLatest: %w", err))
 	}
 	err = s.db.GetContext(ctx, &temp, sql, args...)
 	if err != nil {
