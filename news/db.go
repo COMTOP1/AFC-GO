@@ -3,6 +3,7 @@ package news
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	sq "github.com/Masterminds/squirrel"
 
@@ -37,6 +38,9 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 	}
 	err = s.db.GetContext(ctx, &temp, sql, args...)
 	if err != nil {
+		if strings.Contains(err.Error(), "no rows in result set") {
+			return News{}, nil
+		}
 		return News{}, fmt.Errorf("failed to get news: %w", err)
 	}
 

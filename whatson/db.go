@@ -3,6 +3,7 @@ package whatson
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -73,6 +74,9 @@ func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 	}
 	err = s.db.GetContext(ctx, &w, sql, args...)
 	if err != nil {
+		if strings.Contains(err.Error(), "no rows in result set") {
+			return WhatsOn{}, nil
+		}
 		return WhatsOn{}, fmt.Errorf("failed to get what's on latest: %w", err)
 	}
 
