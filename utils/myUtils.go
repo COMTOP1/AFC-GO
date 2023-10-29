@@ -33,8 +33,8 @@ func (m *MyUtils) GetTime1Day() int64 {
 	return time.Now().Add(24 * time.Hour).Unix()
 }
 
-func (m *MyUtils) GetDay(Time int64) string {
-	timeSet := time.Unix(Time, 0)
+func (m *MyUtils) GetDay(t int64) string {
+	timeSet := time.Unix(t, 0)
 	year, month, day := timeSet.Date()
 	return fmt.Sprintf("%s %d %s %d\n", timeSet.Weekday().String()[:3], day, month.String()[:3], year)
 }
