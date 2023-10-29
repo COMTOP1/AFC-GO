@@ -3,10 +3,11 @@ package utils
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/joho/godotenv"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 const (

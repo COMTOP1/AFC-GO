@@ -2,8 +2,8 @@ package views
 
 import (
 	"fmt"
+	"path/filepath"
 	"strconv"
-	"unicode"
 
 	"github.com/labstack/echo/v4"
 

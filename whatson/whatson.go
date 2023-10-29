@@ -2,9 +2,10 @@ package whatson
 
 import (
 	"context"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
-	"time"
 )
 
 type (

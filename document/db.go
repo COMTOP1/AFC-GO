@@ -3,8 +3,10 @@ package document
 import (
 	"context"
 	"fmt"
-	"github.com/COMTOP1/AFC-GO/utils"
+
 	sq "github.com/Masterminds/squirrel"
+
+	"github.com/COMTOP1/AFC-GO/utils"
 )
 
 func (s *Store) getDocuments(ctx context.Context) ([]Document, error) {

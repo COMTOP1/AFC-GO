@@ -4,12 +4,12 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"fmt"
-	"github.com/COMTOP1/AFC-GO/programme"
+	"log"
+	"time"
+
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
-	"log"
-	"time"
 
 	"github.com/COMTOP1/AFC-GO/affiliation"
 	"github.com/COMTOP1/AFC-GO/document"
@@ -17,6 +17,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/infrastructure/db"
 	"github.com/COMTOP1/AFC-GO/news"
 	"github.com/COMTOP1/AFC-GO/player"
+	"github.com/COMTOP1/AFC-GO/programme"
 	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/sponsor"
 	"github.com/COMTOP1/AFC-GO/team"

@@ -1,15 +1,12 @@
 package main
 
 import (
-	_ "embed"
-	//"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	//"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/views"
 )
 

@@ -3,9 +3,11 @@ package user
 import (
 	"context"
 	"fmt"
-	"github.com/COMTOP1/AFC-GO/utils"
-	sq "github.com/Masterminds/squirrel"
 	"strconv"
+
+	sq "github.com/Masterminds/squirrel"
+
+	"github.com/COMTOP1/AFC-GO/utils"
 )
 
 func (s *Store) getUsers(ctx context.Context) ([]User, error) {

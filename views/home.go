@@ -2,14 +2,16 @@ package views
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/labstack/echo/v4"
+
 	"github.com/COMTOP1/AFC-GO/affiliation"
 	"github.com/COMTOP1/AFC-GO/news"
 	"github.com/COMTOP1/AFC-GO/sponsor"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
 	"github.com/COMTOP1/AFC-GO/whatson"
-	"github.com/labstack/echo/v4"
-	"time"
 )
 
 type (

@@ -3,8 +3,10 @@ package programme
 import (
 	"context"
 	"fmt"
-	"github.com/COMTOP1/AFC-GO/utils"
+
 	sq "github.com/Masterminds/squirrel"
+
+	"github.com/COMTOP1/AFC-GO/utils"
 )
 
 func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {

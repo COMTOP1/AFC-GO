@@ -2,6 +2,7 @@ package affiliation
 
 import (
 	"context"
+
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
 )
