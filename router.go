@@ -166,8 +166,12 @@ func (r *Router) loadRoutes() {
 	//	c.Response().Header().Set("Content-Type", "application/json")
 	//	return c.JSON(http.StatusOK, marshal)
 	//})
-
 	base := r.router.Group("/")
+
+	affiliation := base.Group("/affiliation", r.views.RequiresLogin)
+	affiliation.Match(validMethods, "add", r.views.AffiliationAddFunc)
+	affiliation.Match(validMethods, "delete/:id", r.views.AffiliationDeleteFunc)
+
 	// base is the functions that don't require being logged in
 	base.GET("", r.views.HomeFunc)
 	base.Match(validMethods, "login", r.views.LoginFunc)

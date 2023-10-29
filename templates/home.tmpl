@@ -203,7 +203,7 @@
                         <div class="content">
                             <p class="title">Add Affiliation</p>
                             <p>Enter the affiliation details below.</p>
-                            <form id="addAffiliationForm">
+                            <form id="addAffiliationForm" enctype="multipart/form-data">
                                 <div class="field">
                                     <label class="label" for="name">Name</label>
                                     <div class="control">
@@ -313,17 +313,14 @@
                 url: '/affiliation/add',
                 type: 'post',
                 dataType: 'json',
-                contentType: 'application/x-www-form-urlencoded',
+                contentType: 'multipart/form-data',
                 data: $('#addAffiliationForm').serialize(),
                 success: function (data) {
-                    $("#error").html(data.error);
-                    document.getElementById("firstname").value = "";
-                    document.getElementById("lastname").value = "";
-                    document.getElementById("universityusername").value = "";
-                    document.getElementById("username").value = "";
-                    document.getElementById("email").value = "";
-                    document.getElementById("addUserButton").disabled = false;
-                    document.getElementById("addUserModal").classList.remove("is-active");
+                    if (data.error.length > 0) {
+                        $("#error").html(data.error);
+                    } else {
+                        window.location.href = "https://afcaldermaston.co.uk";
+                    }
                 },
             })
         }
