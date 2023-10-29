@@ -23,9 +23,5 @@ func (v *Views) LogoutFunc(c echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to save session for logout: %w", err)
 	}
-	endpoint := v.conf.LogoutEndpoint
-	if endpoint == "" {
-		endpoint = "/"
-	}
-	return c.Redirect(http.StatusFound, endpoint)
+	return c.Redirect(http.StatusFound, "/")
 }
