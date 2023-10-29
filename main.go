@@ -70,6 +70,20 @@ func main() {
 		log.Fatalf("invalid option for key length: %+v", err)
 	}
 
+	var fileDir string
+
+	stat, err := os.Stat("/FileStore")
+	if err == nil && stat.IsDir() {
+		fileDir = "/FileStore"
+	} else {
+		stat, err = os.Stat("./FileStore")
+		if err == nil && stat.IsDir() {
+			fileDir = "./FileStore"
+		} else {
+			log.Fatalf("failed to get fileStore - isDir: %t, error: %+v", stat.IsDir(), err)
+		}
+	}
+
 	// Generate config
 	conf := &views.Config{
 		Address:     address,
@@ -78,6 +92,7 @@ func main() {
 		//DomainName:        domainName,
 		//LogoutEndpoint:    os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
 		SessionCookieName: sessionCookieName,
+		FileDir:           fileDir,
 		//Mail: views.SMTPConfig{
 		//	Host:       os.Getenv("WAUTH_MAIL_HOST"),
 		//	Username:   os.Getenv("WAUTH_MAIL_USER"),

@@ -34,6 +34,7 @@ type (
 		//DomainName        string
 		//LogoutEndpoint    string
 		SessionCookieName string
+		FileDir           string
 		//Mail              SMTPConfig
 		Security SecurityConfig
 	}
