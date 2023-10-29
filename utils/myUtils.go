@@ -10,12 +10,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const (
-	AttNameConnection = "Q09OTkVDVElPTl9BVFRSSUJVVEU"
-	AttJwtToken       = "SldUX1RPS0VOX0FUVFJJQlVURQ"
-	charset           = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_."
-)
-
 type (
 	MyUtils struct {
 		Test     string
