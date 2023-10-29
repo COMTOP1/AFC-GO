@@ -27,7 +27,7 @@ func (s *Store) getImages(ctx context.Context) ([]Image, error) {
 
 func (s *Store) getImage(ctx context.Context, i Image) (Image, error) {
 	var i1 Image
-	builder := sq.Select("id", "image", "file_name", "caption").
+	builder := utils.MySQL().Select("id", "image", "file_name", "caption").
 		From("afc.images").
 		Where(sq.Eq{"id": i.ID})
 	sql, args, err := builder.ToSql()

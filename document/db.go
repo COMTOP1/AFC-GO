@@ -27,7 +27,7 @@ func (s *Store) getDocuments(ctx context.Context) ([]Document, error) {
 
 func (s *Store) getDocument(ctx context.Context, d Document) (Document, error) {
 	var d1 Document
-	builder := sq.Select("id", "name", "file_name").
+	builder := utils.MySQL().Select("id", "name", "file_name").
 		From("afc.documents").
 		Where(sq.Eq{"id": d.ID})
 	sql, args, err := builder.ToSql()

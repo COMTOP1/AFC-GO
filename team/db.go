@@ -27,7 +27,7 @@ func (s *Store) getTeams(ctx context.Context) ([]Team, error) {
 
 func (s *Store) getTeamsActive(ctx context.Context) ([]Team, error) {
 	var t []Team
-	builder := sq.Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "image", "file_name", "active", "youth", "ages").
+	builder := utils.MySQL().Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "image", "file_name", "active", "youth", "ages").
 		From("afc.teams").
 		Where(sq.Eq{"active": true}).
 		OrderBy("name")
@@ -44,7 +44,7 @@ func (s *Store) getTeamsActive(ctx context.Context) ([]Team, error) {
 
 func (s *Store) getTeam(ctx context.Context, t Team) (Team, error) {
 	var t1 Team
-	builder := sq.Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "image", "file_name", "active", "youth", "ages").
+	builder := utils.MySQL().Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "image", "file_name", "active", "youth", "ages").
 		From("afc.teams").
 		Where(sq.Eq{"id": t.ID})
 	sql, args, err := builder.ToSql()

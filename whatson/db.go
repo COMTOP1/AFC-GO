@@ -28,7 +28,7 @@ func (s *Store) getWhatsOnS(ctx context.Context) ([]WhatsOn, error) {
 
 func (s *Store) getWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
 	var w []WhatsOn
-	builder := sq.Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
+	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.GtOrEq{"date_of_event": time.Now().UnixMilli()}).
 		OrderBy("name")
@@ -45,7 +45,7 @@ func (s *Store) getWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
 
 func (s *Store) getWhatsOnPast(ctx context.Context) ([]WhatsOn, error) {
 	var w []WhatsOn
-	builder := sq.Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
+	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.Lt{"date_of_event": time.Now().UnixMilli()}).
 		OrderBy("name")
@@ -62,7 +62,7 @@ func (s *Store) getWhatsOnPast(ctx context.Context) ([]WhatsOn, error) {
 
 func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 	var w WhatsOn
-	builder := sq.Select("id", "title", "date", "date_of_event").
+	builder := utils.MySQL().Select("id", "title", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.GtOrEq{"date_of_event": time.Now().UnixMilli()}).
 		OrderBy("id DESC").
@@ -81,7 +81,7 @@ func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 
 func (s *Store) getWhatsOn(ctx context.Context, w WhatsOn) (WhatsOn, error) {
 	var w1 WhatsOn
-	builder := sq.Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
+	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.Eq{"id": w.ID})
 	sql, args, err := builder.ToSql()

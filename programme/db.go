@@ -27,7 +27,7 @@ func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {
 
 func (s *Store) getProgrammesSeason(ctx context.Context, seasonID int) ([]Programme, error) {
 	var p []Programme
-	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
+	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programmes").
 		Where(sq.Eq{"programme_season_id": seasonID}).
 		OrderBy("name")
@@ -44,7 +44,7 @@ func (s *Store) getProgrammesSeason(ctx context.Context, seasonID int) ([]Progra
 
 func (s *Store) getProgramme(ctx context.Context, p Programme) (Programme, error) {
 	var p1 Programme
-	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
+	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programmes").
 		Where(sq.Eq{"id": p.ID})
 	sql, args, err := builder.ToSql()
@@ -144,7 +144,7 @@ func (s *Store) getSeasons(ctx context.Context) ([]Season, error) {
 
 func (s *Store) getSeason(ctx context.Context, s1 Season) (Season, error) {
 	var s2 Season
-	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
+	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programme_seasons").
 		Where(sq.Eq{"id": s1.ID})
 	sql, args, err := builder.ToSql()

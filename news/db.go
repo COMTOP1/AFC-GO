@@ -47,7 +47,7 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 
 func (s *Store) getNews(ctx context.Context, n News) (News, error) {
 	var n1 News
-	builder := sq.Select("id", "title", "image", "file_name", "content", "date").
+	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date").
 		From("afc.news").
 		Where(sq.Eq{"id": n.ID})
 	sql, args, err := builder.ToSql()
