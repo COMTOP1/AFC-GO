@@ -72,11 +72,7 @@ func (v *Views) HomeFunc(c echo.Context) error {
 		User:          c1.User,
 	}
 
-	err = v.template.RenderTemplate(c.Response().Writer, data, templates.HomeTemplate, templates.RegularType)
-	if err != nil {
-		fmt.Println(err)
-	}
-	return nil
+	return v.template.RenderTemplate(c.Response().Writer, data, templates.HomeTemplate, templates.RegularType)
 }
 
 func DBNewsLatestToTemplateFormat(newsDB news.News) NewsTemplate {
