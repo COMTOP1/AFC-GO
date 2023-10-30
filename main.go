@@ -80,7 +80,7 @@ func main() {
 		if err == nil && stat.IsDir() {
 			fileDir = "./FileStore"
 		} else {
-			log.Fatalf("failed to get fileStore - isDir: %t, error: %+v", stat.IsDir(), err)
+			log.Fatalf("failed to get fileStore - stat: %+v, error: %+v", stat, err)
 		}
 	}
 
