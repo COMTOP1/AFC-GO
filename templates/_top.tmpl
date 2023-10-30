@@ -58,7 +58,7 @@
             </div>
 
             <div class="navbar-end">
-                {{if and (gt (len .User.Email) 2) (ne .User.Role "Manager")}}
+                {{if and (ne .User.ID 0) (ne .User.Role "Manager")}}
                     <div class="navbar-item has-dropdown is-hoverable">
                         <a class="navbar-link">
                             More
