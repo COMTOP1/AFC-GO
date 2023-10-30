@@ -20,9 +20,9 @@ import (
 )
 
 func (v *Views) Download(c echo.Context) error {
-	source := c.Param("source")
+	source := c.QueryParam("s")
 
-	temp := c.Param("id")
+	temp := c.QueryParam("id")
 
 	id, err := strconv.Atoi(temp)
 	if err != nil {
