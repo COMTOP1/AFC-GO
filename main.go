@@ -20,7 +20,7 @@ func main() {
 	err = godotenv.Overload(".env.local") // Load .env.local
 	local = err == nil
 
-	dbHost := os.Getenv("DB_HOST")
+	dbHost := os.Getenv("DB_HOSTNAME")
 	dbUser := os.Getenv("DB_USERNAME")
 	dbPass := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
