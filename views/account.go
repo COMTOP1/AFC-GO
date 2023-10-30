@@ -1,11 +1,28 @@
 package views
 
 import (
-	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
+
+	"github.com/COMTOP1/AFC-GO/templates"
+	"github.com/COMTOP1/AFC-GO/user"
 )
 
-func (v *Views) Account(c echo.Context) error {
-	return c.JSON(http.StatusOK, "account")
+func (v *Views) AccountFunc(c echo.Context) error {
+	c1 := v.getSessionData(c)
+
+	year, _, _ := time.Now().Date()
+
+	_ = c1.User
+
+	data := struct {
+		Year int
+		User user.User
+	}{
+		Year: year,
+		User: c1.User,
+	}
+
+	return v.template.RenderTemplate(c.Response().Writer, data, templates.AccountTemplate, templates.RegularType)
 }
