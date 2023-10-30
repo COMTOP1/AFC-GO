@@ -20,7 +20,7 @@ type (
 		Image    null.String `db:"image" json:"image"`
 		FileName null.String `db:"file_name" json:"file_name"`
 		Purpose  string      `db:"purpose" json:"purpose"`
-		TeamID   int         `db:"team_id" json:"team_id"`
+		TeamID   string      `db:"team_id" json:"team_id"`
 	}
 )
 
