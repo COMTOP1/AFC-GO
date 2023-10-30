@@ -168,7 +168,7 @@ func (r *Router) loadRoutes() {
 	//})
 	base := r.router.Group("/")
 
-	affiliation := base.Group("/affiliation", r.views.RequiresLogin)
+	affiliation := base.Group("affiliation", r.views.RequiresLogin)
 	affiliation.Match(validMethods, "add", r.views.AffiliationAddFunc)
 	affiliation.Match(validMethods, "delete/:id", r.views.AffiliationDeleteFunc)
 
