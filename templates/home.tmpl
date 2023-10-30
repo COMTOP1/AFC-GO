@@ -115,11 +115,11 @@
         {{if ne .NewsLatest.ID 0}}
             <div class="listItem latest"
                  style="bottom: 0; background-color: white; left: 0; text-align: center; cursor: pointer;"
-                 onclick="location.target='_blank';location.href='news/{{.NewsLatest.ID}}';">
+                 onclick="location.target='_blank';location.href='/news/{{.NewsLatest.ID}}';">
                 Latest from news
-                <img data-src="download/n/{{.NewsLatest.ID}}" alt="public/default.png"
-                     onerror="this.onerror=null;this.src='public/default.png';"
-                     class="latestImage lazy" src="public/AFC.png">
+                <img data-src="/download/n/{{.NewsLatest.ID}}" alt="/public/default.png"
+                     onerror="this.onerror=null;this.src='/public/default.png';"
+                     class="latestImage lazy" src="/public/AFC.png">
                 <span style="margin: 0.83em 0 0.83em 0; display: block; font-size: 1.5em; font-weight: bold;">{{.NewsLatest.Title}}</span>
                 <p style="text-align: left; padding: 10px 10px 10px 0;">{{.NewsLatest.Date}}
                 </p>
@@ -128,11 +128,11 @@
         {{if ne .WhatsOnLatest.ID 0}}
             <div class="listItem latest"
                  style="bottom: 0; background-color: white; left: 190px; text-align: center; cursor: pointer;"
-                 onclick="location.target='_blank';location.href='whatson/{{.WhatsOnLatest.ID}}';">
+                 onclick="location.target='_blank';location.href='/whatson/{{.WhatsOnLatest.ID}}';">
                 Latest from what's on
-                <img data-src="download/w/{{.WhatsOnLatest.ID}}" alt="public/default.png"
-                     onerror="this.onerror=null;this.src='public/default.png';"
-                     class="latestImage lazy" src="public/AFC.png">
+                <img data-src="/download/w/{{.WhatsOnLatest.ID}}" alt="/public/default.png"
+                     onerror="this.onerror=null;this.src='/public/default.png';"
+                     class="latestImage lazy" src="/public/AFC.png">
                 <span style="margin: 0.83em 0 0.83em 0; display: block; font-size: 1.5em; font-weight: bold;">{{.WhatsOnLatest.Title}}</span>
                 <p style="text-align: left; padding: 10px 10px 10px 0;">{{.WhatsOnLatest.Date}}<br>
                     Date of Event - {{.WhatsOnLatest.DateOfEvent}}
@@ -146,16 +146,16 @@
                 {{ $i := 0 }}
                 {{ range .Sponsors }}
                     <a href="{{.Website}}" target="_blank" class="sponsorImage">
-                        <img data-src="download/s/{{.ID}}" alt="public/default.png" src="public/AFC.png"
-                             onerror="this.onerror=null;this.src='public/default.png';"
+                        <img data-src="/download/s/{{.ID}}" alt="/public/default.png" src="/public/AFC.png"
+                             onerror="this.onerror=null;this.src='/public/default.png';"
                              class="{{if eq $i 0}}first {{end}}lazy sponsorImage">
                     </a>
                     {{ $i = inc $i }}
                 {{end}}
                 {{range .Sponsors}}
                     <a href="{{.Website}}" target="_blank" class="sponsorImage">
-                        <img data-src="download/s/{{.ID}}" alt="public/default.png" src="public/AFC.png"
-                             onerror="this.onerror=null;this.src='public/default.png';" class="lazy sponsorImage">
+                        <img data-src="/download/s/{{.ID}}" alt="/public/default.png" src="/public/AFC.png"
+                             onerror="this.onerror=null;this.src='/public/default.png';" class="lazy sponsorImage">
                     </a>
                 {{end}}
             </div>
@@ -169,9 +169,9 @@
                         <div class="imgContainer">
                             {{if .Website.Valid}}
                             <a href="{{.Website}}" target="_blank">{{end}}
-                                <img class="affiliationImage lazy" data-src="download/a/{{.ID}}"
-                                     alt="public/default.png"
-                                     onerror="this.onerror=null;this.src='public/default.png';" src="public/AFC.png">
+                                <img class="affiliationImage lazy" data-src="/download/a/{{.ID}}"
+                                     alt="/public/default.png"
+                                     onerror="this.onerror=null;this.src='/public/default.png';" src="/public/AFC.png">
                                 {{if .Website.Valid}}</a>{{end}}
                             {{if and (gt (len $.User.Email) 2) (ne $.User.Role "Manager")}}
                                 <a class="button is-danger" onclick="deleteAffiliationModal({{.ID}}, '{{.Name}}')"
