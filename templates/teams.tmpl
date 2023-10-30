@@ -2,22 +2,22 @@
 {{define "content"}}
     <main class="main">
             {{range .PageData.Teams}}
-            <div id="listItem" style="text-align: center; width: auto; height: auto;" style="display: block; cursor: pointer;" onclick="location.href='team?id={{ .Id }}';">
+            <div id="listItem" style="text-align: center; width: auto; height: auto;" style="display: block; cursor: pointer;" onclick="location.href='team/{{ .Id }}';">
                 {{ if and (ne $.PageData.User.Id 0) (ne $.PageData.User.Role "Manager")}}
                     {{if .Active}}Active{{else}}Inactive{{end}}<br><br><br>
                 {{end}}
                 {{ .Name }}
                 <br>
                 {{ if and (ne $.PageData.User.Id 0) (ne $.PageData.User.Role "Manager")}}
-                    <p><a href="editteam?id={{ .Id }}">Edit team</a></p><br>
-                    <p><a href="deleteteam?id={{ .Id }}">Delete team</a></p>
+                    <p><a href="/team{{ .Id }}/edit">Edit team</a></p><br>
+                    <p><a href="/team/{{ .Id }}/delete">Delete team</a></p>
                 {{end}}
             </div>
             {{end}}
             <p style="z-index: -1; opacity: 0; float: left; width: 96%;">AFC</p>
             {{ if and (ne $.PageData.User.Id 0) (ne $.PageData.User.Role "Manager")}}
                 <p style="width: 96%;">
-                    <a href="addteam">Add team</a>
+                    <a href="/team/add">Add team</a>
                 </p>
             {{end}}
     </main>
