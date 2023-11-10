@@ -1,0 +1,171 @@
+{{define "title"}}Sponsors{{end}}
+{{define "content"}}
+    {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
+    <main class="main" style="text-align: center;">
+        <div class="affiliationContainer">
+            {{range .Sponsors}}
+                <div class="listItem" style="display: block; cursor: pointer">
+                    {{if .Website.Valid}}<a href="{{.Website.String}}">{{end}}
+                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/default.png"
+                             onerror="this.onerror=null;this.src='/public/default.png';"
+                             class="latestImage lazy" src="/public/AFC.png">
+                        <h2 class="latestTitle">{{.Name}}</h2>
+                        <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose}}
+                        </p>
+                        {{if .Website.Valid}}</a>{{end}}
+                    {{if $priv}}
+                        <br>
+                        <br>
+                        <a class="button is-danger" onclick="deleteSponsorModal({{.ID}}, '{{.Name}}')"
+                           style="margin-bottom: 20px">Delete</a>
+                    {{end}}
+                </div>
+            {{end}}
+        </div>
+        {{if $priv}}
+            <a class="button is-info" onclick="addSponsorModal()"
+               style="text-align: center; margin-bottom: 30px">Add Sponsor</a>
+        {{end}}
+    </main>
+    {{if $priv}}
+        {{template "modal" .}}
+    {{end}}
+{{end}}
+
+{{define "modal"}}
+    <div id="addSponsorModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Add Sponsor</p>
+                            <p>Enter the sponsor details below.</p>
+                            <form id="addSponsorForm" enctype="multipart/form-data">
+                                <div class="field">
+                                    <label class="label" for="title">Title</label>
+                                    <div class="control">
+                                        <input
+                                                id="title"
+                                                class="input"
+                                                type="text"
+                                                name="title"
+                                                placeholder="title"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="content">Content</label>
+                                    <div class="control">
+                                        <textarea class="textarea" placeholder="Content..." rows="10" id="content"
+                                                  name="content"></textarea>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="image">Image</label>
+                                    <div class="file is-info has-name">
+                                        <label class="file-label">
+                                            <input class="file-input" type="file" accept="image/*" name="upload"
+                                                   id="addSponsorUpload">
+                                            <span class="file-cta">
+                                            <span class="file-icon">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            <span class="file-label">Choose a file…</span>
+                                        </span>
+                                            <span class="file-name" id="addSponsorUploadName">...</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <button class="button is-info" onclick="addSponsor()" id="addSponsorButton">
+                                    Add Sponsor
+                                </button>
+                            </form>
+                            <div id="errorParent" style="display: none">
+                                <br><br>
+                                <div class="notification is-danger" id="error"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="deleteSponsorModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="deleteSponsorModalTitle"></p>
+                            <p>Be careful! Are you sure you want to remove this?</p>
+                            <form method="post" id="deleteSponsorModalForm">
+                                <a class="button is-danger" onclick="deleteSponsor()">Delete Sponsor</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        let addSponsorUpload = $('#addSponsorUpload')
+        addSponsorUpload.change(function () {
+            $('#addSponsorUploadName').text(addSponsorUpload[0].files[0].name);
+        });
+
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        let sponsorID = 0;
+
+        function deleteSponsorModal(id, name) {
+            sponsorID = id
+            document.getElementById("deleteSponsorModal").classList.add("is-active");
+            document.getElementById("deleteSponsorModalTitle").innerHTML = 'Are you sure you want to delete "' + name + '" from Sponsor?';
+        }
+
+        function deleteSponsor() {
+            document.getElementById("deleteSponsorModalForm").action = "/sponsor/" + sponsorID + "/delete";
+            $('#deleteSponsorModalForm').submit();
+        }
+
+        function addSponsorModal() {
+            document.getElementById("addSponsorModal").classList.add("is-active");
+        }
+
+        function addSponsor() {
+            document.getElementById("addSponsorButton").disabled = true;
+            let form = $('#addSponsorForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
+            $.ajax({
+                url: '/sponsor/add',
+                type: 'post',
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#error").html(data.error);
+                        document.getElementById("errorParent").style.display = null;
+                    } else {
+                        window.location.href = "/sponsor";
+                    }
+                },
+            })
+        }
+    </script>
+{{end}}
