@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"net/http"
 
@@ -9,6 +10,9 @@ import (
 
 	"github.com/COMTOP1/AFC-GO/views"
 )
+
+//go:embed public/*
+var embeddedFiles embed.FS
 
 type (
 	Router struct {
@@ -57,7 +61,7 @@ func (r *Router) loadRoutes() {
 
 	r.router.HTTPErrorHandler = r.views.CustomHTTPErrorHandler
 
-	assetHandler := http.FileServer(http.Dir("./public/"))
+	assetHandler := http.FileServer(http.FS(echo.MustSubFS(embeddedFiles, "public")))
 
 	r.router.GET("/public/*", echo.WrapHandler(http.StripPrefix("/public/", assetHandler)))
 
