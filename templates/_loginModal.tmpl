@@ -86,6 +86,9 @@
                 contentType: 'application/x-www-form-urlencoded',
                 data: $('#loginModalForm').serialize(),
                 success: function (data) {
+                    {{/*
+                    TODO add a password reset
+                    */}}
                     if (data.error.length > 0) {
                         $("#loginError").html(data.error);
                         document.getElementById("loginErrorParent").style.display = null;
