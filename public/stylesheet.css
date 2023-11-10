@@ -224,8 +224,7 @@ header h1 {
         text-align: center;
     }
 
-    .affiliationContainer {
-        padding: 10px;
+    .flexContainer {
         width: 100%;
         display: inline-flex;
         flex-wrap: wrap;
@@ -333,8 +332,7 @@ header h1 {
         text-align: center;
     }
 
-    .affiliationContainer {
-        padding: 10px;
+    .flexContainer {
         width: 100%;
         display: inline-flex;
         flex-wrap: wrap;
@@ -442,8 +440,7 @@ header h1 {
         text-align: center;
     }
 
-    .affiliationContainer {
-        padding: 10px;
+    .flexContainer {
         width: 100%;
         display: inline-flex;
         flex-wrap: wrap;
@@ -534,8 +531,7 @@ header h1 {
         text-align: center;
     }
 
-    .affiliationContainer {
-        padding: 10px;
+    .flexContainer {
         width: 100%;
         display: inline-flex;
         flex-wrap: wrap;
