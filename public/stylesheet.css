@@ -16,6 +16,17 @@ body {
     background-color: #eee;
 }
 
+.affiliationImageCentre {
+    height: 150px;
+    width: 150px;
+    margin: 5px;
+    align-content: center;
+    align-items: center;
+    vertical-align: middle;
+    display: inline-flex;
+    justify-content: center;
+}
+
 .is-danger {
     background: #fc0f2bff;
 }
@@ -55,7 +66,6 @@ body {
 footer {
     background-size: cover;
     text-align: left;
-    /*font-family: Arial, serif;*/
     bottom: 0;
     padding: 0 0 0 10px;
     position: fixed;
@@ -70,7 +80,6 @@ small > a {
     color: black;
     text-decoration: none;
     letter-spacing: 1px;
-    /*font-family: Arial, serif; !*Allerta*!*/
     z-index: 1;
 }
 
@@ -98,6 +107,16 @@ header h1 {
     margin: 15px 0 15px 0;
 }
 
+.latestTitle {
+    color: #1F1F1F;
+    text-decoration: underline;
+    text-decoration-color: red;
+    font-weight: bold;
+    font-size: 1.125em;
+    margin: 0.83em 0 0.83em 0;
+    display: block;
+}
+
 .welcomeBackground {
     background-image: url('stock.png');
     background-size: cover;
@@ -119,7 +138,20 @@ header h1 {
 
 .sponsorImage {
     width: 350px;
-    max-height: 250px;
+    max-height: 350px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-bottom-width: 20px !important;
+    border-bottom-style: solid !important;
+    border-bottom-color: white;
+}
+
+.sponsorImageCentre {
+    height: 350px;
+    width: 350px;
+    align-content: center;
+    align-items: center;
+    vertical-align: middle;
 }
 
 .socialBar {
@@ -134,7 +166,6 @@ header h1 {
 .fa {
     padding: 20px;
     font-size: 30px;
-    /*width: 30px;*/
     text-align: center;
     text-decoration: none;
     margin: 5px 2px;
@@ -158,6 +189,16 @@ header h1 {
     color: white;
 }
 
+.tile.is-ancestor {
+    margin: 20px 10px 10px 10px;
+}
+
+.tile.is-child.box {
+    border-top: 5px solid red;
+    text-align: center;
+    padding: 15px 5px 15px 5px;
+}
+
 @media screen and (max-width: 299px) {
     .topPage {
         padding: 10px 0 10px 0;
@@ -165,6 +206,10 @@ header h1 {
         overflow: auto;
         height: 220px;
         width: 100%;
+    }
+
+    main {
+        min-height: calc(100vh - (120px + 52px + 220px));
     }
 
     .mainImage {
@@ -204,6 +249,20 @@ header h1 {
     }
 
     .listItem {
+        display: block;
+        padding: 10px;
+        height: auto;
+        width: 200px;
+        margin: 10px;
+        float: left;
+        background-color: white;
+        border-top: 5px solid red;
+        border-radius: 5px;
+        min-width: 150px;
+        box-shadow: 0 .5em 1em -.125em rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .02);
+    }
+
+    .latest {
         display: none;
     }
 
@@ -213,6 +272,9 @@ header h1 {
         width: 300px;
         display: inline-flex;
         flex-wrap: wrap;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     .listItemContact {
@@ -225,10 +287,13 @@ header h1 {
     }
 
     .flexContainer {
+        margin: 10px 0 10px 0;
         width: 100%;
         display: inline-flex;
         flex-wrap: wrap;
         justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     .affiliationImage {
@@ -237,15 +302,21 @@ header h1 {
         display: inline-flex;
         flex-wrap: wrap;
         padding: 5px;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     .imgContainer {
         width: 300px;
         height: 200px;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     header h1 {
-        font-family: Arial, serif; /*Allerta*/
+        font-family: Arial, serif;
         font-style: normal;
         text-align: center;
         font-size: 2em;
@@ -274,6 +345,10 @@ header h1 {
         width: 100%;
     }
 
+    main {
+        min-height: calc(100vh - (120px + 52px + 175px));
+    }
+
     .mainImage {
         max-height: 125px;
         position: absolute;
@@ -312,6 +387,20 @@ header h1 {
     }
 
     .listItem {
+        display: block;
+        padding: 10px;
+        height: auto;
+        width: 200px;
+        margin: 10px;
+        float: left;
+        background-color: white;
+        border-top: 5px solid red;
+        border-radius: 5px;
+        min-width: 150px;
+        box-shadow: 0 .5em 1em -.125em rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .02);
+    }
+
+    .latest {
         display: none;
     }
 
@@ -321,6 +410,9 @@ header h1 {
         width: 300px;
         display: inline-flex;
         flex-wrap: wrap;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     .listItemContact {
@@ -333,6 +425,7 @@ header h1 {
     }
 
     .flexContainer {
+        margin: 10px 0 10px 0;
         width: 100%;
         display: inline-flex;
         flex-wrap: wrap;
@@ -345,15 +438,21 @@ header h1 {
         display: inline-flex;
         flex-wrap: wrap;
         padding: 5px;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     .imgContainer {
         width: 300px;
         height: 200px;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     header h1 {
-        font-family: Arial, serif; /*Allerta*/
+        font-family: Arial, serif;
         font-style: normal;
         text-align: center;
         font-size: 2em;
@@ -383,6 +482,10 @@ header h1 {
         -webkit-box-sizing: border-box;
         -moz-box-sizing: border-box;
         box-sizing: border-box;
+    }
+
+    main {
+        min-height: calc(100vh - (120px + 52px + 145px));
     }
 
     header h1 {
@@ -426,6 +529,9 @@ header h1 {
         width: 300px;
         display: inline-flex;
         flex-wrap: wrap;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     .listItemContact {
@@ -441,6 +547,7 @@ header h1 {
     }
 
     .flexContainer {
+        margin: 10px 0 10px 0;
         width: 100%;
         display: inline-flex;
         flex-wrap: wrap;
@@ -453,11 +560,17 @@ header h1 {
         display: inline-flex;
         flex-wrap: wrap;
         padding: 5px;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     .imgContainer {
         width: 300px;
         height: 200px;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 }
 
@@ -471,6 +584,10 @@ header h1 {
         -webkit-box-sizing: border-box;
         -moz-box-sizing: border-box;
         box-sizing: border-box;
+    }
+
+    main {
+        min-height: calc(100vh - (120px + 52px + 145px));
     }
 
     .mainImage {
@@ -492,7 +609,6 @@ header h1 {
     }
 
     header h2 {
-        /*font-family: Arial, serif; !*Allerta*!*/
         font-style: normal;
         text-align: left;
         font-size: 32px;
@@ -509,29 +625,39 @@ header h1 {
         float: left;
         background-color: white;
         border-top: 5px solid red;
+        border-radius: 5px;
+        min-width: 150px;
+        box-shadow: 0 .5em 1em -.125em rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .02);
     }
 
     .listItemAffiliation {
-        padding: 10px;
-        height: 100px;
-        width: 150px;
+        margin: 0 15px 0 15px;
+        height: 160px;
+        width: 160px;
         display: inline-flex;
         flex-wrap: wrap;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     .listItemContact {
         padding: 10px;
         height: 300px;
-        width: 300px;
+        min-width: 300px;
         display: inline-flex;
         margin: 10px;
         flex-wrap: wrap;
         background-color: white;
         border-top: 5px solid red;
         text-align: center;
+        border-top: 5px solid red;
+        border-radius: 5px;
+        box-shadow: 0 .5em 1em -.125em rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .02);
     }
 
     .flexContainer {
+        margin: 10px 0 10px 0;
         width: 100%;
         display: inline-flex;
         flex-wrap: wrap;
@@ -540,15 +666,19 @@ header h1 {
 
     .affiliationImage {
         max-width: 150px;
-        max-height: 100px;
+        max-height: 150px;
         display: inline-flex;
         flex-wrap: wrap;
-        padding: 5px;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     .imgContainer {
-        width: 300px;
-        height: 200px;
+        width: 160px;
+        justify-content: center;
+        vertical-align: middle;
+        align-items: center;
     }
 
     main {
