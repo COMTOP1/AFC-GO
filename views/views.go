@@ -97,7 +97,7 @@ func New(conf *Config, host string) *Views {
 	v.user = user.NewUserRepo(dbStore)
 	v.whatsOn = whatson.NewWhatsOnRepo(dbStore)
 
-	v.template = templates.NewTemplate()
+	v.template = templates.NewTemplate(v.team)
 
 	// Initialising cache
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)
