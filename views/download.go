@@ -21,7 +21,7 @@ import (
 	whatson1 "github.com/COMTOP1/AFC-GO/whatson"
 )
 
-func (v *Views) Download(c echo.Context) error {
+func (v *Views) DownloadFunc(c echo.Context) error {
 	source := c.QueryParam("s")
 
 	temp := c.QueryParam("id")
