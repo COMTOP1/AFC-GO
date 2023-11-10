@@ -143,15 +143,15 @@
             <div class="photoBanner">
                 {{ $i := 0 }}
                 {{ range .Sponsors }}
-                    <a href="{{.Website}}" target="_blank" class="sponsorImage">
-                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/default.png" src="/public/AFC.png"
-                             onerror="this.onerror=null;this.src='/public/default.png';"
-                             class="{{if eq $i 0}}first {{end}}lazy sponsorImage">
+                    <a href="{{.Website.String}}" target="_blank" class="sponsorImage">
+                            <img data-src="/download?s=s&id={{.ID}}" alt="/public/default.png" src="/public/AFC.png"
+                                 onerror="this.onerror=null;this.src='/public/default.png';"
+                                 class="{{if eq $i 0}}first {{end}}lazy sponsorImage">
                     </a>
                     {{ $i = inc $i }}
                 {{end}}
                 {{range .Sponsors}}
-                    <a href="{{.Website}}" target="_blank" class="sponsorImage">
+                    <a href="{{.Website.String}}" target="_blank" class="sponsorImage">
                         <img data-src="/download?s=s&id={{.ID}}" alt="/public/default.png" src="/public/AFC.png"
                              onerror="this.onerror=null;this.src='/public/default.png';" class="lazy sponsorImage">
                     </a>
@@ -166,10 +166,12 @@
                     <div class="listItemAffiliation">
                         <div class="imgContainer">
                             {{if .Website.Valid}}
-                            <a href="{{.Website}}" target="_blank">{{end}}
-                                <img class="affiliationImage lazy" data-src="/download?s=a&id={{.ID}}"
-                                     alt="/public/default.png"
-                                     onerror="this.onerror=null;this.src='/public/default.png';" src="/public/AFC.png">
+                            <a href="{{.Website.String}}" target="_blank">{{end}}
+                                <div class="affiliationImageCentre">
+                                    <img class="affiliationImage lazy" data-src="/download?s=a&id={{.ID}}"
+                                         alt="/public/default.png"
+                                         onerror="this.onerror=null;this.src='/public/default.png';"
+                                         src="/public/AFC.png"></div>
                                 {{if .Website.Valid}}</a>{{end}}
                             {{if $priv}}
                                 <a class="button is-danger" onclick="deleteAffiliationModal({{.ID}}, '{{.Name}}')"
