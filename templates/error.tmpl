@@ -1,16 +1,10 @@
 {{define "title"}}Error{{end}}
 {{define "content"}}
-    <section class="hero is-fullheight" style="min-height: 95vh">
-        <div class="hero-body">
-            <div class="container">
-                <div class="columns box">
-                    <div class="column">
-                        <h1 class="title">An error occurred</h1>
-                        <h2 class="subtitle">Error code: <code>{{.Code}}</code></h2>
-                        <p>We apologise for the inconvenience but the following error has occurred: <code>{{.Error}}</code></p>
-                    </div>
-                </div>
-            </div>
+    <main>
+        <div class="welcomeBackground">
+            <h2 class="welcomeHeader">An error occurred</h2>
+            <p class="welcome">Error code: <code>{{.Code}}</code><br><br>
+                We apologise for the inconvenience but the following error has occurred: <code>{{.Error}}</code></p>
         </div>
-    </section>
+    </main>
 {{end}}
