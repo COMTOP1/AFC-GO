@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"html/template"
@@ -10,6 +11,7 @@ import (
 
 	role1 "github.com/COMTOP1/AFC-GO/infrastructure/role"
 	"github.com/COMTOP1/AFC-GO/role"
+	"github.com/COMTOP1/AFC-GO/team"
 )
 
 // tmpls are the storage of templates in the executable
@@ -18,6 +20,7 @@ import (
 var tmpls embed.FS
 
 type Templater struct {
+	Team *team.Store
 }
 
 type Template string
@@ -56,8 +59,10 @@ const (
 )
 
 // NewTemplate returns the template format to be used
-func NewTemplate() *Templater {
-	return &Templater{}
+func NewTemplate(team *team.Store) *Templater {
+	return &Templater{
+		Team: team,
+	}
 }
 
 // String returns the string equivalent of Template
@@ -128,37 +133,13 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 			return false
 		},
-		//"getUserModifierField": func(u user.User, atTime null.String, prefix string) template.HTML {
-		//	var s string
-		//	if u.UserID != -1 {
-		//		if len(u.Firstname) == 0 && len(u.Nickname) == 0 && len(u.Lastname) == 0 {
-		//			s = fmt.Sprintf("%s by UNKNOWN(%d) at %s<br>", template.HTMLEscapeString(prefix), u.UserID, template.HTMLEscapeString(atTime.String))
-		//		} else {
-		//			name := formatUserName(u)
-		//			s = fmt.Sprintf("%s by <a href=\"/internal/user/%d\">%s</a> at %s<br>", template.HTMLEscapeString(prefix), u.UserID, template.HTMLEscapeString(name), template.HTMLEscapeString(atTime.String))
-		//		}
-		//	} else if atTime.Valid {
-		//		s = fmt.Sprintf("%s by UNKNOWN at %s<br>", prefix, atTime.String)
-		//	}
-		//	// #nosec
-		//	return template.HTML(s)
-		//},
-		//"formatUserName": func(u user.DetailedUser) (name string) {
-		//	return formatUserName(user.User{
-		//		Firstname: u.Firstname,
-		//		Nickname:  u.Nickname,
-		//		Lastname:  u.Lastname,
-		//	})
-		//},
-		//"formatUserNameUserStruct": formatUserName,
+		"getTeamName": func(teamID int) string {
+			t1, err := t.Team.GetTeam(context.Background(), team.Team{ID: teamID})
+			if err != nil {
+				log.Printf("failed to get team for getTeamName: %+v", err)
+				return ""
+			}
+			return t1.Name
+		},
 	}
 }
-
-//func formatUserName(u user.User) (name string) {
-//	if u.Firstname != u.Nickname {
-//		name = fmt.Sprintf("%s (%s) %s", u.Firstname, u.Nickname, u.Lastname)
-//	} else {
-//		name = fmt.Sprintf("%s %s", u.Firstname, u.Lastname)
-//	}
-//	return name
-//}
