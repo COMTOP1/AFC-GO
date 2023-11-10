@@ -91,6 +91,13 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 
 func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 	_ = c
+	dateOfEvent := c.Request().FormValue("dateOfEvent")
+
+	dateOfEventParsed, err := time.Parse("02/01/2006", dateOfEvent)
+	if err != nil {
+		return fmt.Errorf("failed to parse dateOfEvent: %w", err)
+	}
+	_ = dateOfEventParsed
 	return fmt.Errorf("not implemented yet")
 }
 
