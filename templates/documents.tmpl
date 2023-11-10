@@ -2,7 +2,7 @@
 {{define "content"}}
     {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
     <main class="main" style="text-align: center;">
-        <div class="affiliationContainer">
+        <div class="flexContainer">
             {{range .Documents}}
                 <div class="listItem" style="display: block; cursor: pointer;">
                     <a href="/download?s=d&id={{.ID}}">
