@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Store) getImages(ctx context.Context) ([]Image, error) {
-	var i []Image
+	var imagesDB []Image
 	builder := sq.Select("id", "file_name", "caption").
 		From("afc.images").
 		OrderBy("id")
@@ -18,33 +18,33 @@ func (s *Store) getImages(ctx context.Context) ([]Image, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getImages: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &i, sql, args...)
+	err = s.db.SelectContext(ctx, &imagesDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get images: %w", err)
 	}
-	return i, nil
+	return imagesDB, nil
 }
 
-func (s *Store) getImage(ctx context.Context, i Image) (Image, error) {
-	var i1 Image
+func (s *Store) getImage(ctx context.Context, imageParam Image) (Image, error) {
+	var imageDB Image
 	builder := utils.MySQL().Select("id", "file_name", "caption").
 		From("afc.images").
-		Where(sq.Eq{"id": i.ID})
+		Where(sq.Eq{"id": imageParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getImage: %w", err))
 	}
-	err = s.db.GetContext(ctx, &i1, sql, args...)
+	err = s.db.GetContext(ctx, &imageDB, sql, args...)
 	if err != nil {
 		return Image{}, fmt.Errorf("failed to get image: %w", err)
 	}
-	return i1, nil
+	return imageDB, nil
 }
 
-func (s *Store) addImage(ctx context.Context, i Image) (Image, error) {
+func (s *Store) addImage(ctx context.Context, imageParam Image) (Image, error) {
 	builder := utils.MySQL().Insert("afc.images").
-		Columns("image", "file_name", "caption").
-		Values(i.Image, i.FileName, i.Caption)
+		Columns("file_name", "caption").
+		Values(imageParam.FileName, imageParam.Caption)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addImage: %w", err))
@@ -64,13 +64,13 @@ func (s *Store) addImage(ctx context.Context, i Image) (Image, error) {
 	if err != nil {
 		return Image{}, fmt.Errorf("failed to add image: %w", err)
 	}
-	i.ID = int(id)
-	return i, nil
+	imageParam.ID = int(id)
+	return imageParam, nil
 }
 
-func (s *Store) deleteImage(ctx context.Context, d Image) error {
+func (s *Store) deleteImage(ctx context.Context, imageParam Image) error {
 	builder := utils.MySQL().Delete("afc.images").
-		Where(sq.Eq{"id": d.ID})
+		Where(sq.Eq{"id": imageParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for deleteImage: %w", err))

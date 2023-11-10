@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"github.com/COMTOP1/AFC-GO/team"
 	"strconv"
 
 	sq "github.com/Masterminds/squirrel"
@@ -11,7 +12,7 @@ import (
 )
 
 func (s *Store) getUsers(ctx context.Context) ([]User, error) {
-	var u []User
+	var usersDB []User
 	builder := sq.Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
 		From("afc.users").
 		OrderBy("id")
@@ -19,15 +20,15 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUsers: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &u, sql, args...)
+	err = s.db.SelectContext(ctx, &usersDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
-	return u, nil
+	return usersDB, nil
 }
 
 func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
-	var u []User
+	var usersDB []User
 	builder := sq.Select("id", "name", "email", "role").
 		From("afc.users").
 		Where("role IN ('PROGRAMME_EDITOR', 'LEAGUE_SECRETARY', 'TREASURER', 'SAFEGUARDING_OFFICER', 'CLUB_SECRETARY', 'CHAIRPERSON')").
@@ -36,68 +37,68 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUsersContact: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &u, sql, args...)
+	err = s.db.SelectContext(ctx, &usersDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
-	return u, nil
+	return usersDB, nil
 }
 
-func (s *Store) getUsersManagersTeam(ctx context.Context, teamID int) ([]User, error) {
-	var u []User
+func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) ([]User, error) {
+	var usersDB []User
 	builder := utils.MySQL().Select("id", "name", "file_name").
 		From("afc.users").
-		Where(sq.Eq{"team_id": strconv.FormatUint(uint64(teamID), 10)}).
+		Where(sq.Eq{"team_id": strconv.FormatUint(uint64(teamParam.ID), 10)}).
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUsersManagersTeam: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &u, sql, args...)
+	err = s.db.SelectContext(ctx, &usersDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
-	return u, nil
+	return usersDB, nil
 }
 
-func (s *Store) getUser(ctx context.Context, u User) (User, error) {
-	var u1 User
+func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
+	var userDB User
 	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
 		From("afc.users").
-		Where(sq.And{sq.Eq{"email": u.Email}, sq.NotEq{"email": ""}},
-			sq.Eq{"id": u.ID})
+		Where(sq.Or{sq.Eq{"email": userParam.Email},
+			sq.Eq{"id": userParam.ID}})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUser: %w", err))
 	}
-	err = s.db.GetContext(ctx, &u1, sql, args...)
+	err = s.db.GetContext(ctx, &userDB, sql, args...)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to get user: %w", err)
 	}
-	return u1, nil
+	return userDB, nil
 }
 
-func (s *Store) getUserFull(ctx context.Context, u User) (User, error) {
-	var u1 User
+func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
+	var userDB User
 	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "password", "hash", "salt").
 		From("afc.users").
-		Where(sq.And{sq.Eq{"email": u.Email}},
-			sq.Eq{"id": u.ID})
+		Where(sq.Or{sq.Eq{"email": userParam.Email},
+			sq.Eq{"id": userParam.ID}})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUser: %w", err))
 	}
-	err = s.db.GetContext(ctx, &u1, sql, args...)
+	err = s.db.GetContext(ctx, &userDB, sql, args...)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to get user: %w", err)
 	}
-	return u1, nil
+	return userDB, nil
 }
 
-func (s *Store) addUser(ctx context.Context, u User) (User, error) {
+func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
 	builder := utils.MySQL().Insert("afc.users").
-		Columns("name", "email", "phone", "team_id", "role" /*"image",*/, "file_name", "reset_password", "hash", "salt").
-		Values(u.Name, u.Email, u.Phone, u.TeamID, u.Role.DBString(), u.Image, u.FileName, u.ResetPassword, u.Hash, u.Salt)
+		Columns("name", "email", "phone", "team_id", "role", "file_name", "reset_password", "hash", "salt").
+		Values(userParam.Name, userParam.Email, userParam.Phone, userParam.TeamID, userParam.Role.DBString(), userParam.FileName, userParam.ResetPassword, userParam.Hash, userParam.Salt)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addUser: %w", err))
@@ -117,23 +118,23 @@ func (s *Store) addUser(ctx context.Context, u User) (User, error) {
 	if err != nil {
 		return User{}, fmt.Errorf("failed to add user: %w", err)
 	}
-	u.ID = int(id)
-	return u, nil
+	userParam.ID = int(id)
+	return userParam, nil
 }
 
-func (s *Store) editUser(ctx context.Context, u User, emailOld string) (User, error) {
+func (s *Store) editUser(ctx context.Context, userParam User, emailOld string) (User, error) {
 	builder := utils.MySQL().Update("afc.users").
 		SetMap(map[string]interface{}{
-			"name":           u.Name,
-			"email":          u.Email,
-			"phone":          u.Phone,
-			"team_id":        u.TeamID,
-			"role":           u.Role.DBString(),
-			"file_name":      u.FileName,
-			"reset_password": u.ResetPassword,
-			"password":       u.Password,
-			"hash":           u.Hash,
-			"salt":           u.Salt,
+			"name":           userParam.Name,
+			"email":          userParam.Email,
+			"phone":          userParam.Phone,
+			"team_id":        userParam.TeamID,
+			"role":           userParam.Role.DBString(),
+			"file_name":      userParam.FileName,
+			"reset_password": userParam.ResetPassword,
+			"password":       userParam.Password,
+			"hash":           userParam.Hash,
+			"salt":           userParam.Salt,
 		}).
 		Where(sq.Eq{"email": emailOld})
 	sql, args, err := builder.ToSql()
@@ -151,12 +152,12 @@ func (s *Store) editUser(ctx context.Context, u User, emailOld string) (User, er
 	if rows < 1 {
 		return User{}, fmt.Errorf("failed to edit user: invalid rows affected: %d, this user may not exist: %s", rows, emailOld)
 	}
-	return u, nil
+	return userParam, nil
 }
 
-func (s *Store) deleteUser(ctx context.Context, u User) error {
+func (s *Store) deleteUser(ctx context.Context, userParam User) error {
 	builder := utils.MySQL().Delete("afc.users").
-		Where(sq.Eq{"email": u.Email})
+		Where(sq.Eq{"email": userParam.Email})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for deleteUser: %w", err))

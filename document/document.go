@@ -30,14 +30,14 @@ func (s *Store) GetDocuments(ctx context.Context) ([]Document, error) {
 	return s.getDocuments(ctx)
 }
 
-func (s *Store) GetDocument(ctx context.Context, d Document) (Document, error) {
-	return s.getDocument(ctx, d)
+func (s *Store) GetDocument(ctx context.Context, documentParam Document) (Document, error) {
+	return s.getDocument(ctx, documentParam)
 }
 
-func (s *Store) AddDocument(ctx context.Context, d Document) (Document, error) {
-	return s.addDocument(ctx, d)
+func (s *Store) AddDocument(ctx context.Context, documentParam Document) (Document, error) {
+	return s.addDocument(ctx, documentParam)
 }
 
-func (s *Store) DeleteDocument(ctx context.Context, d Document) error {
-	return s.deleteDocument(ctx, d)
+func (s *Store) DeleteDocument(ctx context.Context, documentParam Document) error {
+	return s.deleteDocument(ctx, documentParam)
 }

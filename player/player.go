@@ -2,6 +2,7 @@ package player
 
 import (
 	"context"
+	"github.com/COMTOP1/AFC-GO/team"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
@@ -36,22 +37,22 @@ func (s *Store) GetPlayers(ctx context.Context) ([]Player, error) {
 	return s.getPlayers(ctx)
 }
 
-func (s *Store) GetPlayersTeam(ctx context.Context, teamID int) ([]Player, error) {
-	return s.getPlayersTeam(ctx, teamID)
+func (s *Store) GetPlayersTeam(ctx context.Context, teamParam team.Team) ([]Player, error) {
+	return s.getPlayersTeam(ctx, teamParam)
 }
 
-func (s *Store) GetPlayer(ctx context.Context, i Player) (Player, error) {
-	return s.getPlayer(ctx, i)
+func (s *Store) GetPlayer(ctx context.Context, playerParam Player) (Player, error) {
+	return s.getPlayer(ctx, playerParam)
 }
 
-func (s *Store) AddPlayer(ctx context.Context, i Player) (Player, error) {
-	return s.addPlayer(ctx, i)
+func (s *Store) AddPlayer(ctx context.Context, playerParam Player) (Player, error) {
+	return s.addPlayer(ctx, playerParam)
 }
 
-func (s *Store) EditPlayer(ctx context.Context, i Player) (Player, error) {
-	return s.editPlayer(ctx, i)
+func (s *Store) EditPlayer(ctx context.Context, playerParam Player) (Player, error) {
+	return s.editPlayer(ctx, playerParam)
 }
 
-func (s *Store) DeletePlayer(ctx context.Context, i Player) error {
-	return s.deletePlayer(ctx, i)
+func (s *Store) DeletePlayer(ctx context.Context, playerParam Player) error {
+	return s.deletePlayer(ctx, playerParam)
 }

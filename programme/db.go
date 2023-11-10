@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {
-	var p []Programme
+	var programmesDB []Programme
 	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programmes").
 		OrderBy("id")
@@ -18,50 +18,50 @@ func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getProgrammes: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql, args...)
+	err = s.db.SelectContext(ctx, &programmesDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get programmes: %w", err)
 	}
-	return p, nil
+	return programmesDB, nil
 }
 
-func (s *Store) getProgrammesSeason(ctx context.Context, seasonID int) ([]Programme, error) {
-	var p []Programme
+func (s *Store) getProgrammesSeason(ctx context.Context, seasonParam Season) ([]Programme, error) {
+	var programmesDB []Programme
 	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programmes").
-		Where(sq.Eq{"programme_season_id": seasonID}).
+		Where(sq.Eq{"programme_season_id": seasonParam.ID}).
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getProgrammesSeason: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql, args...)
+	err = s.db.SelectContext(ctx, &programmesDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get programmes: %w", err)
 	}
-	return p, nil
+	return programmesDB, nil
 }
 
-func (s *Store) getProgramme(ctx context.Context, p Programme) (Programme, error) {
-	var p1 Programme
+func (s *Store) getProgramme(ctx context.Context, programmeParam Programme) (Programme, error) {
+	var programmeDB Programme
 	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programmes").
-		Where(sq.Eq{"id": p.ID})
+		Where(sq.Eq{"id": programmeParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getProgramme: %w", err))
 	}
-	err = s.db.GetContext(ctx, &p1, sql, args...)
+	err = s.db.GetContext(ctx, &programmeDB, sql, args...)
 	if err != nil {
 		return Programme{}, fmt.Errorf("failed to get programme: %w", err)
 	}
-	return p1, nil
+	return programmeDB, nil
 }
 
-func (s *Store) addProgramme(ctx context.Context, p Programme) (Programme, error) {
+func (s *Store) addProgramme(ctx context.Context, programmeParam Programme) (Programme, error) {
 	builder := utils.MySQL().Insert("afc.programmes").
 		Columns("name", "file_name", "date_of_programme", "programme_season_id").
-		Values(p.Name, p.FileName, p.TempDOP, p.SeasonID)
+		Values(programmeParam.Name, programmeParam.FileName, programmeParam.TempDOP, programmeParam.SeasonID)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addProgramme: %w", err))
@@ -81,19 +81,19 @@ func (s *Store) addProgramme(ctx context.Context, p Programme) (Programme, error
 	if err != nil {
 		return Programme{}, fmt.Errorf("failed to add programme: %w", err)
 	}
-	p.ID = int(id)
-	return p, nil
+	programmeParam.ID = int(id)
+	return programmeParam, nil
 }
 
-func (s *Store) editProgramme(ctx context.Context, p Programme) (Programme, error) {
+func (s *Store) editProgramme(ctx context.Context, programmeParam Programme) (Programme, error) {
 	builder := utils.MySQL().Update("afc.programmes").
 		SetMap(map[string]interface{}{
-			"name":                p.Name,
-			"file_name":           p.FileName,
-			"date_of_programme":   p.TempDOP,
-			"programme_season_id": p.SeasonID,
+			"name":                programmeParam.Name,
+			"file_name":           programmeParam.FileName,
+			"date_of_programme":   programmeParam.TempDOP,
+			"programme_season_id": programmeParam.SeasonID,
 		}).
-		Where(sq.Eq{"id": p.ID})
+		Where(sq.Eq{"id": programmeParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for editProgramme: %w", err))
@@ -107,14 +107,14 @@ func (s *Store) editProgramme(ctx context.Context, p Programme) (Programme, erro
 		return Programme{}, fmt.Errorf("failed to edit programme: %w", err)
 	}
 	if rows < 1 {
-		return Programme{}, fmt.Errorf("failed to edit programme: invalid rows affected: %d, this programme may not exist: %d", rows, p.ID)
+		return Programme{}, fmt.Errorf("failed to edit programme: invalid rows affected: %d, this programme may not exist: %d", rows, programmeParam.ID)
 	}
-	return p, nil
+	return programmeParam, nil
 }
 
-func (s *Store) deleteProgramme(ctx context.Context, p Programme) error {
+func (s *Store) deleteProgramme(ctx context.Context, programmeParam Programme) error {
 	builder := utils.MySQL().Delete("afc.programmes").
-		Where(sq.Eq{"id": p.ID})
+		Where(sq.Eq{"id": programmeParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for deleteProgramme: %w", err))
@@ -127,7 +127,7 @@ func (s *Store) deleteProgramme(ctx context.Context, p Programme) error {
 }
 
 func (s *Store) getSeasons(ctx context.Context) ([]Season, error) {
-	var s1 []Season
+	var seasonsDB []Season
 	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programme_seasons").
 		OrderBy("id")
@@ -135,33 +135,33 @@ func (s *Store) getSeasons(ctx context.Context) ([]Season, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getSeasons: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &s1, sql, args...)
+	err = s.db.SelectContext(ctx, &seasonsDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get seasons: %w", err)
 	}
-	return s1, nil
+	return seasonsDB, nil
 }
 
-func (s *Store) getSeason(ctx context.Context, s1 Season) (Season, error) {
-	var s2 Season
+func (s *Store) getSeason(ctx context.Context, seasonParam Season) (Season, error) {
+	var seasonDB Season
 	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programme_seasons").
-		Where(sq.Eq{"id": s1.ID})
+		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getSeason: %w", err))
 	}
-	err = s.db.GetContext(ctx, &s2, sql, args...)
+	err = s.db.GetContext(ctx, &seasonDB, sql, args...)
 	if err != nil {
 		return Season{}, fmt.Errorf("failed to get season: %w", err)
 	}
-	return s2, nil
+	return seasonDB, nil
 }
 
-func (s *Store) addSeason(ctx context.Context, s1 Season) (Season, error) {
+func (s *Store) addSeason(ctx context.Context, seasonParam Season) (Season, error) {
 	builder := utils.MySQL().Insert("afc.programme_seasons").
 		Columns("season").
-		Values(s1.Season)
+		Values(seasonParam.Season)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addSeason: %w", err))
@@ -181,16 +181,16 @@ func (s *Store) addSeason(ctx context.Context, s1 Season) (Season, error) {
 	if err != nil {
 		return Season{}, fmt.Errorf("failed to add season: %w", err)
 	}
-	s1.ID = int(id)
-	return s1, nil
+	seasonParam.ID = int(id)
+	return seasonParam, nil
 }
 
-func (s *Store) editSeason(ctx context.Context, s1 Season) (Season, error) {
+func (s *Store) editSeason(ctx context.Context, seasonParam Season) (Season, error) {
 	builder := utils.MySQL().Update("afc.programme_seasons").
 		SetMap(map[string]interface{}{
-			"season": s1.Season,
+			"season": seasonParam.Season,
 		}).
-		Where(sq.Eq{"id": s1.ID})
+		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for editSeason: %w", err))
@@ -204,14 +204,14 @@ func (s *Store) editSeason(ctx context.Context, s1 Season) (Season, error) {
 		return Season{}, fmt.Errorf("failed to edit season: %w", err)
 	}
 	if rows < 1 {
-		return Season{}, fmt.Errorf("failed to edit season: invalid rows affected: %d, this season may not exist: %d", rows, s1.ID)
+		return Season{}, fmt.Errorf("failed to edit season: invalid rows affected: %d, this season may not exist: %d", rows, seasonParam.ID)
 	}
-	return s1, nil
+	return seasonParam, nil
 }
 
-func (s *Store) deleteSeason(ctx context.Context, s1 Season) error {
+func (s *Store) deleteSeason(ctx context.Context, seasonParam Season) error {
 	builder := utils.MySQL().Delete("afc.programme_seasons").
-		Where(sq.Eq{"id": s1.ID})
+		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for deleteSeason: %w", err))

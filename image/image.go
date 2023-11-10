@@ -31,14 +31,14 @@ func (s *Store) GetImages(ctx context.Context) ([]Image, error) {
 	return s.getImages(ctx)
 }
 
-func (s *Store) GetImage(ctx context.Context, i Image) (Image, error) {
-	return s.getImage(ctx, i)
+func (s *Store) GetImage(ctx context.Context, imageParam Image) (Image, error) {
+	return s.getImage(ctx, imageParam)
 }
 
-func (s *Store) AddAffiliation(ctx context.Context, i Image) (Image, error) {
-	return s.addImage(ctx, i)
+func (s *Store) AddAffiliation(ctx context.Context, imageParam Image) (Image, error) {
+	return s.addImage(ctx, imageParam)
 }
 
-func (s *Store) DeleteAffiliation(ctx context.Context, i Image) error {
-	return s.deleteImage(ctx, i)
+func (s *Store) DeleteAffiliation(ctx context.Context, imageParam Image) error {
+	return s.deleteImage(ctx, imageParam)
 }

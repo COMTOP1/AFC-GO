@@ -11,7 +11,7 @@ import (
 )
 
 func (s *Store) getNews(ctx context.Context) ([]News, error) {
-	var n []News
+	var newsDB []News
 	builder := sq.Select("id", "title", "file_name", "content", "date").
 		From("afc.news").
 		OrderBy("date DESC")
@@ -19,15 +19,15 @@ func (s *Store) getNews(ctx context.Context) ([]News, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getNews: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &n, sql, args...)
+	err = s.db.SelectContext(ctx, &newsDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get news: %w", err)
 	}
-	return n, nil
+	return newsDB, nil
 }
 
 func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
-	temp := make([]News, 1)
+	var newsDB News
 	builder := sq.Select("id", "title", "date").
 		From("afc.news").
 		OrderBy("date DESC").
@@ -36,39 +36,36 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getNewsLatest: %w", err))
 	}
-	err = s.db.GetContext(ctx, &temp, sql, args...)
+	err = s.db.GetContext(ctx, &newsDB, sql, args...)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
 			return News{}, nil
 		}
-		return News{}, fmt.Errorf("failed to get news: %w", err)
+		return News{}, fmt.Errorf("failed to get news latest: %w", err)
 	}
-
-	var n1 News
-	n1 = temp[0]
-	return n1, nil
+	return newsDB, nil
 }
 
-func (s *Store) getNewsArticle(ctx context.Context, n News) (News, error) {
-	var n1 News
+func (s *Store) getNewsArticle(ctx context.Context, newsParam News) (News, error) {
+	var newsDB News
 	builder := utils.MySQL().Select("id", "title", "file_name", "content", "date").
 		From("afc.news").
-		Where(sq.Eq{"id": n.ID})
+		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getNewsArticle: %w", err))
 	}
-	err = s.db.GetContext(ctx, &n1, sql, args...)
+	err = s.db.GetContext(ctx, &newsDB, sql, args...)
 	if err != nil {
-		return News{}, fmt.Errorf("failed to get news: %w", err)
+		return News{}, fmt.Errorf("failed to get news article: %w", err)
 	}
-	return n1, nil
+	return newsDB, nil
 }
 
-func (s *Store) addNews(ctx context.Context, n News) (News, error) {
+func (s *Store) addNews(ctx context.Context, newsParam News) (News, error) {
 	builder := utils.MySQL().Insert("afc.news").
-		Columns("title", "image", "file_name", "content", "date").
-		Values(n.Title, n.Image, n.FileName, n.Content, n.Temp)
+		Columns("title", "file_name", "content", "date").
+		Values(newsParam.Title, newsParam.FileName, newsParam.Content, newsParam.Temp)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addNews: %w", err))
@@ -88,19 +85,19 @@ func (s *Store) addNews(ctx context.Context, n News) (News, error) {
 	if err != nil {
 		return News{}, fmt.Errorf("failed to add news: %w", err)
 	}
-	n.ID = int(id)
-	return n, nil
+	newsParam.ID = int(id)
+	return newsParam, nil
 }
 
-func (s *Store) editNews(ctx context.Context, n News) (News, error) {
+func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
 	builder := utils.MySQL().Update("afc.news").
 		SetMap(map[string]interface{}{
-			"title":     n.Title,
-			"file_name": n.FileName,
-			"content":   n.Content,
-			"date":      n.Temp,
+			"title":     newsParam.Title,
+			"file_name": newsParam.FileName,
+			"content":   newsParam.Content,
+			"date":      newsParam.Temp,
 		}).
-		Where(sq.Eq{"id": n.ID})
+		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for editNews: %w", err))
@@ -114,14 +111,14 @@ func (s *Store) editNews(ctx context.Context, n News) (News, error) {
 		return News{}, fmt.Errorf("failed to edit news: %w", err)
 	}
 	if rows < 1 {
-		return News{}, fmt.Errorf("failed to edit news: invalid rows affected: %d, this news may not exist: %d", rows, n.ID)
+		return News{}, fmt.Errorf("failed to edit news: invalid rows affected: %d, this news may not exist: %d", rows, newsParam.ID)
 	}
-	return n, nil
+	return newsParam, nil
 }
 
-func (s *Store) deleteNews(ctx context.Context, n News) error {
+func (s *Store) deleteNews(ctx context.Context, newsParam News) error {
 	builder := utils.MySQL().Delete("afc.news").
-		Where(sq.Eq{"id": n.ID})
+		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for deleteNews: %w", err))

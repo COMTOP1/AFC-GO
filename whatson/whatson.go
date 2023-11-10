@@ -50,18 +50,18 @@ func (s *Store) GetWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 	return s.getWhatsOnLatest(ctx)
 }
 
-func (s *Store) GetWhatsOnArticle(ctx context.Context, i WhatsOn) (WhatsOn, error) {
-	return s.getWhatsOnArticle(ctx, i)
+func (s *Store) GetWhatsOnArticle(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn, error) {
+	return s.getWhatsOnArticle(ctx, whatsOnParam)
 }
 
-func (s *Store) AddWhatsOn(ctx context.Context, i WhatsOn) (WhatsOn, error) {
-	return s.addWhatsOn(ctx, i)
+func (s *Store) AddWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn, error) {
+	return s.addWhatsOn(ctx, whatsOnParam)
 }
 
-func (s *Store) EditWhatsOn(ctx context.Context, i WhatsOn) (WhatsOn, error) {
-	return s.editWhatsOn(ctx, i)
+func (s *Store) EditWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn, error) {
+	return s.editWhatsOn(ctx, whatsOnParam)
 }
 
-func (s *Store) DeleteWhatsOn(ctx context.Context, i WhatsOn) error {
-	return s.deleteWhatsOn(ctx, i)
+func (s *Store) DeleteWhatsOn(ctx context.Context, whatsOnParam WhatsOn) error {
+	return s.deleteWhatsOn(ctx, whatsOnParam)
 }

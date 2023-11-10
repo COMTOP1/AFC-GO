@@ -36,14 +36,14 @@ func (s *Store) GetAffiliationsMinimal(ctx context.Context) ([]Affiliation, erro
 	return s.getAffiliationsMinimal(ctx)
 }
 
-func (s *Store) GetAffiliation(ctx context.Context, a Affiliation) (Affiliation, error) {
-	return s.getAffiliation(ctx, a)
+func (s *Store) GetAffiliation(ctx context.Context, affiliationParam Affiliation) (Affiliation, error) {
+	return s.getAffiliation(ctx, affiliationParam)
 }
 
-func (s *Store) AddAffiliation(ctx context.Context, a Affiliation) (Affiliation, error) {
-	return s.addAffiliation(ctx, a)
+func (s *Store) AddAffiliation(ctx context.Context, affiliationParam Affiliation) (Affiliation, error) {
+	return s.addAffiliation(ctx, affiliationParam)
 }
 
-func (s *Store) DeleteAffiliation(ctx context.Context, a Affiliation) error {
-	return s.deleteAffiliation(ctx, a)
+func (s *Store) DeleteAffiliation(ctx context.Context, affiliationParam Affiliation) error {
+	return s.deleteAffiliation(ctx, affiliationParam)
 }

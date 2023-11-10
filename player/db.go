@@ -3,6 +3,7 @@ package player
 import (
 	"context"
 	"fmt"
+	"github.com/COMTOP1/AFC-GO/team"
 
 	sq "github.com/Masterminds/squirrel"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func (s *Store) getPlayers(ctx context.Context) ([]Player, error) {
-	var p []Player
+	var playersDB []Player
 	builder := sq.Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("afc.players").
 		OrderBy("id")
@@ -18,50 +19,50 @@ func (s *Store) getPlayers(ctx context.Context) ([]Player, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getPlayers: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql, args...)
+	err = s.db.SelectContext(ctx, &playersDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get player: %w", err)
 	}
-	return p, nil
+	return playersDB, nil
 }
 
-func (s *Store) getPlayersTeam(ctx context.Context, teamID int) ([]Player, error) {
-	var p []Player
+func (s *Store) getPlayersTeam(ctx context.Context, teamParam team.Team) ([]Player, error) {
+	var playersDB []Player
 	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("afc.players").
-		Where(sq.Eq{"team_id": teamID}).
+		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getPlayersTeam: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &p, sql, args...)
+	err = s.db.SelectContext(ctx, &playersDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get player: %w", err)
 	}
-	return p, nil
+	return playersDB, nil
 }
 
-func (s *Store) getPlayer(ctx context.Context, p Player) (Player, error) {
-	var p1 Player
+func (s *Store) getPlayer(ctx context.Context, playerParam Player) (Player, error) {
+	var playerDB Player
 	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("afc.players").
-		Where(sq.Eq{"id": p.ID})
+		Where(sq.Eq{"id": playerParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getPlayer: %w", err))
 	}
-	err = s.db.GetContext(ctx, &p1, sql, args...)
+	err = s.db.GetContext(ctx, &playerDB, sql, args...)
 	if err != nil {
 		return Player{}, fmt.Errorf("failed to get player: %w", err)
 	}
-	return p1, nil
+	return playerDB, nil
 }
 
-func (s *Store) addPlayer(ctx context.Context, p Player) (Player, error) {
+func (s *Store) addPlayer(ctx context.Context, playerParam Player) (Player, error) {
 	builder := utils.MySQL().Insert("afc.players").
-		Columns("name", "image", "file_name", "date_of_birth", "position", "captain", "team_id").
-		Values(p.Name, p.Image, p.FileName, p.TempDOB, p.Position, p.IsCaptain, p.TeamID)
+		Columns("name", "file_name", "date_of_birth", "position", "captain", "team_id").
+		Values(playerParam.Name, playerParam.FileName, playerParam.TempDOB, playerParam.Position, playerParam.IsCaptain, playerParam.TeamID)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addPlayer: %w", err))
@@ -81,21 +82,21 @@ func (s *Store) addPlayer(ctx context.Context, p Player) (Player, error) {
 	if err != nil {
 		return Player{}, fmt.Errorf("failed to add player: %w", err)
 	}
-	p.ID = int(id)
-	return p, nil
+	playerParam.ID = int(id)
+	return playerParam, nil
 }
 
-func (s *Store) editPlayer(ctx context.Context, p Player) (Player, error) {
+func (s *Store) editPlayer(ctx context.Context, playerParam Player) (Player, error) {
 	builder := utils.MySQL().Update("afc.players").
 		SetMap(map[string]interface{}{
-			"name":          p.Name,
-			"file_name":     p.FileName,
-			"date_of_birth": p.TempDOB,
-			"position":      p.Position,
-			"captain":       p.IsCaptain,
-			"team_id":       p.TeamID,
+			"name":          playerParam.Name,
+			"file_name":     playerParam.FileName,
+			"date_of_birth": playerParam.TempDOB,
+			"position":      playerParam.Position,
+			"captain":       playerParam.IsCaptain,
+			"team_id":       playerParam.TeamID,
 		}).
-		Where(sq.Eq{"id": p.ID})
+		Where(sq.Eq{"id": playerParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for editPlayer: %w", err))
@@ -109,14 +110,14 @@ func (s *Store) editPlayer(ctx context.Context, p Player) (Player, error) {
 		return Player{}, fmt.Errorf("failed to edit player: %w", err)
 	}
 	if rows < 1 {
-		return Player{}, fmt.Errorf("failed to edit player: invalid rows affected: %d, this player may not exist: %d", rows, p.ID)
+		return Player{}, fmt.Errorf("failed to edit player: invalid rows affected: %d, this player may not exist: %d", rows, playerParam.ID)
 	}
-	return p, nil
+	return playerParam, nil
 }
 
-func (s *Store) deletePlayer(ctx context.Context, p Player) error {
+func (s *Store) deletePlayer(ctx context.Context, playerParam Player) error {
 	builder := utils.MySQL().Delete("afc.players").
-		Where(sq.Eq{"id": p.ID})
+		Where(sq.Eq{"id": playerParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for deletePlayer: %w", err))

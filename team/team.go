@@ -44,18 +44,18 @@ func (s *Store) GetTeamsActive(ctx context.Context) ([]Team, error) {
 	return s.getTeamsActive(ctx)
 }
 
-func (s *Store) GetTeam(ctx context.Context, t Team) (Team, error) {
-	return s.getTeam(ctx, t)
+func (s *Store) GetTeam(ctx context.Context, teamParam Team) (Team, error) {
+	return s.getTeam(ctx, teamParam)
 }
 
-func (s *Store) AddTeam(ctx context.Context, t Team) (Team, error) {
-	return s.addTeam(ctx, t)
+func (s *Store) AddTeam(ctx context.Context, teamParam Team) (Team, error) {
+	return s.addTeam(ctx, teamParam)
 }
 
-func (s *Store) EditTeam(ctx context.Context, t Team) (Team, error) {
-	return s.editTeam(ctx, t)
+func (s *Store) EditTeam(ctx context.Context, teamParam Team) (Team, error) {
+	return s.editTeam(ctx, teamParam)
 }
 
-func (s *Store) DeleteTeam(ctx context.Context, t Team) error {
-	return s.deleteTeam(ctx, t)
+func (s *Store) DeleteTeam(ctx context.Context, teamParam Team) error {
+	return s.deleteTeam(ctx, teamParam)
 }

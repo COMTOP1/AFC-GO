@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Store) getDocuments(ctx context.Context) ([]Document, error) {
-	var d []Document
+	var documentsDB []Document
 	builder := sq.Select("id", "name", "file_name").
 		From("afc.documents").
 		OrderBy("name")
@@ -18,33 +18,33 @@ func (s *Store) getDocuments(ctx context.Context) ([]Document, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getDocuments: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &d, sql, args...)
+	err = s.db.SelectContext(ctx, &documentsDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get documents: %w", err)
 	}
-	return d, nil
+	return documentsDB, nil
 }
 
-func (s *Store) getDocument(ctx context.Context, d Document) (Document, error) {
-	var d1 Document
+func (s *Store) getDocument(ctx context.Context, documentParam Document) (Document, error) {
+	var documentDB Document
 	builder := utils.MySQL().Select("id", "name", "file_name").
 		From("afc.documents").
-		Where(sq.Eq{"id": d.ID})
+		Where(sq.Eq{"id": documentParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getDocument: %w", err))
 	}
-	err = s.db.GetContext(ctx, &d1, sql, args...)
+	err = s.db.GetContext(ctx, &documentDB, sql, args...)
 	if err != nil {
 		return Document{}, fmt.Errorf("failed to get document: %w", err)
 	}
-	return d1, nil
+	return documentDB, nil
 }
 
-func (s *Store) addDocument(ctx context.Context, d Document) (Document, error) {
+func (s *Store) addDocument(ctx context.Context, documentParam Document) (Document, error) {
 	builder := utils.MySQL().Insert("afc.documents").
 		Columns("name", "file_name").
-		Values(d.Name, d.FileName)
+		Values(documentParam.Name, documentParam.FileName)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addDocument: %w", err))
@@ -64,8 +64,8 @@ func (s *Store) addDocument(ctx context.Context, d Document) (Document, error) {
 	if err != nil {
 		return Document{}, fmt.Errorf("failed to add document: %w", err)
 	}
-	d.ID = int(id)
-	return d, nil
+	documentParam.ID = int(id)
+	return documentParam, nil
 }
 
 func (s *Store) deleteDocument(ctx context.Context, d Document) error {

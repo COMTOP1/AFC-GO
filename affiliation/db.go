@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Store) getAffiliations(ctx context.Context) ([]Affiliation, error) {
-	var a []Affiliation
+	var affiliationsDB []Affiliation
 	builder := sq.Select("id", "name", "website", "file_name").
 		From("afc.affiliations").
 		OrderBy("name")
@@ -18,15 +18,15 @@ func (s *Store) getAffiliations(ctx context.Context) ([]Affiliation, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getAffiliations: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &a, sql, args...)
+	err = s.db.SelectContext(ctx, &affiliationsDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get affiliations: %w", err)
 	}
-	return a, nil
+	return affiliationsDB, nil
 }
 
 func (s *Store) getAffiliationsMinimal(ctx context.Context) ([]Affiliation, error) {
-	var a []Affiliation
+	var affiliationsDB []Affiliation
 	builder := sq.Select("id", "name", "website").
 		From("afc.affiliations").
 		OrderBy("name")
@@ -34,33 +34,33 @@ func (s *Store) getAffiliationsMinimal(ctx context.Context) ([]Affiliation, erro
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getAffiliations: %w", err))
 	}
-	err = s.db.SelectContext(ctx, &a, sql, args...)
+	err = s.db.SelectContext(ctx, &affiliationsDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get affiliations: %w", err)
 	}
-	return a, nil
+	return affiliationsDB, nil
 }
 
-func (s *Store) getAffiliation(ctx context.Context, a Affiliation) (Affiliation, error) {
-	var a1 Affiliation
+func (s *Store) getAffiliation(ctx context.Context, affiliationParam Affiliation) (Affiliation, error) {
+	var affiliationDB Affiliation
 	builder := utils.MySQL().Select("id", "name", "website", "file_name").
 		From("afc.affiliations").
-		Where(sq.Eq{"id": a.ID})
+		Where(sq.Eq{"id": affiliationParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getAffiliation: %w", err))
 	}
-	err = s.db.GetContext(ctx, &a1, sql, args...)
+	err = s.db.GetContext(ctx, &affiliationDB, sql, args...)
 	if err != nil {
 		return Affiliation{}, fmt.Errorf("failed to get affiliation: %w", err)
 	}
-	return a1, nil
+	return affiliationDB, nil
 }
 
-func (s *Store) addAffiliation(ctx context.Context, a Affiliation) (Affiliation, error) {
+func (s *Store) addAffiliation(ctx context.Context, affiliationParam Affiliation) (Affiliation, error) {
 	builder := utils.MySQL().Insert("afc.affiliations").
-		Columns("name", "website", "image", "file_name").
-		Values(a.Name, a.Website, a.Image, a.FileName)
+		Columns("name", "website", "file_name").
+		Values(affiliationParam.Name, affiliationParam.Website, affiliationParam.FileName)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addAffiliation: %w", err))
@@ -80,13 +80,13 @@ func (s *Store) addAffiliation(ctx context.Context, a Affiliation) (Affiliation,
 	if err != nil {
 		return Affiliation{}, fmt.Errorf("failed to add affiliation: %w", err)
 	}
-	a.ID = int(id)
-	return a, nil
+	affiliationParam.ID = int(id)
+	return affiliationParam, nil
 }
 
-func (s *Store) deleteAffiliation(ctx context.Context, a Affiliation) error {
+func (s *Store) deleteAffiliation(ctx context.Context, affiliationParam Affiliation) error {
 	builder := utils.MySQL().Delete("afc.affiliations").
-		Where(sq.Eq{"id": a.ID})
+		Where(sq.Eq{"id": affiliationParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for deleteAffiliation: %w", err))

@@ -39,42 +39,42 @@ func (s *Store) GetProgrammes(ctx context.Context) ([]Programme, error) {
 	return s.getProgrammes(ctx)
 }
 
-func (s *Store) GetProgrammesSeason(ctx context.Context, seasonID int) ([]Programme, error) {
-	return s.getProgrammesSeason(ctx, seasonID)
+func (s *Store) GetProgrammesSeason(ctx context.Context, seasonParam Season) ([]Programme, error) {
+	return s.getProgrammesSeason(ctx, seasonParam)
 }
 
-func (s *Store) GetProgramme(ctx context.Context, p Programme) (Programme, error) {
-	return s.getProgramme(ctx, p)
+func (s *Store) GetProgramme(ctx context.Context, programmeParam Programme) (Programme, error) {
+	return s.getProgramme(ctx, programmeParam)
 }
 
-func (s *Store) AddProgramme(ctx context.Context, p Programme) (Programme, error) {
-	return s.addProgramme(ctx, p)
+func (s *Store) AddProgramme(ctx context.Context, programmeParam Programme) (Programme, error) {
+	return s.addProgramme(ctx, programmeParam)
 }
 
-func (s *Store) EditProgramme(ctx context.Context, p Programme) (Programme, error) {
-	return s.editProgramme(ctx, p)
+func (s *Store) EditProgramme(ctx context.Context, programmeParam Programme) (Programme, error) {
+	return s.editProgramme(ctx, programmeParam)
 }
 
-func (s *Store) DeleteProgramme(ctx context.Context, p Programme) error {
-	return s.deleteProgramme(ctx, p)
+func (s *Store) DeleteProgramme(ctx context.Context, programmeParam Programme) error {
+	return s.deleteProgramme(ctx, programmeParam)
 }
 
 func (s *Store) GetSeasons(ctx context.Context) ([]Season, error) {
 	return s.getSeasons(ctx)
 }
 
-func (s *Store) GetSeason(ctx context.Context, s1 Season) (Season, error) {
-	return s.getSeason(ctx, s1)
+func (s *Store) GetSeason(ctx context.Context, seasonParam Season) (Season, error) {
+	return s.getSeason(ctx, seasonParam)
 }
 
-func (s *Store) AddSeason(ctx context.Context, s1 Season) (Season, error) {
-	return s.addSeason(ctx, s1)
+func (s *Store) AddSeason(ctx context.Context, seasonParam Season) (Season, error) {
+	return s.addSeason(ctx, seasonParam)
 }
 
-func (s *Store) EditSeason(ctx context.Context, s1 Season) (Season, error) {
-	return s.editSeason(ctx, s1)
+func (s *Store) EditSeason(ctx context.Context, seasonParam Season) (Season, error) {
+	return s.editSeason(ctx, seasonParam)
 }
 
-func (s *Store) DeleteSeason(ctx context.Context, s1 Season) error {
-	return s.deleteSeason(ctx, s1)
+func (s *Store) DeleteSeason(ctx context.Context, seasonParam Season) error {
+	return s.deleteSeason(ctx, seasonParam)
 }

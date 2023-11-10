@@ -2,6 +2,7 @@ package sponsor
 
 import (
 	"context"
+	"github.com/COMTOP1/AFC-GO/team"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
@@ -38,22 +39,22 @@ func (s *Store) GetSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
 	return s.getSponsorsMinimal(ctx)
 }
 
-func (s *Store) GetSponsorsTeam(ctx context.Context, teamID string) ([]Sponsor, error) {
-	return s.getSponsorsTeam(ctx, teamID)
+func (s *Store) GetSponsorsTeam(ctx context.Context, teamParam team.Team) ([]Sponsor, error) {
+	return s.getSponsorsTeam(ctx, teamParam)
 }
 
-func (s *Store) GetSponsor(ctx context.Context, s1 Sponsor) (Sponsor, error) {
-	return s.getSponsor(ctx, s1)
+func (s *Store) GetSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, error) {
+	return s.getSponsor(ctx, sponsorParam)
 }
 
-func (s *Store) AddSponsor(ctx context.Context, s1 Sponsor) (Sponsor, error) {
-	return s.addSponsor(ctx, s1)
+func (s *Store) AddSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, error) {
+	return s.addSponsor(ctx, sponsorParam)
 }
 
-func (s *Store) EditSponsor(ctx context.Context, s1 Sponsor) (Sponsor, error) {
-	return s.editSponsor(ctx, s1)
+func (s *Store) EditSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, error) {
+	return s.editSponsor(ctx, sponsorParam)
 }
 
-func (s *Store) DeleteSponsor(ctx context.Context, s1 Sponsor) error {
-	return s.deleteSponsor(ctx, s1)
+func (s *Store) DeleteSponsor(ctx context.Context, sponsorParam Sponsor) error {
+	return s.deleteSponsor(ctx, sponsorParam)
 }
