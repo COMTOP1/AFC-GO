@@ -115,8 +115,8 @@
                  style="bottom: 0; background-color: white; left: 0; text-align: center; cursor: pointer;"
                  onclick="location.target='_blank';location.href='/news/{{.NewsLatest.ID}}';">
                 Latest from news
-                <img data-src="/download?s=n&id={{.NewsLatest.ID}}" alt="/public/default.png"
-                     onerror="this.onerror=null;this.src='/public/default.png';"
+                <img data-src="/download?s=n&id={{.NewsLatest.ID}}" alt="/public/AFC.png"
+                     onerror="this.onerror=null;this.src='/public/AFC.png';"
                      class="latestImage lazy" src="/public/AFC.png">
                 <h2 class="latestTitle">{{.NewsLatest.Title}}</h2>
                 <p style="text-align: left; padding: 10px 10px 10px 0;">{{.NewsLatest.Date}}
@@ -127,9 +127,9 @@
             <div class="listItem latest"
                  style="bottom: 0; background-color: white; left: 190px; text-align: center; cursor: pointer;"
                  onclick="location.target='_blank';location.href='/whatson/{{.WhatsOnLatest.ID}}';">
-                <img data-src="/download?s=w&id={{.WhatsOnLatest.ID}}" alt="/public/default.png"
-                     onerror="this.onerror=null;this.src='/public/default.png';"
                 Coming next from what's on
+                <img data-src="/download?s=w&id={{.WhatsOnLatest.ID}}" alt="/public/AFC.png"
+                     onerror="this.onerror=null;this.src='/public/AFC.png';"
                      class="latestImage lazy" src="/public/AFC.png">
                 <h2 class="latestTitle">{{.WhatsOnLatest.Title}}</h2>
                 <p style="text-align: left; padding: 10px 10px 10px 0;">{{.WhatsOnLatest.Date}}<br>
@@ -145,8 +145,8 @@
                 {{ range .Sponsors }}
                     <a href="{{.Website.String}}" target="_blank" class="sponsorImage">
 {{/*                        <div class="sponsorImageCentre">*/}}
-                            <img data-src="/download?s=s&id={{.ID}}" alt="/public/default.png" src="/public/AFC.png"
-                                 onerror="this.onerror=null;this.src='/public/default.png';"
+                            <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png" src="/public/AFC.png"
+                                 onerror="this.onerror=null;this.src='/public/AFC.png';"
                                  class="{{if eq $i 0}}first {{end}}lazy sponsorImage">
 {{/*                        </div>*/}}
                     </a>
@@ -154,8 +154,8 @@
                 {{end}}
                 {{range .Sponsors}}
                     <a href="{{.Website.String}}" target="_blank" class="sponsorImage">
-                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/default.png" src="/public/AFC.png"
-                             onerror="this.onerror=null;this.src='/public/default.png';" class="lazy sponsorImage">
+                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png" src="/public/AFC.png"
+                             onerror="this.onerror=null;this.src='/public/AFC.png';" class="lazy sponsorImage">
                     </a>
                 {{end}}
             </div>
@@ -171,8 +171,8 @@
                             <a href="{{.Website.String}}" target="_blank">{{end}}
                                 <div class="affiliationImageCentre">
                                     <img class="affiliationImage lazy" data-src="/download?s=a&id={{.ID}}"
-                                         alt="/public/default.png"
-                                         onerror="this.onerror=null;this.src='/public/default.png';"
+                                         alt="/public/AFC.png"
+                                         onerror="this.onerror=null;this.src='/public/AFC.png';"
                                          src="/public/AFC.png"></div>
                                 {{if .Website.Valid}}</a>{{end}}
                             {{if $priv}}

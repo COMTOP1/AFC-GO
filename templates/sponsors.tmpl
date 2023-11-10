@@ -6,8 +6,8 @@
             {{range .Sponsors}}
                 <div class="listItem" style="display: block; cursor: pointer">
                     {{if .Website.Valid}}<a href="{{.Website.String}}">{{end}}
-                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/default.png"
-                             onerror="this.onerror=null;this.src='/public/default.png';"
+                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png"
+                             onerror="this.onerror=null;this.src='/public/AFC.png';"
                              class="latestImage lazy" src="/public/AFC.png">
                         <h2 class="latestTitle">{{.Name}}</h2>
                         <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose}}
