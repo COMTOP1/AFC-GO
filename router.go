@@ -2,7 +2,9 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -69,19 +71,98 @@ func (r *Router) loadRoutes() {
 
 	base := r.router.Group("/")
 
-	affiliation := base.Group("affiliation", r.views.RequiresLogin)
-	affiliation.Match(validMethods, "add", r.views.AffiliationAddFunc)
-	affiliation.Match(validMethods, "delete/:id", r.views.AffiliationDeleteFunc)
+	base.GET("api/health", func(c echo.Context) error {
+		marshal, err := json.Marshal(struct {
+			Status int `json:"status"`
+		}{
+			Status: http.StatusOK,
+		})
+		if err != nil {
+			log.Println(err)
+			return &echo.HTTPError{
+				Code:     http.StatusBadRequest,
+				Message:  err.Error(),
+				Internal: err,
+			}
+		}
+
+		c.Response().Header().Set("Content-Type", "application/json")
+		return c.JSON(http.StatusOK, marshal)
+	})
 
 	// base is the functions that don't require being logged in
 	base.GET("", r.views.HomeFunc)
-	base.Match(validMethods, "login", r.views.LoginFunc)
-	base.Match(validMethods, "logout", r.views.LogoutFunc, r.views.RequiresLogin)
-	base.Match(validMethods, "download", r.views.Download)
+
+	affiliation := base.Group("affiliation", r.views.RequiresLogin, r.views.RequireNotManager)
+	affiliation.Match(validMethods, "/add", r.views.AffiliationAddFunc)
+	affiliation.Match(validMethods, "/:id/delete", r.views.AffiliationDeleteFunc)
+
 	base.Match(validMethods, "account", r.views.AccountFunc, r.views.RequiresLogin)
 	base.Match(validMethods, "contact", r.views.ContactFunc)
+	base.Match(validMethods, "documents", r.views.DocumentsFunc)
+
+	document := base.Group("document", r.views.RequiresLogin, r.views.RequireNotManager)
+	document.Match(validMethods, "/add", r.views.DocumentAddFunc)
+	document.Match(validMethods, "/:id/delete", r.views.DocumentDeleteFunc)
+
+	base.Match(validMethods, "download", r.views.DownloadFunc)
+	base.Match(validMethods, "gallery", r.views.GalleryFunc)
+
+	image := base.Group("image", r.views.RequiresLogin, r.views.RequireNotManager)
+	image.Match(validMethods, "/add", r.views.DocumentAddFunc)
+	image.Match(validMethods, "/:id/delete", r.views.DocumentDeleteFunc)
+
 	base.Match(validMethods, "info", r.views.InfoFunc)
-	//base.Match(validMethods, "signup", r.views.SignUpFunc)
-	//base.Match(validMethods, "forgot", r.views.ForgotFunc)
-	//base.Match(validMethods, "reset/:url", r.views.ResetURLFunc)
+
+	news := base.Group("news")
+	news.Match(validMethods, "/add", r.views.NewsAddFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	newsID := news.Group("/:id")
+	newsID.Match(validMethods, "/edit", r.views.NewsEditFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	newsID.Match(validMethods, "/delete", r.views.NewsDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	newsID.Match(validMethods, "", r.views.NewsArticleFunc)
+	news.Match(validMethods, "", r.views.NewsFunc)
+
+	base.Match(validMethods, "programmes", r.views.ProgrammesFunc)
+	base.Match(validMethods, "sponsors", r.views.SponsorsFunc)
+
+	sponsor := base.Group("sponsor", r.views.RequiresLogin, r.views.RequireNotManager)
+	sponsor.Match(validMethods, "/add", r.views.SponsorAddFunc)
+	sponsor.Match(validMethods, "/:id/delete", r.views.SponsorDeleteFunc)
+
+	base.Match(validMethods, "teams", r.views.TeamsFunc)
+
+	team := base.Group("team")
+	team.Match(validMethods, "/add", r.views.TeamAddFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	teamID := team.Group("/:id")
+	teamID.Match(validMethods, "/edit", r.views.TeamEditFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	teamID.Match(validMethods, "/delete", r.views.TeamDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	teamID.Match(validMethods, "", r.views.TeamFunc)
+
+	whatson := base.Group("whatson")
+	whatson.Match(validMethods, "/add", r.views.WhatsOnAddFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	whatsonID := whatson.Group("/:id")
+	whatsonID.Match(validMethods, "/edit", r.views.WhatsOnEditFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	whatsonID.Match(validMethods, "/delete", r.views.WhatsOnDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	whatsonID.Match(validMethods, "", r.views.WhatsOnArticleFunc)
+	whatson.Match(validMethods, "", r.views.WhatsOnFunc)
+
+	base.Match(validMethods, "login", r.views.LoginFunc)
+
+	base.Match(validMethods, "players", r.views.PlayersFunc, r.views.RequiresLogin)
+
+	player := base.Group("player", r.views.RequiresLogin, r.views.RequireNotManager)
+	player.Match(validMethods, "/add", r.views.PlayerAddFunc)
+	playerID := player.Group("/:id")
+	playerID.Match(validMethods, "/edit", r.views.PlayerEditFunc)
+	playerID.Match(validMethods, "/delete", r.views.PlayerDeleteFunc)
+
+	base.Match(validMethods, "users", r.views.UsersFunc, r.views.RequiresLogin, r.views.RequireClubSecretaryHigher)
+
+	user := base.Group("user", r.views.RequiresLogin, r.views.RequireClubSecretaryHigher)
+	user.Match(validMethods, "/add", r.views.UserAddFunc)
+	userID := user.Group("/:id")
+	userID.Match(validMethods, "/edit", r.views.UserEditFunc)
+	userID.Match(validMethods, "/delete", r.views.UserDeleteFunc)
+
+	base.Match(validMethods, "logout", r.views.LogoutFunc, r.views.RequiresLogin)
 }
