@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
+	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/user"
 )
 
@@ -27,8 +28,6 @@ type (
 		Message string
 		// MsgType is the bulma.io class used to indicate what should be displayed
 		MsgType string
-		//// Callback is the address to redirect the user to
-		//Callback string
 		// User is the stored logged-in user
 		User user.User
 	}
@@ -63,6 +62,18 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 	u, ok := userValue.(user.User)
 	if !ok {
 		u = user.User{Authenticated: false}
+	} else {
+		if len(u.TempRole) > 0 {
+			u.Role, err = role.GetRole(u.TempRole)
+			if err != nil {
+				log.Printf("failed to get role for getSessionData: %+v", err)
+			}
+		} else {
+			u.Role, err = role.GetRole(string(u.Role))
+			if err != nil {
+				log.Printf("failed to get role for getSessionData: %+v", err)
+			}
+		}
 	}
 
 	internalValue := session.Values["internalContext"]
@@ -112,20 +123,20 @@ func (v *Views) clearMessagesInSession(eC echo.Context) error {
 	return nil
 }
 
-// removeDuplicates removes all duplicate permissions
-func removeDuplicate(strSlice []string) []string {
-	allKeys := make(map[string]bool)
-	var list []string
-	for _, item := range strSlice {
-		if _, value := allKeys[item]; !value {
-			allKeys[item] = true
-			//if _, value := allKeys[item.PermissionID]; !value {
-			//	allKeys[item.PermissionID] = true
-			list = append(list, item)
-		}
-	}
-	return list
-}
+//// removeDuplicates removes all duplicate permissions
+// func removeDuplicate(strSlice []string) []string {
+//	allKeys := make(map[string]bool)
+//	var list []string
+//	for _, item := range strSlice {
+//		if _, value := allKeys[item]; !value {
+//			allKeys[item] = true
+//			//if _, value := allKeys[item.PermissionID]; !value {
+//			//	allKeys[item.PermissionID] = true
+//			list = append(list, item)
+//		}
+//	}
+//	return list
+//}
 
 // minRequirementsMet tests if the password meets the minimum requirements
 func minRequirementsMet(password string) (errString string) {
