@@ -248,6 +248,10 @@
                                     Add Affiliation
                                 </button>
                             </form>
+                            <div id="errorParent" style="display: none">
+                                <br><br>
+                                <div class="notification is-danger" id="error"></div>
+                            </div>
                         </div>
                     </div>
                 </article>
@@ -275,10 +279,9 @@
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
     <script>
-        $('#addAffiliationImage').change(function () {
-            console.log("call")
-            console.log($('#addAffiliationImage')[0].files[0].name)
-            $('#addAffiliationImageName').text($('#addAffiliationImage')[0].files[0].name);
+        let addAffiliationImage = $('#addAffiliationImage')
+        addAffiliationImage.change(function () {
+            $('#addAffiliationImageName').text(addAffiliationImage[0].files[0].name);
         });
 
         document.querySelectorAll(
@@ -309,17 +312,24 @@
 
         function addAffiliation() {
             document.getElementById("addAffiliationButton").disabled = true;
+            let form = $('#addAffiliationForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
             $.ajax({
                 url: '/affiliation/add',
                 type: 'post',
                 dataType: 'json',
-                contentType: 'multipart/form-data',
-                data: $('#addAffiliationForm').serialize(),
+                contentType: false,
+                processData: false,
+                data: data,
                 success: function (data) {
                     if (data.error.length > 0) {
                         $("#error").html(data.error);
+                        document.getElementById("addAffiliationButton").disabled = false;
+                        document.getElementById("errorParent").style.display = null;
                     } else {
-                        window.location.href = "https://afcaldermaston.co.uk";
+                        window.location.href = "/";
                     }
                 },
             })

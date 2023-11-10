@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -16,21 +17,33 @@ func (v *Views) AffiliationAddFunc(c echo.Context) error {
 		name := c.FormValue("name")
 		website := c.FormValue("website")
 
+		data := struct {
+			Error string `json:"error"`
+		}{
+			Error: "",
+		}
+
 		file, err := c.FormFile("image")
 		if err != nil {
-			return fmt.Errorf("failed to get file for affiliationAdd: %w", err)
+			log.Printf("failed to get file for affiliationAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to get file for affiliationAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
 		}
 		fileName, err := v.fileUpload(file)
 		if err != nil {
-			return fmt.Errorf("failed to upload file for affiliationAdd: %w", err)
+			log.Printf("failed to upload file for affiliationAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to upload file for affiliationAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.affiliation.AddAffiliation(c.Request().Context(), affiliation.Affiliation{Name: name, Website: null.StringFrom(website), FileName: null.StringFrom(fileName)})
 		if err != nil {
-			return fmt.Errorf("failed to add affiliation for affiliationAdd: %w", err)
+			log.Printf("failed to add affiliation for affiliationAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to add affiliation for affiliationAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
 		}
 
-		return c.Redirect(http.StatusFound, "/")
+		return c.JSON(http.StatusOK, data)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
