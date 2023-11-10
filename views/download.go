@@ -75,7 +75,7 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 			}
 			return fmt.Errorf("failed to get file for document download: %w, id: %d", err, id)
 		}
-		return c.Inline(path, document.FileName)
+		return c.Attachment(path, fmt.Sprintf("AFC_%s.pdf", strings.ReplaceAll(document.Name, " ", "_")))
 	case "g": // Gallery
 		var image image1.Image
 		image, err = v.image.GetImage(c.Request().Context(), image1.Image{ID: id})
