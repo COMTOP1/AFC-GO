@@ -39,18 +39,18 @@ func (s *Store) GetNewsLatest(ctx context.Context) (News, error) {
 	return s.getNewsLatest(ctx)
 }
 
-func (s *Store) GetNewsArticle(ctx context.Context, n News) (News, error) {
-	return s.getNewsArticle(ctx, n)
+func (s *Store) GetNewsArticle(ctx context.Context, newsParam News) (News, error) {
+	return s.getNewsArticle(ctx, newsParam)
 }
 
-func (s *Store) AddNews(ctx context.Context, n News) (News, error) {
-	return s.addNews(ctx, n)
+func (s *Store) AddNews(ctx context.Context, newsParam News) (News, error) {
+	return s.addNews(ctx, newsParam)
 }
 
-func (s *Store) EditNews(ctx context.Context, n News) (News, error) {
-	return s.editNews(ctx, n)
+func (s *Store) EditNews(ctx context.Context, newsParam News) (News, error) {
+	return s.editNews(ctx, newsParam)
 }
 
-func (s *Store) DeleteNews(ctx context.Context, n News) error {
-	return s.deleteNews(ctx, n)
+func (s *Store) DeleteNews(ctx context.Context, newsParam News) error {
+	return s.deleteNews(ctx, newsParam)
 }
