@@ -1,17 +1,14 @@
 {{define "title"}}Home{{end}}
 {{define "header-style"}}
+    {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
     <style>
         .listItemAffiliation {
-            padding: 10px;
-            height: {{if and (gt (len .User.Email) 2) (ne .User.Role "Manager")}}150{{else}}100{{end}}px;
-            width: 150px;
-            display: inline-flex;
-            flex-wrap: wrap;
+            height: {{if $priv}}250{{else}}200{{end}}px;
         }
 
         .photoContainer {
             width: 100%;
-            height: 270px;
+            height: 385px;
             overflow: hidden;
             margin: 50px auto;
             background: white;
@@ -21,7 +18,7 @@
         /*photoBanner*/
 
         .photoBanner {
-            height: 250px;
+            height: 385px;
             width: {{mul (add (len .Sponsors) 4) 354}}px;
             padding: 20px 0 20px 0;
         }
@@ -106,6 +103,7 @@
     </style>
 {{end}}
 {{define "content"}}
+    {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
     <div class="welcomeBackground">
         <h2 class="welcomeHeader">Welcome</h2>
         <p class="welcome">AFC Aldermaston is a Chartered Standard club based in West Berkshire which is run by a group
@@ -173,7 +171,7 @@
                                      alt="/public/default.png"
                                      onerror="this.onerror=null;this.src='/public/default.png';" src="/public/AFC.png">
                                 {{if .Website.Valid}}</a>{{end}}
-                            {{if and (gt (len $.User.Email) 2) (ne $.User.Role "Manager")}}
+                            {{if $priv}}
                                 <a class="button is-danger" onclick="deleteAffiliationModal({{.ID}}, '{{.Name}}')"
                                    style="margin-bottom: 20px">Delete</a>
                             {{end}}
@@ -181,14 +179,14 @@
                     </div>
                 {{end}}
             </div>
-            {{if and (gt (len .User.Email) 2) (ne .User.Role "Manager")}}
+            {{if $priv}}
                 <a class="button is-info" onclick="addAffiliationModal()"
                    style="text-align: center; margin-bottom: 30px">Add Affiliation</a>
             {{end}}
         </div>
         <p style="z-index: -1; opacity: 0; float: left; width: 96%;">AFC</p>
     </main>
-    {{if and (gt (len .User.Email) 2) (ne .User.Role "Manager")}}
+    {{if $priv}}
         {{template "modal" .}}
     {{end}}
 {{end}}
