@@ -3,10 +3,10 @@ package player
 import (
 	"context"
 	"fmt"
-	"github.com/COMTOP1/AFC-GO/team"
 
 	sq "github.com/Masterminds/squirrel"
 
+	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/utils"
 )
 

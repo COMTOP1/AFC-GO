@@ -3,11 +3,11 @@ package user
 import (
 	"context"
 	"fmt"
-	"github.com/COMTOP1/AFC-GO/team"
 	"strconv"
 
 	sq "github.com/Masterminds/squirrel"
 
+	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/utils"
 )
 

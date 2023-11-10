@@ -2,12 +2,13 @@ package views
 
 import (
 	"errors"
-	"github.com/COMTOP1/AFC-GO/user"
 	"log"
 	"time"
 
-	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/labstack/echo/v4"
+
+	"github.com/COMTOP1/AFC-GO/templates"
+	"github.com/COMTOP1/AFC-GO/user"
 )
 
 func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {

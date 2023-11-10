@@ -6,12 +6,12 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
-	"github.com/COMTOP1/AFC-GO/team"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/role"
+	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/utils"
 )
 

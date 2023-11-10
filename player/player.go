@@ -2,10 +2,11 @@ package player
 
 import (
 	"context"
-	"github.com/COMTOP1/AFC-GO/team"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
+
+	"github.com/COMTOP1/AFC-GO/team"
 )
 
 type (
