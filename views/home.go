@@ -16,14 +16,16 @@ import (
 
 type (
 	NewsTemplate struct {
-		ID    int
-		Title string
-		Date  string
+		ID      int
+		Title   string
+		Content string
+		Date    string
 	}
 
 	WhatsOnTemplate struct {
 		ID          int
 		Title       string
+		Content     string
 		Date        string
 		DateOfEvent string
 	}
