@@ -46,7 +46,7 @@ func DBWhatsOnToTemplateFormat(whatsOnDB []whatson.WhatsOn) []WhatsOnTemplate {
 		w.ID = w1.ID
 		w.Title = w1.Title
 		w.Date = time.UnixMilli(w1.TempDate).Format("2006-01-02 15:04:05 MST")
-		w.DateOfEvent = time.UnixMilli(w1.TempDOE).Format("2006-01-02 15:04:05 MST")
+		w.DateOfEvent = time.UnixMilli(w1.TempDOE).Format("2006-01-02")
 		whatsOnTemplate = append(whatsOnTemplate, w)
 	}
 	return whatsOnTemplate
@@ -85,7 +85,7 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 	w.Title = whatsOnDB.Title
 	w.Content = whatsOnDB.Content
 	w.Date = time.UnixMilli(whatsOnDB.TempDate).Format("2006-01-02 15:04:05 MST")
-	w.DateOfEvent = time.UnixMilli(whatsOnDB.TempDOE).Format("2006-01-02 15:04:05 MST")
+	w.DateOfEvent = time.UnixMilli(whatsOnDB.TempDOE).Format("2006-01-02")
 	return w
 }
 

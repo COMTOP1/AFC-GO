@@ -88,6 +88,6 @@ func DBWhatsOnLatestToTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate 
 	w.ID = whatsOnDB.ID
 	w.Title = whatsOnDB.Title
 	w.Date = time.UnixMilli(whatsOnDB.TempDate).Format("2006-01-02 15:04:05 MST")
-	w.DateOfEvent = time.UnixMilli(whatsOnDB.TempDOE).Format("2006-01-02 15:04:05 MST")
+	w.DateOfEvent = time.UnixMilli(whatsOnDB.TempDOE).Format("2006-01-02")
 	return w
 }
