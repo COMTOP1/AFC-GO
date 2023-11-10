@@ -17,7 +17,6 @@ type (
 		ID       int         `db:"id" json:"id"`
 		Name     string      `db:"name" json:"name"`
 		Website  null.String `db:"website" json:"website"`
-		Image    null.String `db:"image" json:"image"`
 		FileName null.String `db:"file_name" json:"file_name"`
 	}
 )

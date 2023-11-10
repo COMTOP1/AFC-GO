@@ -13,7 +13,7 @@ import (
 
 func (s *Store) getWhatsOn(ctx context.Context) ([]WhatsOn, error) {
 	var w []WhatsOn
-	builder := sq.Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
+	builder := sq.Select("id", "title", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
@@ -29,7 +29,7 @@ func (s *Store) getWhatsOn(ctx context.Context) ([]WhatsOn, error) {
 
 func (s *Store) getWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
 	var w []WhatsOn
-	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
+	builder := utils.MySQL().Select("id", "title", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.GtOrEq{"date_of_event": time.Now().UnixMilli()}).
 		OrderBy("date_of_event")
@@ -46,7 +46,7 @@ func (s *Store) getWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
 
 func (s *Store) getWhatsOnPast(ctx context.Context) ([]WhatsOn, error) {
 	var w []WhatsOn
-	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
+	builder := utils.MySQL().Select("id", "title", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.Lt{"date_of_event": time.Now().UnixMilli()}).
 		OrderBy("date_of_event DESC")
@@ -85,7 +85,7 @@ func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 
 func (s *Store) getWhatsOnArticle(ctx context.Context, w WhatsOn) (WhatsOn, error) {
 	var w1 WhatsOn
-	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date", "date_of_event").
+	builder := utils.MySQL().Select("id", "title", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
 		Where(sq.Eq{"id": w.ID})
 	sql, args, err := builder.ToSql()
@@ -130,7 +130,6 @@ func (s *Store) editWhatsOn(ctx context.Context, w WhatsOn) (WhatsOn, error) {
 	builder := utils.MySQL().Update("afc.whatson").
 		SetMap(map[string]interface{}{
 			"title":         w.Title,
-			"image":         w.Image,
 			"file_name":     w.FileName,
 			"content":       w.Content,
 			"date":          w.TempDate,

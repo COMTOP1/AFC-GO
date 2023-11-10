@@ -16,7 +16,6 @@ type (
 	Player struct {
 		ID          int         `db:"id" json:"id"`
 		Name        string      `db:"name" json:"name"`
-		Image       null.String `db:"image" json:"image"`
 		FileName    null.String `json:"file_name"`
 		TempDOB     int64       `db:"date_of_birth" json:"date_of_birth"`
 		DateOfBirth null.Time

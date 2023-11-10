@@ -11,7 +11,7 @@ import (
 
 func (s *Store) getAffiliations(ctx context.Context) ([]Affiliation, error) {
 	var a []Affiliation
-	builder := sq.Select("id", "name", "website", "image", "file_name").
+	builder := sq.Select("id", "name", "website", "file_name").
 		From("afc.affiliations").
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
@@ -43,7 +43,7 @@ func (s *Store) getAffiliationsMinimal(ctx context.Context) ([]Affiliation, erro
 
 func (s *Store) getAffiliation(ctx context.Context, a Affiliation) (Affiliation, error) {
 	var a1 Affiliation
-	builder := utils.MySQL().Select("id", "name", "website", "image", "file_name").
+	builder := utils.MySQL().Select("id", "name", "website", "file_name").
 		From("afc.affiliations").
 		Where(sq.Eq{"id": a.ID})
 	sql, args, err := builder.ToSql()

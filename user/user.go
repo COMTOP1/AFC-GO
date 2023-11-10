@@ -29,7 +29,6 @@ type (
 		TeamID        null.Int `db:"team_id" json:"team_id"`
 		TempRole      string   `db:"role" json:"role"`
 		Role          role.Role
-		Image         null.String `db:"image" json:"image"`
 		FileName      null.String `db:"file_name" json:"file_name"`
 		ResetPassword bool        `db:"reset_password" json:"reset_password"`
 		Password      null.String `db:"password" json:"password"`

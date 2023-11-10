@@ -12,7 +12,7 @@ import (
 
 func (s *Store) getNews(ctx context.Context) ([]News, error) {
 	var n []News
-	builder := sq.Select("id", "title", "image", "file_name", "content", "date").
+	builder := sq.Select("id", "title", "file_name", "content", "date").
 		From("afc.news").
 		OrderBy("date DESC")
 	sql, args, err := builder.ToSql()
@@ -51,7 +51,7 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 
 func (s *Store) getNewsArticle(ctx context.Context, n News) (News, error) {
 	var n1 News
-	builder := utils.MySQL().Select("id", "title", "image", "file_name", "content", "date").
+	builder := utils.MySQL().Select("id", "title", "file_name", "content", "date").
 		From("afc.news").
 		Where(sq.Eq{"id": n.ID})
 	sql, args, err := builder.ToSql()
@@ -96,7 +96,6 @@ func (s *Store) editNews(ctx context.Context, n News) (News, error) {
 	builder := utils.MySQL().Update("afc.news").
 		SetMap(map[string]interface{}{
 			"title":     n.Title,
-			"image":     n.Image,
 			"file_name": n.FileName,
 			"content":   n.Content,
 			"date":      n.Temp,

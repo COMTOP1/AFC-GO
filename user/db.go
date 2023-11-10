@@ -12,7 +12,7 @@ import (
 
 func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 	var u []User
-	builder := sq.Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name", "reset_password").
+	builder := sq.Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
 		From("afc.users").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
@@ -45,7 +45,7 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 
 func (s *Store) getUsersManagersTeam(ctx context.Context, teamID int) ([]User, error) {
 	var u []User
-	builder := utils.MySQL().Select("id", "name" /*"image",*/, "file_name").
+	builder := utils.MySQL().Select("id", "name", "file_name").
 		From("afc.users").
 		Where(sq.Eq{"team_id": strconv.FormatUint(uint64(teamID), 10)}).
 		OrderBy("id")
@@ -62,7 +62,7 @@ func (s *Store) getUsersManagersTeam(ctx context.Context, teamID int) ([]User, e
 
 func (s *Store) getUser(ctx context.Context, u User) (User, error) {
 	var u1 User
-	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name", "reset_password").
+	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
 		From("afc.users").
 		Where(sq.And{sq.Eq{"email": u.Email}, sq.NotEq{"email": ""}},
 			sq.Eq{"id": u.ID})
@@ -79,7 +79,7 @@ func (s *Store) getUser(ctx context.Context, u User) (User, error) {
 
 func (s *Store) getUserFull(ctx context.Context, u User) (User, error) {
 	var u1 User
-	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role" /*"image",*/, "file_name", "reset_password", "password", "hash", "salt").
+	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "password", "hash", "salt").
 		From("afc.users").
 		Where(sq.And{sq.Eq{"email": u.Email}},
 			sq.Eq{"id": u.ID})

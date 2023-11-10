@@ -11,7 +11,7 @@ import (
 
 func (s *Store) getPlayers(ctx context.Context) ([]Player, error) {
 	var p []Player
-	builder := sq.Select("id", "name", "image", "file_name", "date_of_birth", "position", "captain", "team_id").
+	builder := sq.Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("afc.players").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
@@ -27,7 +27,7 @@ func (s *Store) getPlayers(ctx context.Context) ([]Player, error) {
 
 func (s *Store) getPlayersTeam(ctx context.Context, teamID int) ([]Player, error) {
 	var p []Player
-	builder := utils.MySQL().Select("id", "name", "image", "file_name", "date_of_birth", "position", "captain", "team_id").
+	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("afc.players").
 		Where(sq.Eq{"team_id": teamID}).
 		OrderBy("name")
@@ -44,7 +44,7 @@ func (s *Store) getPlayersTeam(ctx context.Context, teamID int) ([]Player, error
 
 func (s *Store) getPlayer(ctx context.Context, p Player) (Player, error) {
 	var p1 Player
-	builder := utils.MySQL().Select("id", "name", "image", "file_name", "date_of_birth", "position", "captain", "team_id").
+	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("afc.players").
 		Where(sq.Eq{"id": p.ID})
 	sql, args, err := builder.ToSql()
@@ -89,7 +89,6 @@ func (s *Store) editPlayer(ctx context.Context, p Player) (Player, error) {
 	builder := utils.MySQL().Update("afc.players").
 		SetMap(map[string]interface{}{
 			"name":          p.Name,
-			"image":         p.Image,
 			"file_name":     p.FileName,
 			"date_of_birth": p.TempDOB,
 			"position":      p.Position,

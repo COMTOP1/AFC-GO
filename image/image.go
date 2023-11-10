@@ -15,7 +15,6 @@ type (
 
 	Image struct {
 		ID       int         `db:"id" json:"id"`
-		Image    null.String `db:"image" json:"image"`
 		FileName null.String `db:"file_name" json:"file_name"`
 		Caption  null.String `db:"caption" json:"caption"`
 	}

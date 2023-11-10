@@ -18,7 +18,6 @@ type (
 	WhatsOn struct {
 		ID          int         `db:"id" json:"id"`
 		Title       string      `db:"title" json:"title"`
-		Image       null.String `db:"image" json:"image"`
 		FileName    null.String `db:"file_name" json:"file_name"`
 		Content     string      `db:"content" json:"content"`
 		TempDate    int64       `db:"date" json:"date"`

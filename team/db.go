@@ -11,7 +11,7 @@ import (
 
 func (s *Store) getTeams(ctx context.Context) ([]Team, error) {
 	var t []Team
-	builder := sq.Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "image", "file_name", "active", "youth", "ages").
+	builder := sq.Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
 		From("afc.teams").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
@@ -27,7 +27,7 @@ func (s *Store) getTeams(ctx context.Context) ([]Team, error) {
 
 func (s *Store) getTeamsActive(ctx context.Context) ([]Team, error) {
 	var t []Team
-	builder := utils.MySQL().Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "image", "file_name", "active", "youth", "ages").
+	builder := utils.MySQL().Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
 		From("afc.teams").
 		Where(sq.Eq{"active": true}).
 		OrderBy("name")
@@ -95,7 +95,6 @@ func (s *Store) editTeam(ctx context.Context, t Team) (Team, error) {
 			"fixtures":     t.Fixtures,
 			"coach":        t.Coach,
 			"physio":       t.Physio,
-			"image":        t.Image,
 			"file_name":    t.FileName,
 			"active":       t.IsActive,
 			"youth":        t.IsYouth,
