@@ -34,12 +34,12 @@ body {
     color: white;
 }
 
-.navbar.is-danger .navbar-start>a.navbar-item:hover {
+.navbar.is-danger .navbar-start > a.navbar-item:hover {
     background-color: #d30e27;
     color: white;
 }
 
-.navbar.is-danger .navbar-end>a.navbar-item:hover {
+.navbar.is-danger .navbar-end > a.navbar-item:hover {
     background-color: #d30e27;
 }
 
@@ -66,7 +66,7 @@ footer {
     z-index: 1;
 }
 
-small>a {
+small > a {
     color: black;
     text-decoration: none;
     letter-spacing: 1px;
@@ -560,7 +560,7 @@ header h1 {
         height: 100%;
     }
 
-    body>main {
+    body > main {
         font-size: 14px;
         background-size: cover;
         text-align: left;
