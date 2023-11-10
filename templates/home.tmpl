@@ -144,9 +144,11 @@
                 {{ $i := 0 }}
                 {{ range .Sponsors }}
                     <a href="{{.Website.String}}" target="_blank" class="sponsorImage">
+{{/*                        <div class="sponsorImageCentre">*/}}
                             <img data-src="/download?s=s&id={{.ID}}" alt="/public/default.png" src="/public/AFC.png"
                                  onerror="this.onerror=null;this.src='/public/default.png';"
                                  class="{{if eq $i 0}}first {{end}}lazy sponsorImage">
+{{/*                        </div>*/}}
                     </a>
                     {{ $i = inc $i }}
                 {{end}}

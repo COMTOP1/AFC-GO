@@ -2,11 +2,11 @@ package views
 
 import (
 	"fmt"
-	"github.com/COMTOP1/AFC-GO/role"
 	"time"
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
 )
