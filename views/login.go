@@ -46,7 +46,6 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 			if resetPw {
 				ctx := v.getSessionData(c)
-				//ctx.Callback = callback
 				ctx.Message = "Password reset required"
 				ctx.MsgType = "is-danger"
 
@@ -61,7 +60,6 @@ func (v *Views) LoginFunc(c echo.Context) error {
 				return c.Redirect(http.StatusFound, fmt.Sprintf("https://afcaldermaston.co.uk/reset/%s", url1))
 			}
 			ctx := v.getSessionData(c)
-			//ctx.Callback = callback
 			ctx.Message = "Invalid username or password"
 			ctx.MsgType = "is-danger"
 			err = v.setMessagesInSession(c, ctx)
