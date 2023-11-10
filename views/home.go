@@ -56,8 +56,6 @@ func (v *Views) HomeFunc(c echo.Context) error {
 
 	year, _, _ := time.Now().Date()
 
-	_ = c1.User
-
 	data := struct {
 		Year          int
 		Affiliations  []affiliation.Affiliation
