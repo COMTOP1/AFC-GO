@@ -10,6 +10,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/guregu/null.v4"
 
+	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/user"
 )
 
@@ -60,14 +61,20 @@ func (v *Views) LoginFunc(c echo.Context) error {
 				return c.Redirect(http.StatusFound, fmt.Sprintf("https://afcaldermaston.co.uk/reset/%s", url1))
 			}
 			ctx := v.getSessionData(c)
-			ctx.Message = "Invalid username or password"
+			ctx.Message = "Invalid email or password"
 			ctx.MsgType = "is-danger"
 			err = v.setMessagesInSession(c, ctx)
 			if err != nil {
 				return fmt.Errorf("failed to set message for login: %w", err)
 			}
-
-			return c.Redirect(http.StatusFound, "/login")
+			data := struct {
+				Error         string `json:"error"`
+				ResetPassword bool   `json:"resetPassword"`
+			}{
+				Error:         "Invalid email or password",
+				ResetPassword: false,
+			}
+			return c.JSON(http.StatusOK, data)
 		}
 		u.Authenticated = true
 
@@ -75,6 +82,12 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to clear message: %w", err)
 		}
+
+		u.Role, err = role.GetRole(u.TempRole)
+		if err != nil {
+			return fmt.Errorf("failed to get role: %w", err)
+		}
+		u.TempRole = ""
 
 		session.Values["user"] = u
 
@@ -96,7 +109,14 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		}
 
 		log.Printf("user \"%s\" is authenticated", u.Email)
-		return c.Redirect(http.StatusFound, "/")
+		data := struct {
+			Error         string `json:"error"`
+			ResetPassword bool   `json:"resetPassword"`
+		}{
+			Error:         "",
+			ResetPassword: false,
+		}
+		return c.JSON(http.StatusOK, data)
 	}
 	return fmt.Errorf("failed to parse method")
 }
