@@ -1,72 +1,77 @@
 {{define "title"}}Users{{end}}
 {{define "content"}}
-    <main class="main" style="text-align: center;">
-        <p style="color: green; padding: 0; margin: 0;" id="error">${success}</p><br>
-        <table style="align-items: center;">
+    <main class="main" style="text-align: center; justify-content: center; align-content: center; align-items: center;">
+        <div style="background-color: white; margin: 10px 0 10px 0; padding: 5px 0 5px 0; text-align: center">
+            <h2 style="color: #1F1F1F" class="welcomeHeader">
+                Users<br><br>
+                {{if or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
+                    <a class="button is-info" onclick="addUserModal()">Add user</a>
+                {{end}}</h2>
+        </div>
+
+        <table style="align-items: center; display: inline-flex; border-radius: 5px;
+        box-shadow: 0 .5em 1em -.125em rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .02);" class="table is-striped">
             <tr>
-                <th>Id</th>
+                {{if eq .User.Role "Webmaster"}}
+                    <th>ID</th>{{end}}
                 <th>Name</th>
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Team</th>
                 <th>Role</th>
                 <th>Image</th>
-                {{if or (eq .PageData.User.Role "Secretary") (or (eq .PageData.User.Role "Chairperson") (eq .PageData.User.Role "Webmaster"))}}
+                {{if or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
                     <th>Edit</th>
                     <th>Delete</th>
                     <th>Reset password</th>
                 {{end}}
             </tr>
-            {{range .PageData.Users}}
-                <tr>
-                    <th>{{ .Id }}
+            {{range .Users}}
+                <tr{{if eq $.User.ID .ID}} class="is-selected"{{end}}>
+                    {{if eq $.User.Role "Webmaster"}}
+                        <th>{{.ID}}
+                        </th>{{end}}
+                    <th>{{.Name}}
                     </th>
-                    <th>{{ .Name }}
+                    <th>{{.Email}}
                     </th>
-                    <th>{{ .Email }}
+                    <th>{{.Phone}}
                     </th>
-                    <th>{{ .Phone }}
-                    </th>
-                    {{ $team := ""}}
-                    {{if ne .Team 0}}
-                        {{ $team = $.PageData.GetTeamName .Team }}
+                    {{$team := ""}}
+                    {{if ne .TeamID 0}}
+                        {{$team = getTeamName .TeamID}}
                     {{else}}
-                        {{ $team = "Not Related to team" }}
+                        {{$team = "Not Related to team"}}
                     {{end}}
-                    <th>{{ $team }}
+                    <th>{{$team}}
                     </th>
-                    <th>{{ .Role }}
+                    <th>{{.Role}}
                     </th>
-                    <th><img data-src="download?s=u&id={{ .Id }}" alt=""
-                             onerror="this.onerror=null;this.src='images/default.png';"
+                    <th><img data-src="/download?s=u&id={{.ID}}" alt="/public/AFC.png"
+                             onerror="this.onerror=null;this.src='/public/AFC.png';"
+                             src="/public/AFC.png"
                              style="border: 5px; max-height: 200px; max-width: 200px;" class="lazy"></th>
-                    {{if or (and (or (eq $.PageData.User.Role "Secretary") (eq $.PageData.User.Role "Chairperson")) (eq .Role "Webmaster"))  (eq $.PageData.User.Role "Webmaster")}}
+                    {{if or (and (eq .Role "Webmaster") (eq $.User.Role "Webmaster")) (and (or (or (eq $.User.Role "Secretary") (eq $.User.Role "Chairperson")) (eq $.User.Role "Webmaster")) (ne .Role "Webmaster"))}}
+                        {{/*                    {{if or (and (or (eq $.User.Role "Secretary") (eq $.User.Role "Chairperson")) (eq .Role "Webmaster")) (eq $.User.Role "Webmaster")}}*/}}
                         <th>
-                            <div class="button" id="container">
-                                <div id="translate"></div>
-                                <a href="edituser?id={{ .Id }}">Edit</a>
-                            </div>
+                            <a class="button is-warning" onclick="editUserModal()">Edit</a>
                         </th>
                         <th>
-                            <div class="button" id="container">
-                                <div id="translate"></div>
-                                <a href="deleteuser?id={{ .Id }}">Delete</a>
-                            </div>
+                            <a class="button is-danger" onclick="deleteUserModal()">Delete</a>
                         </th>
                         <th>
-                            <div class="button" id="container">
-                                <div id="translate"></div>
-                                <a href="resetpassword?id={{ .Id }}">Reset password</a>
-                            </div>
+                            <a class="button is-warning" onclick="resetPasswordModal()">Reset password</a>
                         </th>
                     {{end}}
                 </tr>
             {{end}}
         </table>
     </main>
-    {{if or (eq .PageData.User.Role "Secretary") (or (eq .PageData.User.Role "Chairperson") (eq .PageData.User.Role "Webmaster"))}}
-        <p style="width: 96%">
-            <a href="adduser">Add user</a>
-        </p>
+    {{if or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
+        {{template "modal" .}}
     {{end}}
+{{end}}
+
+{{define "modal"}}
+
 {{end}}

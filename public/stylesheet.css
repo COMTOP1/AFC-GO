@@ -208,6 +208,11 @@ header h1 {
     padding: 15px 5px 15px 5px;
 }
 
+.table tr.is-selected {
+    background-color: rgba(0, 209, 178, 0.5);
+    color: #1f1f1f;
+}
+
 @media screen and (max-width: 299px) {
     .topPage {
         padding: 10px 0 10px 0;
