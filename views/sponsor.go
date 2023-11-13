@@ -45,9 +45,9 @@ func (v *Views) SponsorsFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.SponsorsTemplate, templates.RegularType)
 }
 
-func DBSponsorsToTemplateFormat(s1 []sponsor.Sponsor) []SponsorTemplate {
-	sponsorsTemplate := make([]SponsorTemplate, 0, len(s1))
-	for _, sponsorDB := range s1 {
+func DBSponsorsToTemplateFormat(sponsorsDB []sponsor.Sponsor) []SponsorTemplate {
+	sponsorsTemplate := make([]SponsorTemplate, 0, len(sponsorsDB))
+	for _, sponsorDB := range sponsorsDB {
 		var s2 SponsorTemplate
 		s2.ID = sponsorDB.ID
 		s2.Name = sponsorDB.Name
