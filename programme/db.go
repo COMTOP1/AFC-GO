@@ -128,7 +128,7 @@ func (s *Store) deleteProgramme(ctx context.Context, programmeParam Programme) e
 
 func (s *Store) getSeasons(ctx context.Context) ([]Season, error) {
 	var seasonsDB []Season
-	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
+	builder := sq.Select("id", "season").
 		From("afc.programme_seasons").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
@@ -144,7 +144,7 @@ func (s *Store) getSeasons(ctx context.Context) ([]Season, error) {
 
 func (s *Store) getSeason(ctx context.Context, seasonParam Season) (Season, error) {
 	var seasonDB Season
-	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
+	builder := utils.MySQL().Select("id", "season").
 		From("afc.programme_seasons").
 		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
