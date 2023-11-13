@@ -46,7 +46,7 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 
 func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) ([]User, error) {
 	var usersDB []User
-	builder := utils.MySQL().Select("id", "name", "file_name").
+	builder := utils.MySQL().Select("id", "name").
 		From("afc.users").
 		Where(sq.Eq{"team_id": strconv.FormatUint(uint64(teamParam.ID), 10)}).
 		OrderBy("id")

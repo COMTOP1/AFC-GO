@@ -44,9 +44,9 @@ func (s *Store) getSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
 
 func (s *Store) getSponsorsTeam(ctx context.Context, teamParam team.Team) ([]Sponsor, error) {
 	var sponsorsDB []Sponsor
-	builder := utils.MySQL().Select("id", "name", "website", "file_name", "purpose", "team_id").
+	builder := utils.MySQL().Select("id", "name", "website", "purpose").
 		From("afc.sponsors").
-		Where(sq.Eq{"sponsor_season_id": teamParam.ID}).
+		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
 	if err != nil {

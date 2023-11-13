@@ -28,7 +28,7 @@ func (s *Store) getPlayers(ctx context.Context) ([]Player, error) {
 
 func (s *Store) getPlayersTeam(ctx context.Context, teamParam team.Team) ([]Player, error) {
 	var playersDB []Player
-	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
+	builder := utils.MySQL().Select("id", "name", "date_of_birth", "position", "captain").
 		From("afc.players").
 		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("name")
