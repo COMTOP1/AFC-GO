@@ -34,6 +34,7 @@ const (
 	ResetTemplate          Template = "reset.tmpl"
 	ErrorTemplate          Template = "error.tmpl"
 	TeamsTemplate          Template = "teams.tmpl"
+	TeamTemplate           Template = "team.tmpl"
 	NewsTemplate           Template = "news.tmpl"
 	NewsArticleTemplate    Template = "newsArticle.tmpl"
 	WhatsOnTemplate        Template = "whatson.tmpl"
