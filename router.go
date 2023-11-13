@@ -122,7 +122,20 @@ func (r *Router) loadRoutes() {
 	newsID.Match(validMethods, "", r.views.NewsArticleFunc)
 	news.Match(validMethods, "", r.views.NewsFunc)
 
-	base.Match(validMethods, "programmes", r.views.ProgrammesFunc)
+	programmes := base.Group("programmes")
+	programmes.Match(validMethods, "/:id", r.views.ProgrammesSeasonsFunc)
+	programmes.Match(validMethods, "", r.views.ProgrammesFunc)
+	programme := base.Group("programme")
+	programme.Match(validMethods, "/add", r.views.ProgrammeAddFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	programmeID := programme.Group("/:id")
+	programmeID.Match(validMethods, "/delete", r.views.ProgrammeDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+
+	season := base.Group("season", r.views.RequiresLogin, r.views.RequireNotManager)
+	season.Match(validMethods, "/add", r.views.ProgrammeSeasonAddFunc)
+	seasonsID := season.Group("/:id")
+	seasonsID.Match(validMethods, "/edit", r.views.ProgrammeSeasonEditFunc)
+	seasonsID.Match(validMethods, "/delete", r.views.ProgrammeSeasonDeleteFunc)
+
 	base.Match(validMethods, "sponsors", r.views.SponsorsFunc)
 
 	sponsor := base.Group("sponsor", r.views.RequiresLogin, r.views.RequireNotManager)

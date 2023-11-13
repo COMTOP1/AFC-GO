@@ -11,6 +11,11 @@ func (v *Views) ProgrammesFunc(c echo.Context) error {
 	return fmt.Errorf("not implemented yet")
 }
 
+func (v *Views) ProgrammesSeasonsFunc(c echo.Context) error {
+	_ = c
+	return fmt.Errorf("not implemented yet")
+}
+
 func (v *Views) ProgrammeAddFunc(c echo.Context) error {
 	_ = c
 	return fmt.Errorf("not implemented yet")
