@@ -1,0 +1,64 @@
+{{define "title"}}Programmes{{end}}
+{{define "content"}}
+    {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
+    <main class="main" style="text-align: center">
+        <div style="background-color: white; margin: 10px 0 10px 0; padding: 5px 0 5px 0;">
+            <h2 style="color: #1F1F1F" class="welcomeHeader">
+                Programmes</h2>
+        </div>
+        {{with (index .Programmes 0)}}
+            <h2 class="title">Latest programme - {{.Name}}
+            </h2><br>
+            {{/*            <%*/}}
+            {{/*                 Date date = new Date(programme.getDateOfProgramme());*/}}
+            {{/*                 String[] dateArray = date.toString().split(" ");*/}}
+            {{/*                 String dateString = String.format("%s %s %s %s", dateArray[0], dateArray[2], dateArray[1], dateArray[5]);*/}}
+            {{/*                 if (programme.getProgrammeSeasonId() != 0) {*/}}
+            {{/*                 ProgrammeSeasons programmeSeason = DBUtils.findProgrammeSeason(con, programme.getProgrammeSeasonId());*/}}
+            {{/*                 if (programmeSeason != null)*/}}
+            {{/*                 %>*/}}
+            <h2 class="subtitle">{{if .Season.Valid}}Season - {{.Season.Name}}<br>{{end}}
+                Date of programme - {{.DateOfProgramme}}
+            </h2>
+            <object data="/download?s=p&id={{.ID}}" width="75%" height="750px" embedded="true"></object>
+            {{if $priv}}
+                <br><br><br>
+                <div class="button">
+                    <a class="button is-danger" onclick="deleteProgrammeModal()">Delete</a>
+                </div>
+            {{end}}
+        {{end}}
+        {{if gt (len .Programmes) 1}}
+            <div style="margin: 10px 0 10px 0; padding: 5px 0 5px 0;">
+                <h2 style="color: #1F1F1F" class="welcomeHeader">
+                    Previous Programmes</h2>
+            </div>
+            <div class="flexContainer">
+                {{$first := true}}
+                {{range .Programmes}}
+                    {{if $first}}
+                        {{$first = false}}
+                    {{else}}
+                        <div class="listItem" style="text-align: center; width: 275px; height: auto; cursor: pointer;"
+                             onclick="location.href='/download?s=p&id={{.ID}}';">
+                            <p class="subtitle">{{.Name}}
+                            </p>
+                            <p>Date of programme - {{.DateOfProgramme}}<br><br>Click to download</p>
+                        </div>
+                    {{end}}
+                {{end}}
+            </div>
+        {{end}}
+        {{if $priv}}
+            <a class="button is-info" onclick="addTeamModal()"
+               style="text-align: center; margin-bottom: 30px">Add Team</a>
+        {{end}}
+    </main>
+    {{if $priv}}
+        {{template "modal" .}}
+    {{end}}
+{{end}}
+
+{{define "modal"}}
+
+{{end}}

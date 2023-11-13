@@ -43,6 +43,7 @@ const (
 	SponsorsTemplate       Template = "sponsors.tmpl"
 	UsersTemplate          Template = "users.tmpl"
 	GalleryTemplate        Template = "gallery.tmpl"
+	ProgrammesTemplate     Template = "programmes.tmpl"
 )
 
 type TemplateType int
