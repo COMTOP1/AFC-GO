@@ -18,7 +18,7 @@ type (
 	Player struct {
 		ID          int         `db:"id" json:"id"`
 		Name        string      `db:"name" json:"name"`
-		FileName    null.String `json:"file_name"`
+		FileName    null.String `db:"file_name" json:"file_name"`
 		TempDOB     int64       `db:"date_of_birth" json:"date_of_birth"`
 		DateOfBirth null.Time
 		Position    null.String `db:"position" json:"position"`
