@@ -109,8 +109,8 @@ func (r *Router) loadRoutes() {
 	base.Match(validMethods, "gallery", r.views.GalleryFunc)
 
 	image := base.Group("image", r.views.RequiresLogin, r.views.RequireNotManager)
-	image.Match(validMethods, "/add", r.views.DocumentAddFunc)
-	image.Match(validMethods, "/:id/delete", r.views.DocumentDeleteFunc)
+	image.Match(validMethods, "/add", r.views.ImageAddFunc)
+	image.Match(validMethods, "/:id/delete", r.views.ImageDeleteFunc)
 
 	base.Match(validMethods, "info", r.views.InfoFunc)
 
