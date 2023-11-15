@@ -7,11 +7,9 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/COMTOP1/AFC-GO/affiliation"
-	"github.com/COMTOP1/AFC-GO/news"
 	"github.com/COMTOP1/AFC-GO/sponsor"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
-	"github.com/COMTOP1/AFC-GO/whatson"
 )
 
 type (
@@ -67,27 +65,10 @@ func (v *Views) HomeFunc(c echo.Context) error {
 		Year:          year,
 		Affiliations:  affiliations,
 		Sponsors:      sponsors,
-		NewsLatest:    DBNewsLatestToTemplateFormat(newsLatest),
-		WhatsOnLatest: DBWhatsOnLatestToTemplateFormat(whatsOnLatest),
+		NewsLatest:    DBNewsToArticleTemplateFormat(newsLatest),
+		WhatsOnLatest: DBWhatsOnToArticleTemplateFormat(whatsOnLatest),
 		User:          c1.User,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.HomeTemplate, templates.RegularType)
-}
-
-func DBNewsLatestToTemplateFormat(newsDB news.News) NewsTemplate {
-	var n NewsTemplate
-	n.ID = newsDB.ID
-	n.Title = newsDB.Title
-	n.Date = time.UnixMilli(newsDB.Temp).Format("2006-01-02 15:04:05 MST")
-	return n
-}
-
-func DBWhatsOnLatestToTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate {
-	var w WhatsOnTemplate
-	w.ID = whatsOnDB.ID
-	w.Title = whatsOnDB.Title
-	w.Date = time.UnixMilli(whatsOnDB.TempDate).Format("2006-01-02 15:04:05 MST")
-	w.DateOfEvent = time.UnixMilli(whatsOnDB.TempDOE).Format("2006-01-02")
-	return w
 }
