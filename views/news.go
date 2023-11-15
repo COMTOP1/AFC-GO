@@ -39,18 +39,6 @@ func (v *Views) NewsFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.NewsTemplate, templates.RegularType)
 }
 
-func DBNewsToTemplateFormat(n1 []news.News) []NewsTemplate {
-	newsTemplate := make([]NewsTemplate, 0, len(n1))
-	for _, newsDB := range n1 {
-		var n2 NewsTemplate
-		n2.ID = newsDB.ID
-		n2.Title = newsDB.Title
-		n2.Date = time.UnixMilli(newsDB.Temp).Format("2006-01-02 15:04:05 MST")
-		newsTemplate = append(newsTemplate, n2)
-	}
-	return newsTemplate
-}
-
 func (v *Views) NewsArticleFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 
@@ -76,15 +64,6 @@ func (v *Views) NewsArticleFunc(c echo.Context) error {
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.NewsArticleTemplate, templates.RegularType)
-}
-
-func DBNewsToArticleTemplateFormat(newsDB news.News) NewsTemplate {
-	var n NewsTemplate
-	n.ID = newsDB.ID
-	n.Title = newsDB.Title
-	n.Content = newsDB.Content.String
-	n.Date = time.UnixMilli(newsDB.Temp).Format("2006-01-02 15:04:05 MST")
-	return n
 }
 
 func (v *Views) NewsAddFunc(c echo.Context) error {

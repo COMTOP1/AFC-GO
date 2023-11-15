@@ -45,19 +45,6 @@ func (v *Views) SponsorsFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.SponsorsTemplate, templates.RegularType)
 }
 
-func DBSponsorsToTemplateFormat(sponsorsDB []sponsor.Sponsor) []SponsorTemplate {
-	sponsorsTemplate := make([]SponsorTemplate, 0, len(sponsorsDB))
-	for _, sponsorDB := range sponsorsDB {
-		var s2 SponsorTemplate
-		s2.ID = sponsorDB.ID
-		s2.Name = sponsorDB.Name
-		s2.Website = sponsorDB.Website
-		s2.Purpose = sponsorDB.Purpose
-		sponsorsTemplate = append(sponsorsTemplate, s2)
-	}
-	return sponsorsTemplate
-}
-
 func (v *Views) SponsorAddFunc(c echo.Context) error {
 	_ = c
 	return fmt.Errorf("not implemented yet")

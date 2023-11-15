@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	// importing time zones in case the system doesn't have them
 	_ "time/tzdata"
@@ -15,8 +16,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
+	"github.com/COMTOP1/AFC-GO/document"
+	"github.com/COMTOP1/AFC-GO/news"
+	"github.com/COMTOP1/AFC-GO/player"
+	"github.com/COMTOP1/AFC-GO/programme"
 	"github.com/COMTOP1/AFC-GO/role"
+	"github.com/COMTOP1/AFC-GO/sponsor"
+	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/user"
+	"github.com/COMTOP1/AFC-GO/whatson"
 )
 
 type (
@@ -231,4 +239,181 @@ func (v *Views) fileUpload(file *multipart.FileHeader) (string, error) {
 	}
 
 	return fileName, nil
+}
+
+func DBDocumentsToTemplateFormat(documentsDB []document.Document) []DocumentTemplate {
+	documentsTemplate := make([]DocumentTemplate, 0, len(documentsDB))
+	for _, documentDB := range documentsDB {
+		var documentTemplate DocumentTemplate
+		documentTemplate.ID = documentDB.ID
+		documentTemplate.Name = documentDB.Name
+		documentsTemplate = append(documentsTemplate, documentTemplate)
+	}
+	return documentsTemplate
+}
+
+func DBNewsToTemplateFormat(newsDB []news.News) []NewsTemplate {
+	newsTemplate := make([]NewsTemplate, 0, len(newsDB))
+	for _, newsArticleDB := range newsDB {
+		var newsArticleTemplate NewsTemplate
+		newsArticleTemplate.ID = newsArticleDB.ID
+		newsArticleTemplate.Title = newsArticleDB.Title
+		newsDate := time.UnixMilli(newsArticleDB.Temp)
+		year, month, day := newsDate.Date()
+		newsArticleTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", newsDate.Weekday().String()[0:3], day, month.String()[0:3], year, time.UnixMilli(newsArticleDB.Temp).Format("15:04:05 MST"))
+		newsTemplate = append(newsTemplate, newsArticleTemplate)
+	}
+	return newsTemplate
+}
+
+func DBNewsToArticleTemplateFormat(newsDB news.News) NewsTemplate {
+	var newsTemplate NewsTemplate
+	newsTemplate.ID = newsDB.ID
+	newsTemplate.Title = newsDB.Title
+	newsTemplate.Content = newsDB.Content.String
+	newsDate := time.UnixMilli(newsDB.Temp)
+	year, month, day := newsDate.Date()
+	newsTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", newsDate.Weekday().String()[0:3], day, month.String()[0:3], year, time.UnixMilli(newsDB.Temp).Format("15:04:05 MST"))
+	return newsTemplate
+}
+
+func DBProgrammesToTemplateFormat(programmesDB []programme.Programme, seasonsDB []programme.Season) ([]ProgrammeTemplate, error) {
+	programmesTemplate := make([]ProgrammeTemplate, 0, len(programmesDB))
+	for _, programmeDB := range programmesDB {
+		var programmeTemplate ProgrammeTemplate
+		programmeTemplate.ID = programmeDB.ID
+		programmeTemplate.Name = programmeDB.Name
+		programmeDOP := time.UnixMilli(programmeDB.TempDOP)
+		year, month, day := programmeDOP.Date()
+		programmeTemplate.DateOfProgramme = fmt.Sprintf("%s %02d %s %d", programmeDOP.Weekday().String()[0:3], day, month.String()[0:3], year)
+		found := false
+		for _, seasonDB := range seasonsDB {
+			if seasonDB.ID == programmeDB.SeasonID {
+				var seasonTemplate SeasonTemplate
+				seasonTemplate.ID = seasonDB.ID
+				seasonTemplate.Name = seasonDB.Season
+				seasonTemplate.Valid = true
+				programmeTemplate.Season = seasonTemplate
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Printf("failed to find season for programme: %d", programmeDB.ID)
+			programmeTemplate.Season = SeasonTemplate{Valid: false}
+		}
+		programmesTemplate = append(programmesTemplate, programmeTemplate)
+	}
+	return programmesTemplate, nil
+}
+
+func DBSponsorsToTemplateFormat(sponsorsDB []sponsor.Sponsor) []SponsorTemplate {
+	sponsorsTemplate := make([]SponsorTemplate, 0, len(sponsorsDB))
+	for _, sponsorDB := range sponsorsDB {
+		var sponsorTemplate SponsorTemplate
+		sponsorTemplate.ID = sponsorDB.ID
+		sponsorTemplate.Name = sponsorDB.Name
+		sponsorTemplate.Website = sponsorDB.Website
+		sponsorTemplate.Purpose = sponsorDB.Purpose
+		sponsorsTemplate = append(sponsorsTemplate, sponsorTemplate)
+	}
+	return sponsorsTemplate
+}
+
+func DBManagersToTemplateFormat(managersDB []user.User) []string {
+	managersString := make([]string, 0, len(managersDB))
+	for _, manager := range managersDB {
+		managersString = append(managersString, manager.Name)
+	}
+	return managersString
+}
+
+func DBPlayersToTemplateFormat(playersDB []player.Player) []PlayerTemplate {
+	playersTemplate := make([]PlayerTemplate, 0, len(playersDB))
+	for _, playerDB := range playersDB {
+		var playerTemplate PlayerTemplate
+		playerTemplate.ID = playerDB.ID
+		playerTemplate.Name = playerDB.Name
+		playerTemplate.Position = playerDB.Position
+		playerTemplate.IsCaptain = playerDB.IsCaptain
+		playersTemplate = append(playersTemplate, playerTemplate)
+	}
+	return playersTemplate
+}
+
+func DBTeamsToTemplateFormat(teamsDB []team.Team) []TeamsTemplate {
+	teamsTemplate := make([]TeamsTemplate, 0, len(teamsDB))
+	for _, teamDB := range teamsDB {
+		var teamTemplate TeamsTemplate
+		teamTemplate.ID = teamDB.ID
+		teamTemplate.Name = teamDB.Name
+		teamTemplate.IsActive = teamDB.IsActive
+		teamsTemplate = append(teamsTemplate, teamTemplate)
+	}
+	return teamsTemplate
+}
+
+func DBUsersToTemplateFormat(usersDB []user.User) []UserTemplate {
+	usersTemplate := make([]UserTemplate, 0, len(usersDB))
+	for _, userDB := range usersDB {
+		var userTemplate UserTemplate
+		userTemplate.ID = userDB.ID
+		userTemplate.Name = userDB.Name
+		userTemplate.Email = userDB.Email
+		userTemplate.Phone = userDB.Phone
+		if userDB.TeamID.Valid {
+			userTemplate.TeamID = int(userDB.TeamID.Int64)
+		}
+		roleDB, err := role.GetRole(userDB.TempRole)
+		userTemplate.Role = roleDB.String()
+		if err != nil {
+			userTemplate.Role = fmt.Sprintf("failed to get role for users: %+v", err)
+		}
+		usersTemplate = append(usersTemplate, userTemplate)
+	}
+	return usersTemplate
+}
+
+func DBUsersContactToTemplateFormat(usersDB []user.User) ([]ContactUserTemplate, error) {
+	usersContactTemplate := make([]ContactUserTemplate, 0, len(usersDB))
+	for _, userDB := range usersDB {
+		var userContactTemplate ContactUserTemplate
+		userContactTemplate.ID = userDB.ID
+		userContactTemplate.Name = userDB.Name
+		userContactTemplate.Email = userDB.Email
+		temp, err := role.GetRole(userDB.TempRole)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse role for contactTemplate: %w", err)
+		}
+		userContactTemplate.Role = temp.String()
+		usersContactTemplate = append(usersContactTemplate, userContactTemplate)
+	}
+	return usersContactTemplate, nil
+}
+
+func DBWhatsOnToTemplateFormat(whatsOnsDB []whatson.WhatsOn) []WhatsOnTemplate {
+	whatsOnsTemplate := make([]WhatsOnTemplate, 0, len(whatsOnsDB))
+	for _, whatsOnDB := range whatsOnsDB {
+		var whatsOnTemplate WhatsOnTemplate
+		whatsOnTemplate.ID = whatsOnDB.ID
+		whatsOnTemplate.Title = whatsOnDB.Title
+		whatsOnTemplate.Date = time.UnixMilli(whatsOnDB.TempDate).Format("2006-01-02 15:04:05 MST")
+		whatsonDOE := time.UnixMilli(whatsOnDB.TempDOE)
+		year, month, day := whatsonDOE.Date()
+		whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsonDOE.Weekday().String()[0:3], day, month.String()[0:3], year)
+		whatsOnsTemplate = append(whatsOnsTemplate, whatsOnTemplate)
+	}
+	return whatsOnsTemplate
+}
+
+func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate {
+	var whatsOnTemplate WhatsOnTemplate
+	whatsOnTemplate.ID = whatsOnDB.ID
+	whatsOnTemplate.Title = whatsOnDB.Title
+	whatsOnTemplate.Content = whatsOnDB.Content
+	whatsOnTemplate.Date = time.UnixMilli(whatsOnDB.TempDate).Format("2006-01-02 15:04:05 MST")
+	whatsonDOE := time.UnixMilli(whatsOnDB.TempDOE)
+	year, month, day := whatsonDOE.Date()
+	whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsonDOE.Weekday().String()[0:3], day, month.String()[0:3], year)
+	return whatsOnTemplate
 }

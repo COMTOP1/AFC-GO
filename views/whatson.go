@@ -39,19 +39,6 @@ func (v *Views) WhatsOnFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnTemplate, templates.RegularType)
 }
 
-func DBWhatsOnToTemplateFormat(whatsOnDB []whatson.WhatsOn) []WhatsOnTemplate {
-	whatsOnTemplate := make([]WhatsOnTemplate, 0, len(whatsOnDB))
-	for _, w1 := range whatsOnDB {
-		var w WhatsOnTemplate
-		w.ID = w1.ID
-		w.Title = w1.Title
-		w.Date = time.UnixMilli(w1.TempDate).Format("2006-01-02 15:04:05 MST")
-		w.DateOfEvent = time.UnixMilli(w1.TempDOE).Format("2006-01-02")
-		whatsOnTemplate = append(whatsOnTemplate, w)
-	}
-	return whatsOnTemplate
-}
-
 func (v *Views) WhatsOnArticleFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 
@@ -77,16 +64,6 @@ func (v *Views) WhatsOnArticleFunc(c echo.Context) error {
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnArticleTemplate, templates.RegularType)
-}
-
-func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate {
-	var w WhatsOnTemplate
-	w.ID = whatsOnDB.ID
-	w.Title = whatsOnDB.Title
-	w.Content = whatsOnDB.Content
-	w.Date = time.UnixMilli(whatsOnDB.TempDate).Format("2006-01-02 15:04:05 MST")
-	w.DateOfEvent = time.UnixMilli(whatsOnDB.TempDOE).Format("2006-01-02")
-	return w
 }
 
 func (v *Views) WhatsOnAddFunc(c echo.Context) error {

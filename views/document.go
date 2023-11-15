@@ -45,17 +45,6 @@ func (v *Views) DocumentsFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.DocumentsTemplate, templates.RegularType)
 }
 
-func DBDocumentsToTemplateFormat(d1 []document.Document) []DocumentTemplate {
-	documentsTemplate := make([]DocumentTemplate, 0, len(d1))
-	for _, documentDB := range d1 {
-		var n2 DocumentTemplate
-		n2.ID = documentDB.ID
-		n2.Name = documentDB.Name
-		documentsTemplate = append(documentsTemplate, n2)
-	}
-	return documentsTemplate
-}
-
 func (v *Views) DocumentAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		name := c.FormValue("name")

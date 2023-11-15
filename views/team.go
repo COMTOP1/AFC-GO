@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"gopkg.in/guregu/null.v4"
 
-	"github.com/COMTOP1/AFC-GO/player"
 	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
@@ -60,18 +59,6 @@ func (v *Views) TeamsFunc(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.TeamsTemplate, templates.RegularType)
 }
 
-func DBTeamsToTemplateFormat(teams []team.Team) []TeamsTemplate {
-	teamsTemplate := make([]TeamsTemplate, 0, len(teams))
-	for _, t := range teams {
-		var t1 TeamsTemplate
-		t1.ID = t.ID
-		t1.Name = t.Name
-		t1.IsActive = t.IsActive
-		teamsTemplate = append(teamsTemplate, t1)
-	}
-	return teamsTemplate
-}
-
 func (v *Views) TeamFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 
@@ -118,27 +105,6 @@ func (v *Views) TeamFunc(c echo.Context) error {
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.TeamTemplate, templates.RegularType)
-}
-
-func DBManagersToTemplateFormat(managersDB []user.User) []string {
-	managersString := make([]string, 0, len(managersDB))
-	for _, manager := range managersDB {
-		managersString = append(managersString, manager.Name)
-	}
-	return managersString
-}
-
-func DBPlayersToTemplateFormat(playersDB []player.Player) []PlayerTemplate {
-	playersTemplate := make([]PlayerTemplate, 0, len(playersDB))
-	for _, playerDB := range playersDB {
-		var playerTemplate PlayerTemplate
-		playerTemplate.ID = playerDB.ID
-		playerTemplate.Name = playerDB.Name
-		playerTemplate.Position = playerDB.Position
-		playerTemplate.IsCaptain = playerDB.IsCaptain
-		playersTemplate = append(playersTemplate, playerTemplate)
-	}
-	return playersTemplate
 }
 
 func (v *Views) TeamAddFunc(c echo.Context) error {

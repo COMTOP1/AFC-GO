@@ -6,7 +6,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	role2 "github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
 )
@@ -44,27 +43,6 @@ func (v *Views) UsersFunc(c echo.Context) error {
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.UsersTemplate, templates.RegularType)
-}
-
-func DBUsersToTemplateFormat(u1 []user.User) []UserTemplate {
-	usersTemplate := make([]UserTemplate, 0, len(u1))
-	for _, userDB := range u1 {
-		var u2 UserTemplate
-		u2.ID = userDB.ID
-		u2.Name = userDB.Name
-		u2.Email = userDB.Email
-		u2.Phone = userDB.Phone
-		if userDB.TeamID.Valid {
-			u2.TeamID = int(userDB.TeamID.Int64)
-		}
-		role, err := role2.GetRole(userDB.TempRole)
-		u2.Role = role.String()
-		if err != nil {
-			u2.Role = fmt.Sprintf("failed to get role for users: %+v", err)
-		}
-		usersTemplate = append(usersTemplate, u2)
-	}
-	return usersTemplate
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {

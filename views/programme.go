@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
 
 	"github.com/COMTOP1/AFC-GO/programme"
 	"github.com/COMTOP1/AFC-GO/templates"
@@ -60,34 +59,6 @@ func (v *Views) ProgrammesFunc(c echo.Context) error {
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.ProgrammesTemplate, templates.RegularType)
-}
-
-func DBProgrammesToTemplateFormat(programmesDB []programme.Programme, seasonsDB []programme.Season) ([]ProgrammeTemplate, error) {
-	programmesTemplate := make([]ProgrammeTemplate, 0, len(programmesDB))
-	for _, programmeDB := range programmesDB {
-		var programmeTemplate ProgrammeTemplate
-		programmeTemplate.ID = programmeDB.ID
-		programmeTemplate.Name = programmeDB.Name
-		programmeTemplate.DateOfProgramme = time.UnixMilli(programmeDB.TempDOP).Format("2006-01-02")
-		found := false
-		for _, seasonDB := range seasonsDB {
-			if seasonDB.ID == programmeDB.SeasonID {
-				var seasonTemplate SeasonTemplate
-				seasonTemplate.ID = seasonDB.ID
-				seasonTemplate.Name = seasonDB.Season
-				seasonTemplate.Valid = true
-				programmeTemplate.Season = seasonTemplate
-				found = true
-				break
-			}
-		}
-		if !found {
-			log.Printf("failed to find season for programme: %d", programmeDB.ID)
-			programmeTemplate.Season = SeasonTemplate{Valid: false}
-		}
-		programmesTemplate = append(programmesTemplate, programmeTemplate)
-	}
-	return programmesTemplate, nil
 }
 
 func (v *Views) ProgrammesSeasonsFunc(c echo.Context) error {
