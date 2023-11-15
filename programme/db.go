@@ -13,7 +13,7 @@ func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {
 	var programmesDB []Programme
 	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
 		From("afc.programmes").
-		OrderBy("id")
+		OrderBy("date_of_programme DESC")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getProgrammes: %w", err))
