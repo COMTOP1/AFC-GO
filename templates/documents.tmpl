@@ -2,6 +2,10 @@
 {{define "content"}}
     {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
     <main class="main" style="text-align: center;">
+        <div class="pageHeaderBanner">
+            <h2 class="pageHeader">
+                Documents</h2>
+        </div>
         <div class="flexContainer">
             {{range .Documents}}
                 <div class="listItem" style="display: block; cursor: pointer;">

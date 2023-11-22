@@ -1,10 +1,11 @@
 {{define "title"}}Users{{end}}
 {{define "content"}}
     <main class="main" style="text-align: center; justify-content: center; align-content: center; align-items: center;">
-        <div style="background-color: white; margin: 10px 0 10px 0; padding: 5px 0 5px 0; text-align: center">
-            <h2 style="color: #1F1F1F" class="welcomeHeader">
-                Users<br><br>
+        <div class="pageHeaderBanner">
+            <h2 class="pageHeader">
+                Users
                 {{if or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
+                    <br><br>
                     <a class="button is-info" onclick="addUserModal()">Add user</a>
                 {{end}}</h2>
         </div>
