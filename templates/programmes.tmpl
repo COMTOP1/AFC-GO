@@ -11,13 +11,13 @@
                 <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
                     <h2 class="title">Latest programme - {{.Name}}
                     </h2><br>
-                    <h2 class="subtitle">{{if .Season.Valid}}Season - {{.Season.Name}}<br>{{end}}
+                    <h2 class="subtitle">{{if .Season.IsValid}}Season - {{.Season.Name}}<br>{{end}}
                         Date of programme - {{.DateOfProgramme}}
                     </h2>
                     <object data="/download?s=p&id={{.ID}}" width="95%" height="600px" embedded="true"></object>
                     {{if $priv}}
                         <br><br><br>
-                        <a class="button is-danger" onclick="deleteProgrammeModal()">Delete</a>
+                        <a class="button is-danger" onclick="deleteProgrammeModal({{.ID}}, '{{.Name}}')">Delete</a>
                     {{end}}
                 </div>
             </div>
@@ -34,10 +34,19 @@
                         {{$first = false}}
                     {{else}}
                         <div class="listItem" style="text-align: center; width: 275px; height: auto; cursor: pointer;"
-                             onclick="location.href='/download?s=p&id={{.ID}}';">
-                            <p class="subtitle">{{.Name}}
-                            </p>
-                            <p>{{if .Season.Valid}}Season - {{.Season.Name}}<br>{{end}}Date of programme - {{.DateOfProgramme}}<br><br>Click to download</p>
+                             {{if not $priv}}onclick="location.href='/download?s=p&id={{.ID}}';"{{end}}>
+                            {{if $priv}}<a href="/download?s=p&id={{.ID}}">{{end}}
+                                <p class="subtitle">{{.Name}}
+                                </p>
+                                <p>{{if .Season.IsValid}}Season - {{.Season.Name}}<br>{{end}}Date of programme
+                                    - {{.DateOfProgramme}}<br><br>Click to download</p>
+                                {{if $priv}}</a>{{end}}
+                            {{if $priv}}
+                                <br>
+                                <br>
+                                <a class="button is-danger" onclick="deleteProgrammeModal({{.ID}}, '{{.Name}}')"
+                                   style="margin-bottom: 20px">Delete</a>
+                            {{end}}
                         </div>
                     {{end}}
                 {{end}}
