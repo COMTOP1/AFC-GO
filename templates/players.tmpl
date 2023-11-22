@@ -1,0 +1,449 @@
+{{define "title"}}Players{{end}}
+{{define "content"}}
+    {{$priv := or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
+    <main class="main" style="text-align: center;">
+        <div class="pageHeaderBanner">
+            <h2 class="pageHeader">
+                Players
+            </h2>
+            <p>Please note, players who are under 18 or in a youth team will not have their images displayed.
+                {{if $priv}}
+                <br><br>
+                <a class="button is-info" onclick="addPlayerModal()">Add player</a>
+                {{end}}<br><br>
+            </p>
+        </div>
+        <table style="align-items: center; display: inline-flex; border-radius: 5px;
+        box-shadow: 0 .5em 1em -.125em rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .02);" class="table is-striped">
+            <tr>
+                <th>Name</th>
+                <th>Image</th>
+                <th>Date of birth</th>
+                <th>Captain</th>
+                <th>Team</th>
+                {{if $priv}}
+                    <th>Edit</th>
+                    <th>Delete</th>
+                {{end}}
+            </tr>
+            {{range .Players}}
+                <tr>
+                    <th>{{.Name}}
+                    </th>
+                    {{if ge .Age 18}}
+                        <th><img data-src="download?s=l&id={{.ID}}" alt="/public/AFC.png"
+                                 onerror="this.onerror=null;this.src='/public/AFC.png';" src="/public/AFC.png"
+                                 style="max-width: 150px; max-height: 150px;" class="lazy"/></th>
+                    {{else}}
+                        <th></th>
+                    {{end}}
+                    <th>{{.DateOfBirth}}
+                    </th>
+                    <th>{{if .IsCaptain}}Captain{{else}}No{{end}}
+                    </th>
+                    <th>{{if .Team.IsValid}}{{.Team.Name}}{{else}}!TEAM NOT FOUND!{{end}}
+                    </th>
+                    {{if $priv}}
+                        <th>
+                            <a class="button is-warning" onclick="editPlayerModal({{.ID}}, {{.Name}}, {{.IsFileValid}}, {{.DateOfBirthForm}}, {{.Position}}, {{.IsCaptain}}, {{.Team.ID}})">Edit</a>
+                        </th>
+                        <th>
+                            <a class="button is-danger" onclick="deletePlayerModal({{.ID}}, '{{.Name}}')">Delete</a>
+                        </th>
+                    {{end}}
+                </tr>
+            {{end}}
+        </table>
+    </main>
+    {{if $priv}}
+        {{template "modal" .}}
+    {{end}}
+{{end}}
+
+{{define "modal"}}
+    <div id="addPlayerModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Add Player</p>
+                            <p>Enter the player details below.<br>
+                                Please note, players who are under 18 or in a youth team will not have their images
+                                saved or displayed</p>
+                            <form id="addPlayerForm" enctype="multipart/form-data">
+                                <div class="field">
+                                    <label class="label" for="addName">Name</label>
+                                    <div class="control">
+                                        <input
+                                                id="addName"
+                                                class="input"
+                                                type="text"
+                                                name="name"
+                                                placeholder="Name"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="addDateOfBirth">Date of birth</label>
+                                    <div class="control">
+                                        <input
+                                                type="date"
+                                                id="addDateOfBirth"
+                                                name="dateOfBirth"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="addPlayerTeam">Team</label>
+                                    <div class="control has-icons-left select">
+                                        <select name="playerTeam" id="addPlayerTeam">
+                                            <option disabled selected>Please select</option>
+                                            {{range .Teams}}
+                                                <option id="playerSeason" value="{{.ID}}">
+                                                    {{.Name}}
+                                                </option>
+                                            {{end}}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="addPlayerUpload">Image</label>
+                                    <div class="file is-info has-name">
+                                        <label class="file-label">
+                                            <input class="file-input" type="file" accept="image/*" name="upload"
+                                                   id="addPlayerUpload">
+                                            <span class="file-cta">
+                                            <span class="file-icon">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            <span class="file-label">Choose a file…</span>
+                                        </span>
+                                            <span class="file-name" id="addPlayerUploadName">...</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="addPosition">Position</label>
+                                    <div class="control">
+                                        <input
+                                                id="addPosition"
+                                                class="input"
+                                                type="text"
+                                                name="position"
+                                                placeholder="Position"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="addIsCaptain">Is captain?</label>
+                                    <div class="control">
+                                        <input type="checkbox" id="addIsCaptain" name="isCaptain" value="Y">
+                                    </div>
+                                </div>
+                                <br>
+                                <button class="button is-info" onclick="addPlayer()" id="addPlayerButton">
+                                    Add Player
+                                </button>
+                            </form>
+                            <div id="addErrorParent" style="display: none">
+                                <br><br>
+                                <div class="notification is-danger" id="addError"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="editPlayerModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="editPlayerModalTitle">Edit Player</p>
+                            <p>Enter the player details below.<br>
+                                Please note, players who are under 18 or in a youth team will not have their images
+                                saved or displayed.<br>Either leave the values or leave it blank to not edit a field.</p>
+                            <form id="editPlayerForm" enctype="multipart/form-data">
+                                <div class="field">
+                                    <label class="label" for="editName">Name</label>
+                                    <div class="control">
+                                        <input
+                                                id="editName"
+                                                class="input"
+                                                type="text"
+                                                name="name"
+                                                placeholder="Name"
+                                        />
+                                    </div>
+                                </div>
+                                    <label class="label" for="editDateOfBirth">Date of birth</label>
+                                    <div class="control">
+                                        <input
+                                                type="date"
+                                                id="editDateOfBirth"
+                                                name="dateOfBirth"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="editPlayerTeam">Team</label>
+                                    <div class="control has-icons-left select">
+                                        <select name="team" id="editPlayerTeam">
+                                            <option disabled selected>Please select</option>
+                                            {{range .Teams}}
+                                                <option value="{{.ID}}">
+                                                    {{.Name}}
+                                                </option>
+                                            {{end}}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="editPlayerUpload">Image</label>
+                                    <div class="file is-info has-name">
+                                        <label class="file-label">
+                                            <input class="file-input" type="file" accept="image/*" name="upload"
+                                                   id="editPlayerUpload">
+                                            <span class="file-cta">
+                                            <span class="file-icon">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            <span class="file-label">Choose a file…</span>
+                                        </span>
+                                            <span class="file-name" id="editPlayerUploadName">...</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="editPosition">Position</label>
+                                    <div class="control">
+                                        <input
+                                                id="editPosition"
+                                                class="input"
+                                                type="text"
+                                                name="position"
+                                                placeholder="Position"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="editIsCaptain">Is captain?</label>
+                                    <div class="control">
+                                        <input type="checkbox" id="editIsCaptain" name="isCaptain" value="Y">
+                                    </div>
+                                </div>
+                                <br>
+                                <button class="button is-info" onclick="editPlayer()" id="editPlayerButton">
+                                    Edit Player
+                                </button>
+                            </form>
+                            <div id="editErrorParent" style="display: none">
+                                <br><br>
+                                <div class="notification is-danger" id="editError"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="deletePlayerModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="deletePlayerModalTitle"></p>
+                            <p>Be careful! Are you sure you want to remove them?</p>
+                            <form method="post" id="deletePlayerModalForm">
+                                <a class="button is-danger" onclick="deletePlayer()">Delete Player</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        let addPlayerUpload = $('#addPlayerUpload')
+        addPlayerUpload.change(function () {
+            $('#addPlayerUploadName').text(addPlayerUpload[0].files[0].name);
+        });
+
+        let editPlayerUpload = $('#editPlayerUpload')
+        editPlayerUpload.change(function () {
+            $('#editPlayerUploadName').text(editPlayerUpload[0].files[0].name);
+        });
+
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        let playerDeleteID = 0, playerEditID = 0;
+
+        function deletePlayerModal(id, name) {
+            playerDeleteID = id
+            document.getElementById("deletePlayerModal").classList.add("is-active");
+            document.getElementById("deletePlayerModalTitle").innerHTML = 'Are you sure you want to delete "' + name + '" from Players?';
+        }
+
+        function deletePlayer() {
+            document.getElementById("deletePlayerModalForm").action = "/player/" + playerDeleteID + "/delete";
+            $('#deletePlayerModalForm').submit();
+        }
+
+        function editPlayerModal(id, name, isFileValid, dateOfBirth, position, isCaptain, teamID) {
+            playerEditID = id;
+            let selectOptions = document.getElementById("editPlayerTeam").options;
+
+            for (let i = 0; i < selectOptions.length; i++) {
+                if (selectOptions[i].value === teamID.toString()) {
+                    selectOptions[i].selected = 'selected';
+                    break
+                }
+            }
+
+            document.getElementById("editName").value = name;
+
+            document.getElementById("editPlayerUploadName").textContent = "No file";
+
+            if (isFileValid) {
+                document.getElementById("editPlayerUploadName").textContent = "Uploaded";
+            }
+
+            document.getElementById("editPosition").value = position;
+
+            document.getElementById("editIsCaptain").checked = isCaptain;
+
+            playerEditID = id
+            document.getElementById("editPlayerModal").classList.add("is-active");
+            document.getElementById("editPlayerModalTitle").innerHTML = 'Are you sure you want to edit "' + name + '"?';
+            let date = new Date();
+            let day = date.getDate();
+            let month = date.getMonth() + 1;
+            let year = date.getFullYear();
+            const options = {
+                type: "date",
+                maxDate: day + "/" + month + "/" + year,
+                startDate: dateOfBirth,
+                dateFormat: 'dd/MM/yyyy',
+                showClearButton: false,
+                showTodayButton: false,
+                displayMode: "dialog",
+                weekStart: 1
+            }
+            // Initialize all input of date type.
+            const calendars = bulmaCalendar.attach('[type="date"]', options);
+
+            // Loop on each calendar initialized
+            calendars.forEach(calendar => {
+                // Add listener to select event
+                calendar.on('select', date => {
+                    console.log(date);
+                });
+            });
+            const elements = document.getElementsByClassName("datetimepicker-clear-button");
+            while (elements.length > 0) {
+                elements[0].parentNode.removeChild(elements[0]);
+            }
+        }
+
+        function editPlayer() {
+            document.getElementById("editErrorParent").style.display = 'none';
+            document.getElementById("editPlayerButton").disabled = true;
+            let form = $('#editPlayerForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
+            $.ajax({
+                url: '/player/'+ playerEditID + '/edit',
+                type: 'post',
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#editError").html(data.error);
+                        document.getElementById("editErrorParent").style.display = null;
+                        document.getElementById("editPlayerButton").disabled = false;
+                    } else {
+                        window.location.href = "/players";
+                    }
+                },
+            })
+        }
+
+        function addPlayerModal() {
+            let date = new Date();
+            let day = date.getDate();
+            let month = date.getMonth() + 1;
+            let year = date.getFullYear();
+            const options = {
+                type: "date",
+                maxDate: day + "/" + month + "/" + year,
+                startDate: day + "/" + month + "/" + year,
+                dateFormat: 'dd/MM/yyyy',
+                showClearButton: false,
+                showTodayButton: false,
+                displayMode: "dialog",
+                weekStart: 1
+            }
+            // Initialize all input of date type.
+            const calendars = bulmaCalendar.attach('[type="date"]', options);
+
+            // Loop on each calendar initialized
+            calendars.forEach(calendar => {
+                // Add listener to select event
+                calendar.on('select', date => {
+                    console.log(date);
+                });
+            });
+            const elements = document.getElementsByClassName("datetimepicker-clear-button");
+            while (elements.length > 0) {
+                elements[0].parentNode.removeChild(elements[0]);
+            }
+            document.getElementById("addPlayerModal").classList.add("is-active");
+        }
+
+        function addPlayer() {
+            document.getElementById("addErrorParent").style.display = 'none';
+            document.getElementById("addPlayerButton").disabled = true;
+            let form = $('#addPlayerForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
+            $.ajax({
+                url: '/player/add',
+                type: 'post',
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#addError").html(data.error);
+                        document.getElementById("addErrorParent").style.display = null;
+                        document.getElementById("addPlayerButton").disabled = false;
+                    } else {
+                        window.location.href = "/players";
+                    }
+                },
+            })
+        }
+    </script>
+{{end}}
