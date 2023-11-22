@@ -11,21 +11,6 @@ import (
 	"github.com/COMTOP1/AFC-GO/user"
 )
 
-type (
-	ProgrammeTemplate struct {
-		ID              int
-		Name            string
-		DateOfProgramme string
-		Season          SeasonTemplate
-	}
-
-	SeasonTemplate struct {
-		ID    int
-		Name  string
-		Valid bool
-	}
-)
-
 func (v *Views) ProgrammesFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 

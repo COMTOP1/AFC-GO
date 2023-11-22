@@ -15,6 +15,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/document"
 	"github.com/COMTOP1/AFC-GO/news"
@@ -44,6 +45,82 @@ type (
 		TitleText string
 		Message   string
 		MesType   string
+	}
+
+	ContactUserTemplate struct {
+		ID    int
+		Name  string
+		Email string
+		Role  string
+	}
+
+	DocumentTemplate struct {
+		ID   int
+		Name string
+	}
+
+	NewsTemplate struct {
+		ID      int
+		Title   string
+		Content string
+		Date    string
+	}
+
+	PlayerTemplate struct {
+		ID              int
+		Name            string
+		DateOfBirth     string
+		DateOfBirthForm string
+		IsFileValid     bool
+		Age             int
+		Position        null.String
+		IsCaptain       bool
+		Team            TeamTemplate
+	}
+
+	ProgrammeTemplate struct {
+		ID              int
+		Name            string
+		DateOfProgramme string
+		Season          SeasonTemplate
+	}
+
+	SeasonTemplate struct {
+		ID      int
+		Name    string
+		IsValid bool
+	}
+
+	SponsorTemplate struct {
+		ID      int
+		Name    string
+		Website null.String
+		Purpose string
+	}
+
+	TeamTemplate struct {
+		ID       int
+		Name     string
+		IsActive bool
+		IsYouth  bool
+		IsValid  bool
+	}
+
+	UserTemplate struct {
+		ID     int
+		Name   string
+		Email  string
+		Phone  string
+		TeamID int
+		Role   string
+	}
+
+	WhatsOnTemplate struct {
+		ID          int
+		Title       string
+		Content     string
+		Date        string
+		DateOfEvent string
 	}
 )
 

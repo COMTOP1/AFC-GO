@@ -14,11 +14,6 @@ import (
 	"github.com/COMTOP1/AFC-GO/user"
 )
 
-type DocumentTemplate struct {
-	ID   int
-	Name string
-}
-
 func (v *Views) DocumentsFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 

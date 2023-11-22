@@ -7,26 +7,10 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
-)
-
-type (
-	TeamsTemplate struct {
-		ID       int
-		Name     string
-		IsActive bool
-	}
-
-	PlayerTemplate struct {
-		ID        int
-		Name      string
-		Position  null.String
-		IsCaptain bool
-	}
 )
 
 func (v *Views) TeamsFunc(c echo.Context) error {

@@ -12,23 +12,6 @@ import (
 	"github.com/COMTOP1/AFC-GO/user"
 )
 
-type (
-	NewsTemplate struct {
-		ID      int
-		Title   string
-		Content string
-		Date    string
-	}
-
-	WhatsOnTemplate struct {
-		ID          int
-		Title       string
-		Content     string
-		Date        string
-		DateOfEvent string
-	}
-)
-
 func (v *Views) HomeFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 

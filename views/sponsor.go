@@ -5,19 +5,11 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/sponsor"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
 )
-
-type SponsorTemplate struct {
-	ID      int
-	Name    string
-	Website null.String
-	Purpose string
-}
 
 func (v *Views) SponsorsFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)

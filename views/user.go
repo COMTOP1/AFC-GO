@@ -10,15 +10,6 @@ import (
 	"github.com/COMTOP1/AFC-GO/user"
 )
 
-type UserTemplate struct {
-	ID     int
-	Name   string
-	Email  string
-	Phone  string
-	TeamID int
-	Role   string
-}
-
 func (v *Views) UsersFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 
