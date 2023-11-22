@@ -1,13 +1,22 @@
 package views
 
 import (
+	"encoding/hex"
 	"fmt"
+	"html/template"
+	"log"
+	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
 
+	"github.com/COMTOP1/AFC-GO/infrastructure/mail"
+	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
+	"github.com/COMTOP1/AFC-GO/utils"
 )
 
 func (v *Views) UsersFunc(c echo.Context) error {
@@ -37,8 +46,107 @@ func (v *Views) UsersFunc(c echo.Context) error {
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		name := c.FormValue("name")
+		email := c.FormValue("email")
+		phone := c.FormValue("phone")
+
+		var message struct {
+			Message string `json:"message"`
+			Error   error  `json:"error"`
+		}
+
+		formRole, err := role.GetRole(c.FormValue("role"))
+		if err != nil {
+			log.Printf("failed to get role for userAdd: %+v", err)
+			message.Error = fmt.Errorf("failed to get role for userAdd: %w", err)
+			return c.JSON(http.StatusOK, message)
+		}
+
+		teamID, err := strconv.Atoi(c.FormValue("teamID"))
+		if err != nil {
+			log.Printf("failed to get teamID for userAdd: %+v, proceeding with no team", err)
+			teamID = 0
+		}
+		if teamID < 0 {
+			log.Println("failed to parse negative number, proceeding with no team")
+			teamID = 0
+		}
+
+		password, err := utils.GenerateRandom(utils.GeneratePassword)
+		if err != nil {
+			return fmt.Errorf("error generating password: %w", err)
+		}
+
+		salt, err := utils.GenerateRandom(utils.GenerateSalt)
+		if err != nil {
+			return fmt.Errorf("error generating salt: %w", err)
+		}
+
+		hash := utils.HashPass([]byte(password), []byte(salt), v.conf.Security.Iterations, v.conf.Security.KeyLength)
+
+		u := user.User{
+			ID:            0,
+			Name:          name,
+			Email:         email,
+			Phone:         phone,
+			TeamID:        null.IntFrom(int64(teamID)),
+			Role:          formRole,
+			FileName:      null.StringFrom(""),
+			ResetPassword: true,
+			Hash:          null.StringFrom(hex.EncodeToString(hash)),
+			Salt:          null.StringFrom(salt),
+		}
+
+		_, err = v.user.AddUser(c.Request().Context(), u)
+		if err != nil {
+			return fmt.Errorf("failed to add user for addUser: %w", err)
+		}
+
+		mailer := v.mailer.ConnectMailer()
+
+		if mailer != nil {
+			var tmpl *template.Template
+			// TODO reimplement this
+			// tmpl, err = v.template.GetEmailTemplate(templates.SignupEmailTemplate)
+			if err != nil {
+				return fmt.Errorf("failed to get email in addUser: %w", err)
+			}
+
+			file := mail.Mail{
+				Subject: "Welcome to Aldermaston AFC!",
+				Tpl:     tmpl,
+				To:      u.Email,
+				From:    "Aldermaston AFC No-Reply <no-reply.afc@bswdi.co.uk>",
+				TplData: struct {
+					Name     string
+					Email    string
+					Password string
+				}{
+					Name:     name,
+					Email:    email,
+					Password: password,
+				},
+			}
+
+			err = mailer.SendMail(file)
+			if err != nil {
+				return fmt.Errorf("failed to send email in addUser: %w", err)
+			}
+
+			message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
+		} else {
+			message.Message = fmt.Sprintf("No mailer present\nPlease send the username and password to this email: %s, password: %s", email, password)
+			message.Error = fmt.Errorf("no mailer present")
+			log.Printf("no Mailer present")
+		}
+		log.Printf("created user: %s", u.Email)
+
+		var status int
+
+		return c.JSON(status, message)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
