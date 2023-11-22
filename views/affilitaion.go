@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -55,14 +57,21 @@ func (v *Views) AffiliationDeleteFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get id for affiliationDelete: %w", err)
 		}
 
-		affiliation1, err := v.affiliation.GetAffiliation(c.Request().Context(), affiliation.Affiliation{ID: id})
+		affiliationDB, err := v.affiliation.GetAffiliation(c.Request().Context(), affiliation.Affiliation{ID: id})
 		if err != nil {
-			return fmt.Errorf("failed to get user for affiliationDelete: %w", err)
+			return fmt.Errorf("failed to get affiliaiton for affiliationDelete: %w", err)
 		}
 
-		err = v.affiliation.DeleteAffiliation(c.Request().Context(), affiliation1)
+		if affiliationDB.FileName.Valid {
+			err = os.Remove(filepath.Join(v.conf.FileDir, affiliationDB.FileName.String))
+			if err != nil {
+				return fmt.Errorf("failed to delete affiliation image for affiliationDelete: %w", err)
+			}
+		}
+
+		err = v.affiliation.DeleteAffiliation(c.Request().Context(), affiliationDB)
 		if err != nil {
-			return fmt.Errorf("failed to delete user for affiliationDelete: %w", err)
+			return fmt.Errorf("failed to delete affiliaiton for affiliationDelete: %w", err)
 		}
 		return c.Redirect(http.StatusFound, "/")
 	}
