@@ -8,15 +8,17 @@
         </div>
         <div class="flexContainer">
             {{range .Sponsors}}
-                <div class="listItem" style="display: block; cursor: pointer">
-                    {{if .Website.Valid}}<a href="{{.Website.String}}">{{end}}
+                <div class="listItem" style="display: block; cursor: pointer"
+                {{if and (not $priv) .Website.Valid}}
+                onclick="location.href='{{.Website.String}}';"{{end}}>
+                    {{if and $priv .Website.Valid}}<a href="{{.Website.String}}">{{end}}
                         <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png"
                              onerror="this.onerror=null;this.src='/public/AFC.png';"
                              class="latestImage lazy" src="/public/AFC.png">
                         <h2 class="latestTitle">{{.Name}}</h2>
                         <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose}}
                         </p>
-                        {{if .Website.Valid}}</a>{{end}}
+                        {{if and $priv .Website.Valid}}</a>{{end}}
                     {{if $priv}}
                         <br>
                         <br>
@@ -55,7 +57,7 @@
                                                 class="input"
                                                 type="text"
                                                 name="title"
-                                                placeholder="title"
+                                                placeholder="Title"
                                         />
                                     </div>
                                 </div>
@@ -166,7 +168,7 @@
                         $("#error").html(data.error);
                         document.getElementById("errorParent").style.display = null;
                     } else {
-                        window.location.href = "/sponsor";
+                        window.location.href = "/sponsors";
                     }
                 },
             })
