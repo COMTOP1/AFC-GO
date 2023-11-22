@@ -32,7 +32,7 @@ func (v *Views) TeamsFunc(c echo.Context) error {
 
 	data := struct {
 		Year  int
-		Teams []TeamsTemplate
+		Teams []TeamTemplate
 		User  user.User
 	}{
 		Year:  year,
@@ -84,7 +84,7 @@ func (v *Views) TeamFunc(c echo.Context) error {
 		Team:     teamDB,
 		Managers: DBManagersToTemplateFormat(managersDB),
 		Sponsors: DBSponsorsToTemplateFormat(sponsorsDB),
-		Players:  DBPlayersToTemplateFormat(playersDB),
+		Players:  DBPlayersTeamToTemplateFormat(playersDB),
 		User:     c1.User,
 	}
 
