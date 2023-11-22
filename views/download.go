@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 
@@ -99,6 +100,38 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 		player, err = v.player.GetPlayer(c.Request().Context(), player1.Player{ID: id})
 		if err != nil {
 			return fmt.Errorf("download failed to get player: %w, id: %d", err, id)
+		}
+		var teamDB team1.Team
+		teamDB, err = v.team.GetTeam(c.Request().Context(), team1.Team{ID: player.TeamID})
+		if err != nil {
+			return fmt.Errorf("download failed to get team for player: %w, id: %d", err, id)
+		}
+		if teamDB.IsYouth {
+			return nil // Prevent image being downloaded if the team is a youth team
+		}
+		if player.TempDOB > 0 {
+			var playerDOB time.Time
+			if player.TempDOB < 20000 {
+				playerDOB = ofEpochDay(player.TempDOB)
+			} else {
+				playerDOB = time.UnixMilli(player.TempDOB)
+			}
+			today := time.Now().In(playerDOB.Location())
+			ty, tm, td := today.Date()
+			today = time.Date(ty, tm, td, 0, 0, 0, 0, time.UTC)
+			by, bm, bd := playerDOB.Date()
+			birthdate := time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC)
+			if today.Before(birthdate) {
+				return fmt.Errorf("failed to parse player dateOfBirth: %d", player.ID)
+			}
+			age := ty - by
+			anniversary := birthdate.AddDate(age, 0, 0)
+			if anniversary.After(today) {
+				age--
+			}
+			if age < 18 {
+				return nil // Prevent image download if player is under 18
+			}
 		}
 		if len(player.FileName.String) == 0 || !player.FileName.Valid {
 			return fmt.Errorf("download failed to get player file name: no file name is present, id: %d", id)
