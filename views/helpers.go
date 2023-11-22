@@ -354,7 +354,7 @@ func DBNewsToArticleTemplateFormat(newsDB news.News) NewsTemplate {
 	return newsTemplate
 }
 
-func DBProgrammesToTemplateFormat(programmesDB []programme.Programme, seasonsDB []programme.Season) ([]ProgrammeTemplate, error) {
+func DBProgrammesToTemplateFormat(programmesDB []programme.Programme, seasonsDB []programme.Season) []ProgrammeTemplate {
 	programmesTemplate := make([]ProgrammeTemplate, 0, len(programmesDB))
 	for _, programmeDB := range programmesDB {
 		var programmeTemplate ProgrammeTemplate
@@ -369,7 +369,7 @@ func DBProgrammesToTemplateFormat(programmesDB []programme.Programme, seasonsDB 
 				var seasonTemplate SeasonTemplate
 				seasonTemplate.ID = seasonDB.ID
 				seasonTemplate.Name = seasonDB.Season
-				seasonTemplate.Valid = true
+				seasonTemplate.IsValid = true
 				programmeTemplate.Season = seasonTemplate
 				found = true
 				break
@@ -377,11 +377,11 @@ func DBProgrammesToTemplateFormat(programmesDB []programme.Programme, seasonsDB 
 		}
 		if !found {
 			log.Printf("failed to find season for programme: %d", programmeDB.ID)
-			programmeTemplate.Season = SeasonTemplate{Valid: false}
+			programmeTemplate.Season = SeasonTemplate{IsValid: false}
 		}
 		programmesTemplate = append(programmesTemplate, programmeTemplate)
 	}
-	return programmesTemplate, nil
+	return programmesTemplate
 }
 
 func DBSponsorsToTemplateFormat(sponsorsDB []sponsor.Sponsor) []SponsorTemplate {
@@ -405,7 +405,75 @@ func DBManagersToTemplateFormat(managersDB []user.User) []string {
 	return managersString
 }
 
-func DBPlayersToTemplateFormat(playersDB []player.Player) []PlayerTemplate {
+func DBPlayersToTemplateFormat(playersDB []player.Player, teamsDB []team.Team) []PlayerTemplate {
+	playersTemplate := make([]PlayerTemplate, 0, len(playersDB))
+	for _, playerDB := range playersDB {
+		var playerTemplate PlayerTemplate
+		playerTemplate.ID = playerDB.ID
+		playerTemplate.Name = playerDB.Name
+		playerTemplate.DateOfBirth = "Not provided"
+		if playerDB.TempDOB > 0 {
+			var playerDOB time.Time
+			if playerDB.TempDOB < 20000 {
+				playerDOB = ofEpochDay(playerDB.TempDOB)
+			} else {
+				playerDOB = time.UnixMilli(playerDB.TempDOB)
+			}
+			year, month, day := playerDOB.Date()
+			playerTemplate.DateOfBirth = fmt.Sprintf("%s %02d %s %d", playerDOB.Weekday().String()[0:3], day, month.String()[0:3], year)
+			today := time.Now().In(playerDOB.Location())
+			ty, tm, td := today.Date()
+			today = time.Date(ty, tm, td, 0, 0, 0, 0, time.UTC)
+			by, bm, bd := playerDOB.Date()
+			birthdate := time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC)
+			if today.Before(birthdate) {
+				log.Printf("failed to parse player dateOfBirth: %d", playerDB.ID)
+				playerTemplate.Age = -1
+			} else {
+				age := ty - by
+				anniversary := birthdate.AddDate(age, 0, 0)
+				if anniversary.After(today) {
+					age--
+				}
+				playerTemplate.Age = age
+				playerTemplate.DateOfBirthForm = fmt.Sprintf("%02d/%02d/%04d", bd, bm, by)
+			}
+		} else {
+			playerTemplate.Age = -1
+		}
+		if len(playerDB.FileName.String) > 0 && playerDB.FileName.Valid {
+			playerTemplate.IsFileValid = true
+		}
+		playerTemplate.Position = playerDB.Position
+		playerTemplate.IsCaptain = playerDB.IsCaptain
+		found := false
+		if playerDB.TeamID < 0 {
+			log.Printf("failed to find team for player: %d, teamID set below 1: %d", playerDB.ID, playerDB.TeamID)
+			playerTemplate.Team = TeamTemplate{IsValid: false}
+		} else {
+			for _, teamDB := range teamsDB {
+				if teamDB.ID == playerDB.TeamID {
+					var teamTemplate TeamTemplate
+					teamTemplate.ID = teamDB.ID
+					teamTemplate.Name = teamDB.Name
+					teamTemplate.IsYouth = teamDB.IsYouth
+					teamTemplate.IsValid = true
+					playerTemplate.Team = teamTemplate
+					found = true
+					break
+				}
+			}
+			if !found {
+				log.Printf("failed to find team for player: %d", playerDB.ID)
+				playerTemplate.Team = TeamTemplate{IsValid: false}
+			}
+		}
+		playersTemplate = append(playersTemplate, playerTemplate)
+	}
+	return playersTemplate
+}
+
+func DBPlayersTeamToTemplateFormat(playersDB []player.Player) []PlayerTemplate {
 	playersTemplate := make([]PlayerTemplate, 0, len(playersDB))
 	for _, playerDB := range playersDB {
 		var playerTemplate PlayerTemplate
@@ -418,13 +486,14 @@ func DBPlayersToTemplateFormat(playersDB []player.Player) []PlayerTemplate {
 	return playersTemplate
 }
 
-func DBTeamsToTemplateFormat(teamsDB []team.Team) []TeamsTemplate {
-	teamsTemplate := make([]TeamsTemplate, 0, len(teamsDB))
+func DBTeamsToTemplateFormat(teamsDB []team.Team) []TeamTemplate {
+	teamsTemplate := make([]TeamTemplate, 0, len(teamsDB))
 	for _, teamDB := range teamsDB {
-		var teamTemplate TeamsTemplate
+		var teamTemplate TeamTemplate
 		teamTemplate.ID = teamDB.ID
 		teamTemplate.Name = teamDB.Name
 		teamTemplate.IsActive = teamDB.IsActive
+		teamTemplate.IsYouth = teamDB.IsYouth
 		teamsTemplate = append(teamsTemplate, teamTemplate)
 	}
 	return teamsTemplate
@@ -493,4 +562,46 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 	year, month, day := whatsonDOE.Date()
 	whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsonDOE.Weekday().String()[0:3], day, month.String()[0:3], year)
 	return whatsOnTemplate
+}
+
+const DaysPerCycle = 146097
+const Days0000To1970 = int64(DaysPerCycle*5) - (int64(30)*int64(365) + int64(7))
+
+func ofEpochDay(epochDay int64) time.Time {
+	var zeroDay, adjust, adjustCycles, yearEst, doyEst int64
+	zeroDay = epochDay + Days0000To1970
+	// find the march-based year
+	zeroDay -= 60 // adjust to 0000-03-01 so leap day is at end of four year cycle
+	adjust = 0
+	if zeroDay < 0 {
+		// adjust negative years to positive for calculation
+		adjustCycles = (zeroDay+1)/DaysPerCycle - 1
+		adjust = adjustCycles * 400
+		zeroDay += -adjustCycles * DaysPerCycle
+	}
+	yearEst = (400*zeroDay + 591) / DaysPerCycle
+	doyEst = zeroDay - (365*yearEst + yearEst/4 - yearEst/100 + yearEst/400)
+	if doyEst < 0 {
+		// fix estimate
+		yearEst--
+		doyEst = zeroDay - (365*yearEst + yearEst/4 - yearEst/100 + yearEst/400)
+	}
+	yearEst += adjust // reset any negative year
+	marchDoy0 := int(doyEst)
+
+	// convert march-based values back to january-based
+
+	marchMonth0 := (marchDoy0*5 + 2) / 153
+
+	month := (marchMonth0+2)%12 + 1
+	dom := marchDoy0 - (marchMonth0*306+5)/10 + 1
+	yearEst += int64(marchMonth0) / 10
+
+	location, err := time.LoadLocation("Europe/London")
+	if err != nil {
+		log.Printf("failed to get timezone: %+v", err)
+	}
+
+	// check year now we are certain it is correct
+	return time.Date(int(yearEst), time.Month(month), dom, 0, 0, 0, 0, location)
 }
