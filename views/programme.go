@@ -24,11 +24,6 @@ func (v *Views) ProgrammesFunc(c echo.Context) error {
 		return fmt.Errorf("failed to get seasons for programme: %w", err)
 	}
 
-	programmesTemplate, err := DBProgrammesToTemplateFormat(programmesDB, seasonsDB)
-	if err != nil {
-		return fmt.Errorf("failed to parse programmes for programmes: %w", err)
-	}
-
 	year, _, _ := time.Now().Date()
 
 	data := struct {
@@ -38,7 +33,7 @@ func (v *Views) ProgrammesFunc(c echo.Context) error {
 		User       user.User
 	}{
 		Year:       year,
-		Programmes: programmesTemplate,
+		Programmes: DBProgrammesToTemplateFormat(programmesDB, seasonsDB),
 		Seasons:    seasonsDB,
 		User:       c1.User,
 	}
