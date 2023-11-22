@@ -15,6 +15,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/document"
 	"github.com/COMTOP1/AFC-GO/image"
 	"github.com/COMTOP1/AFC-GO/infrastructure/db"
+	"github.com/COMTOP1/AFC-GO/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/news"
 	"github.com/COMTOP1/AFC-GO/player"
 	"github.com/COMTOP1/AFC-GO/programme"
@@ -35,18 +36,18 @@ type (
 		// LogoutEndpoint    string
 		SessionCookieName string
 		FileDir           string
-		// Mail              SMTPConfig
-		Security SecurityConfig
+		Mail              SMTPConfig
+		Security          SecurityConfig
 	}
 
-	//// SMTPConfig stores the SMTP Mailer configuration
-	// SMTPConfig struct {
-	//	Host       string
-	//	Username   string
-	//	Password   string
-	//	Port       int
-	//	DomainName string
-	// }
+	// SMTPConfig stores the SMTP Mailer configuration
+	SMTPConfig struct {
+		Host       string
+		Username   string
+		Password   string
+		Port       int
+		DomainName string
+	}
 
 	// SecurityConfig stores the security configuration
 	SecurityConfig struct {
@@ -65,6 +66,7 @@ type (
 		cookie      *sessions.CookieStore
 		document    *document.Store
 		image       *image.Store
+		mailer      *mail.MailerInit
 		news        *news.Store
 		player      *player.Store
 		programme   *programme.Store
@@ -132,6 +134,15 @@ func New(conf *Config, host string) *Views {
 	gob.Register(InternalContext{})
 
 	v.conf = conf
+
+	// Initialise mailer
+	v.mailer = mail.NewMailer(mail.Config{
+		Host:       conf.Mail.Host,
+		Port:       conf.Mail.Port,
+		Username:   conf.Mail.Username,
+		Password:   conf.Mail.Password,
+		DomainName: conf.Mail.DomainName,
+	})
 
 	// Struct validator
 	// v.validate = validator.New()
