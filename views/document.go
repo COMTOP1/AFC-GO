@@ -3,6 +3,8 @@ package views
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -85,12 +87,17 @@ func (v *Views) DocumentDeleteFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get id for documentDelete: %w", err)
 		}
 
-		document1, err := v.document.GetDocument(c.Request().Context(), document.Document{ID: id})
+		documentDB, err := v.document.GetDocument(c.Request().Context(), document.Document{ID: id})
 		if err != nil {
 			return fmt.Errorf("failed to get user for documentDelete: %w", err)
 		}
 
-		err = v.document.DeleteDocument(c.Request().Context(), document1)
+		err = os.Remove(filepath.Join(v.conf.FileDir, documentDB.FileName))
+		if err != nil {
+			return fmt.Errorf("failed to delete document file for documentDelete: %w", err)
+		}
+
+		err = v.document.DeleteDocument(c.Request().Context(), documentDB)
 		if err != nil {
 			return fmt.Errorf("failed to delete user for documentDelete: %w", err)
 		}
