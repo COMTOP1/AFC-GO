@@ -49,7 +49,7 @@
                                                 class="input"
                                                 type="text"
                                                 name="title"
-                                                placeholder="title"
+                                                placeholder="Title"
                                         />
                                     </div>
                                 </div>
@@ -76,7 +76,7 @@
                                     </div>
                                 </div>
                                 <div class="field">
-                                    <label class="label" for="expiry">Date of event</label>
+                                    <label class="label" for="dateOfEvent">Date of event</label>
                                     <div class="control">
                                         <input
                                                 type="date"
@@ -180,6 +180,7 @@
         }
 
         function addWhatsOn() {
+            document.getElementById("errorParent").style.display = 'none';
             document.getElementById("addWhatsOnButton").disabled = true;
             let form = $('#addWhatsOnForm')[0];
 
