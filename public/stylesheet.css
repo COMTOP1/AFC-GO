@@ -80,6 +80,10 @@ footer {
     color: #1F1F1F;
 }
 
+a {
+    color: #1F1F1F;
+}
+
 small > a {
     color: black;
     text-decoration: none;
