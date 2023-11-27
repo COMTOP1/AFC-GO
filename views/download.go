@@ -109,17 +109,11 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 		if teamDB.IsYouth {
 			return nil // Prevent image being downloaded if the team is a youth team
 		}
-		if player.TempDOB > 0 {
-			var playerDOB time.Time
-			if player.TempDOB < 20000 {
-				playerDOB = ofEpochDay(player.TempDOB)
-			} else {
-				playerDOB = time.UnixMilli(player.TempDOB)
-			}
-			today := time.Now().In(playerDOB.Location())
+		if player.DateOfBirth.Valid {
+			today := time.Now().In(player.DateOfBirth.Time.Location())
 			ty, tm, td := today.Date()
 			today = time.Date(ty, tm, td, 0, 0, 0, 0, time.UTC)
-			by, bm, bd := playerDOB.Date()
+			by, bm, bd := player.DateOfBirth.Time.Date()
 			birthdate := time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC)
 			if today.Before(birthdate) {
 				return fmt.Errorf("failed to parse player dateOfBirth: %d", player.ID)

@@ -132,8 +132,8 @@ func (s *Store) editWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn,
 			"title":         whatsOnParam.Title,
 			"file_name":     whatsOnParam.FileName,
 			"content":       whatsOnParam.Content,
-			"date":          whatsOnParam.TempDate,
-			"date_of_event": whatsOnParam.TempDOE,
+			"date":          whatsOnParam.Date,
+			"date_of_event": whatsOnParam.DateOfEvent,
 		}).
 		Where(sq.Eq{"id": whatsOnParam.ID})
 	sql, args, err := builder.ToSql()

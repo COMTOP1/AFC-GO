@@ -20,10 +20,8 @@ type (
 		Title       string      `db:"title" json:"title"`
 		FileName    null.String `db:"file_name" json:"file_name"`
 		Content     string      `db:"content" json:"content"`
-		TempDate    int64       `db:"date" json:"date"`
-		Date        time.Time
-		TempDOE     int64 `db:"date_of_event" json:"date_of_event"`
-		DateOfEvent time.Time
+		Date        time.Time   `db:"date" json:"date"`
+		DateOfEvent time.Time   `db:"date_of_event" json:"date_of_event"`
 	}
 )
 

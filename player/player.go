@@ -19,8 +19,7 @@ type (
 		ID          int         `db:"id" json:"id"`
 		Name        string      `db:"name" json:"name"`
 		FileName    null.String `db:"file_name" json:"file_name"`
-		TempDOB     int64       `db:"date_of_birth" json:"date_of_birth"`
-		DateOfBirth null.Time
+		DateOfBirth null.Time   `db:"date_of_birth" json:"date_of_birth"`
 		Position    null.String `db:"position" json:"position"`
 		IsCaptain   bool        `db:"captain" json:"is_captain"`
 		TeamID      int         `db:"team_id" json:"team_id"`
@@ -48,7 +47,7 @@ func (s *Store) GetPlayer(ctx context.Context, playerParam Player) (Player, erro
 
 func (s *Store) AddPlayer(ctx context.Context, playerParam Player) (Player, error) {
 	if playerParam.DateOfBirth.Valid {
-		playerParam.TempDOB = playerParam.DateOfBirth.Time.Unix()
+		playerParam.DateOfBirth = playerParam.DateOfBirth
 	}
 	return s.addPlayer(ctx, playerParam)
 }

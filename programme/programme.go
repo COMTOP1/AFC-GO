@@ -14,12 +14,11 @@ type (
 	}
 
 	Programme struct {
-		ID              int    `db:"id" json:"id"`
-		Name            string `db:"name" json:"name"`
-		FileName        string `db:"file_name" json:"file_name"`
-		TempDOP         int64  `db:"date_of_programme" json:"date_of_programme"`
-		DateOfProgramme time.Time
-		SeasonID        int `db:"programme_season_id" json:"season_id"`
+		ID              int       `db:"id" json:"id"`
+		Name            string    `db:"name" json:"name"`
+		FileName        string    `db:"file_name" json:"file_name"`
+		DateOfProgramme time.Time `db:"date_of_programme" json:"date_of_programme"`
+		SeasonID        int       `db:"programme_season_id" json:"season_id"`
 	}
 
 	Season struct {

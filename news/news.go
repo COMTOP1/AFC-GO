@@ -19,8 +19,7 @@ type (
 		Title    string      `db:"title" json:"title"`
 		FileName null.String `db:"file_name" json:"file_name"`
 		Content  null.String `db:"content" json:"content"`
-		Temp     int64       `db:"date" json:"date"`
-		Date     time.Time
+		Date     time.Time   `db:"date" json:"date"`
 	}
 )
 

@@ -61,7 +61,7 @@ func (s *Store) getProgramme(ctx context.Context, programmeParam Programme) (Pro
 func (s *Store) addProgramme(ctx context.Context, programmeParam Programme) (Programme, error) {
 	builder := utils.MySQL().Insert("afc.programmes").
 		Columns("name", "file_name", "date_of_programme", "programme_season_id").
-		Values(programmeParam.Name, programmeParam.FileName, programmeParam.TempDOP, programmeParam.SeasonID)
+		Values(programmeParam.Name, programmeParam.FileName, programmeParam.DateOfProgramme, programmeParam.SeasonID)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addProgramme: %w", err))
@@ -90,7 +90,7 @@ func (s *Store) editProgramme(ctx context.Context, programmeParam Programme) (Pr
 		SetMap(map[string]interface{}{
 			"name":                programmeParam.Name,
 			"file_name":           programmeParam.FileName,
-			"date_of_programme":   programmeParam.TempDOP,
+			"date_of_programme":   programmeParam.DateOfProgramme,
 			"programme_season_id": programmeParam.SeasonID,
 		}).
 		Where(sq.Eq{"id": programmeParam.ID})

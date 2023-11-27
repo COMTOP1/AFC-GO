@@ -335,9 +335,8 @@ func DBNewsToTemplateFormat(newsDB []news.News) []NewsTemplate {
 		var newsArticleTemplate NewsTemplate
 		newsArticleTemplate.ID = newsArticleDB.ID
 		newsArticleTemplate.Title = newsArticleDB.Title
-		newsDate := time.UnixMilli(newsArticleDB.Temp)
-		year, month, day := newsDate.Date()
-		newsArticleTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", newsDate.Weekday().String()[0:3], day, month.String()[0:3], year, time.UnixMilli(newsArticleDB.Temp).Format("15:04:05 MST"))
+		year, month, day := newsArticleDB.Date.Date()
+		newsArticleTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", newsArticleDB.Date.Weekday().String()[0:3], day, month.String()[0:3], year, newsArticleDB.Date.Format("15:04:05"))
 		newsTemplate = append(newsTemplate, newsArticleTemplate)
 	}
 	return newsTemplate
@@ -348,9 +347,8 @@ func DBNewsToArticleTemplateFormat(newsDB news.News) NewsTemplate {
 	newsTemplate.ID = newsDB.ID
 	newsTemplate.Title = newsDB.Title
 	newsTemplate.Content = newsDB.Content.String
-	newsDate := time.UnixMilli(newsDB.Temp)
-	year, month, day := newsDate.Date()
-	newsTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", newsDate.Weekday().String()[0:3], day, month.String()[0:3], year, time.UnixMilli(newsDB.Temp).Format("15:04:05 MST"))
+	year, month, day := newsDB.Date.Date()
+	newsTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", newsDB.Date.Weekday().String()[0:3], day, month.String()[0:3], year, newsDB.Date.Format("15:04:05"))
 	return newsTemplate
 }
 
@@ -360,9 +358,8 @@ func DBProgrammesToTemplateFormat(programmesDB []programme.Programme, seasonsDB 
 		var programmeTemplate ProgrammeTemplate
 		programmeTemplate.ID = programmeDB.ID
 		programmeTemplate.Name = programmeDB.Name
-		programmeDOP := time.UnixMilli(programmeDB.TempDOP)
-		year, month, day := programmeDOP.Date()
-		programmeTemplate.DateOfProgramme = fmt.Sprintf("%s %02d %s %d", programmeDOP.Weekday().String()[0:3], day, month.String()[0:3], year)
+		year, month, day := programmeDB.DateOfProgramme.Date()
+		programmeTemplate.DateOfProgramme = fmt.Sprintf("%s %02d %s %d", programmeDB.DateOfProgramme.Weekday().String()[0:3], day, month.String()[0:3], year)
 		found := false
 		for _, seasonDB := range seasonsDB {
 			if seasonDB.ID == programmeDB.SeasonID {
@@ -412,19 +409,13 @@ func DBPlayersToTemplateFormat(playersDB []player.Player, teamsDB []team.Team) [
 		playerTemplate.ID = playerDB.ID
 		playerTemplate.Name = playerDB.Name
 		playerTemplate.DateOfBirth = "Not provided"
-		if playerDB.TempDOB > 0 {
-			var playerDOB time.Time
-			if playerDB.TempDOB < 20000 {
-				playerDOB = ofEpochDay(playerDB.TempDOB)
-			} else {
-				playerDOB = time.UnixMilli(playerDB.TempDOB)
-			}
-			year, month, day := playerDOB.Date()
-			playerTemplate.DateOfBirth = fmt.Sprintf("%s %02d %s %d", playerDOB.Weekday().String()[0:3], day, month.String()[0:3], year)
-			today := time.Now().In(playerDOB.Location())
+		if playerDB.DateOfBirth.Valid {
+			year, month, day := playerDB.DateOfBirth.Time.Date()
+			playerTemplate.DateOfBirth = fmt.Sprintf("%s %02d %s %d", playerDB.DateOfBirth.Time.Weekday().String()[0:3], day, month.String()[0:3], year)
+			today := time.Now().In(playerDB.DateOfBirth.Time.Location())
 			ty, tm, td := today.Date()
 			today = time.Date(ty, tm, td, 0, 0, 0, 0, time.UTC)
-			by, bm, bd := playerDOB.Date()
+			by, bm, bd := playerDB.DateOfBirth.Time.Date()
 			birthdate := time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC)
 			if today.Before(birthdate) {
 				log.Printf("failed to parse player dateOfBirth: %d", playerDB.ID)
@@ -543,10 +534,9 @@ func DBWhatsOnToTemplateFormat(whatsOnsDB []whatson.WhatsOn) []WhatsOnTemplate {
 		var whatsOnTemplate WhatsOnTemplate
 		whatsOnTemplate.ID = whatsOnDB.ID
 		whatsOnTemplate.Title = whatsOnDB.Title
-		whatsOnTemplate.Date = time.UnixMilli(whatsOnDB.TempDate).Format("2006-01-02 15:04:05 MST")
-		whatsonDOE := time.UnixMilli(whatsOnDB.TempDOE)
-		year, month, day := whatsonDOE.Date()
-		whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsonDOE.Weekday().String()[0:3], day, month.String()[0:3], year)
+		whatsOnTemplate.Date = whatsOnDB.Date.Format("2006-01-02 15:04:05")
+		year, month, day := whatsOnDB.DateOfEvent.Date()
+		whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsOnDB.DateOfEvent.Weekday().String()[0:3], day, month.String()[0:3], year)
 		whatsOnsTemplate = append(whatsOnsTemplate, whatsOnTemplate)
 	}
 	return whatsOnsTemplate
@@ -557,10 +547,9 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 	whatsOnTemplate.ID = whatsOnDB.ID
 	whatsOnTemplate.Title = whatsOnDB.Title
 	whatsOnTemplate.Content = whatsOnDB.Content
-	whatsOnTemplate.Date = time.UnixMilli(whatsOnDB.TempDate).Format("2006-01-02 15:04:05 MST")
-	whatsonDOE := time.UnixMilli(whatsOnDB.TempDOE)
-	year, month, day := whatsonDOE.Date()
-	whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsonDOE.Weekday().String()[0:3], day, month.String()[0:3], year)
+	whatsOnTemplate.Date = whatsOnDB.Date.Format("2006-01-02 15:04:05")
+	year, month, day := whatsOnDB.DateOfEvent.Date()
+	whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsOnDB.DateOfEvent.Weekday().String()[0:3], day, month.String()[0:3], year)
 	return whatsOnTemplate
 }
 

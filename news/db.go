@@ -65,7 +65,7 @@ func (s *Store) getNewsArticle(ctx context.Context, newsParam News) (News, error
 func (s *Store) addNews(ctx context.Context, newsParam News) (News, error) {
 	builder := utils.MySQL().Insert("afc.news").
 		Columns("title", "file_name", "content", "date").
-		Values(newsParam.Title, newsParam.FileName, newsParam.Content, newsParam.Temp)
+		Values(newsParam.Title, newsParam.FileName, newsParam.Content, newsParam.Date)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addNews: %w", err))
@@ -95,7 +95,7 @@ func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
 			"title":     newsParam.Title,
 			"file_name": newsParam.FileName,
 			"content":   newsParam.Content,
-			"date":      newsParam.Temp,
+			"date":      newsParam.Date,
 		}).
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()

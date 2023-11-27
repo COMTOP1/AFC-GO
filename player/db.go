@@ -62,7 +62,7 @@ func (s *Store) getPlayer(ctx context.Context, playerParam Player) (Player, erro
 func (s *Store) addPlayer(ctx context.Context, playerParam Player) (Player, error) {
 	builder := utils.MySQL().Insert("afc.players").
 		Columns("name", "file_name", "date_of_birth", "position", "captain", "team_id").
-		Values(playerParam.Name, playerParam.FileName, playerParam.TempDOB, playerParam.Position, playerParam.IsCaptain, playerParam.TeamID)
+		Values(playerParam.Name, playerParam.FileName, playerParam.DateOfBirth, playerParam.Position, playerParam.IsCaptain, playerParam.TeamID)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addPlayer: %w", err))
@@ -91,7 +91,7 @@ func (s *Store) editPlayer(ctx context.Context, playerParam Player) (Player, err
 		SetMap(map[string]interface{}{
 			"name":          playerParam.Name,
 			"file_name":     playerParam.FileName,
-			"date_of_birth": playerParam.TempDOB,
+			"date_of_birth": playerParam.DateOfBirth,
 			"position":      playerParam.Position,
 			"captain":       playerParam.IsCaptain,
 			"team_id":       playerParam.TeamID,
