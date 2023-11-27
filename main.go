@@ -50,7 +50,7 @@ func main() {
 	}
 
 	dbConnectionString := fmt.Sprintf(
-		"%s:%s@(%s:%d)/%s",
+		"%s:%s@(%s:%d)/%s?parseTime=true",
 		dbUser,
 		dbPass,
 		dbHost,
