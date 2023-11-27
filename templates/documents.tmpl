@@ -5,6 +5,11 @@
         <div class="pageHeaderBanner">
             <h2 class="pageHeader">
                 Documents</h2>
+            {{if $priv}}
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-info" onclick="addDocumentModal()">Add Document</a>
+                </div>
+            {{end}}
         </div>
         <div class="flexContainer">
             {{range .Documents}}
