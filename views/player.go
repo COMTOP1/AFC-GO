@@ -101,20 +101,29 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
+		var fileName string
+		hasUpload := true
+
 		file, err := c.FormFile("upload")
 		if err != nil {
-			log.Printf("failed to get file for playerAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to get file for playerAdd: %+v", err)
-			return c.JSON(http.StatusOK, data)
+			if !strings.Contains(err.Error(), "no such file") {
+				log.Printf("failed to get file for playerEdit: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for playerEdit: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			} else {
+				hasUpload = false
+			}
 		}
-		fileName, err := v.fileUpload(file)
-		if err != nil {
-			log.Printf("failed to upload file for playerAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to upload file for playerAdd: %+v", err)
-			return c.JSON(http.StatusOK, data)
+		if hasUpload {
+			fileName, err = v.fileUpload(file)
+			if err != nil {
+				log.Printf("failed to upload file for playerEdit: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for playerEdit: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
 		}
 
-		_, err = v.player.AddPlayer(c.Request().Context(), player.Player{Name: name, FileName: null.StringFrom(fileName), DateOfBirth: null.TimeFrom(parse), Position: null.StringFrom(position), IsCaptain: isCaptain, TeamID: teamID})
+		_, err = v.player.AddPlayer(c.Request().Context(), player.Player{Name: name, FileName: null.NewString(fileName, len(fileName) > 0), DateOfBirth: null.TimeFrom(parse), Position: null.StringFrom(position), IsCaptain: isCaptain, TeamID: teamID})
 		if err != nil {
 			log.Printf("failed to add player for playerAdd: %+v", err)
 			data.Error = fmt.Sprintf("failed to add player for playerAdd: %+v", err)
