@@ -74,10 +74,12 @@ func main() {
 
 	stat, err := os.Stat("/FileStore")
 	if err == nil && stat.IsDir() {
+		log.Println("using root /FileStore")
 		fileDir = "/FileStore"
 	} else {
 		stat, err = os.Stat("./FileStore")
 		if err == nil && stat.IsDir() {
+			log.Println("using local ./FileStore")
 			fileDir = "./FileStore"
 		} else {
 			log.Fatalf("failed to get fileStore - stat: %+v, error: %+v", stat, err)
