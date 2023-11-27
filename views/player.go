@@ -70,7 +70,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
 		if err != nil {
 			log.Printf("failed to get team for playerAdd: %+v, id: %d", err, teamID)
-			data.Error = fmt.Sprintf("failed to get tea, for playerAdd: %+v, id: %d", err, teamID)
+			data.Error = fmt.Sprintf("failed to get team for playerAdd: %+v, id: %d", err, teamID)
 			return c.JSON(http.StatusOK, data)
 		}
 
