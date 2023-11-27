@@ -1,9 +1,18 @@
 {{define "title"}}Team - {{ .Team.Name }}{{end}}
 {{define "content"}}
-    <main class="main" style="padding: 0 10px;">
-        <div class="pageHeaderBanner">
+    {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
+    <main class="main">
+        <div class="pageHeaderBanner" style="text-align: center">
             <h2 class="pageHeader">
                 {{.Team.Name}}</h2>
+            {{if $priv}}
+                <div style="margin: 15px 30px">
+                    <a class="button is-warning" onclick="editTeamModal()">Edit Team</a>
+                </div>
+                <div style="margin: 15px 30px">
+                    <a class="button is-danger" onclick="deleteTeamModal()">Delete Team</a>
+                </div>
+            {{end}}
         </div>
         <div style="width: 100%; overflow: auto;">
             <div style="float:left; width: 50%">

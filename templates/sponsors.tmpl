@@ -5,6 +5,11 @@
         <div class="pageHeaderBanner">
             <h2 class="pageHeader">
                 Sponsors</h2>
+            {{if $priv}}
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-info" onclick="addSponsorModal()">Add Sponsor</a>
+                </div>
+            {{end}}
         </div>
         <div class="flexContainer">
             {{range .Sponsors}}
@@ -28,10 +33,6 @@
                 </div>
             {{end}}
         </div>
-        {{if $priv}}
-            <a class="button is-info" onclick="addSponsorModal()"
-               style="text-align: center; margin-bottom: 30px">Add Sponsor</a>
-        {{end}}
     </main>
     {{if $priv}}
         {{template "modal" .}}

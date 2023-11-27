@@ -6,12 +6,12 @@
             <h2 class="pageHeader">
                 Players
             </h2>
-            <p>Please note, players who are under 18 or in a youth team will not have their images displayed.
-                {{if $priv}}
-                <br><br>
-                <a class="button is-info" onclick="addPlayerModal()">Add player</a>
-                {{end}}<br><br>
-            </p>
+            <p>Please note, players who are under 18 or in a youth team will not have their images displayed.</p>
+            {{if $priv}}
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-info" onclick="addPlayerModal()">Add Player</a>
+                </div>
+            {{end}}
         </div>
         <table style="align-items: center; display: inline-flex; border-radius: 5px;
         box-shadow: 0 .5em 1em -.125em rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .02);" class="table is-striped">

@@ -134,10 +134,16 @@
     </style>
 {{end}}
 {{define "content"}}
+    {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
     <main class="main" style="box-sizing: border-box; text-align: center">
         <div class="pageHeaderBanner">
             <h2 class="pageHeader">
                 Gallery</h2>
+            {{if $priv}}
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-info" onclick="addImageModal()">Add Image</a>
+                </div>
+            {{end}}
         </div>
         <div class="row" style="text-align: center;">
 {{/*            <p style="color: red;">${error}</p>*/}}

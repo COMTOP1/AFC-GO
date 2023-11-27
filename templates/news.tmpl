@@ -5,6 +5,11 @@
         <div class="pageHeaderBanner">
             <h2 class="pageHeader">
                 News</h2>
+            {{if $priv}}
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-info" onclick="addNewsModal()">Add News</a>
+                </div>
+            {{end}}
         </div>
         <div class="flexContainer">
             {{range .News}}
@@ -19,10 +24,6 @@
                 </div>
             {{end}}
         </div>
-        {{if $priv}}
-            <a class="button is-info" onclick="addNewsModal()"
-               style="text-align: center; margin-bottom: 30px">Add News</a>
-        {{end}}
     </main>
     {{if $priv}}
         {{template "modal" .}}

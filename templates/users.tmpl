@@ -4,10 +4,12 @@
         <div class="pageHeaderBanner">
             <h2 class="pageHeader">
                 Users
-                {{if or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
-                    <br><br>
-                    <a class="button is-info" onclick="addUserModal()">Add user</a>
-                {{end}}</h2>
+            </h2>
+            {{if or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-info" onclick="addUserModal()">Add User</a>
+                </div>
+            {{end}}
         </div>
 
         <table style="align-items: center; display: inline-flex; border-radius: 5px;

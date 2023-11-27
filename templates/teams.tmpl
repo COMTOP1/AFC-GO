@@ -5,6 +5,12 @@
         <div class="pageHeaderBanner">
             <h2 class="pageHeader">
                 Teams</h2>
+            <p>Select any of the following to see more details</p>
+            {{if $priv}}
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-info" onclick="addTeamModal()">Add Team</a>
+                </div>
+            {{end}}
         </div>
         <div class="flexContainer">
             {{range .Teams}}
@@ -18,10 +24,6 @@
                 </div>
             {{end}}
         </div>
-        {{if $priv}}
-            <a class="button is-info" onclick="addTeamModal()"
-               style="text-align: center; margin-bottom: 30px">Add Team</a>
-        {{end}}
     </main>
     {{if $priv}}
         {{template "modal" .}}

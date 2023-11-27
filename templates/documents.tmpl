@@ -23,10 +23,6 @@
                 </div>
             {{end}}
         </div>
-        {{if $priv}}
-            <a class="button is-info" onclick="addDocumentModal()"
-               style="text-align: center; margin-bottom: 30px">Add Document</a>
-        {{end}}
     </main>
     {{if $priv}}
         {{template "modal" .}}

@@ -5,6 +5,11 @@
         <div class="pageHeaderBanner">
             <h2 class="pageHeader">
                 Programmes</h2>
+            {{if $priv}}
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-info" onclick="addProgrammeModal()">Add Programme</a>
+                </div>
+            {{end}}
         </div>
         {{with (index .Programmes 0)}}
             <div class="flexContainer">
@@ -51,10 +56,6 @@
                     {{end}}
                 {{end}}
             </div>
-        {{end}}
-        {{if $priv}}
-            <a class="button is-info" onclick="addProgrammeModal()"
-               style="text-align: center; margin-bottom: 30px">Add Programme</a>
         {{end}}
     </main>
     {{if $priv}}
