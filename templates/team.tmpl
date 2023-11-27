@@ -112,14 +112,242 @@
             </div>
         </div>
         {{end}}
-        <p></p>
-        {{if and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
-            <p style="width: 96%;">
-                <a href="/team/{{.Team.ID}}/edit">Edit team</a>
-            </p>
-            <p style="width: 96%;">
-                <a href="/team/{{.Team.ID}}/delete">Delete team</a>
-            </p>
-        {{end}}
     </main>
+    {{if $priv}}
+        {{template "modal" .}}
+    {{end}}
+{{end}}
+
+{{define "modal"}}
+    <div id="editTeamModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Edit Team</p>
+                            <p>Enter the team details below.<br>
+                                Leave the values default to not edit a field.</p>
+                            <form id="editTeamForm" enctype="multipart/form-data">
+                                <div class="field">
+                                    <label class="label" for="name">Name</label>
+                                    <div class="control">
+                                        <input
+                                                id="name"
+                                                class="input"
+                                                type="text"
+                                                name="name"
+                                                placeholder="Name"
+                                                value="{{.Team.Name}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="league">League (leave blank if unknown)</label>
+                                    <div class="control">
+                                        <input
+                                                id="league"
+                                                class="input"
+                                                type="text"
+                                                name="league"
+                                                placeholder="League"
+                                                {{if .Team.League.Valid}}value="{{.Team.League.String}}"{{end}}
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="division">Division (leave blank if unknown)</label>
+                                    <div class="control">
+                                        <input
+                                                id="division"
+                                                class="input"
+                                                type="text"
+                                                name="division"
+                                                placeholder="Division"
+                                                {{if .Team.Division.Valid}}value="{{.Team.Division.String}}"{{end}}
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="leagueTable">League Table (url, leave blank if unknown)</label>
+                                    <div class="control">
+                                        <input
+                                                id="leagueTable"
+                                                class="input"
+                                                type="url"
+                                                name="leagueTable"
+                                                placeholder="https://..."
+                                                {{if .Team.LeagueTable.Valid}}value="{{.Team.LeagueTable.String}}"{{end}}
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="fixtures">Fixtures (url, leave blank if unknown)</label>
+                                    <div class="control">
+                                        <input
+                                                id="fixtures"
+                                                class="input"
+                                                type="url"
+                                                name="fixtures"
+                                                placeholder="https://..."
+                                                {{if .Team.Fixtures.Valid}}value="{{.Team.Fixtures.String}}"{{end}}
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="coach">Coach (leave blank if unknown)</label>
+                                    <div class="control">
+                                        <input
+                                                id="coach"
+                                                class="input"
+                                                type="text"
+                                                name="coach"
+                                                placeholder="Coach"
+                                                {{if .Team.Coach.Valid}}value="{{.Team.Coach.String}}"{{end}}
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="physio">Physio (leave blank if unknown)</label>
+                                    <div class="control">
+                                        <input
+                                                id="physio"
+                                                class="input"
+                                                type="text"
+                                                name="physio"
+                                                placeholder="Physio"
+                                                {{if .Team.Physio.Valid}}value="{{.Team.Physio.String}}"{{end}}
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label">Manager assigned via Users</label>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="addTeamImage">Team Photo</label>
+                                    <div class="file is-info has-name">
+                                        <label class="file-label">
+                                            <input class="file-input" type="file" accept="image/*" name="upload"
+                                                   id="addTeamImage">
+                                            <span class="file-cta">
+                                            <span class="file-icon">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            <span class="file-label">Choose a file…</span>
+                                        </span>
+                                            <span class="file-name" id="addTeamImageName">{{if .Team.FileName}}Uploaded{{else}}No file{{end}}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="isActive">Is active team?</label>
+                                    <div class="control">
+                                        <input type="checkbox" id="isActive" name="isActive" value="Y"{{if .Team.IsActive}} checked{{end}}>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="isYouth">Is youth team?</label>
+                                    <div class="control">
+                                        <input type="checkbox" id="isYouth" name="isYouth" value="Y"{{if .Team.IsYouth}} checked{{end}}>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="ages">Team</label>
+                                    <div class="control has-icons-left select">
+                                        <select name="ages" id="ages">
+                                            <option disabled selected>Please select</option>
+                                            <option value="6"{{if eq .Team.Ages 6}} selected{{end}}>&lt;6</option>
+                                            <option value="7"{{if eq .Team.Ages 7}} selected{{end}}>&lt;7</option>
+                                            <option value="8"{{if eq .Team.Ages 8}} selected{{end}}>&lt;8</option>
+                                            <option value="9"{{if eq .Team.Ages 9}} selected{{end}}>&lt;9</option>
+                                            <option value="10"{{if eq .Team.Ages 10}} selected{{end}}>&lt;10</option>
+                                            <option value="11"{{if eq .Team.Ages 11}} selected{{end}}>&lt;11</option>
+                                            <option value="12"{{if eq .Team.Ages 12}} selected{{end}}>&lt;12</option>
+                                            <option value="13"{{if eq .Team.Ages 13}} selected{{end}}>&lt;13</option>
+                                            <option value="14"{{if eq .Team.Ages 14}} selected{{end}}>&lt;14</option>
+                                            <option value="15"{{if eq .Team.Ages 15}} selected{{end}}>&lt;15</option>
+                                            <option value="16"{{if eq .Team.Ages 16}} selected{{end}}>&lt;16</option>
+                                            <option value="17"{{if eq .Team.Ages 17}} selected{{end}}>&lt;17</option>
+                                            <option value="18"{{if eq .Team.Ages 18}} selected{{end}}>&lt;18</option>
+                                            <option value="19"{{if eq .Team.Ages 19}} selected{{end}}>&gt;18</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <br>
+                                <button class="button is-danger" onclick="editTeam()" id="editTeamButton">
+                                    Edit Team
+                                </button>
+                            </form>
+                            <div id="errorParent" style="display: none">
+                                <br><br>
+                                <div class="notification is-danger" id="error"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="deleteTeamModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="deleteTeamModalTitle">Are you sure you want to delete "{{.Team.Name}}"
+                                from Teams?</p>
+                            <p>Be careful! Are you sure you want to remove this?<br>
+                            Any managers, players or sponsors assigned to this team will be reverted to no team. Please ensure this is handled.</p>
+                            <form method="post" id="deleteTeamModalForm" action="/team/{{.Team.ID}}/delete">
+                                <a class="button is-danger" onclick="deleteTeam()">Delete Team</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        function editTeamModal() {
+            document.getElementById("editTeamModal").classList.add("is-active");
+        }
+
+        function deleteTeamModal() {
+            document.getElementById("deleteTeamModal").classList.add("is-active");
+        }
+
+        function deleteTeam() {
+            $('#deleteTeamModalForm').submit();
+        }
+
+        function editPlayer() {
+            document.getElementById("errorParent").style.display = 'none';
+            document.getElementById("editTeamButton").disabled = true;
+            let form = $('#editTeamForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
+            $.ajax({
+                url: '/team/{{.Team.ID}}/edit',
+                type: 'post',
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#error").html(data.error);
+                        document.getElementById("errorParent").style.display = null;
+                        document.getElementById("editTeamButton").disabled = false;
+                    } else {
+                        window.location.href = "/team/{{.Team.ID}}";
+                    }
+                },
+            })
+        }
+    </script>
 {{end}}
