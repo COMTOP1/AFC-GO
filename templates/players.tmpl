@@ -45,7 +45,8 @@
                     </th>
                     {{if $priv}}
                         <th>
-                            <a class="button is-warning" onclick="editPlayerModal({{.ID}}, {{.Name}}, {{.IsFileValid}}, {{.DateOfBirthForm}}, {{.Position}}, {{.IsCaptain}}, {{.Team.ID}})">Edit</a>
+                            <a class="button is-warning"
+                               onclick="editPlayerModal({{.ID}}, {{.Name}}, {{.IsFileValid}}, {{.DateOfBirthForm}}, {{.Position}}, {{.IsCaptain}}, {{.Team.ID}})">Edit</a>
                         </th>
                         <th>
                             <a class="button is-danger" onclick="deletePlayerModal({{.ID}}, '{{.Name}}')">Delete</a>
@@ -195,7 +196,7 @@
                                 <div class="field">
                                     <label class="label" for="editPlayerTeam">Team</label>
                                     <div class="control has-icons-left select">
-                                        <select name="team" id="editPlayerTeam">
+                                        <select name="playerTeam" id="editPlayerTeam">
                                             <option disabled selected>Please select</option>
                                             {{range .Teams}}
                                                 <option value="{{.ID}}">
