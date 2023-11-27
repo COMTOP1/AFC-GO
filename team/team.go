@@ -16,11 +16,11 @@ type (
 	Team struct {
 		ID          int         `db:"id" json:"id"`
 		Name        string      `db:"name" json:"name"`
-		League      string      `db:"league" json:"league"`
-		Division    string      `db:"division" json:"division"`
+		League      null.String `db:"league" json:"league"`
+		Division    null.String `db:"division" json:"division"`
 		LeagueTable null.String `db:"league_table" json:"league_table"`
 		Fixtures    null.String `db:"fixtures" json:"fixtures"`
-		Coach       string      `db:"coach" json:"coach"`
+		Coach       null.String `db:"coach" json:"coach"`
 		Physio      null.String `db:"physio" json:"physio"`
 		FileName    null.String `db:"file_name" json:"file_name"`
 		IsActive    bool        `db:"active" json:"is_active"`

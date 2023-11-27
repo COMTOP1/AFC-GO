@@ -14,69 +14,84 @@
                 </div>
             {{end}}
         </div>
-        <div style="width: 100%; overflow: auto;">
-            <div style="float:left; width: 50%">
-                {{if ne (len .Managers) 0}}
-                <h3 class="secondaryHeader">Team Manager(s)</h3>
-                {{range .Managers}}
-                {{.}}<br>
-                {{end}}<br><br>
-                {{end}}
-                <h3 class="secondaryHeader">Team Coach</h3>
-                {{if .Team.Coach}}{{.Team.Coach}}{{else}}Ask the webmaster to add this information{{end}}
-                <br><br>
-                <h3 class="secondaryHeader">Physio</h3>
-                {{if .Team.Physio.Valid}}{{.Team.Physio.String}}{{else}}Ask the webmaster to add this information{{end}}
-                <br><br>
-                <h3 class="secondaryHeader">Training Location</h3>
-                Aldermaston Recreational Society<br><br>
-                {{if ge .Team.Ages 13}}
-                    <h3 class="secondaryHeader">League</h3>
-                    {{if .Team.League}}{{.Team.League}}{{else}}Ask the webmaster to add this information{{end}}
+        <div style="padding: 0 10px;">
+            <div style="width: 100%; overflow: auto;">
+                <div style="float:left; width: 50%">
+                    {{if ne (len .Managers) 0}}
+                        <h3 class="secondaryHeader">Team Manager(s)</h3>
+                        {{range .Managers}}
+                            {{.}}<br>
+                        {{end}}<br>
+                    {{end}}
+                    <h3 class="secondaryHeader">Team Coach</h3>
+                    {{if .Team.Coach.Valid}}{{.Team.Coach.String}}{{else}}Please contact us to add this information{{end}}
                     <br><br>
-                    <h3 class="secondaryHeader">Division</h3>
-                    {{if .Team.Division}}{{.Team.Division}}{{else}}Ask the webmaster to add this information{{end}}
+                    <h3 class="secondaryHeader">Physio</h3>
+                    {{if .Team.Physio.Valid}}{{.Team.Physio.String}}{{else}}Ask the webmaster to add this information{{end}}
                     <br><br>
-                    {{if .Team.LeagueTable}}<h3 class="secondaryHeader">League Table</h3>
-                    <a href="{{.Team.LeagueTable}}" target="_blank" style="text-decoration: underline;">League
-                        Table</a><br><br>{{end}}
-                    {{if .Team.Fixtures}}<h3 class="secondaryHeader">Fixtures</h3>
-                    <a href="{{.Team.Fixtures}}" target="_blank" style="text-decoration: underline;">Fixtures</a><br>
-                    <br>{{end}}
+                    <h3 class="secondaryHeader">Training Location</h3>
+                    Aldermaston Recreational Society<br><br>
+                    {{if ge .Team.Ages 13}}
+                        <h3 class="secondaryHeader">League</h3>
+                        {{if .Team.League.Valid}}{{.Team.League.String}}{{else}}Ask the webmaster to add this information{{end}}
+                        <br><br>
+                        <h3 class="secondaryHeader">Division</h3>
+                        {{if .Team.Division.Valid}}{{.Team.Division.String}}{{else}}Ask the webmaster to add this information{{end}}
+                        <br><br>
+                        {{if .Team.LeagueTable.Valid}}<h3 class="secondaryHeader">League Table</h3>
+                        <a href="{{.Team.LeagueTable.String}}" target="_blank" style="text-decoration: underline;">League
+                            Table</a><br><br>{{end}}
+                        {{if .Team.Fixtures.Valid}}<h3 class="secondaryHeader">Fixtures</h3>
+                        <a href="{{.Team.Fixtures.String}}" target="_blank"
+                           style="text-decoration: underline;">Fixtures</a>
+                        <br>
+                        <br>{{end}}
+                        {{if $priv}}
+                            <h3 class="secondaryHeader">Only visible to AFC Staff</h3>
+                            <h3 class="secondaryHeader">Is Active</h3>
+                            {{.Team.IsActive}}
+                            <br><br>
+                            <h3 class="secondaryHeader">Is Youth</h3>
+                            {{.Team.IsYouth}}
+                            <br><br>
+                            <h3 class="secondaryHeader">Ages</h3>
+                            {{.Team.Ages}}
+                            <br><br>
+                        {{end}}
+                    {{end}}
+                </div>
+                {{if .Team.FileName.Valid}}
+                    <div style="float:right; text-align: right; width: 50%;">
+                        <h2 class="secondaryHeader">Team photo</h2>
+                        <img data-src="/download?s=t&id={{.Team.ID}}"
+                             alt="/public/AFC.png" src="/public/AFC.png"
+                             onerror="this.onerror=null;this.src='/public/AFC.png';"
+                             style="padding: 5px; max-height: 1000px; max-width: 700px; width: 100%;" class="lazy">
+                    </div>
                 {{end}}
             </div>
-            {{if .Team.FileName.Valid}}
-                <div style="float:right; text-align: right; width: 50%;">
-                    <h2 class="secondaryHeader">Team photo</h2>
-                    <img data-src="/download?s=t&id={{.Team.ID}}" alt="/public/AFC.png"
-                         onerror="this.onerror=null;this.src='/public/AFC.png';"
-                         style="padding: 5px; max-height: 1000px; max-width: 700px; width: 100%;" class="lazy">
+            <br>
+            {{if ne (len .Sponsors) 0}}
+                <div style="margin: 10px 0 10px 0; padding: 5px 0 5px 0; text-align: center">
+                    <h2 style="color: #1F1F1F" class="welcomeHeader">
+                        {{.Team.Name}} Sponsors</h2>
+                </div>
+                <div class="flexContainer">
+                    {{range .Sponsors}}
+                        <div class="listItem" style="display: block; cursor: pointer">
+                            {{if .Website.Valid}}<a href="{{.Website.String}}">{{end}}
+                                <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png"
+                                     onerror="this.onerror=null;this.src='/public/AFC.png';"
+                                     class="latestImage lazy" src="/public/AFC.png">
+                                <h2 class="latestTitle">{{.Name}}</h2>
+                                <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose}}
+                                </p>
+                                {{if .Website.Valid}}</a>{{end}}
+                        </div>
+                    {{end}}
                 </div>
             {{end}}
-        </div>
-        <br>
-    {{if ne (len .Sponsors) 0}}
-        <div style="margin: 10px 0 10px 0; padding: 5px 0 5px 0; text-align: center">
-            <h2 style="color: #1F1F1F" class="welcomeHeader">
-                {{.Team.Name}} Sponsors</h2>
-        </div>
-        <div class="flexContainer">
-            {{range .Sponsors}}
-                <div class="listItem" style="display: block; cursor: pointer">
-                    {{if .Website.Valid}}<a href="{{.Website.String}}">{{end}}
-                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png"
-                             onerror="this.onerror=null;this.src='/public/AFC.png';"
-                             class="latestImage lazy" src="/public/AFC.png">
-                        <h2 class="latestTitle">{{.Name}}</h2>
-                        <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose}}
-                        </p>
-                        {{if .Website.Valid}}</a>{{end}}
-                </div>
-            {{end}}
-        </div>
-        {{end}}
-        {{if and (not .Team.IsYouth) (ne (len .Players) 0)}}
-{{/*            {{if not .Team.IsYouth}}*/}}
+            {{if and (not .Team.IsYouth) (ne (len .Players) 0)}}
             <div style="margin: 10px 0 10px 0; padding: 5px 0 5px 0; text-align: center">
                 <h2 style="color: #1F1F1F" class="welcomeHeader">
                     {{.Team.Name}} Players</h2>
@@ -90,11 +105,12 @@
                         <h2 class="latestTitle">{{.Name}}</h2>
                         <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{if .Position.Valid}}{{.Position.String}}
                             {{if .IsCaptain}}<br>Captain{{end}}{{else}}
-                        {{if .IsCaptain}}Captain{{end}}{{end}}
+                                {{if .IsCaptain}}Captain{{end}}{{end}}
                         </p>
                     </div>
                 {{end}}
             </div>
+        </div>
         {{end}}
         <p></p>
         {{if and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
