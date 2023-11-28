@@ -555,44 +555,44 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 	return whatsOnTemplate
 }
 
-const DaysPerCycle = 146097
-const Days0000To1970 = int64(DaysPerCycle*5) - (int64(30)*int64(365) + int64(7))
-
-func ofEpochDay(epochDay int64) time.Time {
-	var zeroDay, adjust, adjustCycles, yearEst, doyEst int64
-	zeroDay = epochDay + Days0000To1970
-	// find the march-based year
-	zeroDay -= 60 // adjust to 0000-03-01 so leap day is at end of four year cycle
-	adjust = 0
-	if zeroDay < 0 {
-		// adjust negative years to positive for calculation
-		adjustCycles = (zeroDay+1)/DaysPerCycle - 1
-		adjust = adjustCycles * 400
-		zeroDay += -adjustCycles * DaysPerCycle
-	}
-	yearEst = (400*zeroDay + 591) / DaysPerCycle
-	doyEst = zeroDay - (365*yearEst + yearEst/4 - yearEst/100 + yearEst/400)
-	if doyEst < 0 {
-		// fix estimate
-		yearEst--
-		doyEst = zeroDay - (365*yearEst + yearEst/4 - yearEst/100 + yearEst/400)
-	}
-	yearEst += adjust // reset any negative year
-	marchDoy0 := int(doyEst)
-
-	// convert march-based values back to january-based
-
-	marchMonth0 := (marchDoy0*5 + 2) / 153
-
-	month := (marchMonth0+2)%12 + 1
-	dom := marchDoy0 - (marchMonth0*306+5)/10 + 1
-	yearEst += int64(marchMonth0) / 10
-
-	location, err := time.LoadLocation("Europe/London")
-	if err != nil {
-		log.Printf("failed to get timezone: %+v", err)
-	}
-
-	// check year now we are certain it is correct
-	return time.Date(int(yearEst), time.Month(month), dom, 0, 0, 0, 0, location)
-}
+// const DaysPerCycle = 146097
+// const Days0000To1970 = int64(DaysPerCycle*5) - (int64(30)*int64(365) + int64(7))
+//
+// func ofEpochDay(epochDay int64) time.Time {
+//	var zeroDay, adjust, adjustCycles, yearEst, doyEst int64
+//	zeroDay = epochDay + Days0000To1970
+//	// find the march-based year
+//	zeroDay -= 60 // adjust to 0000-03-01 so leap day is at end of four year cycle
+//	adjust = 0
+//	if zeroDay < 0 {
+//		// adjust negative years to positive for calculation
+//		adjustCycles = (zeroDay+1)/DaysPerCycle - 1
+//		adjust = adjustCycles * 400
+//		zeroDay += -adjustCycles * DaysPerCycle
+//	}
+//	yearEst = (400*zeroDay + 591) / DaysPerCycle
+//	doyEst = zeroDay - (365*yearEst + yearEst/4 - yearEst/100 + yearEst/400)
+//	if doyEst < 0 {
+//		// fix estimate
+//		yearEst--
+//		doyEst = zeroDay - (365*yearEst + yearEst/4 - yearEst/100 + yearEst/400)
+//	}
+//	yearEst += adjust // reset any negative year
+//	marchDoy0 := int(doyEst)
+//
+//	// convert march-based values back to january-based
+//
+//	marchMonth0 := (marchDoy0*5 + 2) / 153
+//
+//	month := (marchMonth0+2)%12 + 1
+//	dom := marchDoy0 - (marchMonth0*306+5)/10 + 1
+//	yearEst += int64(marchMonth0) / 10
+//
+//	location, err := time.LoadLocation("Europe/London")
+//	if err != nil {
+//		log.Printf("failed to get timezone: %+v", err)
+//	}
+//
+//	// check year now we are certain it is correct
+//	return time.Date(int(yearEst), time.Month(month), dom, 0, 0, 0, 0, location)
+// }
