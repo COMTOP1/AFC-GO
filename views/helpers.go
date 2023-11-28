@@ -60,10 +60,11 @@ type (
 	}
 
 	NewsTemplate struct {
-		ID      int
-		Title   string
-		Content string
-		Date    string
+		ID          int
+		Title       string
+		Content     string
+		Date        string
+		IsFileValid bool
 	}
 
 	PlayerTemplate struct {
@@ -349,6 +350,7 @@ func DBNewsToArticleTemplateFormat(newsDB news.News) NewsTemplate {
 	newsTemplate.Content = newsDB.Content.String
 	year, month, day := newsDB.Date.Date()
 	newsTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", newsDB.Date.Weekday().String()[0:3], day, month.String()[0:3], year, newsDB.Date.Format("15:04:05"))
+	newsTemplate.IsFileValid = newsDB.FileName.Valid
 	return newsTemplate
 }
 
