@@ -138,6 +138,7 @@
                 success: function (data) {
                     if (data.error.length > 0) {
                         $("#error").html(data.error);
+                        document.getElementById("addNewsButton").disabled = false;
                         document.getElementById("errorParent").style.display = null;
                     } else {
                         window.location.href = "/news";
