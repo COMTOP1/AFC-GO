@@ -65,7 +65,7 @@ func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 	var whatsOnDB WhatsOn
 	builder := utils.MySQL().Select("id", "title", "date", "date_of_event").
 		From("afc.whatson").
-		Where(sq.GtOrEq{"date_of_event": time.Now().UnixMilli()}).
+		Where(sq.GtOrEq{"date_of_event": time.Now().Format("2006-01-02")}).
 		OrderBy("date_of_event ASC").
 		Limit(1)
 	sql, args, err := builder.ToSql()
