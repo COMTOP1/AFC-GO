@@ -2,11 +2,16 @@ package views
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
@@ -67,23 +72,148 @@ func (v *Views) WhatsOnArticleFunc(c echo.Context) error {
 }
 
 func (v *Views) WhatsOnAddFunc(c echo.Context) error {
-	_ = c
-	dateOfEvent := c.Request().FormValue("dateOfEvent")
+	if c.Request().Method == http.MethodPost {
+		title := c.FormValue("title")
+		content := c.FormValue("content")
 
-	dateOfEventParsed, err := time.Parse("02/01/2006", dateOfEvent)
-	if err != nil {
-		return fmt.Errorf("failed to parse dateOfEvent: %w", err)
+		data := struct {
+			Error string `json:"error"`
+		}{
+			Error: "",
+		}
+
+		dateOfEvent := c.Request().FormValue("dateOfEvent")
+
+		dateOfEventParsed, err := time.Parse("02/01/2006", dateOfEvent)
+		if err != nil {
+			log.Printf("failed to parse dateOfEvent for whatsOnAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to parse dateOfEvent for whatsOnAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		var fileName string
+		hasUpload := true
+
+		file, err := c.FormFile("upload")
+		if err != nil {
+			if !strings.Contains(err.Error(), "no such file") {
+				log.Printf("failed to get file for whatsOnAdd: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for whatsOnAdd: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+			hasUpload = false
+		}
+		if hasUpload {
+			fileName, err = v.fileUpload(file)
+			if err != nil {
+				log.Printf("failed to upload file for whatsOnAdd: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for whatsOnAdd: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+		}
+
+		_, err = v.whatsOn.AddWhatsOn(c.Request().Context(), whatson.WhatsOn{Title: title, Content: null.NewString(content, len(content) > 0), FileName: null.NewString(fileName, len(fileName) > 0), DateOfEvent: dateOfEventParsed})
+		if err != nil {
+			log.Printf("failed to add whatsOn for whatsOnAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to add whatsOn for whatsOnAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		return c.JSON(http.StatusOK, data)
 	}
-	_ = dateOfEventParsed
-	return fmt.Errorf("not implemented yet")
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) WhatsOnEditFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		whatsOnID, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for whatsOnEdit: %w", err))
+		}
+		whatsOnDB, err := v.whatsOn.GetWhatsOnArticle(c.Request().Context(), whatson.WhatsOn{ID: whatsOnID})
+		if err != nil {
+			return fmt.Errorf("failed to get whatsOn for whatsOnEdit: %w", err)
+		}
+
+		whatsOnDB.Title = c.FormValue("title")
+		tempContent := c.FormValue("content")
+		whatsOnDB.Content = null.NewString(tempContent, len(tempContent) > 0)
+
+		data := struct {
+			Error string `json:"error"`
+		}{
+			Error: "",
+		}
+
+		dateOfEvent := c.Request().FormValue("dateOfEvent")
+
+		tempDateOfEventParsed, err := time.Parse("02/01/2006", dateOfEvent)
+		if err != nil {
+			log.Printf("failed to parse dateOfEvent for whatsOnAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to parse dateOfEvent for whatsOnAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		whatsOnDB.DateOfEvent = tempDateOfEventParsed
+
+		hasUpload := true
+
+		file, err := c.FormFile("upload")
+		if err != nil {
+			if !strings.Contains(err.Error(), "no such file") {
+				log.Printf("failed to get file for whatsOnEdit: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for whatsOnEdit: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+			hasUpload = false
+		}
+		if hasUpload {
+			var tempFileName string
+			tempFileName, err = v.fileUpload(file)
+			if err != nil {
+				log.Printf("failed to upload file for whatsOnEdit: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for whatsOnEdit: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+			whatsOnDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
+		}
+
+		_, err = v.whatsOn.EditWhatsOn(c.Request().Context(), whatsOnDB)
+		if err != nil {
+			log.Printf("failed to add whatsOn for whatsOnAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to add whatsOn for whatsOnAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return fmt.Errorf("failed to get id for whatsOnDelete: %w", err)
+		}
+
+		whatsOnDB, err := v.whatsOn.GetWhatsOnArticle(c.Request().Context(), whatson.WhatsOn{ID: id})
+		if err != nil {
+			return fmt.Errorf("failed to get whatsOn for whatsOnDelete: %w", err)
+		}
+
+		if whatsOnDB.FileName.Valid {
+			err = os.Remove(filepath.Join(v.conf.FileDir, whatsOnDB.FileName.String))
+			if err != nil {
+				return fmt.Errorf("failed to delete whatsOn image for whatsOnDelete: %w", err)
+			}
+		}
+
+		err = v.whatsOn.DeleteWhatsOn(c.Request().Context(), whatsOnDB)
+		if err != nil {
+			return fmt.Errorf("failed to delete whatsOn for whatsOnDelete: %w", err)
+		}
+		return c.Redirect(http.StatusFound, "/whatson")
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
