@@ -47,9 +47,6 @@ func (s *Store) GetPlayer(ctx context.Context, playerParam Player) (Player, erro
 }
 
 func (s *Store) AddPlayer(ctx context.Context, playerParam Player) (Player, error) {
-	if playerParam.DateOfBirth.Valid {
-		playerParam.DateOfBirth = playerParam.DateOfBirth
-	}
 	return s.addPlayer(ctx, playerParam)
 }
 
