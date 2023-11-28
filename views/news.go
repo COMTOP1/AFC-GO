@@ -103,7 +103,7 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 			}
 		}
 
-		_, err = v.news.AddNews(c.Request().Context(), news.News{Title: title, Content: null.NewString(content, len(content) > 0), FileName: null.StringFrom(fileName)})
+		_, err = v.news.AddNews(c.Request().Context(), news.News{Title: title, Content: null.NewString(content, len(content) > 0), FileName: null.NewString(fileName, len(fileName) > 0)})
 		if err != nil {
 			log.Printf("failed to add news for newsAdd: %+v", err)
 			data.Error = fmt.Sprintf("failed to add news for newsAdd: %+v", err)
@@ -155,7 +155,7 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 				data.Error = fmt.Sprintf("failed to upload file for newsEdit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
-			newsDB.FileName = null.StringFrom(tempFileName)
+			newsDB.FileName = null.NewString(tempFileName, len(tempContent) > 0)
 		}
 
 		_, err = v.news.EditNews(c.Request().Context(), newsDB)
