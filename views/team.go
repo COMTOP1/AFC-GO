@@ -103,7 +103,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 		}
 
 		name := c.FormValue("name")
-		if len(name) < 0 {
+		if len(name) == 0 {
 			log.Printf("name must contain a value for teamAdd")
 			data.Error = fmt.Sprintf("name must contain a value")
 			return c.JSON(http.StatusOK, data)
