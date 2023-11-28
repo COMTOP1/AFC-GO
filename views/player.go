@@ -110,9 +110,8 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 				log.Printf("failed to get file for playerAdd: %+v", err)
 				data.Error = fmt.Sprintf("failed to get file for playerAdd: %+v", err)
 				return c.JSON(http.StatusOK, data)
-			} else {
-				hasUpload = false
 			}
+			hasUpload = false
 		}
 		if hasUpload {
 			fileName, err = v.fileUpload(file)
@@ -207,9 +206,8 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 				log.Printf("failed to get file for playerEdit: %+v", err)
 				data.Error = fmt.Sprintf("failed to get file for playerEdit: %+v", err)
 				return c.JSON(http.StatusOK, data)
-			} else {
-				hasUpload = false
 			}
+			hasUpload = false
 		}
 		if hasUpload {
 			var tempFileName string
