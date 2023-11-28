@@ -27,6 +27,14 @@ body {
     justify-content: center;
 }
 
+.articleBody {
+    background-color: white;
+    margin: 20px 20px 0 20px;
+    padding: 20px;
+    display: table;
+    width: calc(100% - 40px);
+}
+
 .is-danger {
     background: #fc0f2bff;
 }
