@@ -117,11 +117,13 @@ type (
 	}
 
 	WhatsOnTemplate struct {
-		ID          int
-		Title       string
-		Content     string
-		Date        string
-		DateOfEvent string
+		ID              int
+		Title           string
+		Content         string
+		Date            string
+		DateOfEvent     string
+		DateOfEventForm string
+		IsFileValid     bool
 	}
 )
 
@@ -548,10 +550,14 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 	var whatsOnTemplate WhatsOnTemplate
 	whatsOnTemplate.ID = whatsOnDB.ID
 	whatsOnTemplate.Title = whatsOnDB.Title
-	whatsOnTemplate.Content = whatsOnDB.Content
+	if whatsOnDB.Content.Valid {
+		whatsOnTemplate.Content = whatsOnDB.Content.String
+	}
 	whatsOnTemplate.Date = whatsOnDB.Date.Format("2006-01-02 15:04:05")
 	year, month, day := whatsOnDB.DateOfEvent.Date()
 	whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsOnDB.DateOfEvent.Weekday().String()[0:3], day, month.String()[0:3], year)
+	whatsOnTemplate.DateOfEventForm = fmt.Sprintf("%02d/%02d/%04d", day, month, year)
+	whatsOnTemplate.IsFileValid = whatsOnDB.FileName.Valid
 	return whatsOnTemplate
 }
 
