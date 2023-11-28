@@ -19,7 +19,7 @@ type (
 		ID          int         `db:"id" json:"id"`
 		Title       string      `db:"title" json:"title"`
 		FileName    null.String `db:"file_name" json:"file_name"`
-		Content     string      `db:"content" json:"content"`
+		Content     null.String `db:"content" json:"content"`
 		Date        time.Time   `db:"date" json:"date"`
 		DateOfEvent time.Time   `db:"date_of_event" json:"date_of_event"`
 	}
