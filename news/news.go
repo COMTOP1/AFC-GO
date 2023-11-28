@@ -44,6 +44,7 @@ func (s *Store) GetNewsArticle(ctx context.Context, newsParam News) (News, error
 }
 
 func (s *Store) AddNews(ctx context.Context, newsParam News) (News, error) {
+	newsParam.Date = time.Now()
 	return s.addNews(ctx, newsParam)
 }
 
