@@ -35,10 +35,10 @@ func (s *Store) GetImage(ctx context.Context, imageParam Image) (Image, error) {
 	return s.getImage(ctx, imageParam)
 }
 
-func (s *Store) AddAffiliation(ctx context.Context, imageParam Image) (Image, error) {
+func (s *Store) AddImage(ctx context.Context, imageParam Image) (Image, error) {
 	return s.addImage(ctx, imageParam)
 }
 
-func (s *Store) DeleteAffiliation(ctx context.Context, imageParam Image) error {
+func (s *Store) DeleteImage(ctx context.Context, imageParam Image) error {
 	return s.deleteImage(ctx, imageParam)
 }
