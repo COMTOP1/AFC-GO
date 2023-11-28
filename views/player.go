@@ -107,8 +107,8 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for playerEdit: %+v", err)
-				data.Error = fmt.Sprintf("failed to get file for playerEdit: %+v", err)
+				log.Printf("failed to get file for playerAdd: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for playerAdd: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			} else {
 				hasUpload = false
@@ -117,8 +117,8 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		if hasUpload {
 			fileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for playerEdit: %+v", err)
-				data.Error = fmt.Sprintf("failed to upload file for playerEdit: %+v", err)
+				log.Printf("failed to upload file for playerAdd: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for playerAdd: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 		}
