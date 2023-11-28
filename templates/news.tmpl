@@ -90,25 +90,6 @@
         </div>
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
-    <div id="deleteNewsModal" class="modal">
-        <div class="modal-background"></div>
-        <div class="modal-content">
-            <div class="box">
-                <article class="media">
-                    <div class="media-content">
-                        <div class="content">
-                            <p class="title" id="deleteNewsModalTitle"></p>
-                            <p>Be careful! Are you sure you want to remove this?</p>
-                            <form method="post" id="deleteNewsModalForm">
-                                <a class="button is-danger" onclick="deleteNews()">Delete News</a>
-                            </form>
-                        </div>
-                    </div>
-                </article>
-            </div>
-        </div>
-        <button class="modal-close is-large" aria-label="close"></button>
-    </div>
     <script>
         let addNewsUpload = $('#addNewsUpload')
         addNewsUpload.change(function () {
