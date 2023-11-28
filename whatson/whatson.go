@@ -53,6 +53,7 @@ func (s *Store) GetWhatsOnArticle(ctx context.Context, whatsOnParam WhatsOn) (Wh
 }
 
 func (s *Store) AddWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn, error) {
+	whatsOnParam.Date = time.Now()
 	return s.addWhatsOn(ctx, whatsOnParam)
 }
 
