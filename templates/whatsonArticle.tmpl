@@ -1,4 +1,210 @@
 {{define "title"}}What's On - {{.WhatsOn.Title}}{{end}}
 {{define "content"}}
+    {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
+    <main class="main" style="text-align: center;">
+        <div class="pageHeaderBanner">
+            <h2 class="pageHeader">
+                {{.WhatsOn.Title}}</h2>
+            <h3 class="secondaryHeader" style="text-decoration: none; font-size: 1.125em;">{{.WhatsOn.Date}}<br>Date of Event - {{.WhatsOn.DateOfEvent}}</h3>
+            {{if $priv}}
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-warning" onclick="editWhatsOnModal()">Edit What's On</a>
+                </div>
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-danger" onclick="deleteWhatsOnModal()">Delete What's On</a>
+                </div>
+            {{end}}
+        </div>
+        <div class="articleBody">
+            <div style="float:left; width: 50%;">
+                <p style="text-align: left; font-size: 18px; white-space: pre-line;">{{.WhatsOn.Content}}
+                </p></div>
+            <div style="float:right; text-align: center; width: 50%;">
+                <img data-src="/download?s=w&id={{.WhatsOn.ID}}"
+                     alt="/public/AFC.png" src="/public/AFC.png"
+                     onerror="this.onerror=null;this.src='/public/AFC.png';"
+                     style="width: auto; max-height: 500px; max-width: 700px;"
+                     class="lazy"></div>
+        </div>
+    </main>
+    {{if $priv}}
+        {{template "modal" .}}
+    {{end}}
+{{end}}
 
+{{define "modal"}}
+    <div id="editWhatsOnModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Edit What's On</p>
+                            <p>Enter the what's on details below.<br>
+                                Leave the values default to not edit a field.</p>
+                            <form id="editWhatsOnForm" enctype="multipart/form-data">
+                                <div class="field">
+                                    <label class="label" for="title">Title</label>
+                                    <div class="control">
+                                        <input
+                                                id="title"
+                                                class="input"
+                                                type="text"
+                                                name="title"
+                                                placeholder="Title"
+                                                value="{{.WhatsOn.Title}}"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="content">Content</label>
+                                    <div class="control">
+                                        <textarea class="textarea" placeholder="Content..." rows="10" id="content" name="content">{{.WhatsOn.Content}}</textarea>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="image">Image (leave blank for the AFC logo)</label>
+                                    <div class="file is-info has-name">
+                                        <label class="file-label">
+                                            <input class="file-input" type="file" accept="image/*" name="upload"
+                                                   id="editWhatsOnUpload">
+                                            <span class="file-cta">
+                                            <span class="file-icon">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            <span class="file-label">Choose a file…</span>
+                                        </span>
+                                            <span class="file-name" id="editWhatsOnUploadName">{{if .WhatsOn.IsFileValid}}Uploaded{{else}}No file{{end}}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="dateOfEvent">Date of event</label>
+                                    <div class="control">
+                                        <input
+                                                type="date"
+                                                id="dateOfEvent"
+                                                name="dateOfEvent"
+                                        />
+                                    </div>
+                                </div>
+                                <button class="button is-info" onclick="editWhatsOn()" id="editWhatsOnButton">
+                                    Edit What's On
+                                </button>
+                            </form>
+                            <div id="errorParent" style="display: none">
+                                <br><br>
+                                <div class="notification is-danger" id="error"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="deleteWhatsOnModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="deleteWhatsOnModalTitle">Are you sure you want to delete "{{.WhatsOn.Name}}" from What's On?</p>
+                            <p>Be careful! Are you sure you want to remove this?</p>
+                            <form method="post" id="deleteWhatsOnModalForm" action="/whatson/{{.WhatsOn.ID}}/delete">
+                                <a class="button is-danger" onclick="deleteWhatsOn()">Delete What's On</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        let editWhatsOnUpload = $('#editWhatsOnUpload')
+        editWhatsOnUpload.change(function () {
+            $('#editWhatsOnUploadName').text(editWhatsOnUpload[0].files[0].name);
+        });
+
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        let whatsOnID = 0;
+
+        function deleteWhatsOnModal(id, name) {
+            whatsOnID = id
+            document.getElementById("deleteWhatsOnModal").classList.add("is-active");
+        }
+
+        function deleteWhatsOn() {
+            $('#deleteWhatsOnModalForm').submit();
+        }
+
+        function editWhatsOnModal() {
+            let date = new Date();
+            let day = date.getDate();
+            let month = date.getMonth() + 1;
+            let year = date.getFullYear();
+            const options = {
+                type: "date",
+                minDate: day + "/" + month + "/" + year,
+                startDate: {{.WhatsOn.DateOfEventForm}},
+                dateFormat: 'dd/MM/yyyy',
+                showClearButton: false,
+                showTodayButton: false,
+                displayMode: "dialog",
+                weekStart: 1
+            }
+            // Initialize all input of date type.
+            const calendars = bulmaCalendar.attach('[type="date"]', options);
+
+            // Loop on each calendar initialized
+            calendars.forEach(calendar => {
+                // Add listener to select event
+                calendar.on('select', date => {
+                    console.log(date);
+                });
+            });
+            const elements = document.getElementsByClassName("datetimepicker-clear-button");
+            while(elements.length > 0){
+                elements[0].parentNode.removeChild(elements[0]);
+            }
+            document.getElementById("editWhatsOnModal").classList.add("is-active");
+        }
+
+        function editWhatsOn() {
+            document.getElementById("errorParent").style.display = 'none';
+            document.getElementById("editWhatsOnButton").disabled = true;
+            let form = $('#editWhatsOnForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
+            $.ajax({
+                url: '/whatson/{{.WhatsOn.ID}}/edit',
+                type: 'post',
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#error").html(data.error);
+                        document.getElementById("editWhatsOnButton").disabled = false;
+                        document.getElementById("errorParent").style.display = null;
+                    } else {
+                        window.location.href = "/whatson/{{.WhatsOn.ID}}";
+                    }
+                },
+            })
+        }
+    </script>
 {{end}}
