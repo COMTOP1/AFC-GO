@@ -101,25 +101,6 @@
         </div>
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
-    <div id="deleteWhatsOnModal" class="modal">
-        <div class="modal-background"></div>
-        <div class="modal-content">
-            <div class="box">
-                <article class="media">
-                    <div class="media-content">
-                        <div class="content">
-                            <p class="title" id="deleteWhatsOnModalTitle"></p>
-                            <p>Be careful! Are you sure you want to remove this?</p>
-                            <form method="post" id="deleteWhatsOnModalForm">
-                                <a class="button is-danger" onclick="deleteWhatsOn()">Delete What's On</a>
-                            </form>
-                        </div>
-                    </div>
-                </article>
-            </div>
-        </div>
-        <button class="modal-close is-large" aria-label="close"></button>
-    </div>
     <script>
         let addWhatsOnUpload = $('#addWhatsOnUpload')
         addWhatsOnUpload.change(function () {
@@ -134,19 +115,6 @@
                 $modal.classList.remove("is-active");
             });
         });
-
-        let whatsOnID = 0;
-
-        function deleteWhatsOnModal(id, name) {
-            whatsOnID = id
-            document.getElementById("deleteWhatsOnModal").classList.add("is-active");
-            document.getElementById("deleteWhatsOnModalTitle").innerHTML = 'Are you sure you want to delete "' + name + '" from What\'s On?';
-        }
-
-        function deleteWhatsOn() {
-            document.getElementById("deleteWhatsOnModalForm").action = "/whatson/" + whatsOnID + "/delete";
-            $('#deleteWhatsOnModalForm').submit();
-        }
 
         function addWhatsOnModal() {
             let date = new Date();
