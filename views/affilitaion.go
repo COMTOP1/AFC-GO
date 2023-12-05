@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,8 +17,9 @@ import (
 
 func (v *Views) AffiliationAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		name := c.FormValue("name")
-		website := c.FormValue("website")
 
 		data := struct {
 			Error string `json:"error"`
@@ -25,7 +27,17 @@ func (v *Views) AffiliationAddFunc(c echo.Context) error {
 			Error: "",
 		}
 
-		file, err := c.FormFile("image")
+		website := c.FormValue("website")
+		if len(website) > 0 {
+			_, err := url.ParseRequestURI(website)
+			if err != nil {
+				log.Printf("failed to parse website for affiliationAdd: %+v", err)
+				data.Error = fmt.Sprintf("failed to parse website for affiliationAdd: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+		}
+
+		file, err := c.FormFile("upload")
 		if err != nil {
 			log.Printf("failed to get file for affiliationAdd: %+v", err)
 			data.Error = fmt.Sprintf("failed to get file for affiliationAdd: %+v", err)
@@ -38,11 +50,18 @@ func (v *Views) AffiliationAddFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
-		_, err = v.affiliation.AddAffiliation(c.Request().Context(), affiliation.Affiliation{Name: name, Website: null.StringFrom(website), FileName: null.StringFrom(fileName)})
+		_, err = v.affiliation.AddAffiliation(c.Request().Context(), affiliation.Affiliation{Name: name, Website: null.NewString(website, len(website) > 0), FileName: null.NewString(fileName, len(fileName) > 0)})
 		if err != nil {
 			log.Printf("failed to add affiliation for affiliationAdd: %+v", err)
 			data.Error = fmt.Sprintf("failed to add affiliation for affiliationAdd: %+v", err)
 			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = fmt.Sprintf("successfully added \"%s\"", name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for affiliationAdd: %+v", err)
 		}
 
 		return c.JSON(http.StatusOK, data)
