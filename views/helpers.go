@@ -31,20 +31,20 @@ import (
 type (
 	// Context is a struct that is applied to the templates.
 	Context struct {
-		// TitleText is used for sending pages to the user with custom titles
-		TitleText string
 		// Message is used for sending a message back to the user trying to log in, might decide to move later as it may not be needed
 		Message string
 		// MsgType is the bulma.io class used to indicate what should be displayed
 		MsgType string
+		// msgViewed is used to clear the message after it has been viewed once
+		msgViewed bool
 		// User is the stored logged-in user
 		User user.User
 	}
 
 	InternalContext struct {
-		TitleText string
 		Message   string
-		MesType   string
+		MsgType   string
+		msgViewed bool
 	}
 
 	ContactUserTemplate struct {
@@ -137,10 +137,8 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		}
 		i := InternalContext{}
 		c := &Context{
-			TitleText: i.TitleText,
-			Message:   i.Message,
-			MsgType:   i.MesType,
-			//Callback:  "/internal",
+			Message: i.Message,
+			MsgType: i.MsgType,
 		}
 		return c
 	}
@@ -169,11 +167,67 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 	if !ok {
 		i = InternalContext{}
 	}
+	if i.msgViewed {
+		err = v.clearMessagesInSession(eC)
+		if err != nil {
+			log.Printf("failed to clear message for getSessionData")
+		}
+		i.Message = ""
+		i.MsgType = ""
+	} else if len(i.Message) > 0 {
+		err = v.setMessagesInSession(eC, &Context{
+			Message:   i.Message,
+			MsgType:   i.MsgType,
+			msgViewed: true,
+		})
+		if err != nil {
+			log.Printf("failed to set viewed message for getSessionData")
+		}
+	}
 	c := &Context{
-		TitleText: i.TitleText,
-		Message:   i.Message,
-		MsgType:   i.MesType,
-		//Callback:  "/internal",
+		Message: i.Message,
+		MsgType: i.MsgType,
+		User:    u,
+	}
+	return c
+}
+
+func (v *Views) getSessionDataNoMsg(eC echo.Context) *Context {
+	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
+	if err != nil {
+		log.Printf("error getting session: %+v", err)
+		err = session.Save(eC.Request(), eC.Response())
+		if err != nil {
+			panic(fmt.Errorf("failed to save user session for getSessionData: %w", err))
+		}
+		i := InternalContext{}
+		c := &Context{
+			Message: i.Message,
+			MsgType: i.MsgType,
+		}
+		return c
+	}
+
+	var u user.User
+	userValue := session.Values["user"]
+	u, ok := userValue.(user.User)
+	if !ok {
+		u = user.User{Authenticated: false}
+	} else {
+		if len(u.TempRole) > 0 {
+			u.Role, err = role.GetRole(u.TempRole)
+			if err != nil {
+				log.Printf("failed to get role for getSessionData: %+v", err)
+			}
+		} else {
+			u.Role, err = role.GetRole(string(u.Role))
+			if err != nil {
+				log.Printf("failed to get role for getSessionData: %+v", err)
+			}
+		}
+	}
+
+	c := &Context{
 		User: u,
 	}
 	return c
@@ -185,9 +239,9 @@ func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
 		return fmt.Errorf("error getting session: %w", err)
 	}
 	session.Values["internalContext"] = InternalContext{
-		TitleText: c.TitleText,
 		Message:   c.Message,
-		MesType:   c.MsgType,
+		MsgType:   c.MsgType,
+		msgViewed: c.msgViewed,
 	}
 
 	err = session.Save(eC.Request(), eC.Response())
