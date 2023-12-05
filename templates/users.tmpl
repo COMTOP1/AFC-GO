@@ -5,7 +5,7 @@
             <h2 class="pageHeader">
                 Users
             </h2>
-            {{if or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
+            {{if or (eq .User.Role "Club Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
                 <div style="margin: 15px 0 15px 0">
                     <a class="button is-info" onclick="addUserModal()">Add User</a>
                 </div>
@@ -23,7 +23,7 @@
                 <th>Team</th>
                 <th>Role</th>
                 <th>Image</th>
-                {{if or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
+                {{if or (eq .User.Role "Club Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
                     <th>Edit</th>
                     <th>Delete</th>
                     <th>Reset password</th>
@@ -70,7 +70,7 @@
             {{end}}
         </table>
     </main>
-    {{if or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
+    {{if or (eq .User.Role "Club Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
         {{template "modal" .}}
     {{end}}
 {{end}}

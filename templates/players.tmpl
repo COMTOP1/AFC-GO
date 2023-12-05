@@ -1,6 +1,6 @@
 {{define "title"}}Players{{end}}
 {{define "content"}}
-    {{$priv := or (eq .User.Role "Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
+    {{$priv := or (eq .User.Role "Club Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
     <main class="main" style="text-align: center;">
         <div class="pageHeaderBanner">
             <h2 class="pageHeader">
