@@ -58,7 +58,15 @@ func (v *Views) LoginFunc(c echo.Context) error {
 				url1 := uuid.NewString()
 				v.cache.Set(url1, u.ID, cache.DefaultExpiration)
 
-				return c.Redirect(http.StatusFound, fmt.Sprintf("https://afcaldermaston.co.uk/reset/%s", url1))
+				data := struct {
+					Error         string `json:"error"`
+					ResetPassword bool   `json:"resetPassword"`
+					URL           string `json:"url"`
+				}{
+					ResetPassword: true,
+					URL:           fmt.Sprintf("/reset/%s", url1),
+				}
+				return c.JSON(http.StatusOK, data)
 			}
 			ctx := v.getSessionData(c)
 			ctx.Message = "Invalid email or password"
@@ -85,8 +93,9 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 		u.Role, err = role.GetRole(u.TempRole)
 		if err != nil {
-			return fmt.Errorf("failed to get role: %w", err)
+			return fmt.Errorf("failed to get role for login: %w", err)
 		}
+
 		u.TempRole = ""
 
 		session.Values["user"] = u
