@@ -33,10 +33,12 @@ func (v *Views) DocumentsFunc(c echo.Context) error {
 		Year      int
 		Documents []DocumentTemplate
 		User      user.User
+		Context   *Context
 	}{
 		Year:      year,
 		Documents: DBDocumentsToTemplateFormat(d1),
 		User:      c1.User,
+		Context:   c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.DocumentsTemplate, templates.RegularType)
