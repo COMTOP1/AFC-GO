@@ -1,0 +1,27 @@
+<!-- see https://documentation.mjml.io for documentation -->
+<mjml>
+    <mj-body background-color="#ffffff" width="850px">
+        <mj-section background-color="#ffffff" padding-bottom="0px" padding-top="0px">
+            <mj-column vertical-align="top" width="100%">
+                <mj-image src="https://github.com/COMTOP1/AFC-GO/blob/main/public/AFC.png?raw=true" alt="" align="center" border="none" width="400px" padding="15px 0 15px 0"></mj-image>
+            </mj-column>
+        </mj-section>
+        <mj-section padding-bottom="0px" padding-top="0">
+            <mj-column vertical-align="top" width="100%">
+                <mj-text align="left" color="#363636" font-size="48px" font-weight="600" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px" padding-bottom="0px" padding-top="50px">Welcome to Aldermaston Football Club!</mj-text>
+                <mj-text align="left" color="#4a4a4a" font-size="48px" font-weight="400" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px" padding-bottom="30px" padding-top="0px">You have been singed up for an official login.</mj-text>
+            </mj-column>
+        </mj-section>
+        <mj-section padding-bottom="20px" padding-top="20px">
+            <mj-column vertical-align="middle" width="100%">
+                <mj-text align="left" color="#4a4a4a" font-size="22px" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px">Hi {{.Name}}, here are temporary details to get you started, you will be asked to change your password:</mj-text>
+                <mj-text align="left" color="#4a4a4a" font-size="22px" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px">Email: {{.Email}}</mj-text>
+                <mj-text align="left" color="#4a4a4a" font-size="22px" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px">Password: {{.Password}}</mj-text>
+                <mj-button align="left" font-size="22px" font-weight="bold" background-color="#4a4a4a" border-radius="10px" color="#fff" font-family="Arial, sans-serif" href="https://{{.Domain}}">AFC website</mj-button>
+                <mj-text align="left" color="#4a4a4a" font-size="22px" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px">If this was not expected then please report this to the AFC Management Team!</mj-text>
+                <mj-text align="left" color="#4a4a4a" font-size="18px" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px">Thanks,<br />AFC Aldermaston Team</mj-text>
+                <mj-text align="left" color="#4a4a4a" font-size="13px" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px">This password is private to you and temporary.<br></br>If the button above doesn't work then use this link here: <a href="https://{{.Domain}}">https://{{.Domain}}</a></mj-text>
+            </mj-column>
+        </mj-section>
+    </mj-body>
+</mjml>
