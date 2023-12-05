@@ -70,19 +70,32 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		email := c.FormValue("email")
 		phone := c.FormValue("phone")
 
-		var message struct {
-			Message string `json:"message"`
-			Error   error  `json:"error"`
+		if len(name) == 0 {
+			log.Println("name must not be empty")
+			data.Error = fmt.Sprintf("name must not be empty")
+			return c.JSON(http.StatusOK, data)
+		}
+
+		res, err := verifier.Verify(email)
+		if err != nil {
+			log.Printf("failed to parse email for userAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to parse email for userAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+		if !res.Syntax.Valid {
+			log.Println("failed to parse email for userAdd: syntax is invalid")
+			data.Error = fmt.Sprintf("failed to parse email for userAdd: syntax is invalid")
+			return c.JSON(http.StatusOK, data)
 		}
 
 		formRole, err := role.GetRole(c.FormValue("role"))
 		if err != nil {
 			log.Printf("failed to get role for userAdd: %+v", err)
-			message.Error = fmt.Errorf("failed to get role for userAdd: %w", err)
-			return c.JSON(http.StatusOK, message)
+			data.Error = fmt.Sprintf("failed to get role for userAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
 		}
 
-		teamID, err := strconv.Atoi(c.FormValue("teamID"))
+		teamID, err := strconv.Atoi(c.FormValue("userTeam"))
 		if err != nil {
 			log.Printf("failed to get teamID for userAdd: %+v, proceeding with no team", err)
 			teamID = 0
@@ -92,17 +105,34 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			teamID = 0
 		}
 
+		if formRole.String() == role.Manager.String() {
+			_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
+			if err != nil {
+				log.Printf("failed to get team for userAdd: %+v, id: %d", err, teamID)
+				data.Error = fmt.Sprintf("failed to get team for userAdd: %+v, id: %d", err, teamID)
+				return c.JSON(http.StatusOK, data)
+			}
+		} else {
+			teamID = 0
+		}
+
 		password, err := utils.GenerateRandom(utils.GeneratePassword)
 		if err != nil {
-			return fmt.Errorf("error generating password: %w", err)
+			log.Printf("failed to generate password for userAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to generate password for userAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
 		}
 
 		salt, err := utils.GenerateRandom(utils.GenerateSalt)
 		if err != nil {
-			return fmt.Errorf("error generating salt: %w", err)
+			log.Printf("failed to generate salt for userAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to generate salt for userAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
 		}
 
 		hash := utils.HashPass([]byte(password), []byte(salt), v.conf.Security.Iterations, v.conf.Security.KeyLength)
+
+		hashString := string(hash)
 
 		var fileName string
 		hasUpload := true
@@ -126,21 +156,22 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		}
 
 		u := user.User{
-			ID:            0,
 			Name:          name,
 			Email:         email,
-			Phone:         phone,
-			TeamID:        null.IntFrom(int64(teamID)),
+			Phone:         null.NewString(phone, len(phone) > 0),
+			TeamID:        teamID,
 			Role:          formRole,
-			FileName:      null.StringFrom(""),
+			FileName:      null.NewString(fileName, hasUpload),
 			ResetPassword: true,
-			Hash:          null.StringFrom(hex.EncodeToString(hash)),
-			Salt:          null.StringFrom(salt),
+			Hash:          null.NewString(hashString, len(hashString) > 0),
+			Salt:          null.NewString(salt, len(salt) > 0),
 		}
 
 		_, err = v.user.AddUser(c.Request().Context(), u)
 		if err != nil {
-			return fmt.Errorf("failed to add user for addUser: %w", err)
+			log.Printf("failed to add user for userAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to add user for userAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
 		}
 
 		mailer := v.mailer.ConnectMailer()
