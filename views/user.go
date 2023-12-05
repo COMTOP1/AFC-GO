@@ -1,19 +1,24 @@
 package views
 
 import (
-	"encoding/hex"
 	"fmt"
+	"html"
 	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
+	emailverifier "github.com/AfterShip/email-verifier"
 	"github.com/labstack/echo/v4"
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/role"
+	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
 	"github.com/COMTOP1/AFC-GO/utils"
@@ -188,8 +193,144 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		userID, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return fmt.Errorf("failed to parse id for userEdit: %w", err)
+		}
+		userDB, err := v.user.GetUser(c.Request().Context(), user.User{ID: userID})
+		if err != nil {
+			return fmt.Errorf("failed to get user for userEdit: %w", err)
+		}
+
+		verifier := emailverifier.NewVerifier()
+
+		var data struct {
+			Error string `json:"error"`
+		}
+
+		tempName := c.FormValue("name")
+		tempEmail := c.FormValue("email")
+		tempPhone := c.FormValue("phone")
+
+		userDB.Phone = null.NewString(tempPhone, len(tempPhone) > 0)
+
+		if len(tempName) == 0 {
+			log.Println("name must not be empty")
+			data.Error = fmt.Sprintf("name must not be empty")
+			return c.JSON(http.StatusOK, data)
+		}
+
+		userDB.Name = tempName
+
+		res, err := verifier.Verify(tempEmail)
+		if err != nil {
+			log.Printf("failed to parse email for userEdit: %+v", err)
+			data.Error = fmt.Sprintf("failed to parse email for userEdit: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+		if !res.Syntax.Valid {
+			log.Println("failed to parse email for userEdit: syntax is invalid")
+			data.Error = fmt.Sprintf("failed to parse email for userEdit: syntax is invalid")
+			return c.JSON(http.StatusOK, data)
+		}
+
+		userDB.Email = tempEmail
+
+		formRole, err := role.GetRole(c.FormValue("role"))
+		if err != nil {
+			log.Printf("failed to get role for userEdit: %+v", err)
+			data.Error = fmt.Sprintf("failed to get role for userEdit: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		userDB.Role = formRole
+
+		teamID, err := strconv.Atoi(c.FormValue("userTeam"))
+		if err != nil {
+			log.Printf("failed to get teamID for userEdit: %+v, proceeding with no team", err)
+			teamID = 0
+		}
+		if teamID < 0 {
+			log.Println("failed to parse negative number, proceeding with no team")
+			teamID = 0
+		}
+
+		if formRole.String() == role.Manager.String() {
+			_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
+			if err != nil {
+				log.Printf("failed to get team for userEdit: %+v, id: %d", err, teamID)
+				data.Error = fmt.Sprintf("failed to get team for userEdit: %+v, id: %d", err, teamID)
+				return c.JSON(http.StatusOK, data)
+			}
+		} else {
+			teamID = 0
+		}
+
+		userDB.TeamID = teamID
+
+		hasUpload := true
+
+		file, err := c.FormFile("upload")
+		if err != nil {
+			if !strings.Contains(err.Error(), "no such file") {
+				log.Printf("failed to get file for userEdit: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for userEdit: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+			hasUpload = false
+		}
+		if hasUpload {
+			var tempFileName string
+			tempFileName, err = v.fileUpload(file)
+			if err != nil {
+				log.Printf("failed to upload file for userEdit: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for userEdit: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+			if userDB.FileName.Valid {
+				err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
+				if err != nil {
+					log.Printf("failed to delete old image for userEdit: %+v", err)
+				}
+			}
+			userDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
+		}
+
+		tempRemoveUserImage := c.FormValue("removeUserImage")
+		if tempRemoveUserImage == "Y" {
+			if userDB.FileName.Valid {
+				err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
+				if err != nil {
+					log.Printf("failed to delete image for userEdit: %+v", err)
+				}
+			}
+			userDB.FileName = null.NewString("", false)
+		} else if len(tempRemoveUserImage) != 0 {
+			log.Printf("failed to parse removeUserImage for userEdit: %s", tempRemoveUserImage)
+			data.Error = fmt.Sprintf("failed to parse removeUserImage for userEdit: %s", tempRemoveUserImage)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		_, err = v.user.EditUser(c.Request().Context(), userDB)
+		if err != nil {
+			log.Printf("failed to edit user for userEdit: %+v", err)
+			data.Error = fmt.Sprintf("failed to edit user for userEdit: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = fmt.Sprintf("successfully edited \"%s\"", userDB.Name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for userEdit: %+v", err)
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
