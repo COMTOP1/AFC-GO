@@ -154,7 +154,7 @@ func (s *Store) EditUser(ctx context.Context, userParam User) (User, error) {
 }
 
 func (s *Store) EditUserPassword(ctx context.Context, userParam User, iter, keyLen int) error {
-	user, err := s.GetUser(ctx, userParam)
+	user, err := s.getUserFull(ctx, userParam)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
