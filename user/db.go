@@ -136,7 +136,7 @@ func (s *Store) editUser(ctx context.Context, userParam User, emailOld string) (
 			"hash":           userParam.Hash,
 			"salt":           userParam.Salt,
 		}).
-		Where(sq.Eq{"email": emailOld})
+		Where(sq.Eq{"id": userParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for editUser: %w", err))

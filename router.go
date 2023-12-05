@@ -98,6 +98,8 @@ func (r *Router) loadRoutes() {
 	affiliation.Match(validMethods, "/:id/delete", r.views.AffiliationDeleteFunc)
 
 	account := base.Group("account", r.views.RequiresLogin)
+	account.Match(validMethods, "/uploadimage", r.views.UploadImageFunc)
+	account.Match(validMethods, "/removeimage", r.views.RemoveImageFunc)
 	account.Match(validMethods, "", r.views.AccountFunc)
 
 	base.Match(validMethods, "contact", r.views.ContactFunc)

@@ -161,7 +161,22 @@ func (s *Store) EditUserPassword(ctx context.Context, userParam User, iter, keyL
 	}
 	user.Hash = null.StringFrom(hex.EncodeToString(utils.HashPass([]byte(userParam.Password.String), []byte(user.Salt.String), iter, keyLen)))
 	user.ResetPassword = false
-	_, err = s.editUser(ctx, user, user.Email)
+	user.Role = userParam.Role
+	_, err = s.editUser(ctx, user)
+	if err != nil {
+		return fmt.Errorf("failed to edit user for editUserPassword: %w", err)
+	}
+	return nil
+}
+
+func (s *Store) EditUserImage(ctx context.Context, userParam User) error {
+	user, err := s.getUserFull(ctx, userParam)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+	user.Role = userParam.Role
+	user.FileName = userParam.FileName
+	_, err = s.editUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("failed to edit user for editUserPassword: %w", err)
 	}
