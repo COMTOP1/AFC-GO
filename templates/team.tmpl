@@ -235,7 +235,7 @@
                                     <label class="label">Manager assigned via Users</label>
                                 </div>
                                 <div class="field">
-                                    <label class="label" for="addTeamImage">Team Photo</label>
+                                    <label class="label" for="editTeamImage">Team Photo</label>
                                     <div class="file is-info has-name">
                                         <label class="file-label">
                                             <input class="file-input" type="file" accept="image/*" name="upload"
@@ -246,7 +246,8 @@
                                             </span>
                                             <span class="file-label">Choose a file…</span>
                                         </span>
-                                            <span class="file-name" id="addTeamImageName">{{if .Team.FileName.Valid}}Uploaded{{else}}No file{{end}}</span>
+                                            <span class="file-name"
+                                                  id="editTeamImageName">{{if .Team.FileName.Valid}}Uploaded{{else}}No file{{end}}</span>
                                         </label>
                                     </div>
                                     <label class="label" for="preview">Preview</label>
@@ -263,13 +264,15 @@
                                 <div class="field">
                                     <label class="label" for="isActive">Is active team?</label>
                                     <div class="control">
-                                        <input type="checkbox" id="isActive" name="isActive" value="Y"{{if .Team.IsActive}} checked{{end}}>
+                                        <input type="checkbox" id="isActive" name="isActive"
+                                               value="Y"{{if .Team.IsActive}} checked{{end}}>
                                     </div>
                                 </div>
                                 <div class="field">
                                     <label class="label" for="isYouth">Is youth team?</label>
                                     <div class="control">
-                                        <input type="checkbox" id="isYouth" name="isYouth" value="Y"{{if .Team.IsYouth}} checked{{end}}>
+                                        <input type="checkbox" id="isYouth" name="isYouth"
+                                               value="Y"{{if .Team.IsYouth}} checked{{end}}>
                                     </div>
                                 </div>
                                 <div class="field">
@@ -320,7 +323,8 @@
                             <p class="title" id="deleteTeamModalTitle">Are you sure you want to delete "{{.Team.Name}}"
                                 from Teams?</p>
                             <p>Be careful! Are you sure you want to remove this?<br>
-                            Any managers, players or sponsors assigned to this team will be reverted to no team. Please ensure this is handled.</p>
+                                Any managers, players or sponsors assigned to this team will be reverted to no team.
+                                Please ensure this is handled.</p>
                             <form method="post" id="deleteTeamModalForm" action="/team/{{.Team.ID}}/delete">
                                 <a class="button is-danger" onclick="deleteTeam()">Delete Team</a>
                             </form>
@@ -375,7 +379,7 @@
             $('#deleteTeamModalForm').submit();
         }
 
-        function editPlayer() {
+        function editTeam() {
             document.getElementById("errorParent").style.display = 'none';
             document.getElementById("editTeamButton").disabled = true;
             let form = $('#editTeamForm')[0];
