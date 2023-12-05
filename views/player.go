@@ -57,9 +57,16 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 
 		data := struct {
 			Error string `json:"error"`
-		}{
-			Error: "",
+		}{}
+
+		name := c.FormValue("name")
+		if len(name) == 0 {
+			log.Println("name must not be empty")
+			data.Error = fmt.Sprintf("name must not be empty")
+			return c.JSON(http.StatusOK, data)
 		}
+
+		position := c.FormValue("position")
 
 		teamID, err := strconv.Atoi(c.FormValue("playerTeam"))
 		if err != nil {
@@ -123,7 +130,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 			}
 		}
 
-		_, err = v.player.AddPlayer(c.Request().Context(), player.Player{Name: name, FileName: null.NewString(fileName, len(fileName) > 0), DateOfBirth: null.TimeFrom(parse), Position: null.StringFrom(position), IsCaptain: isCaptain, TeamID: teamID})
+		_, err = v.player.AddPlayer(c.Request().Context(), player.Player{Name: name, FileName: null.NewString(fileName, len(fileName) > 0), DateOfBirth: null.TimeFrom(parse), Position: null.NewString(position, len(position) > 0), IsCaptain: isCaptain, TeamID: teamID})
 		if err != nil {
 			log.Printf("failed to add player for playerAdd: %+v", err)
 			data.Error = fmt.Sprintf("failed to add player for playerAdd: %+v", err)
