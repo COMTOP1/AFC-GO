@@ -158,7 +158,7 @@ func (s *Store) EditUserPassword(ctx context.Context, userParam User, iter, keyL
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
-	user.Hash = null.StringFrom(hex.EncodeToString(utils.HashPass([]byte(userParam.Password.String), []byte(user.Salt.String), iter, keyLen)))
+	user.Hash = null.StringFrom(string(utils.HashPass([]byte(userParam.Password.String), []byte(user.Salt.String), iter, keyLen)))
 	user.ResetPassword = false
 	user.Role = userParam.Role
 	_, err = s.editUser(ctx, user)
