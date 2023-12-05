@@ -28,10 +28,12 @@ func (v *Views) SponsorsFunc(c echo.Context) error {
 		Year     int
 		Sponsors []SponsorTemplate
 		User     user.User
+		Context  *Context
 	}{
 		Year:     year,
 		Sponsors: DBSponsorsToTemplateFormat(s1),
 		User:     c1.User,
+		Context:  c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.SponsorsTemplate, templates.RegularType)

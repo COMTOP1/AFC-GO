@@ -73,6 +73,8 @@ func (v *Views) NewsArticleFunc(c echo.Context) error {
 
 func (v *Views) NewsAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		title := c.FormValue("title")
 		content := c.FormValue("content")
 
@@ -110,6 +112,13 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
+		c1.Message = fmt.Sprintf("successfully added \"%s\"", title)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for newsAdd: %+v", err)
+		}
+
 		return c.JSON(http.StatusOK, data)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
@@ -117,6 +126,8 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 
 func (v *Views) NewsEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		newsID, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for newsEdit: %w", err))
@@ -165,6 +176,13 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
+		c1.Message = fmt.Sprintf("successfully edited \"%s\"", newsDB.Title)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for newsEdit: %+v", err)
+		}
+
 		return c.JSON(http.StatusOK, data)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
@@ -172,6 +190,8 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 
 func (v *Views) NewsDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
 			return fmt.Errorf("failed to get id for newsDelete: %w", err)
@@ -193,6 +213,14 @@ func (v *Views) NewsDeleteFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete news for newsDelete: %w", err)
 		}
+
+		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", newsDB.Title)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for newsDelete: %+v", err)
+		}
+
 		return c.Redirect(http.StatusFound, "/news")
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))

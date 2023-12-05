@@ -44,6 +44,8 @@ func (v *Views) DocumentsFunc(c echo.Context) error {
 
 func (v *Views) DocumentAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		name := c.FormValue("name")
 
 		data := struct {
@@ -71,7 +73,13 @@ func (v *Views) DocumentAddFunc(c echo.Context) error {
 			log.Printf("failed to add document for documentAdd: %+v", err)
 			data.Error = fmt.Sprintf("failed to add document for documentAdd: %+v", err)
 			return c.JSON(http.StatusOK, data)
-			// return fmt.Errorf("failed to add document for documentAdd: %w", err)
+		}
+
+		c1.Message = fmt.Sprintf("successfully added \"%s\"", name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for documentAdd: %+v", err)
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -82,6 +90,8 @@ func (v *Views) DocumentAddFunc(c echo.Context) error {
 
 func (v *Views) DocumentDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
 			return fmt.Errorf("failed to get id for documentDelete: %w", err)
@@ -101,6 +111,14 @@ func (v *Views) DocumentDeleteFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete user for documentDelete: %w", err)
 		}
+
+		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", documentDB.Name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for documentDelete: %+v", err)
+		}
+
 		return c.Redirect(http.StatusFound, "/documents")
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))

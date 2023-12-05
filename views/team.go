@@ -34,13 +34,15 @@ func (v *Views) TeamsFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year  int
-		Teams []TeamTemplate
-		User  user.User
+		Year    int
+		Teams   []TeamTemplate
+		User    user.User
+		Context *Context
 	}{
-		Year:  year,
-		Teams: DBTeamsToTemplateFormat(teams),
-		User:  c1.User,
+		Year:    year,
+		Teams:   DBTeamsToTemplateFormat(teams),
+		User:    c1.User,
+		Context: c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.TeamsTemplate, templates.RegularType)
@@ -82,6 +84,7 @@ func (v *Views) TeamFunc(c echo.Context) error {
 		Sponsors []SponsorTemplate
 		Players  []PlayerTemplate
 		User     user.User
+		Context  *Context
 	}{
 		Year:     year,
 		Team:     teamDB,
@@ -89,6 +92,7 @@ func (v *Views) TeamFunc(c echo.Context) error {
 		Sponsors: DBSponsorsToTemplateFormat(sponsorsDB),
 		Players:  DBPlayersTeamToTemplateFormat(playersDB),
 		User:     c1.User,
+		Context:  c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.TeamTemplate, templates.RegularType)
@@ -96,6 +100,8 @@ func (v *Views) TeamFunc(c echo.Context) error {
 
 func (v *Views) TeamAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		data := struct {
 			Error string `json:"error"`
 		}{
@@ -193,6 +199,13 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 			log.Printf("failed to add team for teamAdd: %+v", err)
 			data.Error = fmt.Sprintf("failed to add team for teamAdd: %+v", err)
 			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = fmt.Sprintf("successfully added \"%s\"", name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for teamAdd: %+v", err)
 		}
 
 		return c.JSON(http.StatusOK, data)

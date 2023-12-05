@@ -35,10 +35,12 @@ func (v *Views) WhatsOnFunc(c echo.Context) error {
 		Year    int
 		WhatsOn []WhatsOnTemplate
 		User    user.User
+		Context *Context
 	}{
 		Year:    year,
 		WhatsOn: DBWhatsOnToTemplateFormat(w1),
 		User:    c1.User,
+		Context: c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnTemplate, templates.RegularType)
@@ -62,10 +64,12 @@ func (v *Views) WhatsOnArticleFunc(c echo.Context) error {
 		Year    int
 		WhatsOn WhatsOnTemplate
 		User    user.User
+		Context *Context
 	}{
 		Year:    year,
 		WhatsOn: DBWhatsOnToArticleTemplateFormat(whatsOnFromDB),
 		User:    c1.User,
+		Context: c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnArticleTemplate, templates.RegularType)
@@ -73,6 +77,8 @@ func (v *Views) WhatsOnArticleFunc(c echo.Context) error {
 
 func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		title := c.FormValue("title")
 		content := c.FormValue("content")
 
@@ -119,6 +125,13 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
+		c1.Message = fmt.Sprintf("successfully added \"%s\"", title)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for whatsOnAdd: %+v", err)
+		}
+
 		return c.JSON(http.StatusOK, data)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
@@ -126,6 +139,8 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 
 func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		whatsOnID, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for whatsOnEdit: %w", err))
@@ -185,6 +200,13 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
+		c1.Message = fmt.Sprintf("successfully edited \"%s\"", whatsOnDB.Title)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for whatsOnEdit: %+v", err)
+		}
+
 		return c.JSON(http.StatusOK, data)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
@@ -192,6 +214,8 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 
 func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
 			return fmt.Errorf("failed to get id for whatsOnDelete: %w", err)
@@ -213,6 +237,14 @@ func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete whatsOn for whatsOnDelete: %w", err)
 		}
+
+		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", whatsOnDB.Title)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for whatsOnDelete: %+v", err)
+		}
+
 		return c.Redirect(http.StatusFound, "/whatson")
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))

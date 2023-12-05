@@ -39,11 +39,13 @@ func (v *Views) PlayersFunc(c echo.Context) error {
 		Players []PlayerTemplate
 		Teams   []TeamTemplate
 		User    user.User
+		Context *Context
 	}{
 		Year:    year,
 		Players: DBPlayersToTemplateFormat(playersDB, teamsDB),
 		Teams:   DBTeamsToTemplateFormat(teamsDB),
 		User:    c1.User,
+		Context: c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.PlayersTemplate, templates.RegularType)
@@ -51,8 +53,7 @@ func (v *Views) PlayersFunc(c echo.Context) error {
 
 func (v *Views) PlayerAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
-		name := c.FormValue("name")
-		position := c.FormValue("position")
+		c1 := v.getSessionData(c)
 
 		data := struct {
 			Error string `json:"error"`
@@ -129,6 +130,13 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
+		c1.Message = fmt.Sprintf("successfully added \"%s\"", name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for playerAdd: %+v", err)
+		}
+
 		return c.JSON(http.StatusOK, data)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
@@ -136,6 +144,8 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 
 func (v *Views) PlayerEditFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		playerID, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for playerEdit: %w", err))
@@ -227,6 +237,13 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
+		c1.Message = fmt.Sprintf("successfully edited \"%s\"", playerDB.Name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for playerEdit: %+v", err)
+		}
+
 		return c.JSON(http.StatusOK, data)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
@@ -234,6 +251,8 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 
 func (v *Views) PlayerDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
 			return fmt.Errorf("failed to get id for playerDelete: %w", err)
@@ -255,6 +274,14 @@ func (v *Views) PlayerDeleteFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete player for playerDelete: %w", err)
 		}
+
+		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", playerDB.Name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for playerDelete: %+v", err)
+		}
+
 		return c.Redirect(http.StatusFound, "/players")
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))

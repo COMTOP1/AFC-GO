@@ -47,6 +47,8 @@ func (v *Views) UsersFunc(c echo.Context) error {
 
 func (v *Views) UserAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		name := c.FormValue("name")
 		email := c.FormValue("email")
 		phone := c.FormValue("phone")
@@ -136,13 +138,17 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 			message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
 		} else {
-			message.Message = fmt.Sprintf("No mailer present\nPlease send the username and password to this email: %s, password: %s", email, password)
-			message.Error = fmt.Errorf("no mailer present")
-			log.Printf("no Mailer present")
+			c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s", email, password))
+			c1.MsgType = "is-warning"
+			log.Println("no mailer present")
+			log.Println("proceeding")
 		}
-		log.Printf("created user: %s", u.Email)
+		log.Printf("created user: %s, by: %d - %s", u.Email, c1.User.ID, c1.User.Email)
 
-		var status int
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for uploadImage: %+v", err)
+		}
 
 		return c.JSON(status, message)
 	}

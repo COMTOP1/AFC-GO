@@ -44,6 +44,7 @@ func (v *Views) HomeFunc(c echo.Context) error {
 		NewsLatest    NewsTemplate
 		WhatsOnLatest WhatsOnTemplate
 		User          user.User
+		Context       *Context
 	}{
 		Year:          year,
 		Affiliations:  affiliations,
@@ -51,6 +52,7 @@ func (v *Views) HomeFunc(c echo.Context) error {
 		NewsLatest:    DBNewsToArticleTemplateFormat(newsLatest),
 		WhatsOnLatest: DBWhatsOnToArticleTemplateFormat(whatsOnLatest),
 		User:          c1.User,
+		Context:       c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.HomeTemplate, templates.RegularType)

@@ -45,6 +45,8 @@ func (v *Views) ImageAddFunc(c echo.Context) error {
 
 func (v *Views) ImageDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
 			return fmt.Errorf("failed to get id for imageDelete: %w", err)
@@ -66,6 +68,14 @@ func (v *Views) ImageDeleteFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete image for imageDelete: %w", err)
 		}
+
+		c1.Message = "successfully deleted image"
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for imageDelete: %+v", err)
+		}
+
 		return c.Redirect(http.StatusFound, "/gallery")
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
