@@ -60,7 +60,7 @@
                             <a class="button is-warning" onclick="editUserModal()">Edit</a>
                         </th>
                         <th>
-                            <a class="button is-danger" onclick="deleteUserModal()">Delete</a>
+                            <a class="button is-danger" onclick="deleteUserModal({{.ID}}, {{.Name}})">Delete</a>
                         </th>
                         <th>
                             <a class="button is-warning" onclick="resetPasswordModal()">Reset password</a>
@@ -76,5 +76,45 @@
 {{end}}
 
 {{define "modal"}}
+    <div id="deleteUserModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="deleteUserModalTitle"></p>
+                            <p>Be careful! Are you sure you want to remove them?</p>
+                            <form method="post" id="deleteUserModalForm">
+                                <a class="button is-danger" onclick="deleteUser()">Delete User</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
 
+        let editUserID = 0, deleteUserID = 0, resetPasswordUserID = 0;
+
+        function deleteUserModal(id, name) {
+            deleteUserID = id
+            document.getElementById("deleteUserModal").classList.add("is-active");
+            document.getElementById("deleteUserModalTitle").innerHTML = 'Are you sure you want to delete "' + name + '" from Users?';
+        }
+
+        function deleteUser() {
+            document.getElementById("deleteUserModalForm").action = "/user/" + deleteUserID + "/delete";
+            $('#deleteUserModalForm').submit();
+        }
 {{end}}
