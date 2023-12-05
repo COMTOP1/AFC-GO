@@ -81,7 +81,7 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 	case NoNavType:
 		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_bodyNoNavs.tmpl", "_head.tmpl", "_footer.tmpl", mainTmpl.String())
 	case RegularType:
-		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_top.tmpl", "_footer.tmpl", "_logoutModal.tmpl", "_loginModal.tmpl" /*"_navbar.tmpl", "_sidebar.tmpl",*/, mainTmpl.String())
+		t1, err = t1.ParseFS(tmpls, "_base.tmpl", "_top.tmpl", "_footer.tmpl", "_logoutModal.tmpl", "_loginModal.tmpl", mainTmpl.String())
 	default:
 		return fmt.Errorf("unable to parse template, invalid type: %d", templateType)
 	}
