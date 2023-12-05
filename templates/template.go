@@ -94,6 +94,10 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 	return t1.Execute(w, data)
 }
 
+func (t *Templater) GetEmailTemplate(emailTemplate Template) (*template.Template, error) {
+	return template.New(emailTemplate.String()).ParseFS(tmpls, emailTemplate.String())
+}
+
 // getFuncMaps returns all the in built functions that templates can use
 func (t *Templater) getFuncMaps() template.FuncMap {
 	return template.FuncMap{
