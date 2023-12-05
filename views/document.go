@@ -64,7 +64,6 @@ func (v *Views) DocumentAddFunc(c echo.Context) error {
 		}
 		fileName, err := v.fileUpload(file)
 		if err != nil {
-			// return fmt.Errorf("failed to upload file for documentAdd: %w", err)
 			log.Printf("failed to upload file for documentAdd: %+v", err)
 			data.Error = fmt.Sprintf("failed to upload file for documentAdd: %+v", err)
 			return c.JSON(http.StatusOK, data)
@@ -85,7 +84,6 @@ func (v *Views) DocumentAddFunc(c echo.Context) error {
 		}
 
 		return c.JSON(http.StatusOK, data)
-		// return c.Redirect(http.StatusFound, "/")
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
