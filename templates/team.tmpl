@@ -50,18 +50,22 @@
                            style="text-decoration: underline;">Fixtures</a>
                         <br>
                         <br>{{end}}
-                        {{if $priv}}
-                            <h3 class="secondaryHeader">Only visible to AFC Staff</h3>
-                            <h3 class="secondaryHeader">Is Active</h3>
-                            {{.Team.IsActive}}
-                            <br><br>
-                            <h3 class="secondaryHeader">Is Youth</h3>
-                            {{.Team.IsYouth}}
-                            <br><br>
-                            <h3 class="secondaryHeader">Ages</h3>
-                            {{.Team.Ages}}
-                            <br><br>
+                    {{end}}
+                    {{if $priv}}
+                        <h3 class="secondaryHeader">Only visible to AFC Staff</h3>
+                        <h3 class="secondaryHeader">Is Active</h3>
+                        {{.Team.IsActive}}
+                        <br><br>
+                        <h3 class="secondaryHeader">Is Youth</h3>
+                        {{.Team.IsYouth}}
+                        <br><br>
+                        <h3 class="secondaryHeader">Ages</h3>
+                        {{if eq .Team.Ages 19}}
+                            &gt;18
+                        {{else}}
+                            &lt;{{.Team.Ages}}
                         {{end}}
+                        <br><br>
                     {{end}}
                 </div>
                 {{if .Team.FileName.Valid}}
