@@ -138,17 +138,8 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 			}
 		}
 
-		tempCoach := c.FormValue("tempCoach")
-		coach := null.StringFrom(tempCoach)
-		if len(tempCoach) == 0 {
-			coach.Valid = false
-		}
-
-		tempPhysio := c.FormValue("physio")
-		physio := null.StringFrom(tempPhysio)
-		if len(tempPhysio) == 0 {
-			physio.Valid = false
-		}
+		coach := c.FormValue("coach")
+		physio := c.FormValue("physio")
 
 		var isActive, isYouth bool
 
@@ -202,7 +193,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 			}
 		}
 
-		_, err = v.team.AddTeam(c.Request().Context(), team.Team{Name: name, League: null.StringFrom(league), Division: null.StringFrom(division), LeagueTable: null.StringFrom(leagueTable), Fixtures: null.StringFrom(fixtures), Coach: coach, Physio: physio, FileName: null.StringFrom(fileName), IsActive: isActive, IsYouth: isYouth, Ages: ages})
+		_, err = v.team.AddTeam(c.Request().Context(), team.Team{Name: name, League: null.NewString(league, len(league) > 0), Division: null.NewString(division, len(division) > 0), LeagueTable: null.NewString(leagueTable, len(leagueTable) > 0), Fixtures: null.NewString(fixtures, len(fixtures) > 0), Coach: null.NewString(coach, len(coach) > 0), Physio: null.NewString(physio, len(physio) > 0), FileName: null.NewString(fileName, len(fileName) > 0), IsActive: isActive, IsYouth: isYouth, Ages: ages})
 		if err != nil {
 			log.Printf("failed to add team for teamAdd: %+v", err)
 			data.Error = fmt.Sprintf("failed to add team for teamAdd: %+v", err)
