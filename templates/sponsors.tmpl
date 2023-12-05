@@ -56,22 +56,55 @@
                             <p>Enter the sponsor details below.</p>
                             <form id="addSponsorForm" enctype="multipart/form-data">
                                 <div class="field">
-                                    <label class="label" for="title">Title</label>
+                                    <label class="label" for="name">Name</label>
                                     <div class="control">
                                         <input
-                                                id="title"
+                                                id="name"
                                                 class="input"
                                                 type="text"
-                                                name="title"
-                                                placeholder="Title"
+                                                name="name"
+                                                placeholder="Name"
                                         />
                                     </div>
                                 </div>
                                 <div class="field">
-                                    <label class="label" for="content">Content</label>
+                                    <label class="label" for="website">Website (leave blank if there isn't one)</label>
                                     <div class="control">
-                                        <textarea class="textarea" placeholder="Content..." rows="10" id="content"
-                                                  name="content"></textarea>
+                                        <input
+                                                id="website"
+                                                class="input"
+                                                type="text"
+                                                name="website"
+                                                placeholder="https://..."
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="purpose">Purpose</label>
+                                    <div class="control">
+                                        <input
+                                                id="purpose"
+                                                class="input"
+                                                type="text"
+                                                name="purpose"
+                                                placeholder="Purpose"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="team">Team</label>
+                                    <div class="control has-icons-left select">
+                                        <select name="team" id="team">
+                                            <option disabled selected>Please select</option>
+                                            <option value="A">All</option>
+                                            <option value="O">Adult</option>
+                                            <option value="Y">Youth</option>
+                                            {{range .Teams}}
+                                                <option value="{{.ID}}">
+                                                    {{.Name}}
+                                                </option>
+                                            {{end}}
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="field">
@@ -140,7 +173,7 @@
             let image = document.getElementById('preview');
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     image.src = e.target.result;
                 }
                 reader.readAsDataURL(input.files[0]);
@@ -193,6 +226,7 @@
                     if (data.error.length > 0) {
                         $("#error").html(data.error);
                         document.getElementById("errorParent").style.display = null;
+                        document.getElementById("addSponsorButton").disabled = false;
                     } else {
                         window.location.href = "/sponsors";
                     }
