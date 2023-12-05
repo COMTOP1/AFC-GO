@@ -50,51 +50,6 @@
                 {{end}}
             {{end}}
         </div>
-        {{with (index .Programmes 0)}}
-            <div class="flexContainer">
-                <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
-                    <h2 class="title">Latest programme - {{.Name}}
-                    </h2><br>
-                    <h2 class="subtitle">{{if .Season.IsValid}}Season - {{.Season.Name}}<br>{{end}}
-                        Date of programme - {{.DateOfProgramme}}
-                    </h2>
-                    <object data="/download?s=p&id={{.ID}}" width="95%" height="600px" embedded="true"></object>
-                    {{if $priv}}
-                        <br><br><br>
-                        <a class="button is-danger" onclick="deleteProgrammeModal({{.ID}}, '{{.Name}}')">Delete</a>
-                    {{end}}
-                </div>
-            </div>
-        {{end}}
-        {{if gt (len .Programmes) 1}}
-            <div style="margin: 10px 0 10px 0; padding: 5px 0 5px 0;">
-                <h2 style="color: #1F1F1F" class="welcomeHeader">
-                    Other Programmes</h2>
-            </div>
-            <div class="flexContainer">
-                {{$first := true}}
-                {{range .Programmes}}
-                    {{if $first}}
-                        {{$first = false}}
-                    {{else}}
-                        <div class="listItem" style="text-align: center; width: 275px; height: auto; cursor: pointer;"
-                             {{if not $priv}}onclick="location.href='/download?s=p&id={{.ID}}';"{{end}}>
-                            {{if $priv}}<a href="/download?s=p&id={{.ID}}">{{end}}
-                                <p class="subtitle">{{.Name}}
-                                </p>
-                                <p>{{if .Season.IsValid}}Season - {{.Season.Name}}<br>{{end}}Date of programme
-                                    - {{.DateOfProgramme}}<br><br>Click to download</p>
-                                {{if $priv}}</a>{{end}}
-                            {{if $priv}}
-                                <br>
-                                <br>
-                                <a class="button is-danger" onclick="deleteProgrammeModal({{.ID}}, '{{.Name}}')"
-                                   style="margin-bottom: 20px">Delete</a>
-                            {{end}}
-                        </div>
-                    {{end}}
-                {{end}}
-            </div>
         {{if eq (len .Programmes) 0}}
             <div class="flexContainer">
                 <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
@@ -103,6 +58,52 @@
                 </div>
             </div>
         {{else}}
+            {{with (index .Programmes 0)}}
+                <div class="flexContainer">
+                    <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
+                        <h2 class="title">Latest programme - {{.Name}}
+                        </h2><br>
+                        <h2 class="subtitle">{{if .Season.IsValid}}Season - {{.Season.Name}}<br>{{end}}
+                            Date of programme - {{.DateOfProgramme}}
+                        </h2>
+                        <object data="/download?s=p&id={{.ID}}" width="95%" height="600px" embedded="true"></object>
+                        {{if $priv}}
+                            <br><br><br>
+                            <a class="button is-danger" onclick="deleteProgrammeModal({{.ID}}, '{{.Name}}')">Delete</a>
+                        {{end}}
+                    </div>
+                </div>
+            {{end}}
+            {{if gt (len .Programmes) 1}}
+                <div style="margin: 10px 0 10px 0; padding: 5px 0 5px 0;">
+                    <h2 style="color: #1F1F1F" class="welcomeHeader">
+                        Other Programmes</h2>
+                </div>
+                <div class="flexContainer">
+                    {{$first := true}}
+                    {{range .Programmes}}
+                        {{if $first}}
+                            {{$first = false}}
+                        {{else}}
+                            <div class="listItem"
+                                 style="text-align: center; width: 275px; height: auto; cursor: pointer;"
+                                 {{if not $priv}}onclick="location.href='/download?s=p&id={{.ID}}';"{{end}}>
+                                {{if $priv}}<a href="/download?s=p&id={{.ID}}">{{end}}
+                                    <p class="subtitle">{{.Name}}
+                                    </p>
+                                    <p>{{if .Season.IsValid}}Season - {{.Season.Name}}<br>{{end}}Date of programme
+                                        - {{.DateOfProgramme}}<br><br>Click to download</p>
+                                    {{if $priv}}</a>{{end}}
+                                {{if $priv}}
+                                    <br>
+                                    <br>
+                                    <a class="button is-danger" onclick="deleteProgrammeModal({{.ID}}, '{{.Name}}')"
+                                       style="margin-bottom: 20px">Delete</a>
+                                {{end}}
+                            </div>
+                        {{end}}
+                    {{end}}
+                </div>
             {{end}}
         {{end}}
     </main>
