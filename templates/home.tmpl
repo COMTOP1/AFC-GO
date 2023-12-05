@@ -246,6 +246,11 @@
                                             <span class="file-name" id="addAffiliationImageName">...</span>
                                         </label>
                                     </div>
+                                    <label class="label" for="preview">Preview</label>
+                                    <img id="preview" alt="/public/AFC.png"
+                                         onerror="this.onerror=null;this.src='/public/AFC.png';"
+                                         src="/public/AFC.png"
+                                         style="border: 5px; max-height: 200px; max-width: 200px;">
                                 </div>
                                 <a class="button is-info" onclick="addAffiliation()" id="addAffiliationButton">
                                     Add Affiliation
@@ -287,6 +292,18 @@
             $('#addAffiliationImageName').text(addAffiliationImage[0].files[0].name);
         });
 
+        function previewImage(event) {
+            let input = event.target;
+            let image = document.getElementById('preview');
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    image.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
         document.querySelectorAll(
             ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
         ).forEach(($el) => {
@@ -310,6 +327,9 @@
         }
 
         function addAffiliationModal() {
+            document.getElementById("addAffiliationImage").value = "";
+            $('#addAffiliationImageName').text("...");
+            document.getElementById("preview").src = "/public/AFC.png";
             document.getElementById("addAffiliationModal").classList.add("is-active");
         }
 

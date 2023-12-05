@@ -117,7 +117,7 @@
                                     <div class="file is-info has-name">
                                         <label class="file-label">
                                             <input class="file-input" type="file" accept="image/*" name="upload"
-                                                   id="addPlayerUpload">
+                                                   id="addPlayerUpload" onchange="addPreviewImage(event)">
                                             <span class="file-cta">
                                             <span class="file-icon">
                                                 <i class="fa fa-upload"></i>
@@ -127,6 +127,11 @@
                                             <span class="file-name" id="addPlayerUploadName">...</span>
                                         </label>
                                     </div>
+                                    <label class="label" for="addPreview">Preview</label>
+                                    <img id="addPreview" alt="/public/AFC.png"
+                                         onerror="this.onerror=null;this.src='/public/AFC.png';"
+                                         src="/public/AFC.png"
+                                         style="border: 5px; max-height: 200px; max-width: 200px;">
                                 </div>
                                 <div class="field">
                                     <label class="label" for="addPosition">Position</label>
@@ -215,7 +220,7 @@
                                     <div class="file is-info has-name">
                                         <label class="file-label">
                                             <input class="file-input" type="file" accept="image/*" name="upload"
-                                                   id="editPlayerUpload">
+                                                   id="editPlayerUpload" onchange="editPreviewImage(event)">
                                             <span class="file-cta">
                                             <span class="file-icon">
                                                 <i class="fa fa-upload"></i>
@@ -224,6 +229,15 @@
                                         </span>
                                             <span class="file-name" id="editPlayerUploadName">...</span>
                                         </label>
+                                    </div>
+                                    <label class="label" for="editPreview">Preview</label>
+                                    <img id="editPreview" alt="/public/AFC.png"
+                                         onerror="this.onerror=null;this.src='/public/AFC.png';"
+                                         src="/public/AFC.png"
+                                         style="border: 5px; max-height: 200px; max-width: 200px;">
+                                    <label class="label" for="removePlayerImage">Remove Player Image</label>
+                                    <div class="control">
+                                        <input type="checkbox" id="removePlayerImage" name="removePlayerImage" value="Y">
                                     </div>
                                 </div>
                                 <div class="field">
@@ -289,6 +303,30 @@
         editPlayerUpload.change(function () {
             $('#editPlayerUploadName').text(editPlayerUpload[0].files[0].name);
         });
+
+        function addPreviewImage(event) {
+            let input = event.target;
+            let image = document.getElementById('addPreview');
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    image.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function editPreviewImage(event) {
+            let input = event.target;
+            let image = document.getElementById('editPreview');
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    image.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
 
         document.querySelectorAll(
             ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
@@ -366,6 +404,14 @@
             while (elements.length > 0) {
                 elements[0].parentNode.removeChild(elements[0]);
             }
+            document.getElementById("editPreview").src = "/public/AFC.png";
+            document.getElementById("editPlayerUpload").value = "";
+            let editPlayerUploadName = $('#editPlayerUploadName');
+            editPlayerUploadName.text("No file");
+            if (isFileValid) {
+                editPlayerUploadName.text("Uploaded");
+                document.getElementById("editPreview").src = "/download?s=l&id=" + id + "&r=" + Math.floor(Math.random() * 999999);
+            }
         }
 
         function editPlayer() {
@@ -423,6 +469,9 @@
             while (elements.length > 0) {
                 elements[0].parentNode.removeChild(elements[0]);
             }
+            document.getElementById("addPlayerUpload").value = "";
+            $('#addPlayerUploadName').text("...");
+            document.getElementById("preview").src = "/public/AFC.png";
             document.getElementById("addPlayerModal").classList.add("is-active");
         }
 

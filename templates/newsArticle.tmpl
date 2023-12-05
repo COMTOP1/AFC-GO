@@ -72,7 +72,7 @@
                                     <div class="file is-info has-name">
                                         <label class="file-label">
                                             <input class="file-input" type="file" accept="image/*" name="upload"
-                                                   id="editNewsUpload">
+                                                   id="editNewsUpload" onchange="previewImage(event)">
                                             <span class="file-cta">
                                             <span class="file-icon">
                                                 <i class="fa fa-upload"></i>
@@ -82,6 +82,15 @@
                                             <span class="file-name"
                                                   id="editNewsUploadName">{{if .News.IsFileValid}}Uploaded{{else}}No file{{end}}</span>
                                         </label>
+                                    </div>
+                                    <label class="label" for="preview">Preview</label>
+                                    <img id="preview" data-src="/download?s=n&id={{.News.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
+                                         onerror="this.onerror=null;this.src='/public/AFC.png';"
+                                         src="/public/AFC.png"
+                                         style="border: 5px; max-height: 200px; max-width: 200px;" class="lazy">
+                                    <label class="label" for="removeNewsImage">Remove News Image</label>
+                                    <div class="control">
+                                        <input type="checkbox" id="removeNewsImage" name="removeNewsImage" value="Y">
                                     </div>
                                 </div>
                                 <a class="button is-info" onclick="editNews()" id="editNewsButton">
@@ -133,6 +142,27 @@
             });
         });
 
+        function previewImage(event) {
+            let input = event.target;
+            let image = document.getElementById('preview');
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    image.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
         function deleteNewsModal() {
             document.getElementById("deleteNewsModal").classList.add("is-active");
         }
@@ -142,6 +172,11 @@
         }
 
         function editNewsModal() {
+            document.getElementById("editNewsUpload").value = "";
+            $('#editNewsUploadName').text("{{if .News.IsFileValid}}Uploaded{{else}}No file{{end}}");
+            {{if .News.IsFileValid}}
+            document.getElementById("preview").src = "/download?s=n&id={{.News.ID}}&r={{randomImgInt}}";
+            {{end}}
             document.getElementById("editNewsModal").classList.add("is-active");
         }
 

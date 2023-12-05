@@ -71,7 +71,7 @@
                                     <div class="file is-info has-name">
                                         <label class="file-label">
                                             <input class="file-input" type="file" accept="image/*" name="upload"
-                                                   id="editWhatsOnUpload">
+                                                   id="editWhatsOnUpload" onchange="previewImage(event)">
                                             <span class="file-cta">
                                             <span class="file-icon">
                                                 <i class="fa fa-upload"></i>
@@ -80,6 +80,15 @@
                                         </span>
                                             <span class="file-name" id="editWhatsOnUploadName">{{if .WhatsOn.IsFileValid}}Uploaded{{else}}No file{{end}}</span>
                                         </label>
+                                    </div>
+                                    <label class="label" for="preview">Preview</label>
+                                    <img id="preview" data-src="/download?s=w&id={{.WhatsOn.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
+                                         onerror="this.onerror=null;this.src='/public/AFC.png';"
+                                         src="/public/AFC.png"
+                                         style="border: 5px; max-height: 200px; max-width: 200px;" class="lazy">
+                                    <label class="label" for="removeWhatsOnImage">Remove WhatsOn Image</label>
+                                    <div class="control">
+                                        <input type="checkbox" id="removeWhatsOnImage" name="removeWhatsOnImage" value="Y">
                                     </div>
                                 </div>
                                 <div class="field">
@@ -114,7 +123,7 @@
                 <article class="media">
                     <div class="media-content">
                         <div class="content">
-                            <p class="title" id="deleteWhatsOnModalTitle">Are you sure you want to delete "{{.WhatsOn.Name}}" from What's On?</p>
+                            <p class="title" id="deleteWhatsOnModalTitle">Are you sure you want to delete "{{.WhatsOn.Title}}" from What's On?</p>
                             <p>Be careful! Are you sure you want to remove this?</p>
                             <form method="post" id="deleteWhatsOnModalForm" action="/whatson/{{.WhatsOn.ID}}/delete">
                                 <a class="button is-danger" onclick="deleteWhatsOn()">Delete What's On</a>
@@ -132,6 +141,18 @@
             $('#editWhatsOnUploadName').text(editWhatsOnUpload[0].files[0].name);
         });
 
+        function previewImage(event) {
+            let input = event.target;
+            let image = document.getElementById('preview');
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    image.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
         document.querySelectorAll(
             ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
         ).forEach(($el) => {
@@ -141,10 +162,7 @@
             });
         });
 
-        let whatsOnID = 0;
-
-        function deleteWhatsOnModal(id, name) {
-            whatsOnID = id
+        function deleteWhatsOnModal() {
             document.getElementById("deleteWhatsOnModal").classList.add("is-active");
         }
 
@@ -181,6 +199,11 @@
             while(elements.length > 0){
                 elements[0].parentNode.removeChild(elements[0]);
             }
+            document.getElementById("editWhatsOnUpload").value = "";
+            $('#editWhatsOnUploadName').text("{{if .WhatsOn.IsFileValid}}Uploaded{{else}}No file{{end}}");
+            {{if .WhatsOn.IsFileValid}}
+            document.getElementById("preview").src = "/download?s=w&id={{.WhatsOn.ID}}&r={{randomImgInt}}";
+            {{end}}
             document.getElementById("editWhatsOnModal").classList.add("is-active");
         }
 

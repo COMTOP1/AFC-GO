@@ -136,7 +136,7 @@
                                     <div class="file is-info has-name">
                                         <label class="file-label">
                                             <input class="file-input" type="file" accept="image/*" name="upload"
-                                                   id="addTeamImage">
+                                                   id="addTeamImage" onchange="previewImage(event)">
                                             <span class="file-cta">
                                             <span class="file-icon">
                                                 <i class="fa fa-upload"></i>
@@ -146,6 +146,11 @@
                                             <span class="file-name" id="addTeamImageName">...</span>
                                         </label>
                                     </div>
+                                    <label class="label" for="preview">Preview</label>
+                                    <img id="preview" alt="/public/AFC.png"
+                                         onerror="this.onerror=null;this.src='/public/AFC.png';"
+                                         src="/public/AFC.png"
+                                         style="border: 5px; max-height: 200px; max-width: 200px;">
                                 </div>
                                 <div class="field">
                                     <label class="label" for="isActive">Is active team?</label>
@@ -203,6 +208,18 @@
             $('#addTeamImageName').text(addTeamUpload[0].files[0].name);
         });
 
+        function previewImage(event) {
+            let input = event.target;
+            let image = document.getElementById('preview');
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    image.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
         document.querySelectorAll(
             ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
         ).forEach(($el) => {
@@ -213,6 +230,9 @@
         });
 
         function addTeamModal() {
+            document.getElementById("addTeamImage").value = "";
+            $('#addTeamImageName').text("...");
+            document.getElementById("preview").src = "/public/AFC.png";
             document.getElementById("addTeamModal").classList.add("is-active");
         }
 

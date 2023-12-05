@@ -68,7 +68,7 @@
                                     <div class="file is-info has-name">
                                         <label class="file-label">
                                             <input class="file-input" type="file" accept="image/*" name="upload"
-                                                   id="addWhatsOnUpload">
+                                                   id="addWhatsOnUpload" onchange="previewImage(event)">
                                             <span class="file-cta">
                                             <span class="file-icon">
                                                 <i class="fa fa-upload"></i>
@@ -78,6 +78,11 @@
                                             <span class="file-name" id="addWhatsOnUploadName">...</span>
                                         </label>
                                     </div>
+                                    <label class="label" for="preview">Preview</label>
+                                    <img id="preview" alt="/public/AFC.png"
+                                         onerror="this.onerror=null;this.src='/public/AFC.png';"
+                                         src="/public/AFC.png"
+                                         style="border: 5px; max-height: 200px; max-width: 200px;">
                                 </div>
                                 <div class="field">
                                     <label class="label" for="dateOfEvent">Date of event</label>
@@ -109,6 +114,18 @@
         addWhatsOnUpload.change(function () {
             $('#addWhatsOnUploadName').text(addWhatsOnUpload[0].files[0].name);
         });
+
+        function previewImage(event) {
+            let input = event.target;
+            let image = document.getElementById('preview');
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    image.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
 
         document.querySelectorAll(
             ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
