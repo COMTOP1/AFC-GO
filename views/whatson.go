@@ -190,7 +190,23 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 				data.Error = fmt.Sprintf("failed to upload file for whatsOnEdit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
+			if whatsOnDB.FileName.Valid {
+				err = os.Remove(filepath.Join(v.conf.FileDir, whatsOnDB.FileName.String))
+				if err != nil {
+					log.Printf("failed to delete old image for whatsOnEdit: %+v", err)
+				}
+			}
 			whatsOnDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
+		}
+
+		tempRemoveWhatsOnImage := c.FormValue("removeWhatsOnImage")
+		if tempRemoveWhatsOnImage == "Y" {
+
+			whatsOnDB.FileName = null.NewString("", false)
+		} else if len(tempRemoveWhatsOnImage) != 0 {
+			log.Printf("failed to parse removeWhatsOnImage for whatsOnEdit: %s", tempRemoveWhatsOnImage)
+			data.Error = fmt.Sprintf("failed to parse removeWhatsOnImage for whatsOnEdit: %s", tempRemoveWhatsOnImage)
+			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.whatsOn.EditWhatsOn(c.Request().Context(), whatsOnDB)
@@ -229,7 +245,7 @@ func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
 		if whatsOnDB.FileName.Valid {
 			err = os.Remove(filepath.Join(v.conf.FileDir, whatsOnDB.FileName.String))
 			if err != nil {
-				return fmt.Errorf("failed to delete whatsOn image for whatsOnDelete: %w", err)
+				log.Printf("failed to delete whatsOn image for whatsOnDelete: %+v", err)
 			}
 		}
 

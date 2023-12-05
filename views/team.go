@@ -181,17 +181,25 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 			isYouth = true
 		}
 
+		var fileName string
+		hasUpload := true
+
 		file, err := c.FormFile("upload")
 		if err != nil {
-			log.Printf("failed to get file for teamAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to get file for teamAdd: %+v", err)
-			return c.JSON(http.StatusOK, data)
+			if !strings.Contains(err.Error(), "no such file") {
+				log.Printf("failed to get file for teamAdd: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for teamAdd: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+			hasUpload = false
 		}
-		fileName, err := v.fileUpload(file)
-		if err != nil {
-			log.Printf("failed to upload file for teamAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to upload file for teamAdd: %+v", err)
-			return c.JSON(http.StatusOK, data)
+		if hasUpload {
+			fileName, err = v.fileUpload(file)
+			if err != nil {
+				log.Printf("failed to upload file for teamAdd: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for teamAdd: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
 		}
 
 		_, err = v.team.AddTeam(c.Request().Context(), team.Team{Name: name, League: null.StringFrom(league), Division: null.StringFrom(division), LeagueTable: null.StringFrom(leagueTable), Fixtures: null.StringFrom(fixtures), Coach: coach, Physio: physio, FileName: null.StringFrom(fileName), IsActive: isActive, IsYouth: isYouth, Ages: ages})

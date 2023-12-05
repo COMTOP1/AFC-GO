@@ -93,6 +93,27 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		hash := utils.HashPass([]byte(password), []byte(salt), v.conf.Security.Iterations, v.conf.Security.KeyLength)
 
+		var fileName string
+		hasUpload := true
+
+		file, err := c.FormFile("upload")
+		if err != nil {
+			if !strings.Contains(err.Error(), "no such file") {
+				log.Printf("failed to get file for userAdd: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for userAdd: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+			hasUpload = false
+		}
+		if hasUpload {
+			fileName, err = v.fileUpload(file)
+			if err != nil {
+				log.Printf("failed to upload file for userAdd: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for userAdd: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+		}
+
 		u := user.User{
 			ID:            0,
 			Name:          name,
