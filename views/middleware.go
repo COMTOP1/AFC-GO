@@ -27,7 +27,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			return c.Redirect(http.StatusFound, "/")
 		}
-		c1 := v.getSessionData(c)
+		c1 := v.getSessionDataNoMsg(c)
 		if !c1.User.Authenticated {
 			return c.Redirect(http.StatusFound, "/")
 		}
@@ -48,7 +48,7 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (v *Views) RequireNotManager(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		c1 := v.getSessionData(c)
+		c1 := v.getSessionDataNoMsg(c)
 		if c1 == nil {
 			return fmt.Errorf("failed to get session data")
 		}
@@ -63,7 +63,7 @@ func (v *Views) RequireNotManager(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (v *Views) RequireClubSecretaryHigher(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		c1 := v.getSessionData(c)
+		c1 := v.getSessionDataNoMsg(c)
 		if c1 == nil {
 			return fmt.Errorf("failed to get session data")
 		}
