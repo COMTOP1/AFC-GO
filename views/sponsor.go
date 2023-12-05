@@ -129,6 +129,39 @@ func (v *Views) SponsorAddFunc(c echo.Context) error {
 }
 
 func (v *Views) SponsorDeleteFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return fmt.Errorf("failed to get id for sponsorDelete: %w", err)
+		}
+
+		sponsorDB, err := v.sponsor.GetSponsor(c.Request().Context(), sponsor.Sponsor{ID: id})
+		if err != nil {
+			return fmt.Errorf("failed to get sponsor for sponsorDelete: %w", err)
+		}
+
+		if sponsorDB.FileName.Valid {
+			err = os.Remove(filepath.Join(v.conf.FileDir, sponsorDB.FileName.String))
+			if err != nil {
+				log.Printf("failed to delete sponsor image for sponsorDelete: %+v", err)
+			}
+		}
+
+		err = v.sponsor.DeleteSponsor(c.Request().Context(), sponsorDB)
+		if err != nil {
+			return fmt.Errorf("failed to delete sponsor for sponsorDelete: %w", err)
+		}
+
+		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", sponsorDB.Name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for sponsorDelete: %+v", err)
+		}
+
+		return c.Redirect(http.StatusFound, "/sponsors")
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
