@@ -45,6 +45,8 @@ const (
 	GalleryTemplate        Template = "gallery.tmpl"
 	ProgrammesTemplate     Template = "programmes.tmpl"
 	PlayersTemplate        Template = "players.tmpl"
+	SignupEmailTemplate    Template = "signupEmail.tmpl"
+	ResetEmailTemplate     Template = "resetEmail.tmpl"
 )
 
 type TemplateType int
