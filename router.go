@@ -97,7 +97,9 @@ func (r *Router) loadRoutes() {
 	affiliation.Match(validMethods, "/add", r.views.AffiliationAddFunc)
 	affiliation.Match(validMethods, "/:id/delete", r.views.AffiliationDeleteFunc)
 
-	base.Match(validMethods, "account", r.views.AccountFunc, r.views.RequiresLogin)
+	account := base.Group("account", r.views.RequiresLogin)
+	account.Match(validMethods, "", r.views.AccountFunc)
+
 	base.Match(validMethods, "contact", r.views.ContactFunc)
 	base.Match(validMethods, "documents", r.views.DocumentsFunc)
 

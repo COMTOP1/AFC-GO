@@ -18,7 +18,9 @@
         <div class="button" id="container">
             <div id="translate"></div>
             <a href="changepassword" style="text-decoration: underline;">Change password</a>
+            {{if .Context.Message}}
+                <div class="notification {{.Context.MsgType}}">{{.Context.Message}}</div>
+            {{end}}
         </div>
-        <p style="z-index: -1; opacity: 0; float: left; width: 96%;">AFC</p>
     </main>
 {{end}}
