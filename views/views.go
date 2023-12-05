@@ -133,11 +133,10 @@ func New(conf *Config, host string) *Views {
 
 	// Initialise mailer
 	v.mailer = mail.NewMailer(mail.Config{
-		Host:       conf.Mail.Host,
-		Port:       conf.Mail.Port,
-		Username:   conf.Mail.Username,
-		Password:   conf.Mail.Password,
-		DomainName: conf.Mail.DomainName,
+		Host:     conf.Mail.Host,
+		Port:     conf.Mail.Port,
+		Username: conf.Mail.Username,
+		Password: conf.Mail.Password,
 	})
 
 	go func() {

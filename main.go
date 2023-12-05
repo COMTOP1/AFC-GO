@@ -86,28 +86,28 @@ func main() {
 		}
 	}
 
+	mailPort, _ := strconv.Atoi(os.Getenv("MAIL_PORT"))
+
+	domainName := os.Getenv("DOMAIN_NAME")
+
 	// Generate config
 	conf := &views.Config{
-		Address:     address,
-		DatabaseURL: dbConnectionString,
-		// BaseDomainName:    os.Getenv("WAUTH_BASE_DOMAIN_NAME"),
-		// DomainName:        domainName,
-		// LogoutEndpoint:    os.Getenv("WAUTH_LOGOUT_ENDPOINT"),
+		Address:           address,
+		DatabaseURL:       dbConnectionString,
+		DomainName:        domainName,
 		SessionCookieName: sessionCookieName,
 		FileDir:           fileDir,
-		// Mail: views.SMTPConfig{
-		//	Host:       os.Getenv("WAUTH_MAIL_HOST"),
-		//	Username:   os.Getenv("WAUTH_MAIL_USER"),
-		//	Password:   os.Getenv("WAUTH_MAIL_PASS"),
-		//	Port:       mailPort,
-		//	DomainName: domainName,
-		// },
+		Mail: views.SMTPConfig{
+			Host:     os.Getenv("MAIL_HOST"),
+			Username: os.Getenv("MAIL_USER"),
+			Password: os.Getenv("MAIL_PASS"),
+			Port:     mailPort,
+		},
 		Security: views.SecurityConfig{
 			EncryptionKey:     os.Getenv("ENCRYPTION_KEY"),
 			AuthenticationKey: os.Getenv("AUTHENTICATION_KEY"),
-			//SigningKey:        signingKey,
-			Iterations: iter,
-			KeyLength:  keyLen,
+			Iterations:        iter,
+			KeyLength:         keyLen,
 		},
 	}
 
