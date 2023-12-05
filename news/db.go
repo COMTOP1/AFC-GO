@@ -106,13 +106,13 @@ func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
 	if err != nil {
 		return News{}, fmt.Errorf("failed to edit news: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return News{}, fmt.Errorf("failed to edit news: %w", err)
 	}
-	if rows < 1 {
-		return News{}, fmt.Errorf("failed to edit news: invalid rows affected: %d, this news may not exist: %d", rows, newsParam.ID)
-	}
+	//if rows < 1 {
+	//	return News{}, fmt.Errorf("failed to edit news: invalid rows affected: %d, this news may not exist: %d", rows, newsParam.ID)
+	//}
 	return newsParam, nil
 }
 

@@ -109,13 +109,13 @@ func (s *Store) editTeam(ctx context.Context, teamParam Team) (Team, error) {
 	if err != nil {
 		return Team{}, fmt.Errorf("failed to edit team: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return Team{}, fmt.Errorf("failed to edit team: %w", err)
 	}
-	if rows < 1 {
-		return Team{}, fmt.Errorf("failed to edit team: invalid rows affected: %d, this team may not exist: %d", rows, teamParam.ID)
-	}
+	//if rows < 1 {
+	//	return Team{}, fmt.Errorf("failed to edit team: invalid rows affected: %d, this team may not exist: %d", rows, teamParam.ID)
+	//}
 	return teamParam, nil
 }
 

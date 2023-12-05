@@ -145,13 +145,13 @@ func (s *Store) editUser(ctx context.Context, userParam User, emailOld string) (
 	if err != nil {
 		return User{}, fmt.Errorf("failed to edit user: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return User{}, fmt.Errorf("failed to edit user: %w", err)
 	}
-	if rows < 1 {
-		return User{}, fmt.Errorf("failed to edit user: invalid rows affected: %d, this user may not exist: %s", rows, emailOld)
-	}
+	// if rows < 1 {
+	//	return User{}, fmt.Errorf("failed to edit user: invalid rows affected: %d, this user may not exist: %d", rows, userParam.ID)
+	// }
 	return userParam, nil
 }
 

@@ -105,13 +105,13 @@ func (s *Store) editPlayer(ctx context.Context, playerParam Player) (Player, err
 	if err != nil {
 		return Player{}, fmt.Errorf("failed to edit player: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return Player{}, fmt.Errorf("failed to edit player: %w", err)
 	}
-	if rows < 1 {
-		return Player{}, fmt.Errorf("failed to edit player: invalid rows affected: %d, this player may not exist: %d", rows, playerParam.ID)
-	}
+	//if rows < 1 {
+	//	return Player{}, fmt.Errorf("failed to edit player: invalid rows affected: %d, this player may not exist: %d", rows, playerParam.ID)
+	//}
 	return playerParam, nil
 }
 
