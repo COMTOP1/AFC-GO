@@ -9,6 +9,9 @@
                 <div style="margin: 15px 0 15px 0">
                     <a class="button is-info" onclick="addWhatsOnModal()">Add What's On</a>
                 </div>
+                {{if .Context.Message}}
+                    <div class="notification {{.Context.MsgType}}" style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
+                {{end}}
             {{end}}
         </div>
         <div class="flexContainer">

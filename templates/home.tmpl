@@ -104,6 +104,9 @@
 {{end}}
 {{define "content"}}
     {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
+    {{if .Context.Message}}
+        <div class="notification {{.Context.MsgType}}" style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
+    {{end}}
     <div class="welcomeBackground">
         <h2 class="welcomeHeader">Welcome</h2>
         <p class="welcome">AFC Aldermaston is a Chartered Standard club based in West Berkshire which is run by a group
