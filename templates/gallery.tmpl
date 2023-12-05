@@ -161,15 +161,12 @@
                 {{range .Images}}
                     {{$i1 = inc $i1}}
                 <div class="column" style="display: inline-block; float: none;">
-                    <img data-src="download?s=g&id={{.ID}}" style="width:100%"
+                    <img data-src="download?s=g&id={{.ID}}" style="width:100%" src="/public/AFC.png"
                          onclick="openModal();currentSlide({{$i1}})" class="hover-shadow cursor lazy"
                          alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
-{{/*                    <%if (user != null && user.getRole() != Role.MANAGER) {%>*/}}
-{{/*                    <div class="button" id="container">*/}}
-{{/*                        <div id="translate"></div>*/}}
-{{/*                        <a href="deleteimage?id=<%=image.getId()%>">Delete</a>*/}}
-{{/*                    </div>*/}}
-{{/*                    <%}%>*/}}
+                    {{if $priv}}
+                        <a class="button is-danger" onclick="deleteImageModal({{.ID}})">Delete</a>
+                    {{end}}
                 </div>
                 {{end}}
         </div>
@@ -184,7 +181,7 @@
                     <div class="mySlides">
                         <div class="numbertext">{{$i2}} / {{$lenOfImages}}
                         </div>
-                        <img data-src="download?s=g&id={{.ID}}" style="width:100%" class="lazy" alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
+                        <img data-src="download?s=g&id={{.ID}}" style="width:100%" class="lazy" src="/public/AFC.png" alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
                     </div>
                 {{end}}
 
@@ -199,12 +196,10 @@
                 {{range .Images}}
                     {{$i3 = inc $i3}}
                     <div class="column">
-                        <img class="demo cursor lazy" data-src="download?s=g&id={{.ID}}" style="width:100%"
+                        <img class="demo cursor lazy" data-src="download?s=g&id={{.ID}}" style="width:100%" src="/public/AFC.png"
                              onclick="currentSlide({{$i3}})" alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
                     </div>
                 {{end}}
-                <p style="z-index: -1; opacity: 0; float: left; width: 96%;">AFC</p>
-                <p style="z-index: -1; opacity: 0; float: left; width: 96%;">AFC</p>
             </div>
         </div>
         <script>
@@ -252,4 +247,159 @@
             }
         </script>
     </main>
+    {{if $priv}}
+        {{template "modal" .}}
+    {{end}}
+{{end}}
+
+{{define "modal"}}
+    <div id="addImageModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Add Image</p>
+                            <p>Enter the image details below.</p>
+                            <form id="addImageForm" enctype="multipart/form-data">
+                                <div class="field">
+                                    <label class="label" for="image">Image</label>
+                                    <div class="file is-info has-name">
+                                        <label class="file-label">
+                                            <input class="file-input" type="file" accept="image/*" name="upload"
+                                                   id="addImageImage" onchange="previewImage(event)">
+                                            <span class="file-cta">
+                                            <span class="file-icon">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            <span class="file-label">Choose a file…</span>
+                                        </span>
+                                            <span class="file-name" id="addImageImageName">...</span>
+                                        </label>
+                                    </div>
+                                    <label class="label" for="preview">Preview</label>
+                                    <img id="preview" alt="/public/AFC.png"
+                                         onerror="this.onerror=null;this.src='/public/AFC.png';"
+                                         src="/public/AFC.png"
+                                         style="border: 5px; max-height: 200px; max-width: 200px;">
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="caption">Caption</label>
+                                    <div class="control">
+                                        <input
+                                                id="caption"
+                                                class="input"
+                                                type="text"
+                                                name="caption"
+                                                placeholder="Caption"
+                                        />
+                                    </div>
+                                </div>
+                                <a class="button is-info" onclick="addImage()" id="addImageButton">
+                                    Add Image
+                                </a>
+                            </form>
+                            <div id="errorParent" style="display: none">
+                                <br><br>
+                                <div class="notification is-danger" id="error"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <div id="deleteImageModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="deleteImageModalTitle"></p>
+                            <p>Be careful! Are you sure you want to remove this?</p>
+                            <form method="post" id="deleteImageModalForm">
+                                <a class="button is-danger" onclick="deleteImage()">Delete Image</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+    <script>
+        let addImageImage = $('#addImageImage')
+        addImageImage.change(function () {
+            $('#addImageImageName').text(addImageImage[0].files[0].name);
+        });
+
+        function previewImage(event) {
+            let input = event.target;
+            let image = document.getElementById('preview');
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    image.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        let imageID = 0;
+
+        function deleteImageModal(id) {
+            imageID = id
+            document.getElementById("deleteImageModal").classList.add("is-active");
+            document.getElementById("deleteImageModalTitle").innerHTML = 'Are you sure you want to delete this image (' + id + ')?';
+        }
+
+        function deleteImage() {
+            document.getElementById("deleteImageModalForm").action = "/image/" + imageID + "/delete";
+            $('#deleteImageModalForm').submit();
+        }
+
+        function addImageModal() {
+            document.getElementById("addImageImage").value = "";
+            $('#addImageImageName').text("...");
+            document.getElementById("preview").src = "/public/AFC.png";
+            document.getElementById("addImageModal").classList.add("is-active");
+        }
+
+        function addImage() {
+            document.getElementById("addImageButton").disabled = true;
+            let form = $('#addImageForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
+            $.ajax({
+                url: '/image/add',
+                type: 'post',
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#error").html(data.error);
+                        document.getElementById("addImageButton").disabled = false;
+                        document.getElementById("errorParent").style.display = null;
+                    } else {
+                        window.location.href = "/gallery";
+                    }
+                },
+            })
+        }
+    </script>
 {{end}}

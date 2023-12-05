@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/image"
 	"github.com/COMTOP1/AFC-GO/templates"
@@ -42,8 +43,47 @@ func (v *Views) GalleryFunc(c echo.Context) error {
 }
 
 func (v *Views) ImageAddFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		data := struct {
+			Error string `json:"error"`
+		}{
+			Error: "",
+		}
+
+		file, err := c.FormFile("upload")
+		if err != nil {
+			log.Printf("failed to get file for imageAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to get file for imageAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+		fileName, err := v.fileUpload(file)
+		if err != nil {
+			log.Printf("failed to upload file for imageAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to upload file for imageAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		caption := c.FormValue("caption")
+
+		_, err = v.image.AddImage(c.Request().Context(), image.Image{FileName: fileName, Caption: null.NewString(caption, len(caption) > 0)})
+		if err != nil {
+			log.Printf("failed to add image for imageAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to add image for imageAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = "successfully added image"
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for imageAdd: %+v", err)
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) ImageDeleteFunc(c echo.Context) error {
