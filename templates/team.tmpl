@@ -92,8 +92,9 @@
                                      onerror="this.onerror=null;this.src='/public/AFC.png';"
                                      class="latestImage lazy" src="/public/AFC.png">
                                 <h2 class="latestTitle">{{.Name}}</h2>
-                                <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose}}
-                                </p>
+                                {{if .Purpose.Valid}}<p
+                                        style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose.String}}
+                                </p>{{end}}
                                 {{if .Website.Valid}}</a>{{end}}
                         </div>
                     {{end}}
@@ -178,7 +179,8 @@
                                     </div>
                                 </div>
                                 <div class="field">
-                                    <label class="label" for="leagueTable">League Table (url, leave blank if unknown)</label>
+                                    <label class="label" for="leagueTable">League Table (url, leave blank if
+                                        unknown)</label>
                                     <div class="control">
                                         <input
                                                 id="leagueTable"
