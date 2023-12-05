@@ -27,13 +27,15 @@ func (v *Views) GalleryFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year   int
-		Images []image.Image
-		User   user.User
+		Year    int
+		Images  []image.Image
+		User    user.User
+		Context *Context
 	}{
-		Year:   year,
-		Images: imagesDB,
-		User:   c1.User,
+		Year:    year,
+		Images:  imagesDB,
+		User:    c1.User,
+		Context: c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.GalleryTemplate, templates.RegularType)
@@ -58,11 +60,9 @@ func (v *Views) ImageDeleteFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get image for imageDelete: %w", err)
 		}
 
-		if imageDB.FileName.Valid {
-			err = os.Remove(filepath.Join(v.conf.FileDir, imageDB.FileName.String))
-			if err != nil {
-				return fmt.Errorf("failed to delete image image for imageDelete: %w", err)
-			}
+		err = os.Remove(filepath.Join(v.conf.FileDir, imageDB.FileName))
+		if err != nil {
+			log.Printf("failed to delete image file for imageDelete: %+v", err)
 		}
 
 		err = v.image.DeleteImage(c.Request().Context(), imageDB)
