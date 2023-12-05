@@ -1,0 +1,83 @@
+{{define "title"}}Reset password{{end}}
+{{define "content"}}
+    <main class="main" style="text-align: center;">
+        <div class="pageHeaderBanner">
+            <h2 class="pageHeader">
+                Reset password</h2>
+            <p>Enter your new password.</p>
+            <form id="resetPasswordForm" style="width: 600px; margin: 0 auto;">
+                <div class="field">
+                    <label class="label" for="newPassword">New password</label>
+                    <div class="control has-icons-left">
+                        <input
+                                id="newPassword"
+                                class="input"
+                                type="password"
+                                name="newPassword"
+                                placeholder="********"
+                        />
+                        <span class="icon is-small is-left"><i class="fa fa-lock"></i></span>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label" for="confirmationPassword">Confirm password</label>
+                    <div class="control has-icons-left">
+                        <input
+                                id="confirmationPassword"
+                                class="input"
+                                type="password"
+                                name="confirmationPassword"
+                                placeholder="********"
+                        />
+                        <span class="icon is-small is-left"><i class="fa fa-lock"></i></span>
+                    </div>
+                </div>
+                <a class="button is-warning" onclick="resetPassword()" id="resetPasswordButton">
+                    Reset Password
+                </a>
+            </form>
+            <br><br>
+            <div id="errorParent" style="display: none">
+                <div class="notification is-danger" id="error"></div>
+            </div>
+            {{if .Context.Message}}
+                <div class="notification {{.Context.MsgType}}">{{.Context.Message}}</div>
+            {{end}}
+        </div>
+    </main>
+    <script>
+        document.querySelectorAll(
+            ".modal-background, .modal-close,.modal-card-head .delete, .modal-card-foot .button"
+        ).forEach(($el) => {
+            const $modal = $el.closest(".modal");
+            $el.addEventListener("click", () => {
+                $modal.classList.remove("is-active");
+            });
+        });
+
+        function resetPassword() {
+            document.getElementById("resetPasswordButton").disabled = true;
+            let form = $('#resetPasswordForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
+            $.ajax({
+                url: '/reset/{{.URL}}',
+                type: 'post',
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#error").html(data.error);
+                        document.getElementById("resetPasswordButton").disabled = false;
+                        document.getElementById("errorParent").style.display = null;
+                    } else {
+                        window.location.href = "/";
+                    }
+                },
+            })
+        }
+    </script>
+{{end}}
