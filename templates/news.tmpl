@@ -125,19 +125,6 @@
             });
         });
 
-        let newsID = 0;
-
-        function deleteNewsModal(id, name) {
-            newsID = id
-            document.getElementById("deleteNewsModal").classList.add("is-active");
-            document.getElementById("deleteNewsModalTitle").innerHTML = 'Are you sure you want to delete "' + name + '" from News?';
-        }
-
-        function deleteNews() {
-            document.getElementById("deleteNewsModalForm").action = "/news/" + newsID + "/delete";
-            $('#deleteNewsModalForm').submit();
-        }
-
         function addNewsModal() {
             document.getElementById("addNewsUpload").value = "";
             $('#addNewsUploadName').text("...");
