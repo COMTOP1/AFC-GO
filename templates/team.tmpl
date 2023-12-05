@@ -67,7 +67,7 @@
                 {{if .Team.FileName.Valid}}
                     <div style="float:right; text-align: right; width: 50%;">
                         <h2 class="secondaryHeader">Team photo</h2>
-                        <img data-src="/download?s=t&id={{.Team.ID}}"
+                        <img data-src="/download?s=t&id={{.Team.ID}}&r={{randomImgInt}}"
                              alt="/public/AFC.png" src="/public/AFC.png"
                              onerror="this.onerror=null;this.src='/public/AFC.png';"
                              style="padding: 5px; max-height: 1000px; max-width: 700px; width: 100%;" class="lazy">

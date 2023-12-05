@@ -18,7 +18,7 @@
             {{range .WhatsOn}}
                 <div class="listItem" style="display: block; cursor: pointer;"
                      onclick="location.href='/whatson/{{.ID}}';">
-                    <img data-src="/download?s=w&id={{.ID}}" alt="/public/AFC.png"
+                    <img data-src="/download?s=w&id={{.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
                          onerror="this.onerror=null;this.src='/public/AFC.png';"
                          class="latestImage lazy" src="/public/AFC.png">
                     <h2 class="latestTitle">{{.Title}}</h2>

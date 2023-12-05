@@ -34,7 +34,7 @@
                     <th>{{.Name}}
                     </th>
                     {{if ge .Age 18}}
-                        <th><img data-src="download?s=l&id={{.ID}}" alt="/public/AFC.png"
+                        <th><img data-src="download?s=l&id={{.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
                                  onerror="this.onerror=null;this.src='/public/AFC.png';" src="/public/AFC.png"
                                  style="max-width: 150px; max-height: 150px;" class="lazy"/></th>
                     {{else}}
