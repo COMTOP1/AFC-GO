@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
 
 	"github.com/COMTOP1/AFC-GO/document"
 	"github.com/COMTOP1/AFC-GO/templates"
@@ -106,7 +106,7 @@ func (v *Views) DocumentDeleteFunc(c echo.Context) error {
 
 		err = os.Remove(filepath.Join(v.conf.FileDir, documentDB.FileName))
 		if err != nil {
-			return fmt.Errorf("failed to delete document file for documentDelete: %w", err)
+			log.Printf("failed to delete document file for documentDelete: %+v", err)
 		}
 
 		err = v.document.DeleteDocument(c.Request().Context(), documentDB)
