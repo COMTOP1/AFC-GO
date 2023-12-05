@@ -150,8 +150,7 @@ func (s *Store) EditUser(ctx context.Context, userParam User) (User, error) {
 	if err != nil {
 		return userParam, fmt.Errorf("failed to edit user: %w", err)
 	}
-
-	return s.editUser(ctx, userParam, emailOld)
+	return userParam, nil
 }
 
 func (s *Store) EditUserPassword(ctx context.Context, userParam User, iter, keyLen int) error {
