@@ -155,6 +155,39 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return fmt.Errorf("failed to get id for userDelete: %w", err)
+		}
+
+		userDB, err := v.user.GetUser(c.Request().Context(), user.User{ID: id})
+		if err != nil {
+			return fmt.Errorf("failed to get user for userDelete: %w", err)
+		}
+
+		if userDB.FileName.Valid {
+			err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
+			if err != nil {
+				log.Printf("failed to delete user image for userDelete: %+v", err)
+			}
+		}
+
+		err = v.user.DeleteUser(c.Request().Context(), userDB)
+		if err != nil {
+			return fmt.Errorf("failed to delete user for userDelete: %w", err)
+		}
+
+		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", userDB.Name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for userDelete: %+v", err)
+		}
+
+		return c.Redirect(http.StatusFound, "/users")
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
