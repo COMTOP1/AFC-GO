@@ -2,6 +2,7 @@ package team
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
@@ -53,6 +54,43 @@ func (s *Store) AddTeam(ctx context.Context, teamParam Team) (Team, error) {
 }
 
 func (s *Store) EditTeam(ctx context.Context, teamParam Team) (Team, error) {
+	teamDB, err := s.GetTeam(ctx, teamParam)
+	if err != nil {
+		return Team{}, fmt.Errorf("failed to get team for editTeam: %w", err)
+	}
+	if teamDB.Name != teamParam.Name {
+		teamDB.Name = teamParam.Name
+	}
+	if teamParam.League.Valid && (!teamDB.League.Valid || teamDB.League.String != teamParam.League.String) {
+		teamDB.League = teamParam.League
+	}
+	if teamParam.Division.Valid && (!teamDB.Division.Valid || teamDB.Division.String != teamParam.Division.String) {
+		teamDB.Division = teamParam.Division
+	}
+	if teamParam.LeagueTable.Valid && (!teamDB.LeagueTable.Valid || teamDB.LeagueTable.String != teamParam.LeagueTable.String) {
+		teamDB.LeagueTable = teamParam.LeagueTable
+	}
+	if teamParam.Fixtures.Valid && (!teamDB.Fixtures.Valid || teamDB.Fixtures.String != teamParam.Fixtures.String) {
+		teamDB.Fixtures = teamParam.Fixtures
+	}
+	if teamParam.Coach.Valid && (!teamDB.Coach.Valid || teamDB.Coach.String != teamParam.Coach.String) {
+		teamDB.Coach = teamParam.Coach
+	}
+	if teamParam.Physio.Valid && (!teamDB.Physio.Valid || teamDB.Physio.String != teamParam.Physio.String) {
+		teamDB.Physio = teamParam.Physio
+	}
+	if teamParam.FileName.Valid && (!teamDB.FileName.Valid || teamDB.FileName.String != teamParam.FileName.String) {
+		teamDB.FileName = teamParam.FileName
+	}
+	if teamDB.IsActive != teamParam.IsActive {
+		teamDB.IsActive = teamParam.IsActive
+	}
+	if teamDB.IsYouth != teamParam.IsYouth {
+		teamDB.IsYouth = teamParam.IsYouth
+	}
+	if teamDB.Ages != teamParam.Ages {
+		teamDB.Ages = teamParam.Ages
+	}
 	return s.editTeam(ctx, teamParam)
 }
 
