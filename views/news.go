@@ -196,8 +196,8 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 
 		_, err = v.news.EditNews(c.Request().Context(), newsDB)
 		if err != nil {
-			log.Printf("failed to add news for newsAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to add news for newsAdd: %+v", err)
+			log.Printf("failed to add news for newsEdit: %+v", err)
+			data.Error = fmt.Sprintf("failed to add news for newsEdit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
