@@ -166,7 +166,28 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 				data.Error = fmt.Sprintf("failed to upload file for newsEdit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
+			if newsDB.FileName.Valid {
+				err = os.Remove(filepath.Join(v.conf.FileDir, newsDB.FileName.String))
+				if err != nil {
+					log.Printf("failed to delete old image for newsEdit: %+v", err)
+				}
+			}
 			newsDB.FileName = null.NewString(tempFileName, len(tempContent) > 0)
+		}
+
+		tempRemoveNewsImage := c.FormValue("removeNewsImage")
+		if tempRemoveNewsImage == "Y" {
+			if newsDB.FileName.Valid {
+				err = os.Remove(filepath.Join(v.conf.FileDir, newsDB.FileName.String))
+				if err != nil {
+					log.Printf("failed to delete image for newsEdit: %+v", err)
+				}
+			}
+			newsDB.FileName = null.NewString("", false)
+		} else if len(tempRemoveNewsImage) != 0 {
+			log.Printf("failed to parse removeNewsImage for newsEdit: %s", tempRemoveNewsImage)
+			data.Error = fmt.Sprintf("failed to parse removeNewsImage for newsEdit: %s", tempRemoveNewsImage)
+			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.news.EditNews(c.Request().Context(), newsDB)
@@ -205,7 +226,7 @@ func (v *Views) NewsDeleteFunc(c echo.Context) error {
 		if newsDB.FileName.Valid {
 			err = os.Remove(filepath.Join(v.conf.FileDir, newsDB.FileName.String))
 			if err != nil {
-				return fmt.Errorf("failed to delete news image for newsDelete: %w", err)
+				log.Printf("failed to delete news image for newsDelete: %+v", err)
 			}
 		}
 
