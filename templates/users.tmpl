@@ -62,7 +62,8 @@
                              style="border: 5px; max-height: 200px; max-width: 200px;" class="lazy"></th>
                     {{if or (and (eq .Role "Webmaster") (eq $.User.Role "Webmaster")) (and (or (or (eq $.User.Role "Club Secretary") (eq $.User.Role "Chairperson")) (eq $.User.Role "Webmaster")) (ne .Role "Webmaster"))}}
                         <th>
-                            <a class="button is-warning" onclick="editUserModal()">Edit</a>
+                            <a class="button is-warning"
+                               onclick="editUserModal({{.ID}}, {{.Name}}, {{.Email}}, {{.Phone}}, {{.TeamID}}, {{.RoleTemplate}}, {{.IsFileValid}})">Edit</a>
                         </th>
                         <th>
                             <a class="button is-danger" onclick="deleteUserModal({{.ID}}, {{.Name}})">Delete</a>
@@ -412,6 +413,149 @@
         });
 
         let editUserID = 0, deleteUserID = 0, resetPasswordUserID = 0;
+
+        function addUserModal() {
+            document.getElementById("addUserUpload").value = "";
+            $('#addUserUploadName').text("...");
+            document.getElementById("addPreview").src = "/public/AFC.png";
+            document.getElementById("addUserModal").classList.add("is-active");
+        }
+
+        function addUserModalTeam() {
+            const role = document.getElementById('addUserRole');
+            const team = document.getElementById('addUserTeamBlock');
+            const teamBlock = document.getElementById('addUserTeamBlock');
+            if (role.value === "manager") {
+                teamBlock.style.display = null;
+            } else {
+                teamBlock.style.display = "none";
+                let selectOptions = team.options;
+
+                for (let i = 0; i < selectOptions.length; i++) {
+                    if (selectOptions[i].value === "0") {
+                        selectOptions[i].selected = 'selected';
+                        break
+                    }
+                }
+            }
+        }
+
+        function addUser() {
+            document.getElementById("addUserErrorParent").style.display = 'none';
+            document.getElementById("addUserButton").disabled = true;
+            let form = $('#addUserForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
+            $.ajax({
+                url: '/user/add',
+                type: 'post',
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#addUserError").html(data.error);
+                        document.getElementById("addUserErrorParent").style.display = null;
+                        document.getElementById("addUserButton").disabled = false;
+                    } else {
+                        window.location.href = "/users";
+                    }
+                },
+            })
+        }
+
+        function editUserModal(id, name, email, phone, teamID, role, isFileValid) {
+            editUserID = id
+
+            document.getElementById("editName").value = name;
+
+            document.getElementById("editEmail").value = email;
+
+            if (phone !== "No number provided") {
+                document.getElementById("editPhone").value = phone;
+            } else {
+                document.getElementById("editPhone").value = '';
+            }
+
+            let teamSelectOptions = document.getElementById("editUserTeam").options;
+
+            for (let i = 0; i < teamSelectOptions.length; i++) {
+                if (teamSelectOptions[i].value === teamID.toString()) {
+                    teamSelectOptions[i].selected = 'selected';
+                    break
+                }
+            }
+
+            let roleSelectOptions = document.getElementById("editUserRole").options;
+
+            if (role !== "manager") {
+                document.getElementById('editUserTeamBlock').style.display = "none"
+            }
+
+            for (let i = 0; i < roleSelectOptions.length; i++) {
+                if (roleSelectOptions[i].value === role) {
+                    roleSelectOptions[i].selected = 'selected';
+                    break
+                }
+            }
+
+            document.getElementById("editPreview").src = "/public/AFC.png";
+            document.getElementById("editUserUpload").value = "";
+            let editUserUploadName = $('#editUserUploadName');
+            editUserUploadName.text("No file");
+            if (isFileValid) {
+                editUserUploadName.text("Uploaded");
+                document.getElementById("editPreview").src = "/download?s=u&id=" + id + "&r=" + Math.floor(Math.random() * 999999);
+            }
+            document.getElementById("editUserModal").classList.add("is-active");
+        }
+
+        function editUserModalTeam() {
+            const role = document.getElementById('editUserRole');
+            const team = document.getElementById('editUserTeam');
+            const teamBlock = document.getElementById('editUserTeamBlock');
+            if (role.value === "manager") {
+                teamBlock.style.display = null;
+            } else {
+                teamBlock.style.display = "none";
+                let selectOptions = team.options;
+
+                for (let i = 0; i < selectOptions.length; i++) {
+                    if (selectOptions[i].value === "0") {
+                        selectOptions[i].selected = 'selected';
+                        break
+                    }
+                }
+            }
+        }
+
+        function editUser() {
+            document.getElementById("editUserErrorParent").style.display = 'none';
+            document.getElementById("editUserButton").disabled = true;
+            let form = $('#editUserForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
+            $.ajax({
+                url: '/user/' + editUserID + '/edit',
+                type: 'post',
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#editUserError").html(data.error);
+                        document.getElementById("editUserErrorParent").style.display = null;
+                        document.getElementById("editUserButton").disabled = false;
+                    } else {
+                        window.location.href = "/users";
+                    }
+                },
+            })
+        }
 
         function deleteUserModal(id, name) {
             deleteUserID = id
