@@ -285,6 +285,27 @@
         </div>
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
+    <div id="deleteSeasonModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="deleteSeasonModalTitle"></p>
+                            <p>Be careful! Are you sure you want to remove this?<br>
+                                Any programmes assigned to this season will be reverted to no season. Please ensure this
+                                is handled.</p>
+                            <form method="post" id="deleteSeasonModalForm">
+                                <a class="button is-danger" onclick="deleteSeason()">Delete Season</a>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
     <script>
         let addProgrammeUpload = $('#addProgrammeUpload')
         addProgrammeUpload.change(function () {
@@ -311,6 +332,17 @@
         function deleteProgramme() {
             document.getElementById("deleteProgrammeModalForm").action = "/programme/" + programmeID + "/delete";
             $('#deleteProgrammeModalForm').submit();
+        }
+
+        function deleteSeasonModal(id, name) {
+            deleteSeasonID = id
+            document.getElementById("deleteSeasonModal").classList.add("is-active");
+            document.getElementById("deleteSeasonModalTitle").innerHTML = 'Are you sure you want to delete "' + name + '" from Seasons?';
+        }
+
+        function deleteSeason() {
+            document.getElementById("deleteSeasonModalForm").action = "/season/" + deleteSeasonID + "/delete";
+            $('#deleteSeasonModalForm').submit();
         }
 
         function addProgrammeModal() {
