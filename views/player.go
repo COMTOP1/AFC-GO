@@ -155,7 +155,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 
 		playerID, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for playerEdit: %w", err))
+			return fmt.Errorf("failed to parse id for playerEdit: %w", err)
 		}
 		playerDB, err := v.player.GetPlayer(c.Request().Context(), player.Player{ID: playerID})
 		if err != nil {
@@ -234,7 +234,28 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 				data.Error = fmt.Sprintf("failed to upload file for playerEdit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
-			playerDB.FileName = null.StringFrom(tempFileName)
+			if playerDB.FileName.Valid {
+				err = os.Remove(filepath.Join(v.conf.FileDir, playerDB.FileName.String))
+				if err != nil {
+					log.Printf("failed to delete old image for playerEdit: %+v", err)
+				}
+			}
+			playerDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
+		}
+
+		tempRemovePlayerImage := c.FormValue("removePlayerImage")
+		if tempRemovePlayerImage == "Y" {
+			if playerDB.FileName.Valid {
+				err = os.Remove(filepath.Join(v.conf.FileDir, playerDB.FileName.String))
+				if err != nil {
+					log.Printf("failed to delete image for playerEdit: %+v", err)
+				}
+			}
+			playerDB.FileName = null.NewString("", false)
+		} else if len(tempRemovePlayerImage) != 0 {
+			log.Printf("failed to parse removePlayerImage for playerEdit: %s", tempRemovePlayerImage)
+			data.Error = fmt.Sprintf("failed to parse removePlayerImage for playerEdit: %s", tempRemovePlayerImage)
+			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.player.EditPlayer(c.Request().Context(), playerDB)
