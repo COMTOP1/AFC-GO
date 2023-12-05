@@ -5,7 +5,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -213,11 +216,233 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 }
 
 func (v *Views) TeamEditFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		data := struct {
+			Error string `json:"error"`
+		}{
+			Error: "",
+		}
+
+		teamID, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return fmt.Errorf("failed to parse id for teamEdit: %w", err)
+		}
+		teamDB, err := v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
+		if err != nil {
+			return fmt.Errorf("failed to get team for teamEdit: %w", err)
+		}
+
+		name := c.FormValue("name")
+		if len(name) == 0 {
+			log.Printf("name must contain a value for teamEdit")
+			data.Error = fmt.Sprintf("name must contain a value")
+			return c.JSON(http.StatusOK, data)
+		}
+
+		teamDB.Name = name
+
+		tempLeague := c.FormValue("league")
+		teamDB.League = null.NewString(tempLeague, len(tempLeague) > 0)
+		tempDivision := c.FormValue("division")
+		teamDB.Division = null.NewString(tempDivision, len(tempDivision) > 0)
+
+		tempLeagueTable := c.FormValue("leagueTable")
+		if len(tempLeagueTable) > 0 {
+			_, err = url.ParseRequestURI(tempLeagueTable)
+			if err != nil {
+				log.Printf("failed to parse leagueTable for teamEdit: %+v", err)
+				data.Error = fmt.Sprintf("failed to parse leagueTable for teamEdit: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+		}
+
+		teamDB.LeagueTable = null.NewString(tempLeagueTable, len(tempLeagueTable) > 0)
+
+		tempFixtures := c.FormValue("fixtures")
+		if len(tempFixtures) > 0 {
+			_, err = url.ParseRequestURI(tempFixtures)
+			if err != nil {
+				log.Printf("failed to parse fixtures for teamEdit: %+v", err)
+				data.Error = fmt.Sprintf("failed to parse fixtures for teamEdit: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+		}
+
+		teamDB.Fixtures = null.NewString(tempFixtures, len(tempFixtures) > 0)
+
+		tempCoach := c.FormValue("coach")
+		teamDB.Coach = null.NewString(tempCoach, len(tempCoach) > 0)
+		tempPhysio := c.FormValue("physio")
+		teamDB.Physio = null.NewString(tempPhysio, len(tempPhysio) > 0)
+
+		tempIsActive := c.FormValue("isActive")
+		if tempIsActive == "Y" {
+			teamDB.IsActive = true
+		} else if len(tempIsActive) != 0 {
+			log.Printf("failed to parse isActive for teamEdit: %s", tempIsActive)
+			data.Error = fmt.Sprintf("failed to parse isActive for teamEdit: %s", tempIsActive)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		tempIsYouth := c.FormValue("isYouth")
+		if tempIsYouth == "Y" {
+			teamDB.IsYouth = true
+		} else if len(tempIsYouth) != 0 {
+			log.Printf("failed to parse isYouth for teamEdit: %s", tempIsYouth)
+			data.Error = fmt.Sprintf("failed to parse isYouth for teamEdit: %s", tempIsYouth)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		ages, err := strconv.Atoi(c.FormValue("ages"))
+		if err != nil {
+			log.Printf("failed to parse ages for playerAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to parse ages for playerAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		if ages < 19 {
+			teamDB.IsYouth = true
+		}
+
+		teamDB.Ages = ages
+
+		hasUpload := true
+
+		file, err := c.FormFile("upload")
+		if err != nil {
+			if !strings.Contains(err.Error(), "no such file") {
+				log.Printf("failed to get file for teamEdit: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for teamEdit: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+			hasUpload = false
+		}
+		if hasUpload {
+			var fileName string
+			fileName, err = v.fileUpload(file)
+			if err != nil {
+				log.Printf("failed to upload file for teamEdit: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for teamEdit: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+			if teamDB.FileName.Valid {
+				err = os.Remove(filepath.Join(v.conf.FileDir, teamDB.FileName.String))
+				if err != nil {
+					log.Printf("failed to delete old image for teamEdit: %+v", err)
+				}
+			}
+			teamDB.FileName = null.StringFrom(fileName)
+		}
+
+		tempRemoveTeamImage := c.FormValue("removeTeamImage")
+		if tempRemoveTeamImage == "Y" {
+			if teamDB.FileName.Valid {
+				err = os.Remove(filepath.Join(v.conf.FileDir, teamDB.FileName.String))
+				if err != nil {
+					log.Printf("failed to delete image for teamEdit: %+v", err)
+				}
+			}
+			teamDB.FileName = null.NewString("", false)
+		} else if len(tempRemoveTeamImage) != 0 {
+			log.Printf("failed to parse removeTeamImage for teamEdit: %s", tempRemoveTeamImage)
+			data.Error = fmt.Sprintf("failed to parse removeTeamImage for teamEdit: %s", tempRemoveTeamImage)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		_, err = v.team.EditTeam(c.Request().Context(), teamDB)
+		if err != nil {
+			log.Printf("failed to edit team for teamEdit: %+v", err)
+			data.Error = fmt.Sprintf("failed to edit team for teamEdit: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = fmt.Sprintf("successfully edited \"%s\"", name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for teamEdit: %+v", err)
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) TeamDeleteFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return fmt.Errorf("failed to get id for teamDelete: %w", err)
+		}
+
+		teamDB, err := v.team.GetTeam(c.Request().Context(), team.Team{ID: id})
+		if err != nil {
+			return fmt.Errorf("failed to get team for teamDelete: %w", err)
+		}
+
+		playersDB, err := v.player.GetPlayersTeam(c.Request().Context(), teamDB)
+		if err != nil {
+			return fmt.Errorf("failed to get players for teamDelete: %w", err)
+		}
+
+		for _, playerDB := range playersDB {
+			playerDB.TeamID = 0
+			_, err = v.player.EditPlayer(c.Request().Context(), playerDB)
+			if err != nil {
+				return fmt.Errorf("failed to edit player for teamDelete")
+			}
+		}
+
+		sponsorsDB, err := v.sponsor.GetSponsorsTeam(c.Request().Context(), teamDB)
+		if err != nil {
+			return fmt.Errorf("failed to get sponsors for teamDelete: %w", err)
+		}
+
+		for _, sponsorDB := range sponsorsDB {
+			sponsorDB.TeamID = "A"
+			_, err = v.sponsor.EditSponsor(c.Request().Context(), sponsorDB)
+			if err != nil {
+				return fmt.Errorf("failed to edit sponsor for teamDelete")
+			}
+		}
+
+		usersDB, err := v.user.GetUsersManagersTeam(c.Request().Context(), teamDB)
+		if err != nil {
+			return fmt.Errorf("failed to get managers for teamDelete: %w", err)
+		}
+
+		for _, userDB := range usersDB {
+			userDB.TeamID = 0
+			_, err = v.user.EditUser(c.Request().Context(), userDB)
+			if err != nil {
+				return fmt.Errorf("failed to edit user for teamDelete")
+			}
+		}
+
+		if teamDB.FileName.Valid {
+			err = os.Remove(filepath.Join(v.conf.FileDir, teamDB.FileName.String))
+			if err != nil {
+				log.Printf("failed to delete team file for teamDelete: %+v", err)
+			}
+		}
+
+		err = v.team.DeleteTeam(c.Request().Context(), teamDB)
+		if err != nil {
+			return fmt.Errorf("failed to delete team for teamDelete: %w", err)
+		}
+
+		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", teamDB.Name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for teamDelete: %+v", err)
+		}
+
+		return c.Redirect(http.StatusFound, "/teams")
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
