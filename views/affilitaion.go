@@ -71,6 +71,8 @@ func (v *Views) AffiliationAddFunc(c echo.Context) error {
 
 func (v *Views) AffiliationDeleteFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
 			return fmt.Errorf("failed to get id for affiliationDelete: %w", err)
@@ -84,7 +86,7 @@ func (v *Views) AffiliationDeleteFunc(c echo.Context) error {
 		if affiliationDB.FileName.Valid {
 			err = os.Remove(filepath.Join(v.conf.FileDir, affiliationDB.FileName.String))
 			if err != nil {
-				return fmt.Errorf("failed to delete affiliation image for affiliationDelete: %w", err)
+				log.Printf("failed to delete affiliation image for affiliationDelete: %+v", err)
 			}
 		}
 
@@ -92,6 +94,14 @@ func (v *Views) AffiliationDeleteFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete affiliaiton for affiliationDelete: %w", err)
 		}
+
+		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", affiliationDB.Name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for affiliationDelete: %+v", err)
+		}
+
 		return c.Redirect(http.StatusFound, "/")
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
