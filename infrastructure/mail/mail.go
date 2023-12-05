@@ -15,15 +15,13 @@ type (
 	// Mailer is the struct that is used to send mail, can only be used once connected to mailer
 	Mailer struct {
 		*mail.SMTPClient
-		Defaults   Defaults
-		DomainName string
+		Defaults Defaults
 	}
 
 	// MailerInit is the config store for the mailer, can be initialised once then connected multiple times
 	MailerInit struct {
 		SMTPServer mail.SMTPServer
 		Defaults   Defaults
-		DomainName string
 	}
 
 	// Defaults is the default values for the mailer if none are explicitly mentioned
@@ -36,12 +34,11 @@ type (
 
 	// Config represents a configuration to connect to an SMTP server
 	Config struct {
-		Host       string
-		Port       int
-		Username   string
-		Password   string
-		DomainName string
-		Defaults   Defaults
+		Host     string
+		Port     int
+		Username string
+		Password string
+		Defaults Defaults
 	}
 
 	// Mail represents an email to be sent
@@ -77,7 +74,6 @@ func NewMailer(config Config) *MailerInit {
 	return &MailerInit{
 		SMTPServer: smtpServer,
 		Defaults:   config.Defaults,
-		DomainName: config.DomainName,
 	}
 }
 
@@ -89,7 +85,7 @@ func (m *MailerInit) ConnectMailer() *Mailer {
 		return nil
 	}
 	log.Printf("connected to mailer: %s", m.SMTPServer.Host)
-	return &Mailer{smtpClient, m.Defaults, m.DomainName}
+	return &Mailer{smtpClient, m.Defaults}
 }
 
 // CheckSendable verifies that the email can be sent
