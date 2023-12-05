@@ -27,24 +27,30 @@ import (
 func (v *Views) UsersFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 
-	var u1 []user.User
-	var err error
-
-	u1, err = v.user.GetUsers(c.Request().Context())
+	usersDB, err := v.user.GetUsers(c.Request().Context())
 	if err != nil {
 		return fmt.Errorf("failed to get users for users: %w", err)
+	}
+
+	teamsDB, err := v.team.GetTeams(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("failed to get teams for users: %w", err)
 	}
 
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year  int
-		Users []UserTemplate
-		User  user.User
+		Year    int
+		Users   []UserTemplate
+		Teams   []TeamTemplate
+		User    user.User
+		Context *Context
 	}{
-		Year:  year,
-		Users: DBUsersToTemplateFormat(u1),
-		User:  c1.User,
+		Year:    year,
+		Users:   DBUsersToTemplateFormat(usersDB),
+		Teams:   DBTeamsToTemplateFormat(teamsDB),
+		User:    c1.User,
+		Context: c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.UsersTemplate, templates.RegularType)
