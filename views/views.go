@@ -29,11 +29,9 @@ import (
 
 type (
 	Config struct {
-		Address     string
-		DatabaseURL string
-		// BaseDomainName    string
-		// DomainName        string
-		// LogoutEndpoint    string
+		Address           string
+		DatabaseURL       string
+		DomainName        string
 		SessionCookieName string
 		FileDir           string
 		Mail              SMTPConfig
@@ -42,20 +40,18 @@ type (
 
 	// SMTPConfig stores the SMTP Mailer configuration
 	SMTPConfig struct {
-		Host       string
-		Username   string
-		Password   string
-		Port       int
-		DomainName string
+		Host     string
+		Username string
+		Password string
+		Port     int
 	}
 
 	// SecurityConfig stores the security configuration
 	SecurityConfig struct {
 		EncryptionKey     string
 		AuthenticationKey string
-		// SigningKey        string
-		Iterations int
-		KeyLength  int
+		Iterations        int
+		KeyLength         int
 	}
 
 	// Views encapsulates our view dependencies
@@ -143,9 +139,6 @@ func New(conf *Config, host string) *Views {
 		Password:   conf.Mail.Password,
 		DomainName: conf.Mail.DomainName,
 	})
-
-	// Struct validator
-	// v.validate = validator.New()
 
 	go func() {
 		for {
