@@ -83,10 +83,10 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("download failed to get image: %w, id: %d", err, id)
 		}
-		if len(image.FileName.String) == 0 {
+		if len(image.FileName) == 0 {
 			return fmt.Errorf("download failed to get image file name: no file name is present, id: %d", id)
 		}
-		path := filepath.Join(v.conf.FileDir, image.FileName.String)
+		path := filepath.Join(v.conf.FileDir, image.FileName)
 		_, err = os.Stat(path)
 		if err != nil {
 			if strings.Contains(err.Error(), "no such file") {
@@ -94,7 +94,7 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 			}
 			return fmt.Errorf("failed to get file for image download: %w, id: %d", err, id)
 		}
-		return c.Inline(path, image.FileName.String)
+		return c.Inline(path, image.FileName)
 	case "l": // Player
 		var player player1.Player
 		player, err = v.player.GetPlayer(c.Request().Context(), player1.Player{ID: id})

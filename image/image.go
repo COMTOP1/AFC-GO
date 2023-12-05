@@ -15,7 +15,7 @@ type (
 
 	Image struct {
 		ID       int         `db:"id" json:"id"`
-		FileName null.String `db:"file_name" json:"file_name"`
+		FileName string      `db:"file_name" json:"file_name"`
 		Caption  null.String `db:"caption" json:"caption"`
 	}
 )
