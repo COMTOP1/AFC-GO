@@ -2,6 +2,11 @@ package views
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -104,26 +109,213 @@ func (v *Views) ProgrammeSeasonSelectFunc(c echo.Context) error {
 }
 
 func (v *Views) ProgrammeAddFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		name := c.FormValue("name")
+
+		data := struct {
+			Error string `json:"error"`
+		}{
+			Error: "",
+		}
+
+		programmeSeason, err := strconv.Atoi(c.FormValue("programmeSeason"))
+		if err != nil {
+			log.Printf("failed to parse programmeSeason for programmeAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to parse programmeSeason for programmeAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		dateOfProgramme := c.Request().FormValue("dateOfProgramme")
+
+		parsed, err := time.Parse("02/01/2006", dateOfProgramme)
+		if err != nil {
+			log.Printf("failed to parse dateOfProgramme for programmeAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to parse dateOfProgramme for programmeAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		file, err := c.FormFile("upload")
+		if err != nil {
+			log.Printf("failed to get file for programmeAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to get file for documentAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+		fileName, err := v.fileUpload(file)
+		if err != nil {
+			log.Printf("failed to upload file for programmeAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to upload file for programmeAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		_, err = v.programme.AddProgramme(c.Request().Context(), programme.Programme{Name: name, FileName: fileName, DateOfProgramme: parsed, SeasonID: programmeSeason})
+		if err != nil {
+			log.Printf("failed to add programme for programmeAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to add programme for programmeAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = fmt.Sprintf("successfully added \"%s\"", name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for programmeAdd: %+v", err)
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) ProgrammeDeleteFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return fmt.Errorf("failed to get id for programmeDelete: %w", err)
+		}
+
+		programmeDB, err := v.programme.GetProgramme(c.Request().Context(), programme.Programme{ID: id})
+		if err != nil {
+			return fmt.Errorf("failed to get programme for programmeDelete: %w", err)
+		}
+
+		err = os.Remove(filepath.Join(v.conf.FileDir, programmeDB.FileName))
+		if err != nil {
+			log.Printf("failed to delete programme image for programmeDelete: %+v", err)
+		}
+
+		err = v.programme.DeleteProgramme(c.Request().Context(), programmeDB)
+		if err != nil {
+			return fmt.Errorf("failed to delete programme for programmeDelete: %w", err)
+		}
+
+		c1.Message = fmt.Sprintf("successfully added \"%s\"", programmeDB.Name)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for programmeDelete: %+v", err)
+		}
+
+		return c.Redirect(http.StatusFound, "/programmes")
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) ProgrammeSeasonAddFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		season := c.FormValue("season")
+
+		data := struct {
+			Error string `json:"error"`
+		}{
+			Error: "",
+		}
+
+		_, err := v.programme.AddSeason(c.Request().Context(), programme.Season{Season: season})
+		if err != nil {
+			log.Printf("failed to add season for seasonAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to add season for seasonAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = fmt.Sprintf("successfully added \"%s\"", season)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for programmeSeasonAdd: %+v", err)
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) ProgrammeSeasonEditFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return fmt.Errorf("failed to get id for programmeSeasonEdit: %w", err)
+		}
+
+		seasonDB, err := v.programme.GetSeason(c.Request().Context(), programme.Season{ID: id})
+		if err != nil {
+			return fmt.Errorf("failed to get season for programmeSeasonEdit: %w", err)
+		}
+
+		seasonDB.Season = c.FormValue("season")
+
+		data := struct {
+			Error string `json:"error"`
+		}{
+			Error: "",
+		}
+
+		_, err = v.programme.EditSeason(c.Request().Context(), seasonDB)
+		if err != nil {
+			log.Printf("failed to edit season for seasonEdit: %+v", err)
+			data.Error = fmt.Sprintf("failed to edit season for seasonEdit: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = fmt.Sprintf("successfully edited \"%s\"", seasonDB.Season)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for programmeSeasonEdit: %+v", err)
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) ProgrammeSeasonDeleteFunc(c echo.Context) error {
-	_ = c
-	return fmt.Errorf("not implemented yet")
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return fmt.Errorf("failed to get id for programmeSeasonDelete: %w", err)
+		}
+
+		seasonDB, err := v.programme.GetSeason(c.Request().Context(), programme.Season{ID: id})
+		if err != nil {
+			return fmt.Errorf("failed to get season for programmeSeasonDelete: %w", err)
+		}
+
+		programmesDB, err := v.programme.GetProgrammesSeason(c.Request().Context(), seasonDB)
+		if err != nil {
+			return fmt.Errorf("failed to get programmes for programmeSeasonDelete: %w", err)
+		}
+
+		for _, programmeDB := range programmesDB {
+			programmeDB.SeasonID = 0
+			_, err = v.programme.EditProgramme(c.Request().Context(), programmeDB)
+			if err != nil {
+				return fmt.Errorf("failed to edit programme for programmeSeasonDelete")
+			}
+		}
+
+		err = v.programme.DeleteSeason(c.Request().Context(), seasonDB)
+		if err != nil {
+			return fmt.Errorf("failed to delete season for programmeSeasonDelete: %w", err)
+		}
+
+		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", seasonDB.Season)
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for programmeSeasonDelete: %+v", err)
+		}
+
+		return c.Redirect(http.StatusFound, "/programmes")
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
