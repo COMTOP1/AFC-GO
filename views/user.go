@@ -178,29 +178,33 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		if mailer != nil {
 			var tmpl *template.Template
-			// TODO reimplement this
-			// tmpl, err = v.template.GetEmailTemplate(templates.SignupEmailTemplate)
+			tmpl, err = v.template.GetEmailTemplate(templates.SignupEmailTemplate)
 			if err != nil {
-				return fmt.Errorf("failed to get email in addUser: %w", err)
-			}
+				c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - no mailer present. Please send the username and password to this email: %s, password: %s", email, password))
+				c1.MsgType = "is-warning"
+				log.Printf("failed to get email for userAdd: %+v", err)
+				log.Println("proceeding")
+			} else {
 
-			file := mail.Mail{
-				Subject: "Welcome to Aldermaston AFC!",
-				Tpl:     tmpl,
-				To:      u.Email,
-				From:    "Aldermaston AFC No-Reply <no-reply.afc@bswdi.co.uk>",
-				TplData: struct {
-					Name     string
-					Email    string
-					Password string
-				}{
-					Name:     name,
-					Email:    email,
-					Password: password,
-				},
-			}
+				mailFile := mail.Mail{
+					Subject: "Welcome to AFC Aldermaston!",
+					Tpl:     tmpl,
+					To:      u.Email,
+					From:    "Aldermaston AFC No-Reply <no-reply.afc@bswdi.co.uk>",
+					TplData: struct {
+						Name     string
+						Email    string
+						Password string
+						Domain   string
+					}{
+						Name:     name,
+						Email:    email,
+						Password: password,
+						Domain:   v.conf.DomainName,
+					},
+				}
 
-				err = mailer.SendMail(file)
+				err = mailer.SendMail(mailFile)
 				if err != nil {
 					c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s", email, password))
 					c1.MsgType = "is-warning"
@@ -224,7 +228,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			log.Printf("failed to set data for uploadImage: %+v", err)
 		}
 
-		return c.JSON(status, message)
+		return c.JSON(http.StatusOK, data)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
