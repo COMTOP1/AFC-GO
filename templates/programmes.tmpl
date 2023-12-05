@@ -5,10 +5,49 @@
         <div class="pageHeaderBanner">
             <h2 class="pageHeader">
                 Programmes</h2>
+            <form method="post" action="/programmeselect">
+                <div class="field">
+                    <label class="label" for="seasonSelect">Select which season you want to see programmes for</label>
+                    <div class="control has-icons-left select">
+                        <select name="season" id="seasonSelect">
+                            <option value="0" {{if eq .SelectedSeason 0}}selected{{end}}>All seasons</option>
+                            {{range .Seasons}}
+                                <option value="{{.ID}}" {{if eq $.SelectedSeason .ID}}selected{{end}}>
+                                    {{.Season}}
+                                </option>
+                            {{end}}
+                        </select>
+                    </div>
+                </div>
+                <button class="button is-info">
+                    Select
+                </button>
+            </form>
             {{if $priv}}
+                <br><br>
                 <div style="margin: 15px 0 15px 0">
                     <a class="button is-info" onclick="addProgrammeModal()">Add Programme</a>
                 </div>
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-info" onclick="addSeasonModal()">Add Season</a>
+                </div>
+                <div class="flexContainer">
+                    {{range .Seasons}}
+                        <div class="listItem" style="text-align: center; width: auto; height: auto; display: block;">
+                            <p class="subtitle">
+                                {{.Season}}</p>
+                            <div style="margin: 15px 0 15px 0">
+                                <a class="button is-warning" onclick="editSeasonModal({{.ID}}, '{{.Season}}')">Edit</a>
+                            </div>
+                            <div style="margin: 15px 0 15px 0">
+                                <a class="button is-danger" onclick="deleteSeasonModal({{.ID}}, '{{.Season}}')">Delete</a>
+                            </div>
+                        </div>
+                    {{end}}
+                </div>
+                {{if .Context.Message}}
+                    <div class="notification {{.Context.MsgType}}" style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
+                {{end}}
             {{end}}
         </div>
         {{with (index .Programmes 0)}}
