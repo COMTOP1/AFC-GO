@@ -49,6 +49,12 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
+		verifier := emailverifier.NewVerifier()
+
+		var data struct {
+			Error string `json:"error"`
+		}
+
 		name := c.FormValue("name")
 		email := c.FormValue("email")
 		phone := c.FormValue("phone")
@@ -131,12 +137,17 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 				},
 			}
 
-			err = mailer.SendMail(file)
-			if err != nil {
-				return fmt.Errorf("failed to send email in addUser: %w", err)
+				err = mailer.SendMail(file)
+				if err != nil {
+					c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s", email, password))
+					c1.MsgType = "is-warning"
+					log.Printf("failed to send email for userAdd: %+v", err)
+					log.Println("proceeding")
+				} else {
+					c1.Message = fmt.Sprintf("successfully created user, sent signup email to: \"%s\"", email)
+					c1.MsgType = "is-success"
+				}
 			}
-
-			message.Message = fmt.Sprintf("Successfully sent user email to: \"%s\"", email)
 		} else {
 			c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s", email, password))
 			c1.MsgType = "is-warning"

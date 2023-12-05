@@ -14,8 +14,6 @@ func (v *Views) InfoFunc(c echo.Context) error {
 
 	year, _, _ := time.Now().Date()
 
-	_ = c1.User
-
 	data := struct {
 		Year int
 		User user.User
