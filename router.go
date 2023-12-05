@@ -129,6 +129,7 @@ func (r *Router) loadRoutes() {
 	programmes := base.Group("programmes")
 	programmes.Match(validMethods, "/:id", r.views.ProgrammesSeasonsFunc)
 	programmes.Match(validMethods, "", r.views.ProgrammesFunc)
+	base.Match(validMethods, "programmeselect", r.views.ProgrammeSeasonSelectFunc)
 	programme := base.Group("programme")
 	programme.Match(validMethods, "/add", r.views.ProgrammeAddFunc, r.views.RequiresLogin, r.views.RequireNotManager)
 	programmeID := programme.Group("/:id")
@@ -180,6 +181,11 @@ func (r *Router) loadRoutes() {
 	userID := user.Group("/:id")
 	userID.Match(validMethods, "/edit", r.views.UserEditFunc)
 	userID.Match(validMethods, "/delete", r.views.UserDeleteFunc)
+	userID.Match(validMethods, "/reset", r.views.ResetUserPasswordFunc)
+
+	base.Match(validMethods, "reset/:url", r.views.ResetURLFunc)
+
+	base.Match(validMethods, "changepassword", r.views.ChangePasswordFunc, r.views.RequiresLogin)
 
 	base.Match(validMethods, "logout", r.views.LogoutFunc, r.views.RequiresLogin)
 }
