@@ -95,6 +95,15 @@
                     {{end}}
                 {{end}}
             </div>
+        {{if eq (len .Programmes) 0}}
+            <div class="flexContainer">
+                <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
+                    <h2 class="title">No programmes are available
+                    </h2>
+                </div>
+            </div>
+        {{else}}
+            {{end}}
         {{end}}
     </main>
     {{if $priv}}
