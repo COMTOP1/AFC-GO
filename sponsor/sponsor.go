@@ -20,7 +20,7 @@ type (
 		Name     string      `db:"name" json:"name"`
 		Website  null.String `db:"website" json:"website"`
 		FileName null.String `db:"file_name" json:"file_name"`
-		Purpose  string      `db:"purpose" json:"purpose"`
+		Purpose  null.String `db:"purpose" json:"purpose"`
 		TeamID   string      `db:"team_id" json:"team_id"`
 	}
 )
