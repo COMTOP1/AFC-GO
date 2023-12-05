@@ -23,12 +23,12 @@ type (
 
 	// User represents relevant user fields
 	User struct {
-		ID            int      `db:"id" json:"id"`
-		Name          string   `db:"name" json:"name"`
-		Email         string   `db:"email" json:"email"`
-		Phone         string   `db:"phone" json:"phone"`
-		TeamID        null.Int `db:"team_id" json:"team_id"`
-		TempRole      string   `db:"role" json:"role"`
+		ID            int         `db:"id" json:"id"`
+		Name          string      `db:"name" json:"name"`
+		Email         string      `db:"email" json:"email"`
+		Phone         null.String `db:"phone" json:"phone"`
+		TeamID        int         `db:"team_id" json:"team_id"`
+		TempRole      string      `db:"role" json:"role"`
 		Role          role.Role
 		FileName      null.String `db:"file_name" json:"file_name"`
 		ResetPassword bool        `db:"reset_password" json:"reset_password"`
