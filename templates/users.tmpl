@@ -69,7 +69,7 @@
                             <a class="button is-danger" onclick="deleteUserModal({{.ID}}, {{.Name}})">Delete</a>
                         </th>
                         <th>
-                            <a class="button is-warning" onclick="resetPasswordModal()">Reset password</a>
+                            <a class="button is-warning" onclick="resetPasswordModal({{.ID}}, {{.Name}})">Reset password</a>
                         </th>
                     {{end}}
                 </tr>
@@ -82,6 +82,25 @@
 {{end}}
 
 {{define "modal"}}
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title" id="resetPasswordModalTitle"></p>
+                            <p>An email will be sent to the user for
+                                them to reset their password</p>
+                            <a class="button is-danger" onclick="resetPassword()" id="resetPasswordButton">
+                                Reset password</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
     <div id="deleteUserModal" class="modal">
         <div class="modal-background"></div>
         <div class="modal-content">
@@ -123,4 +142,28 @@
             document.getElementById("deleteUserModalForm").action = "/user/" + deleteUserID + "/delete";
             $('#deleteUserModalForm').submit();
         }
+
+        function resetPasswordModal(id, name) {
+            resetPasswordUserID = id;
+            document.getElementById("resetPasswordModal").classList.add("is-active");
+            document.getElementById("resetPasswordModalTitle").innerHTML = 'Are you sure you want to reset the password of "' + name + '"?';
+        }
+
+        function resetPassword() {
+            document.getElementById("resetPasswordButton").disabled = true;
+
+            $.ajax({
+                url: '/user/' + resetPasswordUserID + '/reset',
+                type: 'post',
+                dataType: 'json',
+                contentType: 'application/x-www-form-urlencoded',
+                success: function (data) {
+                    document.getElementById("resetPasswordModal").classList.remove("is-active");
+                    document.getElementById("resetPasswordButton").disabled = false;
+                    $("#message").html(data.message);
+                    $("#error").html(data.error);
+                },
+            })
+        }
+    </script>
 {{end}}
