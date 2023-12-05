@@ -294,7 +294,7 @@ func (v *Views) PlayerDeleteFunc(c echo.Context) error {
 		if playerDB.FileName.Valid {
 			err = os.Remove(filepath.Join(v.conf.FileDir, playerDB.FileName.String))
 			if err != nil {
-				return fmt.Errorf("failed to delete player image for playerDelete: %w", err)
+				log.Printf("failed to delete player image for playerDelete: %+v", err)
 			}
 		}
 
