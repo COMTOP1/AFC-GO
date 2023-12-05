@@ -122,7 +122,7 @@ func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
 	return userParam, nil
 }
 
-func (s *Store) editUser(ctx context.Context, userParam User, emailOld string) (User, error) {
+func (s *Store) editUser(ctx context.Context, userParam User) (User, error) {
 	builder := utils.MySQL().Update("afc.users").
 		SetMap(map[string]interface{}{
 			"name":           userParam.Name,

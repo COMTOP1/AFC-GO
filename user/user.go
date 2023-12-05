@@ -93,7 +93,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, keyLen int
 			user.Password = null.NewString("", false)
 			user.Hash = null.StringFrom(hex.EncodeToString(hash))
 			user.Salt = null.StringFrom(hex.EncodeToString(salt))
-			_, err = s.EditUser(ctx, user, user.Email)
+			_, err = s.EditUser(ctx, user)
 			if err != nil {
 				return userParam, false, fmt.Errorf("failed to update user password security: %w", err)
 			}
@@ -116,8 +116,8 @@ func (s *Store) AddUser(ctx context.Context, userParam User) (User, error) {
 	return s.addUser(ctx, userParam)
 }
 
-func (s *Store) EditUser(ctx context.Context, userParam User, emailOld string) (User, error) {
-	userDB, err := s.GetUser(ctx, userParam)
+func (s *Store) EditUser(ctx context.Context, userParam User) (User, error) {
+	userDB, err := s.getUserFull(ctx, userParam)
 	if err != nil {
 		return userParam, fmt.Errorf("failed to get user for editUser: %w", err)
 	}
@@ -146,7 +146,7 @@ func (s *Store) EditUser(ctx context.Context, userParam User, emailOld string) (
 	if userParam.ResetPassword != userDB.ResetPassword {
 		userDB.ResetPassword = userParam.ResetPassword
 	}
-	_, err = s.editUser(ctx, userDB, emailOld)
+	_, err = s.editUser(ctx, userDB)
 	if err != nil {
 		return userParam, fmt.Errorf("failed to edit user: %w", err)
 	}
