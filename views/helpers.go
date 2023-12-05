@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	// importing time zones in case the system doesn't have them
@@ -96,7 +97,7 @@ type (
 		ID      int
 		Name    string
 		Website null.String
-		Purpose string
+		Purpose null.String
 	}
 
 	TeamTemplate struct {
@@ -108,12 +109,14 @@ type (
 	}
 
 	UserTemplate struct {
-		ID     int
-		Name   string
-		Email  string
-		Phone  string
-		TeamID int
-		Role   string
+		ID           int
+		Name         string
+		Email        string
+		Phone        string
+		TeamID       int
+		Role         string
+		RoleTemplate string
+		IsFileValid  bool
 	}
 
 	WhatsOnTemplate struct {
@@ -265,21 +268,6 @@ func (v *Views) clearMessagesInSession(eC echo.Context) error {
 	return nil
 }
 
-//// removeDuplicates removes all duplicate permissions
-// func removeDuplicate(strSlice []string) []string {
-//	allKeys := make(map[string]bool)
-//	var list []string
-//	for _, item := range strSlice {
-//		if _, value := allKeys[item]; !value {
-//			allKeys[item] = true
-//			//if _, value := allKeys[item.PermissionID]; !value {
-//			//	allKeys[item.PermissionID] = true
-//			list = append(list, item)
-//		}
-//	}
-//	return list
-//}
-
 // minRequirementsMet tests if the password meets the minimum requirements
 func minRequirementsMet(password string) (errString string) {
 	var match bool
@@ -419,20 +407,22 @@ func DBProgrammesToTemplateFormat(programmesDB []programme.Programme, seasonsDB 
 		year, month, day := programmeDB.DateOfProgramme.Date()
 		programmeTemplate.DateOfProgramme = fmt.Sprintf("%s %02d %s %d", programmeDB.DateOfProgramme.Weekday().String()[0:3], day, month.String()[0:3], year)
 		found := false
-		for _, seasonDB := range seasonsDB {
-			if seasonDB.ID == programmeDB.SeasonID {
-				var seasonTemplate SeasonTemplate
-				seasonTemplate.ID = seasonDB.ID
-				seasonTemplate.Name = seasonDB.Season
-				seasonTemplate.IsValid = true
-				programmeTemplate.Season = seasonTemplate
-				found = true
-				break
+		if programmeDB.SeasonID != 0 {
+			for _, seasonDB := range seasonsDB {
+				if seasonDB.ID == programmeDB.SeasonID {
+					var seasonTemplate SeasonTemplate
+					seasonTemplate.ID = seasonDB.ID
+					seasonTemplate.Name = seasonDB.Season
+					seasonTemplate.IsValid = true
+					programmeTemplate.Season = seasonTemplate
+					found = true
+					break
+				}
 			}
-		}
-		if !found {
-			log.Printf("failed to find season for programme: %d", programmeDB.ID)
-			programmeTemplate.Season = SeasonTemplate{IsValid: false}
+			if !found {
+				log.Printf("failed to find season for programme: %d", programmeDB.ID)
+				programmeTemplate.Season = SeasonTemplate{IsValid: false}
+			}
 		}
 		programmesTemplate = append(programmesTemplate, programmeTemplate)
 	}
@@ -548,6 +538,27 @@ func DBTeamsToTemplateFormat(teamsDB []team.Team) []TeamTemplate {
 	return teamsTemplate
 }
 
+func DBUserToTemplateFormat(userDB user.User) UserTemplate {
+	var userTemplate UserTemplate
+	userTemplate.ID = userDB.ID
+	userTemplate.Name = userDB.Name
+	userTemplate.Email = userDB.Email
+	userTemplate.Phone = "No number provided"
+	if userDB.Phone.Valid {
+		userTemplate.Phone = userDB.Phone.String
+	}
+	userTemplate.TeamID = userDB.TeamID
+	roleDB, err := role.GetRole(userDB.TempRole)
+	userTemplate.Role = roleDB.String()
+	if err != nil {
+		userTemplate.Role = fmt.Sprintf("failed to get role for users: %+v", err)
+	}
+	if len(userDB.FileName.String) > 0 && userDB.FileName.Valid {
+		userTemplate.IsFileValid = true
+	}
+	return userTemplate
+}
+
 func DBUsersToTemplateFormat(usersDB []user.User) []UserTemplate {
 	usersTemplate := make([]UserTemplate, 0, len(usersDB))
 	for _, userDB := range usersDB {
@@ -555,14 +566,19 @@ func DBUsersToTemplateFormat(usersDB []user.User) []UserTemplate {
 		userTemplate.ID = userDB.ID
 		userTemplate.Name = userDB.Name
 		userTemplate.Email = userDB.Email
-		userTemplate.Phone = userDB.Phone
-		if userDB.TeamID.Valid {
-			userTemplate.TeamID = int(userDB.TeamID.Int64)
+		userTemplate.Phone = "No number provided"
+		if userDB.Phone.Valid {
+			userTemplate.Phone = userDB.Phone.String
 		}
+		userTemplate.TeamID = userDB.TeamID
 		roleDB, err := role.GetRole(userDB.TempRole)
 		userTemplate.Role = roleDB.String()
+		userTemplate.RoleTemplate = strings.ToLower(roleDB.DBString())
 		if err != nil {
 			userTemplate.Role = fmt.Sprintf("failed to get role for users: %+v", err)
+		}
+		if len(userDB.FileName.String) > 0 && userDB.FileName.Valid {
+			userTemplate.IsFileValid = true
 		}
 		usersTemplate = append(usersTemplate, userTemplate)
 	}
@@ -614,45 +630,3 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 	whatsOnTemplate.IsFileValid = whatsOnDB.FileName.Valid
 	return whatsOnTemplate
 }
-
-// const DaysPerCycle = 146097
-// const Days0000To1970 = int64(DaysPerCycle*5) - (int64(30)*int64(365) + int64(7))
-//
-// func ofEpochDay(epochDay int64) time.Time {
-//	var zeroDay, adjust, adjustCycles, yearEst, doyEst int64
-//	zeroDay = epochDay + Days0000To1970
-//	// find the march-based year
-//	zeroDay -= 60 // adjust to 0000-03-01 so leap day is at end of four year cycle
-//	adjust = 0
-//	if zeroDay < 0 {
-//		// adjust negative years to positive for calculation
-//		adjustCycles = (zeroDay+1)/DaysPerCycle - 1
-//		adjust = adjustCycles * 400
-//		zeroDay += -adjustCycles * DaysPerCycle
-//	}
-//	yearEst = (400*zeroDay + 591) / DaysPerCycle
-//	doyEst = zeroDay - (365*yearEst + yearEst/4 - yearEst/100 + yearEst/400)
-//	if doyEst < 0 {
-//		// fix estimate
-//		yearEst--
-//		doyEst = zeroDay - (365*yearEst + yearEst/4 - yearEst/100 + yearEst/400)
-//	}
-//	yearEst += adjust // reset any negative year
-//	marchDoy0 := int(doyEst)
-//
-//	// convert march-based values back to january-based
-//
-//	marchMonth0 := (marchDoy0*5 + 2) / 153
-//
-//	month := (marchMonth0+2)%12 + 1
-//	dom := marchDoy0 - (marchMonth0*306+5)/10 + 1
-//	yearEst += int64(marchMonth0) / 10
-//
-//	location, err := time.LoadLocation("Europe/London")
-//	if err != nil {
-//		log.Printf("failed to get timezone: %+v", err)
-//	}
-//
-//	// check year now we are certain it is correct
-//	return time.Date(int(yearEst), time.Month(month), dom, 0, 0, 0, 0, location)
-// }
