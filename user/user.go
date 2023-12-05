@@ -127,10 +127,10 @@ func (s *Store) EditUser(ctx context.Context, userParam User) (User, error) {
 	if userParam.Name != userDB.Name && len(userParam.Name) > 0 {
 		userDB.Name = userParam.Name
 	}
-	if userParam.Phone != userDB.Phone && len(userParam.Phone) > 0 {
+	if userParam.Phone.Valid && (!userDB.Phone.Valid || userDB.Phone.String != userParam.Phone.String) {
 		userDB.Phone = userParam.Phone
 	}
-	if userParam.TeamID.Int64 != userDB.TeamID.Int64 {
+	if userParam.TeamID != userDB.TeamID {
 		userDB.TeamID = userParam.TeamID
 	}
 	userDB.Role, err = role.GetRole(userDB.TempRole)
