@@ -2,11 +2,13 @@ package templates
 
 import (
 	"context"
+	"crypto/rand"
 	"embed"
 	"fmt"
 	"html/template"
 	"io"
 	"log"
+	"math/big"
 	"time"
 
 	role1 "github.com/COMTOP1/AFC-GO/infrastructure/role"
@@ -138,6 +140,13 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				return ""
 			}
 			return t1.Name
+		},
+		"randomImgInt": func() int64 {
+			nBig, err := rand.Int(rand.Reader, big.NewInt(999999))
+			if err != nil {
+				panic(err)
+			}
+			return nBig.Int64()
 		},
 	}
 }
