@@ -10,28 +10,30 @@
                     <a class="button is-info" onclick="addSponsorModal()">Add Sponsor</a>
                 </div>
                 {{if .Context.Message}}
-                    <div class="notification {{.Context.MsgType}}" style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
+                    <div class="notification {{.Context.MsgType}}"
+                         style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
                 {{end}}
             {{end}}
         </div>
         <div class="flexContainer">
             {{range .Sponsors}}
                 <div class="listItem" style="display: block; cursor: pointer"
-                {{if and (not $priv) .Website.Valid}}
+                        {{if and (not $priv) .Website.Valid}}
                 onclick="location.href='{{.Website.String}}';"{{end}}>
                     {{if and $priv .Website.Valid}}<a href="{{.Website.String}}">{{end}}
                         <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png"
                              onerror="this.onerror=null;this.src='/public/AFC.png';"
                              class="latestImage lazy" src="/public/AFC.png">
                         <h2 class="latestTitle">{{.Name}}</h2>
-                        <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose}}
-                        </p>
-                        {{if and $priv .Website.Valid}}</a>{{end}}
-                    {{if $priv}}
-                        <br>
-                        <br>
-                        <a class="button is-danger" onclick="deleteSponsorModal({{.ID}}, '{{.Name}}')"
-                           style="margin-bottom: 20px">Delete</a>
+                        {{if .Purpose.Valid}}
+                            <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose.String}}
+                            </p>{{end}}
+                        {{if $priv}}
+                        {{if .Website.Valid}}</a>{{end}}
+                <br>
+                <br>
+                <a class="button is-danger" onclick="deleteSponsorModal({{.ID}}, '{{.Name}}')"
+                   style="margin-bottom: 20px">Delete</a>
                     {{end}}
                 </div>
             {{end}}
