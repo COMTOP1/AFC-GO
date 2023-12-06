@@ -2,7 +2,6 @@ package views
 
 import (
 	"fmt"
-	"github.com/COMTOP1/AFC-GO/role"
 	"html/template"
 	"log"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/infrastructure/mail"
+	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
 )

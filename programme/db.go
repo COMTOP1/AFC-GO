@@ -106,9 +106,9 @@ func (s *Store) editProgramme(ctx context.Context, programmeParam Programme) (Pr
 	if err != nil {
 		return Programme{}, fmt.Errorf("failed to edit programme: %w", err)
 	}
-	//if rows < 1 {
+	// if rows < 1 {
 	//	return Programme{}, fmt.Errorf("failed to edit programme: invalid rows affected: %d, this programme may not exist: %d", rows, programmeParam.ID)
-	//}
+	// }
 	return programmeParam, nil
 }
 
@@ -203,9 +203,9 @@ func (s *Store) editSeason(ctx context.Context, seasonParam Season) (Season, err
 	if err != nil {
 		return Season{}, fmt.Errorf("failed to edit season: %w", err)
 	}
-	//if rows < 1 {
+	// if rows < 1 {
 	//	return Season{}, fmt.Errorf("failed to edit season: invalid rows affected: %d, this season may not exist: %d", rows, seasonParam.ID)
-	//}
+	// }
 	return seasonParam, nil
 }
 

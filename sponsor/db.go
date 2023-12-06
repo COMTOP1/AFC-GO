@@ -124,9 +124,9 @@ func (s *Store) editSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, 
 	if err != nil {
 		return Sponsor{}, fmt.Errorf("failed to edit sponsor: %w", err)
 	}
-	//if rows < 1 {
+	// if rows < 1 {
 	//	return Sponsor{}, fmt.Errorf("failed to edit sponsor: invalid rows affected: %d, this sponsor may not exist: %d", rows, seasonParam.ID)
-	//}
+	// }
 	return seasonParam, nil
 }
 

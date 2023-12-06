@@ -148,9 +148,9 @@ func (s *Store) editWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn,
 	if err != nil {
 		return WhatsOn{}, fmt.Errorf("failed to edit what's on: %w", err)
 	}
-	//if rows < 1 {
+	// if rows < 1 {
 	//	return WhatsOn{}, fmt.Errorf("failed to edit what's on: invalid rows affected: %d, this what's on may not exist: %d", rows, whatsOnParam.ID)
-	//}
+	// }
 	return whatsOnParam, nil
 }
 
