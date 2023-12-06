@@ -122,7 +122,7 @@ func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
 	return userParam, nil
 }
 
-func (s *Store) editUser(ctx context.Context, userParam User) (User, error) {
+func (s *Store) editUser(ctx context.Context, userParam User) error {
 	builder := utils.MySQL().Update("afc.users").
 		SetMap(map[string]interface{}{
 			"name":           userParam.Name,
@@ -143,16 +143,16 @@ func (s *Store) editUser(ctx context.Context, userParam User) (User, error) {
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return User{}, fmt.Errorf("failed to edit user: %w", err)
+		return fmt.Errorf("failed to edit user: %w", err)
 	}
 	_, err = res.RowsAffected()
 	if err != nil {
-		return User{}, fmt.Errorf("failed to edit user: %w", err)
+		return fmt.Errorf("failed to edit user: %w", err)
 	}
 	// if rows < 1 {
 	//	return User{}, fmt.Errorf("failed to edit user: invalid rows affected: %d, this user may not exist: %d", rows, userParam.ID)
 	// }
-	return userParam, nil
+	return nil
 }
 
 func (s *Store) deleteUser(ctx context.Context, userParam User) error {
