@@ -46,7 +46,7 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 
 func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) ([]User, error) {
 	var usersDB []User
-	builder := utils.MySQL().Select("id", "name").
+	builder := utils.PSQL().Select("id", "name").
 		From("afc.users").
 		Where(sq.Eq{"team_id": strconv.FormatUint(uint64(teamParam.ID), 10)}).
 		OrderBy("id")
@@ -63,7 +63,7 @@ func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) (
 
 func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
 	var userDB User
-	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
+	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
 		From("afc.users").
 		Where(sq.Or{sq.Eq{"email": userParam.Email},
 			sq.Eq{"id": userParam.ID}})
@@ -80,7 +80,7 @@ func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
 
 func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 	var userDB User
-	builder := utils.MySQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "password", "hash", "salt").
+	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "password", "hash", "salt").
 		From("afc.users").
 		Where(sq.Or{sq.Eq{"email": userParam.Email},
 			sq.Eq{"id": userParam.ID}})
@@ -96,7 +96,7 @@ func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 }
 
 func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
-	builder := utils.MySQL().Insert("afc.users").
+	builder := utils.PSQL().Insert("afc.users").
 		Columns("name", "email", "phone", "team_id", "role", "file_name", "reset_password", "hash", "salt").
 		Values(userParam.Name, userParam.Email, userParam.Phone, userParam.TeamID, userParam.Role.DBString(), userParam.FileName, userParam.ResetPassword, userParam.Hash, userParam.Salt)
 	sql, args, err := builder.ToSql()
@@ -123,7 +123,7 @@ func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
 }
 
 func (s *Store) editUser(ctx context.Context, userParam User) error {
-	builder := utils.MySQL().Update("afc.users").
+	builder := utils.PSQL().Update("afc.users").
 		SetMap(map[string]interface{}{
 			"name":           userParam.Name,
 			"email":          userParam.Email,
@@ -156,7 +156,7 @@ func (s *Store) editUser(ctx context.Context, userParam User) error {
 }
 
 func (s *Store) deleteUser(ctx context.Context, userParam User) error {
-	builder := utils.MySQL().Delete("afc.users").
+	builder := utils.PSQL().Delete("afc.users").
 		Where(sq.Eq{"email": userParam.Email})
 	sql, args, err := builder.ToSql()
 	if err != nil {

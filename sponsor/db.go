@@ -44,7 +44,7 @@ func (s *Store) getSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
 
 func (s *Store) getSponsorsTeam(ctx context.Context, teamParam team.Team) ([]Sponsor, error) {
 	var sponsorsDB []Sponsor
-	builder := utils.MySQL().Select("id", "name", "website", "purpose").
+	builder := utils.PSQL().Select("id", "name", "website", "purpose").
 		From("afc.sponsors").
 		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("name")
@@ -61,7 +61,7 @@ func (s *Store) getSponsorsTeam(ctx context.Context, teamParam team.Team) ([]Spo
 
 func (s *Store) getSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, error) {
 	var seasonDB Sponsor
-	builder := utils.MySQL().Select("id", "name", "website", "file_name", "purpose", "team_id").
+	builder := utils.PSQL().Select("id", "name", "website", "file_name", "purpose", "team_id").
 		From("afc.sponsors").
 		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
@@ -76,7 +76,7 @@ func (s *Store) getSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, e
 }
 
 func (s *Store) addSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, error) {
-	builder := utils.MySQL().Insert("afc.sponsors").
+	builder := utils.PSQL().Insert("afc.sponsors").
 		Columns("name", "website", "file_name", "purpose", "team_id").
 		Values(seasonParam.Name, seasonParam.Website, seasonParam.FileName, seasonParam.Purpose, seasonParam.TeamID)
 	sql, args, err := builder.ToSql()
@@ -103,7 +103,7 @@ func (s *Store) addSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, e
 }
 
 func (s *Store) editSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, error) {
-	builder := utils.MySQL().Update("afc.sponsors").
+	builder := utils.PSQL().Update("afc.sponsors").
 		SetMap(map[string]interface{}{
 			"name":      seasonParam.Name,
 			"website":   seasonParam.Website,
@@ -131,7 +131,7 @@ func (s *Store) editSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, 
 }
 
 func (s *Store) deleteSponsor(ctx context.Context, seasonParam Sponsor) error {
-	builder := utils.MySQL().Delete("afc.sponsors").
+	builder := utils.PSQL().Delete("afc.sponsors").
 		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

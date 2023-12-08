@@ -27,7 +27,7 @@ func (s *Store) getTeams(ctx context.Context) ([]Team, error) {
 
 func (s *Store) getTeamsActive(ctx context.Context) ([]Team, error) {
 	var teamsDB []Team
-	builder := utils.MySQL().Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
+	builder := utils.PSQL().Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
 		From("afc.teams").
 		Where(sq.Eq{"active": true}).
 		OrderBy("name")
@@ -44,7 +44,7 @@ func (s *Store) getTeamsActive(ctx context.Context) ([]Team, error) {
 
 func (s *Store) getTeam(ctx context.Context, teamParam Team) (Team, error) {
 	var teamDB Team
-	builder := utils.MySQL().Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
+	builder := utils.PSQL().Select("id", "name", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
 		From("afc.teams").
 		Where(sq.Eq{"id": teamParam.ID})
 	sql, args, err := builder.ToSql()
@@ -59,7 +59,7 @@ func (s *Store) getTeam(ctx context.Context, teamParam Team) (Team, error) {
 }
 
 func (s *Store) addTeam(ctx context.Context, teamParam Team) (Team, error) {
-	builder := utils.MySQL().Insert("afc.teams").
+	builder := utils.PSQL().Insert("afc.teams").
 		Columns("name", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
 		Values(teamParam.Name, teamParam.League, teamParam.Division, teamParam.LeagueTable, teamParam.Fixtures, teamParam.Coach, teamParam.Physio, teamParam.FileName, teamParam.IsActive, teamParam.IsYouth, teamParam.Ages)
 	sql, args, err := builder.ToSql()
@@ -86,7 +86,7 @@ func (s *Store) addTeam(ctx context.Context, teamParam Team) (Team, error) {
 }
 
 func (s *Store) editTeam(ctx context.Context, teamParam Team) (Team, error) {
-	builder := utils.MySQL().Update("afc.teams").
+	builder := utils.PSQL().Update("afc.teams").
 		SetMap(map[string]interface{}{
 			"name":         teamParam.Name,
 			"league":       teamParam.League,
@@ -120,7 +120,7 @@ func (s *Store) editTeam(ctx context.Context, teamParam Team) (Team, error) {
 }
 
 func (s *Store) deleteTeam(ctx context.Context, teamParam Team) error {
-	builder := utils.MySQL().Delete("afc.teams").
+	builder := utils.PSQL().Delete("afc.teams").
 		Where(sq.Eq{"id": teamParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

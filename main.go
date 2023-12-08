@@ -24,6 +24,7 @@ func main() {
 	dbUser := os.Getenv("DB_USERNAME")
 	dbPass := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
+	dbSSL := os.Getenv("DB_SSLMODE")
 
 	if !local && !global && dbHost == "" {
 		log.Fatal("unable to find env files and no env variables have been supplied")
@@ -50,12 +51,13 @@ func main() {
 	}
 
 	dbConnectionString := fmt.Sprintf(
-		"%s:%s@(%s:%d)/%s?parseTime=true",
-		dbUser,
-		dbPass,
+		"host=%s port=%d user=%s dbname=%s sslmode=%s password=%s",
 		dbHost,
 		dbPort,
+		dbUser,
 		dbName,
+		dbSSL,
+		dbPass,
 	)
 
 	address := os.Getenv("ADDRESS")

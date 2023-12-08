@@ -27,7 +27,7 @@ func (s *Store) getDocuments(ctx context.Context) ([]Document, error) {
 
 func (s *Store) getDocument(ctx context.Context, documentParam Document) (Document, error) {
 	var documentDB Document
-	builder := utils.MySQL().Select("id", "name", "file_name").
+	builder := utils.PSQL().Select("id", "name", "file_name").
 		From("afc.documents").
 		Where(sq.Eq{"id": documentParam.ID})
 	sql, args, err := builder.ToSql()
@@ -42,7 +42,7 @@ func (s *Store) getDocument(ctx context.Context, documentParam Document) (Docume
 }
 
 func (s *Store) addDocument(ctx context.Context, documentParam Document) (Document, error) {
-	builder := utils.MySQL().Insert("afc.documents").
+	builder := utils.PSQL().Insert("afc.documents").
 		Columns("name", "file_name").
 		Values(documentParam.Name, documentParam.FileName)
 	sql, args, err := builder.ToSql()
@@ -69,7 +69,7 @@ func (s *Store) addDocument(ctx context.Context, documentParam Document) (Docume
 }
 
 func (s *Store) deleteDocument(ctx context.Context, d Document) error {
-	builder := utils.MySQL().Delete("afc.documents").
+	builder := utils.PSQL().Delete("afc.documents").
 		Where(sq.Eq{"id": d.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

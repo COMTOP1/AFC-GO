@@ -3,7 +3,6 @@ package views
 import (
 	"encoding/gob"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"time"
 
@@ -138,28 +137,6 @@ func New(conf *Config, host string) *Views {
 		Username: conf.Mail.Username,
 		Password: conf.Mail.Password,
 	})
-
-	go func() {
-		for {
-			var location *time.Location
-			location, err = time.LoadLocation("Europe/London")
-			if err != nil {
-				log.Printf("failed to get timezone: %+v", err)
-			}
-			time1 := time.Now().In(location)
-			_, time2 := time1.Zone()
-			format := fmt.Sprintf("%+03d", time2/3600)
-			_, err = dbStore.Exec(`SET GLOBAL time_zone = '` + format + `:00';`)
-			if err != nil {
-				log.Printf("failed to set time func first: %+v", err)
-			}
-			_, err = dbStore.Exec(`SET @@global.time_zone = '` + format + `:00';`)
-			if err != nil {
-				log.Printf("failed to set time func second: %+v", err)
-			}
-			time.Sleep(5 * time.Minute)
-		}
-	}()
 
 	return v
 }

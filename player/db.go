@@ -28,7 +28,7 @@ func (s *Store) getPlayers(ctx context.Context) ([]Player, error) {
 
 func (s *Store) getPlayersTeam(ctx context.Context, teamParam team.Team) ([]Player, error) {
 	var playersDB []Player
-	builder := utils.MySQL().Select("id", "name", "date_of_birth", "position", "captain").
+	builder := utils.PSQL().Select("id", "name", "date_of_birth", "position", "captain").
 		From("afc.players").
 		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("name")
@@ -45,7 +45,7 @@ func (s *Store) getPlayersTeam(ctx context.Context, teamParam team.Team) ([]Play
 
 func (s *Store) getPlayer(ctx context.Context, playerParam Player) (Player, error) {
 	var playerDB Player
-	builder := utils.MySQL().Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
+	builder := utils.PSQL().Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("afc.players").
 		Where(sq.Eq{"id": playerParam.ID})
 	sql, args, err := builder.ToSql()
@@ -60,7 +60,7 @@ func (s *Store) getPlayer(ctx context.Context, playerParam Player) (Player, erro
 }
 
 func (s *Store) addPlayer(ctx context.Context, playerParam Player) (Player, error) {
-	builder := utils.MySQL().Insert("afc.players").
+	builder := utils.PSQL().Insert("afc.players").
 		Columns("name", "file_name", "date_of_birth", "position", "captain", "team_id").
 		Values(playerParam.Name, playerParam.FileName, playerParam.DateOfBirth, playerParam.Position, playerParam.IsCaptain, playerParam.TeamID)
 	sql, args, err := builder.ToSql()
@@ -87,7 +87,7 @@ func (s *Store) addPlayer(ctx context.Context, playerParam Player) (Player, erro
 }
 
 func (s *Store) editPlayer(ctx context.Context, playerParam Player) (Player, error) {
-	builder := utils.MySQL().Update("afc.players").
+	builder := utils.PSQL().Update("afc.players").
 		SetMap(map[string]interface{}{
 			"name":          playerParam.Name,
 			"file_name":     playerParam.FileName,
@@ -116,7 +116,7 @@ func (s *Store) editPlayer(ctx context.Context, playerParam Player) (Player, err
 }
 
 func (s *Store) deletePlayer(ctx context.Context, playerParam Player) error {
-	builder := utils.MySQL().Delete("afc.players").
+	builder := utils.PSQL().Delete("afc.players").
 		Where(sq.Eq{"id": playerParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

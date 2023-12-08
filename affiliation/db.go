@@ -43,7 +43,7 @@ func (s *Store) getAffiliationsMinimal(ctx context.Context) ([]Affiliation, erro
 
 func (s *Store) getAffiliation(ctx context.Context, affiliationParam Affiliation) (Affiliation, error) {
 	var affiliationDB Affiliation
-	builder := utils.MySQL().Select("id", "name", "website", "file_name").
+	builder := utils.PSQL().Select("id", "name", "website", "file_name").
 		From("afc.affiliations").
 		Where(sq.Eq{"id": affiliationParam.ID})
 	sql, args, err := builder.ToSql()
@@ -58,7 +58,7 @@ func (s *Store) getAffiliation(ctx context.Context, affiliationParam Affiliation
 }
 
 func (s *Store) addAffiliation(ctx context.Context, affiliationParam Affiliation) (Affiliation, error) {
-	builder := utils.MySQL().Insert("afc.affiliations").
+	builder := utils.PSQL().Insert("afc.affiliations").
 		Columns("name", "website", "file_name").
 		Values(affiliationParam.Name, affiliationParam.Website, affiliationParam.FileName)
 	sql, args, err := builder.ToSql()
@@ -85,7 +85,7 @@ func (s *Store) addAffiliation(ctx context.Context, affiliationParam Affiliation
 }
 
 func (s *Store) deleteAffiliation(ctx context.Context, affiliationParam Affiliation) error {
-	builder := utils.MySQL().Delete("afc.affiliations").
+	builder := utils.PSQL().Delete("afc.affiliations").
 		Where(sq.Eq{"id": affiliationParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

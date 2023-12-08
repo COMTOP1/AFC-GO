@@ -48,7 +48,7 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 
 func (s *Store) getNewsArticle(ctx context.Context, newsParam News) (News, error) {
 	var newsDB News
-	builder := utils.MySQL().Select("id", "title", "file_name", "content", "date").
+	builder := utils.PSQL().Select("id", "title", "file_name", "content", "date").
 		From("afc.news").
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
@@ -63,7 +63,7 @@ func (s *Store) getNewsArticle(ctx context.Context, newsParam News) (News, error
 }
 
 func (s *Store) addNews(ctx context.Context, newsParam News) (News, error) {
-	builder := utils.MySQL().Insert("afc.news").
+	builder := utils.PSQL().Insert("afc.news").
 		Columns("title", "file_name", "content", "date").
 		Values(newsParam.Title, newsParam.FileName, newsParam.Content, newsParam.Date)
 	sql, args, err := builder.ToSql()
@@ -90,7 +90,7 @@ func (s *Store) addNews(ctx context.Context, newsParam News) (News, error) {
 }
 
 func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
-	builder := utils.MySQL().Update("afc.news").
+	builder := utils.PSQL().Update("afc.news").
 		SetMap(map[string]interface{}{
 			"title":     newsParam.Title,
 			"file_name": newsParam.FileName,
@@ -117,7 +117,7 @@ func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
 }
 
 func (s *Store) deleteNews(ctx context.Context, newsParam News) error {
-	builder := utils.MySQL().Delete("afc.news").
+	builder := utils.PSQL().Delete("afc.news").
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

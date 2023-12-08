@@ -27,7 +27,7 @@ func (s *Store) getImages(ctx context.Context) ([]Image, error) {
 
 func (s *Store) getImage(ctx context.Context, imageParam Image) (Image, error) {
 	var imageDB Image
-	builder := utils.MySQL().Select("id", "file_name", "caption").
+	builder := utils.PSQL().Select("id", "file_name", "caption").
 		From("afc.images").
 		Where(sq.Eq{"id": imageParam.ID})
 	sql, args, err := builder.ToSql()
@@ -42,7 +42,7 @@ func (s *Store) getImage(ctx context.Context, imageParam Image) (Image, error) {
 }
 
 func (s *Store) addImage(ctx context.Context, imageParam Image) (Image, error) {
-	builder := utils.MySQL().Insert("afc.images").
+	builder := utils.PSQL().Insert("afc.images").
 		Columns("file_name", "caption").
 		Values(imageParam.FileName, imageParam.Caption)
 	sql, args, err := builder.ToSql()
@@ -69,7 +69,7 @@ func (s *Store) addImage(ctx context.Context, imageParam Image) (Image, error) {
 }
 
 func (s *Store) deleteImage(ctx context.Context, imageParam Image) error {
-	builder := utils.MySQL().Delete("afc.images").
+	builder := utils.PSQL().Delete("afc.images").
 		Where(sq.Eq{"id": imageParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
