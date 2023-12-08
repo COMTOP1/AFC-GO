@@ -29,10 +29,21 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 
 func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 	var usersDB []User
+	caseBuilder := sq.Case().
+		When("role = 'CHAIRPERSON'", "1").
+		When("role = 'CLUB_SECRETARY'", "2").
+		When("role = 'SAFEGUARDING_OFFICER'", "3").
+		When("role = 'TREASURER'", "4").
+		When("role = 'LEAGUE_SECRETARY'", "5").
+		When("role = 'PROGRAMME_EDITOR'", "6")
+	caseSQL, _, err := caseBuilder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build case sql for getUsersContact: %w", err))
+	}
 	builder := sq.Select("id", "name", "email", "role").
 		From("afc.users").
 		Where("role IN ('PROGRAMME_EDITOR', 'LEAGUE_SECRETARY', 'TREASURER', 'SAFEGUARDING_OFFICER', 'CLUB_SECRETARY', 'CHAIRPERSON')").
-		OrderBy("FIELD(role, 'PROGRAMME_EDITOR', 'LEAGUE_SECRETARY', 'TREASURER', 'SAFEGUARDING_OFFICER', 'CLUB_SECRETARY', 'CHAIRPERSON') DESC")
+		OrderBy(caseSQL)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getUsersContact: %w", err))
