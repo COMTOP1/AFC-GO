@@ -71,6 +71,19 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, keyLen int
 		userParam.ID = user.ID
 		return userParam, true, fmt.Errorf("password reset required")
 	}
+	var hashDecode, saltDecode []byte
+	if user.Hash.Valid {
+		hashDecode, err = hex.DecodeString(user.Hash.String)
+		if err != nil {
+			return userParam, false, fmt.Errorf("failed to decode hex of hash verifyUser: %w", err)
+		}
+	}
+	if user.Salt.Valid {
+		saltDecode, err = hex.DecodeString(user.Salt.String)
+		if err != nil {
+			return userParam, false, fmt.Errorf("failed to decode hex of salt verifyUser: %w", err)
+		}
+	}
 	if user.Password.Valid {
 		sha := sha512.New()
 		sha.Write([]byte(userParam.Password.String))
@@ -79,20 +92,15 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, keyLen int
 			if user.ResetPassword {
 				return user, true, fmt.Errorf("password reset required")
 			}
-			var saltString string
-			saltString, err = utils.GenerateRandom(utils.GenerateSalt)
+			var salt string
+			salt, err = utils.GenerateRandom(utils.GenerateSalt)
 			if err != nil {
 				return userParam, false, fmt.Errorf("failed to generate new salt: %w", err)
 			}
-			var salt []byte
-			salt, err = hex.DecodeString(saltString)
-			if err != nil {
-				return userParam, false, fmt.Errorf("failed to hex new salt: %w", err)
-			}
-			hash := utils.HashPass([]byte(userParam.Password.String), salt, iter, keyLen)
+			hash := utils.HashPass([]byte(userParam.Password.String), []byte(salt), iter, keyLen)
 			user.Password = null.NewString("", false)
 			user.Hash = null.StringFrom(hex.EncodeToString(hash))
-			user.Salt = null.StringFrom(hex.EncodeToString(salt))
+			user.Salt = null.StringFrom(hex.EncodeToString([]byte(salt)))
 			_, err = s.EditUser(ctx, user)
 			if err != nil {
 				return userParam, false, fmt.Errorf("failed to update user password security: %w", err)
@@ -101,7 +109,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, keyLen int
 			user.Salt = null.NewString("", false)
 			return user, false, nil
 		}
-	} else if bytes.Equal(utils.HashPass([]byte(userParam.Password.String), []byte(user.Salt.String), iter, keyLen), []byte(user.Hash.String)) {
+	} else if bytes.Equal(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen), hashDecode) {
 		user.Hash = null.NewString("", false)
 		user.Salt = null.NewString("", false)
 		if user.ResetPassword {
@@ -158,7 +166,14 @@ func (s *Store) EditUserPassword(ctx context.Context, userParam User, iter, keyL
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
-	user.Hash = null.StringFrom(string(utils.HashPass([]byte(userParam.Password.String), []byte(user.Salt.String), iter, keyLen)))
+	var saltDecode []byte
+	if user.Salt.Valid {
+		saltDecode, err = hex.DecodeString(user.Salt.String)
+		if err != nil {
+			return fmt.Errorf("failed to decode hex of salt verifyUser: %w", err)
+		}
+	}
+	user.Hash = null.StringFrom(hex.EncodeToString(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen)))
 	user.ResetPassword = false
 	user.Role = userParam.Role
 	err = s.editUser(ctx, user)
