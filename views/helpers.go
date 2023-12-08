@@ -611,6 +611,7 @@ func DBWhatsOnToTemplateFormat(whatsOnsDB []whatson.WhatsOn) []WhatsOnTemplate {
 		whatsOnTemplate.Date = whatsOnDB.Date.Format("2006-01-02 15:04:05")
 		year, month, day := whatsOnDB.DateOfEvent.Date()
 		whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsOnDB.DateOfEvent.Weekday().String()[0:3], day, month.String()[0:3], year)
+		whatsOnTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", whatsOnDB.Date.Weekday().String()[0:3], day, month.String()[0:3], year, whatsOnDB.Date.Format("15:04:05"))
 		whatsOnsTemplate = append(whatsOnsTemplate, whatsOnTemplate)
 	}
 	return whatsOnsTemplate
@@ -623,8 +624,8 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 	if whatsOnDB.Content.Valid {
 		whatsOnTemplate.Content = whatsOnDB.Content.String
 	}
-	whatsOnTemplate.Date = whatsOnDB.Date.Format("2006-01-02 15:04:05")
 	year, month, day := whatsOnDB.DateOfEvent.Date()
+	whatsOnTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", whatsOnDB.Date.Weekday().String()[0:3], day, month.String()[0:3], year, whatsOnDB.Date.Format("15:04:05"))
 	whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsOnDB.DateOfEvent.Weekday().String()[0:3], day, month.String()[0:3], year)
 	whatsOnTemplate.DateOfEventForm = fmt.Sprintf("%02d/%02d/%04d", day, month, year)
 	whatsOnTemplate.IsFileValid = whatsOnDB.FileName.Valid
