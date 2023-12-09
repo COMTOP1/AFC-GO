@@ -149,10 +149,10 @@
                                     <div class="field">
                                         <label class="label" for="programmeSeason">Programme Season</label>
                                         <div class="control has-icons-left select">
-                                            <select form="add" name="programmeSeason" id="programmeSeason">
-                                                <option id="programmeSeason" value="0">No season</option>
+                                            <select name="programmeSeason" id="programmeSeason">
+                                                <option value="0">No season</option>
                                                 {{range .Seasons}}
-                                                    <option id="programmeSeason" value="{{.ID}}">
+                                                    <option value="{{.ID}}">
                                                         {{.Season}}
                                                     </option>
                                                 {{end}}
