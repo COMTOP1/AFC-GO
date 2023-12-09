@@ -33,20 +33,29 @@
                 {{end}}
             {{end}}
         </div>
-        <div class="flexContainer">
-            {{range .WhatsOn}}
-                <div class="listItem" style="display: block; cursor: pointer;"
-                     onclick="location.href='/whatson/{{.ID}}';">
-                    <img data-src="/download?s=w&id={{.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
-                         onerror="this.onerror=null;this.src='/public/AFC.png';"
-                         class="latestImage lazy" src="/public/AFC.png">
-                    <h2 class="latestTitle">{{.Title}}</h2>
-                    <p style="text-align: left; padding: 10px 10px 10px 0;">{{.Date}}<br><br>
-                        Date of Event - {{.DateOfEvent}}
-                    </p>
+        {{if eq (len .WhatsOn) 0}}
+            <div class="flexContainer">
+                <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
+                    <h2 class="title">No articles are available
+                    </h2>
                 </div>
-            {{end}}
-        </div>
+            </div>
+        {{else}}
+            <div class="flexContainer">
+                {{range .WhatsOn}}
+                    <div class="listItem" style="display: block; cursor: pointer;"
+                         onclick="location.href='/whatson/{{.ID}}';">
+                        <img data-src="/download?s=w&id={{.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
+                             onerror="this.onerror=null;this.src='/public/AFC.png';"
+                             class="latestImage lazy" src="/public/AFC.png">
+                        <h2 class="latestTitle">{{.Title}}</h2>
+                        <p style="text-align: left; padding: 10px 10px 10px 0;">{{.Date}}<br><br>
+                            Date of Event - {{.DateOfEvent}}
+                        </p>
+                    </div>
+                {{end}}
+            </div>
+        {{end}}
     </main>
     {{if $priv}}
         {{template "modal" .}}
