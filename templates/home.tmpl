@@ -105,7 +105,8 @@
 {{define "content"}}
     {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
     {{if .Context.Message}}
-        <div class="notification {{.Context.MsgType}}" style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
+        <div class="notification {{.Context.MsgType}}"
+             style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
     {{end}}
     <div class="welcomeBackground">
         <h2 class="welcomeHeader">Welcome</h2>
@@ -146,11 +147,11 @@
                 {{ $i := 0 }}
                 {{ range .Sponsors }}
                     <a href="{{.Website.String}}" target="_blank" class="sponsorImage">
-{{/*                        <div class="sponsorImageCentre">*/}}
-                            <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png" src="/public/AFC.png"
-                                 onerror="this.onerror=null;this.src='/public/AFC.png';"
-                                 class="{{if eq $i 0}}first {{end}}lazy sponsorImage">
-{{/*                        </div>*/}}
+                        {{/*                        <div class="sponsorImageCentre">*/}}
+                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png" src="/public/AFC.png"
+                             onerror="this.onerror=null;this.src='/public/AFC.png';"
+                             class="{{if eq $i 0}}first {{end}}lazy sponsorImage">
+                        {{/*                        </div>*/}}
                     </a>
                     {{ $i = inc $i }}
                 {{end}}
@@ -297,7 +298,7 @@
             let image = document.getElementById('preview');
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     image.src = e.target.result;
                 }
                 reader.readAsDataURL(input.files[0]);
