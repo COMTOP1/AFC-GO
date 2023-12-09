@@ -162,7 +162,7 @@ func (r *Router) loadRoutes() {
 	whatsonID.Match(validMethods, "/edit", r.views.WhatsOnEditFunc, r.views.RequiresLogin, r.views.RequireNotManager)
 	whatsonID.Match(validMethods, "/delete", r.views.WhatsOnDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManager)
 	whatsonID.Match(validMethods, "", r.views.WhatsOnArticleFunc)
-	whatson.Match(validMethods, "/:timePeriod", r.views.WhatsOnTomePeriodFunc)
+	whatson.Match(validMethods, "period/:timePeriod", r.views.WhatsOnTomePeriodFunc)
 	whatson.Match(validMethods, "", r.views.WhatsOnFunc)
 	base.Match(validMethods, "whatsonselect", r.views.WhatsOnSelectFunc)
 

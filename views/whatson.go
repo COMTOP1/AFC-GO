@@ -98,9 +98,9 @@ func (v *Views) WhatsOnSelectFunc(c echo.Context) error {
 
 		switch timePeriod {
 		case "future":
-			return c.Redirect(http.StatusFound, "/whatson/future")
+			return c.Redirect(http.StatusFound, "/whatsonperiod/future")
 		case "past":
-			return c.Redirect(http.StatusFound, "/whatson/past")
+			return c.Redirect(http.StatusFound, "/whatsonperiod/past")
 		default:
 			return c.Redirect(http.StatusFound, "/whatson")
 		}
