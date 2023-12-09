@@ -15,7 +15,7 @@ func (s *Store) getWhatsOn(ctx context.Context) ([]WhatsOn, error) {
 	var whatsOnsDB []WhatsOn
 	builder := sq.Select("id", "title", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
-		OrderBy("id")
+		OrderBy("date_of_event")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getWhatsOn: %w", err))
