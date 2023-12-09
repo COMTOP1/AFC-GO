@@ -5,6 +5,24 @@
         <div class="pageHeaderBanner">
             <h2 class="pageHeader">
                 What's On</h2>
+            <h3 class="secondaryHeader">
+                You are currently viewing {{.TimePeriod}}
+            </h3>
+            <form method="post" action="/whatsonselect">
+                <div class="field">
+                    <label class="label" for="timePeriod">Select which what's on articles you want to see</label>
+                    <div class="control has-icons-left select">
+                        <select name="timePeriod" id="timePeriod">
+                            <option value="all" {{if eq .Selected "all"}}selected{{end}}>All articles</option>
+                            <option value="future" {{if eq .Selected "future"}}selected{{end}}>Future articles</option>
+                            <option value="past" {{if eq .Selected "past"}}selected{{end}}>Past articles</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="button is-info">
+                    Select
+                </button>
+            </form>
             {{if $priv}}
                 <div style="margin: 15px 0 15px 0">
                     <a class="button is-info" onclick="addWhatsOnModal()">Add What's On</a>
@@ -60,7 +78,8 @@
                                 <div class="field">
                                     <label class="label" for="content">Content</label>
                                     <div class="control">
-                                        <textarea class="textarea" placeholder="Content..." rows="10" id="content" name="content"></textarea>
+                                        <textarea class="textarea" placeholder="Content..." rows="10" id="content"
+                                                  name="content"></textarea>
                                     </div>
                                 </div>
                                 <div class="field">
@@ -120,7 +139,7 @@
             let image = document.getElementById('preview');
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     image.src = e.target.result;
                 }
                 reader.readAsDataURL(input.files[0]);
@@ -162,7 +181,7 @@
                 });
             });
             const elements = document.getElementsByClassName("datetimepicker-clear-button");
-            while(elements.length > 0){
+            while (elements.length > 0) {
                 elements[0].parentNode.removeChild(elements[0]);
             }
             document.getElementById("addWhatsOnModal").classList.add("is-active");

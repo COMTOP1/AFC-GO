@@ -21,10 +21,7 @@ import (
 func (v *Views) WhatsOnFunc(c echo.Context) error {
 	c1 := v.getSessionData(c)
 
-	var w1 []whatson.WhatsOn
-	var err error
-
-	w1, err = v.whatsOn.GetWhatsOn(c.Request().Context())
+	whatsOnsDB, err := v.whatsOn.GetWhatsOn(c.Request().Context())
 	if err != nil {
 		return fmt.Errorf("failed to get whatsOn for whatsOn: %w", err)
 	}
@@ -32,18 +29,83 @@ func (v *Views) WhatsOnFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year    int
-		WhatsOn []WhatsOnTemplate
-		User    user.User
-		Context *Context
+		Year       int
+		WhatsOn    []WhatsOnTemplate
+		User       user.User
+		TimePeriod string
+		Selected   string
+		Context    *Context
 	}{
-		Year:    year,
-		WhatsOn: DBWhatsOnToTemplateFormat(w1),
-		User:    c1.User,
-		Context: c1,
+		Year:       year,
+		WhatsOn:    DBWhatsOnToTemplateFormat(whatsOnsDB),
+		User:       c1.User,
+		TimePeriod: "all the what's on articles",
+		Selected:   "all",
+		Context:    c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnTemplate, templates.RegularType)
+}
+
+func (v *Views) WhatsOnTomePeriodFunc(c echo.Context) error {
+	c1 := v.getSessionData(c)
+
+	timePeriod := c.Param("timePeriod")
+
+	var whatsOnsDB []whatson.WhatsOn
+	var err error
+
+	switch timePeriod {
+	case "future":
+		whatsOnsDB, err = v.whatsOn.GetWhatsOnFuture(c.Request().Context())
+		if err != nil {
+			return fmt.Errorf("failed to get whatsOnFuture for whatsOn: %w", err)
+		}
+	case "past":
+		whatsOnsDB, err = v.whatsOn.GetWhatsOnPast(c.Request().Context())
+		if err != nil {
+			return fmt.Errorf("failed to get whatsOnPast for whatsOn: %w", err)
+		}
+	case "all":
+	default:
+		return c.Redirect(http.StatusFound, "/whatson")
+	}
+
+	year, _, _ := time.Now().Date()
+
+	data := struct {
+		Year       int
+		WhatsOn    []WhatsOnTemplate
+		User       user.User
+		TimePeriod string
+		Selected   string
+		Context    *Context
+	}{
+		Year:       year,
+		WhatsOn:    DBWhatsOnToTemplateFormat(whatsOnsDB),
+		User:       c1.User,
+		TimePeriod: fmt.Sprintf("all the %s what's on articles", timePeriod),
+		Selected:   timePeriod,
+		Context:    c1,
+	}
+
+	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnTemplate, templates.RegularType)
+}
+
+func (v *Views) WhatsOnSelectFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		timePeriod := c.FormValue("timePeriod")
+
+		switch timePeriod {
+		case "future":
+			return c.Redirect(http.StatusFound, "/whatson/future")
+		case "past":
+			return c.Redirect(http.StatusFound, "/whatson/past")
+		default:
+			return c.Redirect(http.StatusFound, "/whatson")
+		}
+	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
 }
 
 func (v *Views) WhatsOnArticleFunc(c echo.Context) error {
