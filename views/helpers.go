@@ -315,6 +315,15 @@ func (v *Views) fileUpload(file *multipart.FileHeader) (string, error) {
 	case "application/pdf":
 		fileType = ".pdf"
 		break
+	case "application/msword":
+		fileType = ".docx"
+		break
+	case "application/vnd.ms-powerpoint":
+		fileType = ".pptx"
+		break
+	case "text/plain":
+		fileType = ".txt"
+		break
 	case "image/apng":
 		fileType = ".apng"
 		break
