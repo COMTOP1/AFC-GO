@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	sq "github.com/Masterminds/squirrel"
 	"strings"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/lann/builder"
 )
 
@@ -54,6 +54,7 @@ func (d *selectData) QueryRow() sq.RowScanner {
 	return sq.QueryRowWith(queryRower, d)
 }
 
+//nolint:revive
 func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 	sqlStr, args, err = d.toSqlRaw(false)
 	if err != nil {
@@ -64,126 +65,123 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 	return
 }
 
-func (d *selectData) toSqlRaw(subquery bool) (sqlStr string, args []interface{}, err error) {
+//nolint:revive
+func (d *selectData) toSqlRaw(subQuery bool) (sqlStr string, args []interface{}, err error) {
 	if len(d.Columns) == 0 {
 		err = fmt.Errorf("select statements must have at least one result column")
 		return
 	}
 
-	sql := &bytes.Buffer{}
-
-	//if subquery {
-	//	sql.WriteString("(")
-	//}
+	sql1 := &bytes.Buffer{}
 
 	if len(d.Prefixes) > 0 {
-		args, err = appendToSql(d.Prefixes, sql, " ", args)
+		args, err = appendToSql(d.Prefixes, sql1, " ", args)
 		if err != nil {
 			return
 		}
 
-		sql.WriteString(" ")
+		sql1.WriteString(" ")
 	}
 
-	sql.WriteString("(SELECT ")
+	sql1.WriteString("(SELECT ")
 
 	if len(d.Options) > 0 {
-		sql.WriteString(strings.Join(d.Options, " "))
-		sql.WriteString(" ")
+		sql1.WriteString(strings.Join(d.Options, " "))
+		sql1.WriteString(" ")
 	}
 
 	if len(d.Columns) > 0 {
-		args, err = appendToSql(d.Columns, sql, ", ", args)
+		args, err = appendToSql(d.Columns, sql1, ", ", args)
 		if err != nil {
 			return
 		}
 	}
 
 	if d.From != nil {
-		sql.WriteString(" FROM ")
-		args, err = appendToSql([]sq.Sqlizer{d.From}, sql, "", args)
+		sql1.WriteString(" FROM ")
+		args, err = appendToSql([]sq.Sqlizer{d.From}, sql1, "", args)
 		if err != nil {
 			return
 		}
 	}
 
 	if len(d.Joins) > 0 {
-		sql.WriteString(" ")
-		args, err = appendToSql(d.Joins, sql, " ", args)
+		sql1.WriteString(" ")
+		args, err = appendToSql(d.Joins, sql1, " ", args)
 		if err != nil {
 			return
 		}
 	}
 
 	if len(d.WhereParts) > 0 {
-		sql.WriteString(" WHERE ")
-		args, err = appendToSql(d.WhereParts, sql, " AND ", args)
+		sql1.WriteString(" WHERE ")
+		args, err = appendToSql(d.WhereParts, sql1, " AND ", args)
 		if err != nil {
 			return
 		}
 	}
 
 	if len(d.GroupBys) > 0 {
-		sql.WriteString(" GROUP BY ")
-		sql.WriteString(strings.Join(d.GroupBys, ", "))
+		sql1.WriteString(" GROUP BY ")
+		sql1.WriteString(strings.Join(d.GroupBys, ", "))
 	}
 
 	if len(d.HavingParts) > 0 {
-		sql.WriteString(" HAVING ")
-		args, err = appendToSql(d.HavingParts, sql, " AND ", args)
+		sql1.WriteString(" HAVING ")
+		args, err = appendToSql(d.HavingParts, sql1, " AND ", args)
 		if err != nil {
 			return
 		}
 	}
 
 	if len(d.OrderByParts) > 0 {
-		sql.WriteString(" ORDER BY ")
-		args, err = appendToSql(d.OrderByParts, sql, ", ", args)
+		sql1.WriteString(" ORDER BY ")
+		args, err = appendToSql(d.OrderByParts, sql1, ", ", args)
 		if err != nil {
 			return
 		}
 	}
 
 	if len(d.Limit) > 0 {
-		sql.WriteString(" LIMIT ")
-		sql.WriteString(d.Limit)
+		sql1.WriteString(" LIMIT ")
+		sql1.WriteString(d.Limit)
 	}
 
 	if len(d.Offset) > 0 {
-		sql.WriteString(" OFFSET ")
-		sql.WriteString(d.Offset)
+		sql1.WriteString(" OFFSET ")
+		sql1.WriteString(d.Offset)
 	}
 
 	if len(d.Union) > 0 {
-		sql.WriteString(" UNION ")
-		args, err = appendToSql(d.Union, sql, " UNION ", args)
+		sql1.WriteString(" UNION ")
+		args, err = appendToSql(d.Union, sql1, " UNION ", args)
 		if err != nil {
 			return
 		}
 	}
 
 	if len(d.UnionAll) > 0 {
-		sql.WriteString(") UNION ALL ")
-		args, err = appendToSql(d.UnionAll, sql, ") UNION ALL ", args)
+		sql1.WriteString(") UNION ALL ")
+		args, err = appendToSql(d.UnionAll, sql1, ") UNION ALL ", args)
 		if err != nil {
 			return
 		}
 	}
 
 	if len(d.Suffixes) > 0 {
-		sql.WriteString(" ")
+		sql1.WriteString(" ")
 
-		args, err = appendToSql(d.Suffixes, sql, " ", args)
+		args, err = appendToSql(d.Suffixes, sql1, " ", args)
 		if err != nil {
 			return
 		}
 	}
 
-	if subquery {
-		sql.WriteString(")")
+	if subQuery {
+		sql1.WriteString(")")
 	}
 
-	sqlStr = sql.String()
+	sqlStr = sql1.String()
 	return
 }
 
@@ -220,7 +218,7 @@ func (b SelectBuilder) Exec() (sql.Result, error) {
 	return data.Exec()
 }
 
-// Query builds and Querys the query with the Runner set by RunWith.
+// Query builds and queries the query with the Runner set by RunWith.
 func (b SelectBuilder) Query() (*sql.Rows, error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.Query()
@@ -240,11 +238,14 @@ func (b SelectBuilder) Scan(dest ...interface{}) error {
 // SQL methods
 
 // ToSql builds the query into a SQL string and bound args.
+//
+//nolint:revive
 func (b SelectBuilder) ToSql() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.ToSql()
 }
 
+//nolint:revive
 func (b SelectBuilder) toSqlRaw() (string, []interface{}, error) {
 	data := builder.GetStruct(b).(selectData)
 	return data.toSqlRaw(false)
@@ -252,12 +253,14 @@ func (b SelectBuilder) toSqlRaw() (string, []interface{}, error) {
 
 // MustSql builds the query into a SQL string and bound args.
 // It panics if there are any errors.
+//
+//nolint:revive
 func (b SelectBuilder) MustSql() (string, []interface{}) {
-	sql, args, err := b.ToSql()
+	sql1, args, err := b.ToSql()
 	if err != nil {
 		panic(err)
 	}
-	return sql, args
+	return sql1, args
 }
 
 // Prefix adds an expression to the beginning of the query
@@ -310,10 +313,10 @@ func (b SelectBuilder) From(from string) SelectBuilder {
 	return builder.Set(b, "From", newPart(from)).(SelectBuilder)
 }
 
-// FromSelect sets a subquery into the FROM clause of the query.
+// FromSelect sets a sub-query into the FROM clause of the query.
 func (b SelectBuilder) FromSelect(from SelectBuilder, alias string) SelectBuilder {
 	// Prevent misnumbered parameters in nested selects (#183).
-	from = from.PlaceholderFormat(Question)
+	from = from.PlaceholderFormat(Dollar)
 	return builder.Set(b, "From", sq.Alias(from, alias)).(SelectBuilder)
 }
 
@@ -405,7 +408,7 @@ func (b SelectBuilder) Limit(limit uint64) SelectBuilder {
 	return builder.Set(b, "Limit", fmt.Sprintf("%d", limit)).(SelectBuilder)
 }
 
-// Limit ALL allows to access all records with limit
+// RemoveLimit ALL allows to access all records with limit
 func (b SelectBuilder) RemoveLimit() SelectBuilder {
 	return builder.Delete(b, "Limit").(SelectBuilder)
 }

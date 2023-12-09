@@ -2,8 +2,9 @@ package squirrel
 
 import (
 	"fmt"
-	sq "github.com/Masterminds/squirrel"
 	"io"
+
+	sq "github.com/Masterminds/squirrel"
 )
 
 type part struct {
@@ -15,6 +16,7 @@ func newPart(pred interface{}, args ...interface{}) sq.Sqlizer {
 	return &part{pred, args}
 }
 
+//nolint:revive
 func (p part) ToSql() (sql string, args []interface{}, err error) {
 	switch pred := p.pred.(type) {
 	case nil:
@@ -30,31 +32,32 @@ func (p part) ToSql() (sql string, args []interface{}, err error) {
 	return
 }
 
+//nolint:revive
 func nestedToSql(s sq.Sqlizer) (string, []interface{}, error) {
 	if raw, ok := s.(rawSqlizer); ok {
 		return raw.toSqlRaw()
-	} else {
-		return s.ToSql()
 	}
+	return s.ToSql()
 }
 
+//nolint:revive
 func appendToSql(parts []sq.Sqlizer, w io.Writer, sep string, args []interface{}) ([]interface{}, error) {
 	for i, p := range parts {
-		partSql, partArgs, err := nestedToSql(p)
+		partSQL, partArgs, err := nestedToSql(p)
 		if err != nil {
 			return nil, err
-		} else if len(partSql) == 0 {
+		} else if len(partSQL) == 0 {
 			continue
 		}
 
 		if i > 0 {
-			_, err := io.WriteString(w, sep)
+			_, err = io.WriteString(w, sep)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		_, err = io.WriteString(w, partSql)
+		_, err = io.WriteString(w, partSQL)
 		if err != nil {
 			return nil, err
 		}

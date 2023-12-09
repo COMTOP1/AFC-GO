@@ -2,6 +2,7 @@ package squirrel
 
 import (
 	"fmt"
+
 	sq "github.com/Masterminds/squirrel"
 )
 
@@ -11,6 +12,7 @@ func newWherePart(pred interface{}, args ...interface{}) Sqlizer {
 	return &wherePart{pred: pred, args: args}
 }
 
+//nolint:revive
 func (p wherePart) ToSql() (sql string, args []interface{}, err error) {
 	switch pred := p.pred.(type) {
 	case nil:

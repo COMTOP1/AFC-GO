@@ -41,11 +41,4 @@ func (b StatementBuilderType) Where(pred interface{}, args ...interface{}) State
 }
 
 // StatementBuilder is a parent builder for other builders, e.g. SelectBuilder.
-var StatementBuilder = StatementBuilderType(builder.EmptyBuilder).PlaceholderFormat(Question)
-
-// Select returns a new SelectBuilder, optionally setting some result columns.
-//
-// See SelectBuilder.Columns.
-func Select(columns ...string) SelectBuilder {
-	return StatementBuilder.Select(columns...)
-}
+var StatementBuilder = StatementBuilderType(builder.EmptyBuilder).PlaceholderFormat(Dollar)
