@@ -31,7 +31,7 @@ func (s *Store) getWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
 	var whatsOnsDB []WhatsOn
 	builder := utils.PSQL().Select("id", "title", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
-		Where(sq.GtOrEq{"date_of_event": time.Now().UnixMilli()}).
+		Where(sq.GtOrEq{"date_of_event": time.Now().Format("2006-01-02")}).
 		OrderBy("date_of_event")
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -48,7 +48,7 @@ func (s *Store) getWhatsOnPast(ctx context.Context) ([]WhatsOn, error) {
 	var whatsOnsDB []WhatsOn
 	builder := utils.PSQL().Select("id", "title", "file_name", "content", "date", "date_of_event").
 		From("afc.whatson").
-		Where(sq.Lt{"date_of_event": time.Now().UnixMilli()}).
+		Where(sq.Lt{"date_of_event": time.Now().Format("2006-01-02")}).
 		OrderBy("date_of_event DESC")
 	sql, args, err := builder.ToSql()
 	if err != nil {
