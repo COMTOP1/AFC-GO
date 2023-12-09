@@ -192,7 +192,7 @@ func (v *Views) ProgrammeDeleteFunc(c echo.Context) error {
 			return fmt.Errorf("failed to delete programme for programmeDelete: %w", err)
 		}
 
-		c1.Message = fmt.Sprintf("successfully added \"%s\"", programmeDB.Name)
+		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", programmeDB.Name)
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
