@@ -36,8 +36,8 @@ type (
 		Message string
 		// MsgType is the bulma.io class used to indicate what should be displayed
 		MsgType string
-		// msgViewed is used to clear the message after it has been viewed once
-		msgViewed bool
+		// MsgViewed is used to clear the message after it has been viewed once
+		MsgViewed bool
 		// User is the stored logged-in user
 		User user.User
 	}
@@ -45,7 +45,7 @@ type (
 	InternalContext struct {
 		Message   string
 		MsgType   string
-		msgViewed bool
+		MsgViewed bool
 	}
 
 	ContactUserTemplate struct {
@@ -170,7 +170,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 	if !ok {
 		i = InternalContext{}
 	}
-	if i.msgViewed {
+	if i.MsgViewed {
 		err = v.clearMessagesInSession(eC)
 		if err != nil {
 			log.Printf("failed to clear message for getSessionData")
@@ -181,7 +181,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 		err = v.setMessagesInSession(eC, &Context{
 			Message:   i.Message,
 			MsgType:   i.MsgType,
-			msgViewed: true,
+			MsgViewed: true,
 		})
 		if err != nil {
 			log.Printf("failed to set viewed message for getSessionData")
@@ -244,7 +244,7 @@ func (v *Views) setMessagesInSession(eC echo.Context, c *Context) error {
 	session.Values["internalContext"] = InternalContext{
 		Message:   c.Message,
 		MsgType:   c.MsgType,
-		msgViewed: c.msgViewed,
+		MsgViewed: c.MsgViewed,
 	}
 
 	err = session.Save(eC.Request(), eC.Response())
