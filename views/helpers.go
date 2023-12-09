@@ -346,7 +346,7 @@ func (v *Views) fileUpload(file *multipart.FileHeader) (string, error) {
 		fileType = ".webp"
 		break
 	default:
-		return "", fmt.Errorf("invalid image type: %s", file.Header.Get("content-type"))
+		return "", fmt.Errorf("invalid file type: %s", file.Header.Get("content-type"))
 	}
 
 	fileName = uuid.NewString() + fileType
