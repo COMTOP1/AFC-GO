@@ -10,5 +10,5 @@ func PSQL() sq.StatementBuilderType {
 }
 
 func PSQL1() sq1.StatementBuilderType {
-	return sq1.StatementBuilder.PlaceholderFormat(sq.Dollar)
+	return sq1.StatementBuilder.PlaceholderFormat(sq1.Dollar)
 }
