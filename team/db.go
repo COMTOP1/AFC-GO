@@ -70,18 +70,10 @@ func (s *Store) addTeam(ctx context.Context, teamParam Team) (Team, error) {
 	if err != nil {
 		return Team{}, fmt.Errorf("failed to add team: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return Team{}, fmt.Errorf("failed to add team: %w", err)
 	}
-	if rows < 1 {
-		return Team{}, fmt.Errorf("failed to add team: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return Team{}, fmt.Errorf("failed to add team: %w", err)
-	}
-	teamParam.ID = int(id)
 	return teamParam, nil
 }
 
@@ -113,9 +105,6 @@ func (s *Store) editTeam(ctx context.Context, teamParam Team) (Team, error) {
 	if err != nil {
 		return Team{}, fmt.Errorf("failed to edit team: %w", err)
 	}
-	// if rows < 1 {
-	//	return Team{}, fmt.Errorf("failed to edit team: invalid rows affected: %d, this team may not exist: %d", rows, teamParam.ID)
-	// }
 	return teamParam, nil
 }
 

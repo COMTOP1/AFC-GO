@@ -111,18 +111,10 @@ func (s *Store) addWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn, 
 	if err != nil {
 		return WhatsOn{}, fmt.Errorf("failed to add what's on: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return WhatsOn{}, fmt.Errorf("failed to add what's on: %w", err)
 	}
-	if rows < 1 {
-		return WhatsOn{}, fmt.Errorf("failed to add what's on: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return WhatsOn{}, fmt.Errorf("failed to add what's on: %w", err)
-	}
-	whatsOnParam.ID = int(id)
 	return whatsOnParam, nil
 }
 
@@ -148,9 +140,6 @@ func (s *Store) editWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn,
 	if err != nil {
 		return WhatsOn{}, fmt.Errorf("failed to edit what's on: %w", err)
 	}
-	// if rows < 1 {
-	//	return WhatsOn{}, fmt.Errorf("failed to edit what's on: invalid rows affected: %d, this what's on may not exist: %d", rows, whatsOnParam.ID)
-	// }
 	return whatsOnParam, nil
 }
 

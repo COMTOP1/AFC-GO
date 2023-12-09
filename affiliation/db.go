@@ -69,18 +69,10 @@ func (s *Store) addAffiliation(ctx context.Context, affiliationParam Affiliation
 	if err != nil {
 		return Affiliation{}, fmt.Errorf("failed to add affiliation: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return Affiliation{}, fmt.Errorf("failed to add affiliation: %w", err)
 	}
-	if rows < 1 {
-		return Affiliation{}, fmt.Errorf("failed to add affiliation: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return Affiliation{}, fmt.Errorf("failed to add affiliation: %w", err)
-	}
-	affiliationParam.ID = int(id)
 	return affiliationParam, nil
 }
 

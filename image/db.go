@@ -53,18 +53,10 @@ func (s *Store) addImage(ctx context.Context, imageParam Image) (Image, error) {
 	if err != nil {
 		return Image{}, fmt.Errorf("failed to add image: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return Image{}, fmt.Errorf("failed to add image: %w", err)
 	}
-	if rows < 1 {
-		return Image{}, fmt.Errorf("failed to add image: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return Image{}, fmt.Errorf("failed to add image: %w", err)
-	}
-	imageParam.ID = int(id)
 	return imageParam, nil
 }
 

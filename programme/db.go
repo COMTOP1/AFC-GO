@@ -70,18 +70,10 @@ func (s *Store) addProgramme(ctx context.Context, programmeParam Programme) (Pro
 	if err != nil {
 		return Programme{}, fmt.Errorf("failed to add programme: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return Programme{}, fmt.Errorf("failed to add programme: %w", err)
 	}
-	if rows < 1 {
-		return Programme{}, fmt.Errorf("failed to add programme: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return Programme{}, fmt.Errorf("failed to add programme: %w", err)
-	}
-	programmeParam.ID = int(id)
 	return programmeParam, nil
 }
 
@@ -106,9 +98,6 @@ func (s *Store) editProgramme(ctx context.Context, programmeParam Programme) (Pr
 	if err != nil {
 		return Programme{}, fmt.Errorf("failed to edit programme: %w", err)
 	}
-	// if rows < 1 {
-	//	return Programme{}, fmt.Errorf("failed to edit programme: invalid rows affected: %d, this programme may not exist: %d", rows, programmeParam.ID)
-	// }
 	return programmeParam, nil
 }
 
@@ -170,18 +159,10 @@ func (s *Store) addSeason(ctx context.Context, seasonParam Season) (Season, erro
 	if err != nil {
 		return Season{}, fmt.Errorf("failed to add season: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return Season{}, fmt.Errorf("failed to add season: %w", err)
 	}
-	if rows < 1 {
-		return Season{}, fmt.Errorf("failed to add season: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return Season{}, fmt.Errorf("failed to add season: %w", err)
-	}
-	seasonParam.ID = int(id)
 	return seasonParam, nil
 }
 
@@ -203,9 +184,6 @@ func (s *Store) editSeason(ctx context.Context, seasonParam Season) (Season, err
 	if err != nil {
 		return Season{}, fmt.Errorf("failed to edit season: %w", err)
 	}
-	// if rows < 1 {
-	//	return Season{}, fmt.Errorf("failed to edit season: invalid rows affected: %d, this season may not exist: %d", rows, seasonParam.ID)
-	// }
 	return seasonParam, nil
 }
 

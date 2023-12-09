@@ -71,18 +71,10 @@ func (s *Store) addPlayer(ctx context.Context, playerParam Player) (Player, erro
 	if err != nil {
 		return Player{}, fmt.Errorf("failed to add player: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return Player{}, fmt.Errorf("failed to add player: %w", err)
 	}
-	if rows < 1 {
-		return Player{}, fmt.Errorf("failed to add player: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return Player{}, fmt.Errorf("failed to add player: %w", err)
-	}
-	playerParam.ID = int(id)
 	return playerParam, nil
 }
 

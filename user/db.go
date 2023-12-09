@@ -118,18 +118,10 @@ func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
 	if err != nil {
 		return User{}, fmt.Errorf("failed to add user: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return User{}, fmt.Errorf("failed to add user: %w", err)
 	}
-	if rows < 1 {
-		return User{}, fmt.Errorf("failed to add user: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return User{}, fmt.Errorf("failed to add user: %w", err)
-	}
-	userParam.ID = int(id)
 	return userParam, nil
 }
 
@@ -160,9 +152,6 @@ func (s *Store) editUser(ctx context.Context, userParam User) error {
 	if err != nil {
 		return fmt.Errorf("failed to edit user: %w", err)
 	}
-	// if rows < 1 {
-	//	return User{}, fmt.Errorf("failed to edit user: invalid rows affected: %d, this user may not exist: %d", rows, userParam.ID)
-	// }
 	return nil
 }
 

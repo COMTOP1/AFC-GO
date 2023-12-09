@@ -87,18 +87,10 @@ func (s *Store) addSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, e
 	if err != nil {
 		return Sponsor{}, fmt.Errorf("failed to add sponsor: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return Sponsor{}, fmt.Errorf("failed to add sponsor: %w", err)
 	}
-	if rows < 1 {
-		return Sponsor{}, fmt.Errorf("failed to add sponsor: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return Sponsor{}, fmt.Errorf("failed to add sponsor: %w", err)
-	}
-	seasonParam.ID = int(id)
 	return seasonParam, nil
 }
 
@@ -124,9 +116,6 @@ func (s *Store) editSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, 
 	if err != nil {
 		return Sponsor{}, fmt.Errorf("failed to edit sponsor: %w", err)
 	}
-	// if rows < 1 {
-	//	return Sponsor{}, fmt.Errorf("failed to edit sponsor: invalid rows affected: %d, this sponsor may not exist: %d", rows, seasonParam.ID)
-	// }
 	return seasonParam, nil
 }
 

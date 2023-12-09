@@ -53,18 +53,10 @@ func (s *Store) addDocument(ctx context.Context, documentParam Document) (Docume
 	if err != nil {
 		return Document{}, fmt.Errorf("failed to add document: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return Document{}, fmt.Errorf("failed to add document: %w", err)
 	}
-	if rows < 1 {
-		return Document{}, fmt.Errorf("failed to add document: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return Document{}, fmt.Errorf("failed to add document: %w", err)
-	}
-	documentParam.ID = int(id)
 	return documentParam, nil
 }
 

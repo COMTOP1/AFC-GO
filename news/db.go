@@ -74,18 +74,10 @@ func (s *Store) addNews(ctx context.Context, newsParam News) (News, error) {
 	if err != nil {
 		return News{}, fmt.Errorf("failed to add news: %w", err)
 	}
-	rows, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return News{}, fmt.Errorf("failed to add news: %w", err)
 	}
-	if rows < 1 {
-		return News{}, fmt.Errorf("failed to add news: invalid rows affected: %d", rows)
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return News{}, fmt.Errorf("failed to add news: %w", err)
-	}
-	newsParam.ID = int(id)
 	return newsParam, nil
 }
 
@@ -110,9 +102,6 @@ func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
 	if err != nil {
 		return News{}, fmt.Errorf("failed to edit news: %w", err)
 	}
-	// if rows < 1 {
-	//	return News{}, fmt.Errorf("failed to edit news: invalid rows affected: %d, this news may not exist: %d", rows, newsParam.ID)
-	// }
 	return newsParam, nil
 }
 
