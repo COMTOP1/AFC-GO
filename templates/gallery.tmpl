@@ -152,24 +152,34 @@
                     <a class="button is-info" onclick="addImageModal()">Add Image</a>
                 </div>
                 {{if .Context.Message}}
-                    <div class="notification {{.Context.MsgType}}" style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
+                    <div class="notification {{.Context.MsgType}}"
+                         style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
                 {{end}}
             {{end}}
         </div>
-        <div class="row" style="text-align: center;">
+        {{if eq (len .Images) 0}}
+            <div class="flexContainer">
+                <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
+                    <h2 class="title">No images are available
+                    </h2>
+                </div>
+            </div>
+        {{else}}
+            <div class="row" style="text-align: center;">
                 {{$i1 := 0}}
                 {{range .Images}}
                     {{$i1 = inc $i1}}
-                <div class="column" style="display: inline-block; float: none;">
-                    <img data-src="download?s=g&id={{.ID}}" style="width:100%" src="/public/AFC.png"
-                         onclick="openModal();currentSlide({{$i1}})" class="hover-shadow cursor lazy"
-                         alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
-                    {{if $priv}}
-                        <a class="button is-danger" onclick="deleteImageModal({{.ID}})">Delete</a>
-                    {{end}}
-                </div>
+                    <div class="column" style="display: inline-block; float: none;">
+                        <img data-src="download?s=g&id={{.ID}}" style="width:100%" src="/public/AFC.png"
+                             onclick="openModal();currentSlide({{$i1}})" class="hover-shadow cursor lazy"
+                             alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
+                        {{if $priv}}
+                            <a class="button is-danger" onclick="deleteImageModal({{.ID}})">Delete</a>
+                        {{end}}
+                    </div>
                 {{end}}
-        </div>
+            </div>
+        {{end}}
 
         <div id="myModal" class="imageModal">
             <span class="close cursor" onclick="closeModal()">&times;</span>
@@ -181,7 +191,8 @@
                     <div class="mySlides">
                         <div class="numbertext">{{$i2}} / {{$lenOfImages}}
                         </div>
-                        <img data-src="download?s=g&id={{.ID}}" style="width:100%" class="lazy" src="/public/AFC.png" alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
+                        <img data-src="download?s=g&id={{.ID}}" style="width:100%" class="lazy" src="/public/AFC.png"
+                             alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
                     </div>
                 {{end}}
 
@@ -196,7 +207,8 @@
                 {{range .Images}}
                     {{$i3 = inc $i3}}
                     <div class="column">
-                        <img class="demo cursor lazy" data-src="download?s=g&id={{.ID}}" style="width:100%" src="/public/AFC.png"
+                        <img class="demo cursor lazy" data-src="download?s=g&id={{.ID}}" style="width:100%"
+                             src="/public/AFC.png"
                              onclick="currentSlide({{$i3}})" alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
                     </div>
                 {{end}}
@@ -341,7 +353,7 @@
             let image = document.getElementById('preview');
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     image.src = e.target.result;
                 }
                 reader.readAsDataURL(input.files[0]);

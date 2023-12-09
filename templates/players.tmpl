@@ -12,52 +12,62 @@
                     <a class="button is-info" onclick="addPlayerModal()">Add Player</a>
                 </div>
                 {{if .Context.Message}}
-                    <div class="notification {{.Context.MsgType}}" style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
+                    <div class="notification {{.Context.MsgType}}"
+                         style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
                 {{end}}
             {{end}}
         </div>
-        <table style="align-items: center; display: inline-flex; border-radius: 5px;
+        {{if eq (len .Players) 0}}
+            <div class="flexContainer">
+                <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
+                    <h2 class="title">No players exist
+                    </h2>
+                </div>
+            </div>
+        {{else}}
+            <table style="align-items: center; display: inline-flex; border-radius: 5px;
         box-shadow: 0 .5em 1em -.125em rgba(10, 10, 10, .1), 0 0 0 1px rgba(10, 10, 10, .02);" class="table is-striped">
-            <tr>
-                <th>Name</th>
-                <th>Image</th>
-                <th>Date of birth</th>
-                <th>Captain</th>
-                <th>Team</th>
-                {{if $priv}}
-                    <th>Edit</th>
-                    <th>Delete</th>
-                {{end}}
-            </tr>
-            {{range .Players}}
                 <tr>
-                    <th>{{.Name}}
-                    </th>
-                    {{if ge .Age 18}}
-                        <th><img data-src="download?s=l&id={{.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
-                                 onerror="this.onerror=null;this.src='/public/AFC.png';" src="/public/AFC.png"
-                                 style="max-width: 150px; max-height: 150px;" class="lazy"/></th>
-                    {{else}}
-                        <th></th>
-                    {{end}}
-                    <th>{{.DateOfBirth}}
-                    </th>
-                    <th>{{if .IsCaptain}}Captain{{else}}No{{end}}
-                    </th>
-                    <th>{{if .Team.IsValid}}{{.Team.Name}}{{else}}!TEAM NOT FOUND!{{end}}
-                    </th>
+                    <th>Name</th>
+                    <th>Image</th>
+                    <th>Date of birth</th>
+                    <th>Captain</th>
+                    <th>Team</th>
                     {{if $priv}}
-                        <th>
-                            <a class="button is-warning"
-                               onclick="editPlayerModal({{.ID}}, {{.Name}}, {{.IsFileValid}}, {{.DateOfBirthForm}}, {{.Position}}, {{.IsCaptain}}, {{.Team.ID}})">Edit</a>
-                        </th>
-                        <th>
-                            <a class="button is-danger" onclick="deletePlayerModal({{.ID}}, '{{.Name}}')">Delete</a>
-                        </th>
+                        <th>Edit</th>
+                        <th>Delete</th>
                     {{end}}
                 </tr>
-            {{end}}
-        </table>
+                {{range .Players}}
+                    <tr>
+                        <th>{{.Name}}
+                        </th>
+                        {{if ge .Age 18}}
+                            <th><img data-src="download?s=l&id={{.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
+                                     onerror="this.onerror=null;this.src='/public/AFC.png';" src="/public/AFC.png"
+                                     style="max-width: 150px; max-height: 150px;" class="lazy"/></th>
+                        {{else}}
+                            <th></th>
+                        {{end}}
+                        <th>{{.DateOfBirth}}
+                        </th>
+                        <th>{{if .IsCaptain}}Captain{{else}}No{{end}}
+                        </th>
+                        <th>{{if .Team.IsValid}}{{.Team.Name}}{{else}}!TEAM NOT FOUND!{{end}}
+                        </th>
+                        {{if $priv}}
+                            <th>
+                                <a class="button is-warning"
+                                   onclick="editPlayerModal({{.ID}}, {{.Name}}, {{.IsFileValid}}, {{.DateOfBirthForm}}, {{.Position}}, {{.IsCaptain}}, {{.Team.ID}})">Edit</a>
+                            </th>
+                            <th>
+                                <a class="button is-danger" onclick="deletePlayerModal({{.ID}}, '{{.Name}}')">Delete</a>
+                            </th>
+                        {{end}}
+                    </tr>
+                {{end}}
+            </table>
+        {{end}}
     </main>
     {{if $priv}}
         {{template "modal" .}}
@@ -237,7 +247,8 @@
                                          style="border: 5px; max-height: 200px; max-width: 200px;">
                                     <label class="label" for="removePlayerImage">Remove Player Image</label>
                                     <div class="control">
-                                        <input type="checkbox" id="removePlayerImage" name="removePlayerImage" value="Y">
+                                        <input type="checkbox" id="removePlayerImage" name="removePlayerImage"
+                                               value="Y">
                                     </div>
                                 </div>
                                 <div class="field">
@@ -309,7 +320,7 @@
             let image = document.getElementById('addPreview');
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     image.src = e.target.result;
                 }
                 reader.readAsDataURL(input.files[0]);
@@ -321,7 +332,7 @@
             let image = document.getElementById('editPreview');
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     image.src = e.target.result;
                 }
                 reader.readAsDataURL(input.files[0]);

@@ -11,22 +11,32 @@
                     <a class="button is-info" onclick="addTeamModal()">Add Team</a>
                 </div>
                 {{if .Context.Message}}
-                    <div class="notification {{.Context.MsgType}}" style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
+                    <div class="notification {{.Context.MsgType}}"
+                         style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
                 {{end}}
             {{end}}
         </div>
-        <div class="flexContainer">
-            {{range .Teams}}
-                <div class="listItem" style="text-align: center; width: auto; height: auto;"
-                     style="display: block; cursor: pointer;" onclick="location.href='/team/{{.ID}}';">
-                    <p class="subtitle">
-                        {{.Name}}</p>
-                    {{if $priv}}
-                        <p class="subtitle is-6">{{if .IsActive}}Active{{else}}Inactive{{end}}</p>
-                    {{end}}
+        {{if eq (len .Teams) 0}}
+            <div class="flexContainer">
+                <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
+                    <h2 class="title">No teams are available
+                    </h2>
                 </div>
-            {{end}}
-        </div>
+            </div>
+        {{else}}
+            <div class="flexContainer">
+                {{range .Teams}}
+                    <div class="listItem" style="text-align: center; width: auto; height: auto;"
+                         style="display: block; cursor: pointer;" onclick="location.href='/team/{{.ID}}';">
+                        <p class="subtitle">
+                            {{.Name}}</p>
+                        {{if $priv}}
+                            <p class="subtitle is-6">{{if .IsActive}}Active{{else}}Inactive{{end}}</p>
+                        {{end}}
+                    </div>
+                {{end}}
+            </div>
+        {{end}}
     </main>
     {{if $priv}}
         {{template "modal" .}}
@@ -81,7 +91,8 @@
                                     </div>
                                 </div>
                                 <div class="field">
-                                    <label class="label" for="leagueTable">League Table (url, leave blank if unknown)</label>
+                                    <label class="label" for="leagueTable">League Table (url, leave blank if
+                                        unknown)</label>
                                     <div class="control">
                                         <input
                                                 id="leagueTable"
@@ -213,7 +224,7 @@
             let image = document.getElementById('preview');
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     image.src = e.target.result;
                 }
                 reader.readAsDataURL(input.files[0]);

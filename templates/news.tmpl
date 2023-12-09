@@ -10,23 +10,33 @@
                     <a class="button is-info" onclick="addNewsModal()">Add News</a>
                 </div>
                 {{if .Context.Message}}
-                    <div class="notification {{.Context.MsgType}}" style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
+                    <div class="notification {{.Context.MsgType}}"
+                         style="margin-bottom: 0; text-align: center;">{{.Context.Message}}</div>
                 {{end}}
             {{end}}
         </div>
-        <div class="flexContainer">
-            {{range .News}}
-                <div class="listItem" style="display: block; cursor: pointer;"
-                     onclick="location.href='/news/{{.ID}}';">
-                    <img data-src="/download?s=n&id={{.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
-                         onerror="this.onerror=null;this.src='/public/AFC.png';"
-                         class="latestImage lazy" src="/public/AFC.png">
-                    <h2 class="latestTitle">{{.Title}}</h2>
-                    <p style="text-align: left; padding: 10px 10px 10px 0;">{{.Date}}
-                    </p>
+        {{if eq (len .News) 0}}
+            <div class="flexContainer">
+                <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
+                    <h2 class="title">No articles are available
+                    </h2>
                 </div>
-            {{end}}
-        </div>
+            </div>
+        {{else}}
+            <div class="flexContainer">
+                {{range .News}}
+                    <div class="listItem" style="display: block; cursor: pointer;"
+                         onclick="location.href='/news/{{.ID}}';">
+                        <img data-src="/download?s=n&id={{.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
+                             onerror="this.onerror=null;this.src='/public/AFC.png';"
+                             class="latestImage lazy" src="/public/AFC.png">
+                        <h2 class="latestTitle">{{.Title}}</h2>
+                        <p style="text-align: left; padding: 10px 10px 10px 0;">{{.Date}}
+                        </p>
+                    </div>
+                {{end}}
+            </div>
+        {{end}}
     </main>
     {{if $priv}}
         {{template "modal" .}}
@@ -59,7 +69,8 @@
                                 <div class="field">
                                     <label class="label" for="content">Content</label>
                                     <div class="control">
-                                        <textarea class="textarea" placeholder="Content..." rows="10" id="content" name="content"></textarea>
+                                        <textarea class="textarea" placeholder="Content..." rows="10" id="content"
+                                                  name="content"></textarea>
                                     </div>
                                 </div>
                                 <div class="field">
@@ -109,7 +120,7 @@
             let image = document.getElementById('preview');
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     image.src = e.target.result;
                 }
                 reader.readAsDataURL(input.files[0]);

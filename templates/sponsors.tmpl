@@ -15,29 +15,38 @@
                 {{end}}
             {{end}}
         </div>
-        <div class="flexContainer">
-            {{range .Sponsors}}
-                <div class="listItem" style="display: block; cursor: pointer"
-                        {{if and (not $priv) .Website.Valid}}
-                onclick="location.href='{{.Website.String}}';"{{end}}>
-                    {{if and $priv .Website.Valid}}<a href="{{.Website.String}}">{{end}}
-                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png"
-                             onerror="this.onerror=null;this.src='/public/AFC.png';"
-                             class="latestImage lazy" src="/public/AFC.png">
-                        <h2 class="latestTitle">{{.Name}}</h2>
-                        {{if .Purpose.Valid}}
-                            <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose.String}}
-                            </p>{{end}}
-                        {{if $priv}}
-                        {{if .Website.Valid}}</a>{{end}}
-                <br>
-                <br>
-                <a class="button is-danger" onclick="deleteSponsorModal({{.ID}}, '{{.Name}}')"
-                   style="margin-bottom: 20px">Delete</a>
-                    {{end}}
+        {{if eq (len .Sponsors) 0}}
+            <div class="flexContainer">
+                <div class="listItem" style="text-align: center; width: 85%; height: auto; cursor: pointer;">
+                    <h2 class="title">No sponsors are available
+                    </h2>
                 </div>
-            {{end}}
-        </div>
+            </div>
+        {{else}}
+            <div class="flexContainer">
+                {{range .Sponsors}}
+                    <div class="listItem" style="display: block; cursor: pointer"
+                            {{if and (not $priv) .Website.Valid}}
+                    onclick="location.href='{{.Website.String}}';"{{end}}>
+                        {{if and $priv .Website.Valid}}<a href="{{.Website.String}}">{{end}}
+                            <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png"
+                                 onerror="this.onerror=null;this.src='/public/AFC.png';"
+                                 class="latestImage lazy" src="/public/AFC.png">
+                            <h2 class="latestTitle">{{.Name}}</h2>
+                            {{if .Purpose.Valid}}
+                                <p style="text-align: left; padding: 10px 10px 10px 0; color: #1F1F1F">{{.Purpose.String}}
+                                </p>{{end}}
+                            {{if $priv}}
+                            {{if .Website.Valid}}</a>{{end}}
+                    <br>
+                    <br>
+                    <a class="button is-danger" onclick="deleteSponsorModal({{.ID}}, '{{.Name}}')"
+                       style="margin-bottom: 20px">Delete</a>
+                        {{end}}
+                    </div>
+                {{end}}
+            </div>
+        {{end}}
     </main>
     {{if $priv}}
         {{template "modal" .}}
