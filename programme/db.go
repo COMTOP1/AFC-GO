@@ -3,6 +3,7 @@ package programme
 import (
 	"context"
 	"fmt"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 
@@ -11,10 +12,18 @@ import (
 
 func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {
 	var programmesDB []Programme
-	builder := sq.Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
-		From("afc.programmes").
+	builder2 := utils.PSQL1().
+		Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
+		From("programmes").
+		Where(sq.Lt{"date_of_programme": time.Now().Format("2006-01-02")}).
 		OrderBy("date_of_programme DESC")
-	sql, args, err := builder.ToSql()
+	builder1 := utils.PSQL1().
+		Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
+		From("programmes").
+		Where(sq.GtOrEq{"date_of_programme": time.Now().Format("2006-01-02")}).
+		OrderBy("date_of_programme").
+		UnionAll(builder2)
+	sql, args, err := builder1.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getProgrammes: %w", err))
 	}
@@ -27,11 +36,18 @@ func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {
 
 func (s *Store) getProgrammesSeason(ctx context.Context, seasonParam Season) ([]Programme, error) {
 	var programmesDB []Programme
-	builder := utils.PSQL().Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
-		From("afc.programmes").
-		Where(sq.Eq{"programme_season_id": seasonParam.ID}).
-		OrderBy("name")
-	sql, args, err := builder.ToSql()
+	builder2 := utils.PSQL1().
+		Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
+		From("programmes").
+		Where(sq.And{sq.Eq{"programme_season_id": seasonParam.ID}, sq.Lt{"date_of_programme": time.Now().Format("2006-01-02")}}).
+		OrderBy("date_of_programme DESC")
+	builder1 := utils.PSQL1().
+		Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
+		From("programmes").
+		Where(sq.And{sq.Eq{"programme_season_id": seasonParam.ID}, sq.GtOrEq{"date_of_programme": time.Now().Format("2006-01-02")}}).
+		OrderBy("date_of_programme").
+		UnionAll(builder2)
+	sql, args, err := builder1.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for getProgrammesSeason: %w", err))
 	}
