@@ -23,8 +23,6 @@ const (
 	passwordCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@*()&"
 )
 
-// HashPass hashes a password using a Whirlpool hash.
-// Passwords are presumed to be hashed.
 func HashPass(password, salt []byte, iter, keyLen int) []byte {
 	return pbkdf2.Key(password, salt, iter, keyLen, sha512.New)
 }
