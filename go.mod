@@ -7,7 +7,7 @@ toolchain go1.21.4
 require (
 	github.com/AfterShip/email-verifier v1.3.3
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gorilla/sessions v1.2.2
 	github.com/jmoiron/sqlx v1.3.5
