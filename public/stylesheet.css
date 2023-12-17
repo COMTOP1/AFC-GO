@@ -179,8 +179,8 @@ header h1 {
 
 .sponsorImage {
     width: 350px;
-    max-height: 350px;
-    margin-top: 20px;
+    max-height: 250px;
+    /*margin-top: 20px;*/
     margin-bottom: 20px;
     border-bottom-width: 20px !important;
     border-bottom-style: solid !important;
