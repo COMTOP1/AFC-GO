@@ -27,8 +27,8 @@ func HashPass(password, salt []byte, iter, keyLen int) []byte {
 	return pbkdf2.Key(password, salt, iter, keyLen, sha512.New)
 }
 
-func HashPassScrypt(password, salt []byte) (string, error) {
-	hash, err := scrypt.Key(password, salt, 32768, 16, 2, 64)
+func HashPassScrypt(password, salt []byte, workFactor, blockSize, parallelismFactor, keyLen int) (string, error) {
+	hash, err := scrypt.Key(password, salt, workFactor, blockSize, parallelismFactor, keyLen)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate hash: %w", err)
 	}

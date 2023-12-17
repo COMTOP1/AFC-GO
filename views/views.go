@@ -47,10 +47,13 @@ type (
 
 	// SecurityConfig stores the security configuration
 	SecurityConfig struct {
-		EncryptionKey     string
-		AuthenticationKey string
-		Iterations        int
-		KeyLength         int
+		EncryptionKey           string
+		AuthenticationKey       string
+		Iterations              int
+		ScryptWorkFactor        int
+		ScryptBlockSize         int
+		ScryptParallelismFactor int
+		KeyLength               int
 	}
 
 	// Views encapsulates our view dependencies

@@ -67,6 +67,21 @@ func main() {
 		log.Fatalf("invalid option for iterations: %+v", err)
 	}
 
+	sWorkFactor, err := strconv.Atoi(os.Getenv("SCRYPT_WORK_FACTOR"))
+	if err != nil {
+		log.Fatalf("invalid option for scrypt work factor: %+v", err)
+	}
+
+	sBlockSize, err := strconv.Atoi(os.Getenv("SCRYPT_BLOCK_SIZE"))
+	if err != nil {
+		log.Fatalf("invalid option for scrypt block size: %+v", err)
+	}
+
+	sParallelismFactor, err := strconv.Atoi(os.Getenv("SCRYPT_PARALLELISM_FACTOR"))
+	if err != nil {
+		log.Fatalf("invalid option for scrypt parallelism factor: %+v", err)
+	}
+
 	keyLen, err := strconv.Atoi(os.Getenv("KEY_LENGTH_BYTES"))
 	if err != nil {
 		log.Fatalf("invalid option for key length: %+v", err)
@@ -106,10 +121,13 @@ func main() {
 			Port:     mailPort,
 		},
 		Security: views.SecurityConfig{
-			EncryptionKey:     os.Getenv("ENCRYPTION_KEY"),
-			AuthenticationKey: os.Getenv("AUTHENTICATION_KEY"),
-			Iterations:        iter,
-			KeyLength:         keyLen,
+			EncryptionKey:           os.Getenv("ENCRYPTION_KEY"),
+			AuthenticationKey:       os.Getenv("AUTHENTICATION_KEY"),
+			Iterations:              iter,
+			ScryptWorkFactor:        sWorkFactor,
+			ScryptBlockSize:         sBlockSize,
+			ScryptParallelismFactor: sParallelismFactor,
+			KeyLength:               keyLen,
 		},
 	}
 
