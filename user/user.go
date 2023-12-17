@@ -62,7 +62,7 @@ func (s *Store) GetUser(ctx context.Context, userParam User) (User, error) {
 	return s.getUser(ctx, userParam)
 }
 
-func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, keyLen int) (User, bool, error) {
+func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor, blockSize, parallelismFactor, keyLen int) (User, bool, error) {
 	user, err := s.getUserFull(ctx, userParam)
 	if err != nil {
 		return userParam, false, fmt.Errorf("failed to get user: %w", err)
@@ -97,9 +97,13 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, keyLen int
 			if err != nil {
 				return userParam, false, fmt.Errorf("failed to generate new salt: %w", err)
 			}
-			hash := utils.HashPass([]byte(userParam.Password.String), []byte(salt), iter, keyLen)
+			var hash string
+			hash, err = utils.HashPassScrypt([]byte(userParam.Password.String), []byte(salt), workFactor, blockSize, parallelismFactor, keyLen)
+			if err != nil {
+				return userParam, false, fmt.Errorf("failed to generate password hash: %w", err)
+			}
 			user.Password = null.NewString("", false)
-			user.Hash = null.StringFrom(hex.EncodeToString(hash))
+			user.Hash = null.StringFrom(hash)
 			user.Salt = null.StringFrom(hex.EncodeToString([]byte(salt)))
 			_, err = s.EditUser(ctx, user)
 			if err != nil {
@@ -109,7 +113,32 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, keyLen int
 			user.Salt = null.NewString("", false)
 			return user, false, nil
 		}
+		return userParam, false, fmt.Errorf("invalid credentials")
 	} else if bytes.Equal(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen), hashDecode) {
+		var hash string
+		hash, err = utils.HashPassScrypt([]byte(userParam.Password.String), saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
+		if err != nil {
+			return userParam, false, fmt.Errorf("failed to generate password hash: %w", err)
+		}
+		user.Password = null.NewString("", false)
+		user.Hash = null.StringFrom(hash)
+		user.Salt = null.StringFrom(hex.EncodeToString(saltDecode))
+		_, err = s.EditUser(ctx, user)
+		if err != nil {
+			return userParam, false, fmt.Errorf("failed to update user password security: %w", err)
+		}
+		user.Hash = null.NewString("", false)
+		user.Salt = null.NewString("", false)
+		if user.ResetPassword {
+			return user, true, fmt.Errorf("password reset required")
+		}
+		return user, false, nil
+	}
+	scryptHash, err := utils.HashPassScrypt([]byte(userParam.Password.String), saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
+	if err != nil {
+		return userParam, false, fmt.Errorf("failed to generate password hash verify: %w", err)
+	}
+	if scryptHash == user.Hash.String {
 		user.Hash = null.NewString("", false)
 		user.Salt = null.NewString("", false)
 		if user.ResetPassword {
