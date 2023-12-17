@@ -130,9 +130,12 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
-		hash := utils.HashPass([]byte(password), []byte(salt), v.conf.Security.Iterations, v.conf.Security.KeyLength)
-
-		hashString := string(hash)
+		hash, err := utils.HashPassScrypt([]byte(password), []byte(salt), v.conf.Security.ScryptWorkFactor, v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
+		if err != nil {
+			log.Printf("failed to generate password hash for userAdd: %+v", err)
+			data.Error = fmt.Sprintf("failed to generate password hash for userAdd: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
 
 		var fileName string
 		hasUpload := true
@@ -163,7 +166,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			Role:          formRole,
 			FileName:      null.NewString(fileName, hasUpload),
 			ResetPassword: true,
-			Hash:          null.NewString(hashString, len(hashString) > 0),
+			Hash:          null.StringFrom(hash),
 			Salt:          null.NewString(salt, len(salt) > 0),
 		}
 
