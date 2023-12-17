@@ -22,7 +22,7 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 
 		c1.User.Password = null.StringFrom(oldPassword)
 
-		_, _, err := v.user.VerifyUser(c.Request().Context(), c1.User, v.conf.Security.Iterations, v.conf.Security.KeyLength)
+		_, _, err := v.user.VerifyUser(c.Request().Context(), c1.User, v.conf.Security.Iterations, v.conf.Security.ScryptWorkFactor, v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
 		if err != nil {
 			data.Error = "old password is not correct"
 			return c.JSON(http.StatusOK, data)

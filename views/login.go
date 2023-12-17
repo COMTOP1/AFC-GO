@@ -37,7 +37,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		_ = message
 
 		// Authentication
-		u, resetPw, err := v.user.VerifyUser(c.Request().Context(), u, v.conf.Security.Iterations, v.conf.Security.KeyLength)
+		u, resetPw, err := v.user.VerifyUser(c.Request().Context(), u, v.conf.Security.Iterations, v.conf.Security.ScryptWorkFactor, v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
 		if err != nil {
 			log.Printf("failed login for \"%s\": %v", u.Email, err)
 			err = session.Save(c.Request(), c.Response())
