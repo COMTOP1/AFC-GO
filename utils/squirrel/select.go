@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
@@ -405,7 +406,7 @@ func (b SelectBuilder) OrderBy(orderBys ...string) SelectBuilder {
 
 // Limit sets a LIMIT clause on the query.
 func (b SelectBuilder) Limit(limit uint64) SelectBuilder {
-	return builder.Set(b, "Limit", fmt.Sprintf("%d", limit)).(SelectBuilder)
+	return builder.Set(b, "Limit", strconv.FormatUint(limit, 10)).(SelectBuilder)
 }
 
 // RemoveLimit ALL allows accessing all records with limit
@@ -415,7 +416,7 @@ func (b SelectBuilder) RemoveLimit() SelectBuilder {
 
 // Offset sets a OFFSET clause on the query.
 func (b SelectBuilder) Offset(offset uint64) SelectBuilder {
-	return builder.Set(b, "Offset", fmt.Sprintf("%d", offset)).(SelectBuilder)
+	return builder.Set(b, "Offset", strconv.FormatUint(offset, 10)).(SelectBuilder)
 }
 
 // RemoveOffset removes OFFSET clause.
