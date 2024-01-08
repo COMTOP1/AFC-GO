@@ -9,10 +9,7 @@ import (
 	"io"
 	"log"
 	"math/big"
-	"time"
 
-	role1 "github.com/COMTOP1/AFC-GO/infrastructure/role"
-	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/team"
 )
 
@@ -100,9 +97,6 @@ func (t *Templater) GetEmailTemplate(emailTemplate Template) (*template.Template
 // getFuncMaps returns all the in built functions that templates can use
 func (t *Templater) getFuncMaps() template.FuncMap {
 	return template.FuncMap{
-		"thisYear": func() int {
-			return time.Now().Year()
-		},
 		"add": func(a, b int) int {
 			return a + b
 		},
@@ -114,27 +108,6 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		},
 		"div": func(a, b int) float64 {
 			return float64(a) / float64(b)
-		},
-		"dec": func(a int) int {
-			return a - 1
-		},
-		"even": func(a int) bool {
-			return a%2 == 0
-		},
-		"checkPermission": func(perms []string, r string) bool {
-			r1, err := role.GetRole(r)
-			if err != nil {
-				log.Printf("failed to parse role for checkPermission: %+v", err)
-				return false
-			}
-			m := role1.SufficientPermissionsFor(r1)
-
-			for _, perm := range perms {
-				if m[perm] {
-					return true
-				}
-			}
-			return false
 		},
 		"getTeamName": func(teamID int) string {
 			t1, err := t.Team.GetTeam(context.Background(), team.Team{ID: teamID})
