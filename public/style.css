@@ -153,7 +153,7 @@ p {
 }
 
 .welcomeBackground {
-    background-image: url('images/stock.png');
+    background-image: url('/public/stock.png');
     background-size: cover;
     padding: 10px;
     margin: 0;

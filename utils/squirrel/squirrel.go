@@ -12,13 +12,13 @@ import (
 
 // Sqlizer is the interface that wraps the ToSql method.
 //
-// ToSql returns a SQL representation of the Sqlizer, along with a slice of args
+// ToSql returns an SQL representation of the Sqlizer, along with a slice of args
 // as passed to e.g. database/sql.Exec. It can also return an error.
 type Sqlizer interface {
 	ToSql() (string, []interface{}, error)
 }
 
-// rawSqlizer is expected to do what Sqlizer does, but without finalizing placeholders.
+// rawSqlizer is expected to do what Sqlizer does, but without finalising placeholders.
 // This is useful for nested queries.
 type rawSqlizer interface {
 	toSqlRaw() (string, []interface{}, error)

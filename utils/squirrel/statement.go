@@ -13,7 +13,7 @@ func (b StatementBuilderType) Select(columns ...string) SelectBuilder {
 	return SelectBuilder(b).Columns(columns...)
 }
 
-// Update returns a UpdateBuilder for this StatementBuilderType.
+// Update returns an UpdateBuilder for this StatementBuilderType.
 func (b StatementBuilderType) Update(table string) sq.UpdateBuilder {
 	return sq.UpdateBuilder(b).Table(table)
 }

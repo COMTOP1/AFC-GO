@@ -238,7 +238,7 @@ func (b SelectBuilder) Scan(dest ...interface{}) error {
 
 // SQL methods
 
-// ToSql builds the query into a SQL string and bound args.
+// ToSql builds the query into an SQL string and bound args.
 //
 //nolint:revive
 func (b SelectBuilder) ToSql() (string, []interface{}, error) {
@@ -252,7 +252,7 @@ func (b SelectBuilder) toSqlRaw() (string, []interface{}, error) {
 	return data.toSqlRaw(false)
 }
 
-// MustSql builds the query into a SQL string and bound args.
+// MustSql builds the query into an SQL string and bound args.
 // It panics if there are any errors.
 //
 //nolint:revive
@@ -279,12 +279,12 @@ func (b SelectBuilder) Distinct() SelectBuilder {
 	return b.Options("DISTINCT")
 }
 
-// Options adds select option to the query
+// Options add a select option to the query
 func (b SelectBuilder) Options(options ...string) SelectBuilder {
 	return builder.Extend(b, "Options", options).(SelectBuilder)
 }
 
-// Columns adds result columns to the query.
+// Columns add result columns to the query.
 func (b SelectBuilder) Columns(columns ...string) SelectBuilder {
 	parts := make([]interface{}, 0, len(columns))
 	for _, str := range columns {
@@ -293,16 +293,16 @@ func (b SelectBuilder) Columns(columns ...string) SelectBuilder {
 	return builder.Extend(b, "Columns", parts).(SelectBuilder)
 }
 
-// RemoveColumns remove all columns from query.
+// RemoveColumns remove all columns from the query.
 // Must add a new column with Column or Columns methods, otherwise
-// return a error.
+// return an error.
 func (b SelectBuilder) RemoveColumns() SelectBuilder {
 	return builder.Delete(b, "Columns").(SelectBuilder)
 }
 
 // Column adds a result column to the query.
 // Unlike Columns, Column accepts args which will be bound to placeholders in
-// the columns string, for example:
+// the columns string, for example,
 //
 //	Column("IF(col IN ("+squirrel.Placeholders(3)+"), 1, 0) as col", 1, 2, 3)
 func (b SelectBuilder) Column(column interface{}, args ...interface{}) SelectBuilder {
@@ -341,7 +341,7 @@ func (b SelectBuilder) RightJoin(join string, rest ...interface{}) SelectBuilder
 	return b.JoinClause("RIGHT JOIN "+join, rest...)
 }
 
-// InnerJoin adds a INNER JOIN clause to the query.
+// InnerJoin adds an INNER JOIN clause to the query.
 func (b SelectBuilder) InnerJoin(join string, rest ...interface{}) SelectBuilder {
 	return b.JoinClause("INNER JOIN "+join, rest...)
 }
@@ -360,7 +360,7 @@ func (b SelectBuilder) CrossJoin(join string, rest ...interface{}) SelectBuilder
 // nil OR "" - ignored.
 //
 // string - SQL expression.
-// If the expression has SQL placeholders then a set of arguments must be passed
+// If the expression has SQL placeholders, then a set of arguments must be passed
 // as well, one for each placeholder.
 //
 // map[string]interface{} OR Eq - map of SQL expressions to values. Each key is

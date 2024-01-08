@@ -12,7 +12,7 @@ import (
 )
 
 type (
-	// Mailer is the struct that is used to send mail, can only be used once connected to mailer
+	// Mailer is the struct used to send mail, can only be used once connected to mailer
 	Mailer struct {
 		*mail.SMTPClient
 		Defaults Defaults

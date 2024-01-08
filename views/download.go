@@ -124,7 +124,7 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 				age--
 			}
 			if age < 18 {
-				return nil // Prevent image download if player is under 18
+				return nil // Prevent image download if the player is under 18
 			}
 		}
 		if len(player.FileName.String) == 0 || !player.FileName.Valid {

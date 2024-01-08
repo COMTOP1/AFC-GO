@@ -18,7 +18,7 @@ import (
 // add a cookie to the cookie store for managing authentication
 func (v *Views) LoginFunc(c echo.Context) error {
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
-	// We're ignoring the error here since sometimes the cookies keys change, and then we
+	// We're ignoring the error here since sometimes the cookie keys change, and then we
 	// can overwrite it instead, it does need to stay as it is written to here
 
 	if c.Request().Method == http.MethodPost {

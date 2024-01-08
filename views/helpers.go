@@ -30,7 +30,7 @@ import (
 )
 
 type (
-	// Context is a struct that is applied to the templates.
+	// Context is a struct applied to the templates.
 	Context struct {
 		// Message is used for sending a message back to the user trying to log in, might decide to move later as it may not be needed
 		Message string
