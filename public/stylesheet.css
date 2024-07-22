@@ -27,12 +27,16 @@ body {
     justify-content: center;
 }
 
-.articleBody {
+.articleBody, .articleBodyVertical {
     background-color: white;
     margin: 20px 20px 0 20px;
     padding: 20px;
     display: table;
     width: calc(100% - 40px);
+}
+
+.articleImageVertical {
+    width: calc(100% - 80px);
 }
 
 .is-danger {
@@ -381,6 +385,14 @@ header h1 {
         -webkit-transform: translateX(-50%);
         transform: translateX(-50%);
     }
+
+    .articleBodyVertical {
+        display: table;
+    }
+
+    .articleBody {
+        display: none;
+    }
 }
 
 @media screen and (min-width: 300px) and (max-width: 612px) {
@@ -518,6 +530,14 @@ header h1 {
         -webkit-transform: translateX(-50%);
         transform: translateX(-50%);
     }
+
+    .articleBodyVertical {
+        display: table;
+    }
+
+    .articleBody {
+        display: none;
+    }
 }
 
 @media screen and (min-width: 613px) and (max-width: 1023px) {
@@ -620,6 +640,14 @@ header h1 {
         justify-content: center;
         vertical-align: middle;
         align-items: center;
+    }
+
+    .articleBodyVertical {
+        display: table;
+    }
+
+    .articleBody {
+        display: none;
     }
 }
 
@@ -757,5 +785,9 @@ header h1 {
         text-align: left;
         font-style: normal;
         font-weight: 400;
+    }
+
+    .articleBodyVertical {
+        display: none;
     }
 }

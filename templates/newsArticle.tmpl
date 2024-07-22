@@ -18,6 +18,15 @@
                 {{end}}
             {{end}}
         </div>
+        <div class="articleBodyVertical">
+            <img data-src="/download?s=n&id={{.News.ID}}&r={{randomImgInt}}"
+                 alt="/public/AFC.png" src="/public/AFC.png"
+                 onerror="this.onerror=null;this.src='/public/AFC.png';"
+                 style="width: auto; max-height: 500px;"
+                 class="lazy articleImageVertical"><br><br>
+            <p style="text-align: left; font-size: 18px; white-space: pre-line;">{{.News.Content}}
+            </p>
+        </div>
         <div class="articleBody">
             <div style="float:left; width: 50%;">
                 <p style="text-align: left; font-size: 18px; white-space: pre-line;">{{.News.Content}}
