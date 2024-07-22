@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -114,7 +115,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 		name := c.FormValue("name")
 		if len(name) == 0 {
 			log.Printf("name must contain a value for teamAdd")
-			data.Error = fmt.Sprintf("name must contain a value")
+			data.Error = "name must contain a value"
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -151,7 +152,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 			isActive = true
 		} else if len(tempIsActive) != 0 {
 			log.Printf("failed to parse isActive for teamAdd: %s", tempIsActive)
-			data.Error = fmt.Sprintf("failed to parse isActive for teamAdd: %s", tempIsActive)
+			data.Error = "failed to parse isActive for teamAdd: " + tempIsActive
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -160,7 +161,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 			isActive = true
 		} else if len(tempIsYouth) != 0 {
 			log.Printf("failed to parse isYouth for teamAdd: %s", tempIsYouth)
-			data.Error = fmt.Sprintf("failed to parse isYouth for teamAdd: %s", tempIsYouth)
+			data.Error = "failed to parse isYouth for teamAdd: " + tempIsYouth
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -212,7 +213,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) TeamEditFunc(c echo.Context) error {
@@ -237,7 +238,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 		name := c.FormValue("name")
 		if len(name) == 0 {
 			log.Printf("name must contain a value for teamEdit")
-			data.Error = fmt.Sprintf("name must contain a value")
+			data.Error = "name must contain a value"
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -282,7 +283,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 			teamDB.IsActive = true
 		} else if len(tempIsActive) != 0 {
 			log.Printf("failed to parse isActive for teamEdit: %s", tempIsActive)
-			data.Error = fmt.Sprintf("failed to parse isActive for teamEdit: %s", tempIsActive)
+			data.Error = "failed to parse isActive for teamEdit: " + tempIsActive
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -291,7 +292,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 			teamDB.IsYouth = true
 		} else if len(tempIsYouth) != 0 {
 			log.Printf("failed to parse isYouth for teamEdit: %s", tempIsYouth)
-			data.Error = fmt.Sprintf("failed to parse isYouth for teamEdit: %s", tempIsYouth)
+			data.Error = "failed to parse isYouth for teamEdit: " + tempIsYouth
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -347,7 +348,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 			teamDB.FileName = null.NewString("", false)
 		} else if len(tempRemoveTeamImage) != 0 {
 			log.Printf("failed to parse removeTeamImage for teamEdit: %s", tempRemoveTeamImage)
-			data.Error = fmt.Sprintf("failed to parse removeTeamImage for teamEdit: %s", tempRemoveTeamImage)
+			data.Error = "failed to parse removeTeamImage for teamEdit: " + tempRemoveTeamImage
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -367,7 +368,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) TeamDeleteFunc(c echo.Context) error {
@@ -393,7 +394,7 @@ func (v *Views) TeamDeleteFunc(c echo.Context) error {
 			playerDB.TeamID = 0
 			_, err = v.player.EditPlayer(c.Request().Context(), playerDB)
 			if err != nil {
-				return fmt.Errorf("failed to edit player for teamDelete")
+				return errors.New("failed to edit player for teamDelete")
 			}
 		}
 
@@ -406,7 +407,7 @@ func (v *Views) TeamDeleteFunc(c echo.Context) error {
 			sponsorDB.TeamID = "A"
 			_, err = v.sponsor.EditSponsor(c.Request().Context(), sponsorDB)
 			if err != nil {
-				return fmt.Errorf("failed to edit sponsor for teamDelete")
+				return errors.New("failed to edit sponsor for teamDelete")
 			}
 		}
 
@@ -419,7 +420,7 @@ func (v *Views) TeamDeleteFunc(c echo.Context) error {
 			userDB.TeamID = 0
 			_, err = v.user.EditUser(c.Request().Context(), userDB)
 			if err != nil {
-				return fmt.Errorf("failed to edit user for teamDelete")
+				return errors.New("failed to edit user for teamDelete")
 			}
 		}
 
@@ -444,5 +445,5 @@ func (v *Views) TeamDeleteFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/teams")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }

@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"html"
 	"html/template"
@@ -72,7 +73,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		if len(name) == 0 {
 			log.Println("name must not be empty")
-			data.Error = fmt.Sprintf("name must not be empty")
+			data.Error = "name must not be empty"
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -84,7 +85,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		}
 		if !res.Syntax.Valid {
 			log.Println("failed to parse email for userAdd: syntax is invalid")
-			data.Error = fmt.Sprintf("failed to parse email for userAdd: syntax is invalid")
+			data.Error = "failed to parse email for userAdd: syntax is invalid"
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -233,7 +234,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
@@ -263,7 +264,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		if len(tempName) == 0 {
 			log.Println("name must not be empty")
-			data.Error = fmt.Sprintf("name must not be empty")
+			data.Error = "name must not be empty"
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -277,7 +278,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		}
 		if !res.Syntax.Valid {
 			log.Println("failed to parse email for userEdit: syntax is invalid")
-			data.Error = fmt.Sprintf("failed to parse email for userEdit: syntax is invalid")
+			data.Error = "failed to parse email for userEdit: syntax is invalid"
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -354,7 +355,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 			userDB.FileName = null.NewString("", false)
 		} else if len(tempRemoveUserImage) != 0 {
 			log.Printf("failed to parse removeUserImage for userEdit: %s", tempRemoveUserImage)
-			data.Error = fmt.Sprintf("failed to parse removeUserImage for userEdit: %s", tempRemoveUserImage)
+			data.Error = "failed to parse removeUserImage for userEdit: " + tempRemoveUserImage
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -374,7 +375,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
@@ -412,5 +413,5 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/users")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }

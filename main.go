@@ -139,7 +139,5 @@ func main() {
 	})
 
 	err = router.Start()
-	if err != nil {
-		log.Fatalf("The web server couldn't be started!\n\n%s\n\nExiting!", err)
-	}
+	log.Fatalf("The web server couldn't be started!\n\n%s\n\nExiting!", err)
 }

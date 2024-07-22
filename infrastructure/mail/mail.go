@@ -3,6 +3,7 @@ package mail
 import (
 	"bytes"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -91,7 +92,7 @@ func (m *MailerInit) ConnectMailer() *Mailer {
 // CheckSendable verifies that the email can be sent
 func (m *Mailer) CheckSendable(item Mail) error {
 	if item.To == "" {
-		return fmt.Errorf("no To field is set")
+		return errors.New("no To field is set")
 	}
 	return nil
 }

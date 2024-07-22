@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha512"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -69,7 +70,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 	}
 	if user.ResetPassword == true {
 		userParam.ID = user.ID
-		return userParam, true, fmt.Errorf("password reset required")
+		return userParam, true, errors.New("password reset required")
 	}
 	var hashDecode, saltDecode []byte
 	if user.Hash.Valid {
@@ -90,7 +91,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 		sum := sha.Sum(nil)
 		if bytes.Equal(sum, []byte(user.Password.String)) {
 			if user.ResetPassword {
-				return user, true, fmt.Errorf("password reset required")
+				return user, true, errors.New("password reset required")
 			}
 			var salt string
 			salt, err = utils.GenerateRandom(utils.GenerateSalt)
@@ -113,7 +114,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 			user.Salt = null.NewString("", false)
 			return user, false, nil
 		}
-		return userParam, false, fmt.Errorf("invalid credentials")
+		return userParam, false, errors.New("invalid credentials")
 	} else if bytes.Equal(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen), hashDecode) {
 		var hash string
 		hash, err = utils.HashPassScrypt([]byte(userParam.Password.String), saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
@@ -130,7 +131,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 		user.Hash = null.NewString("", false)
 		user.Salt = null.NewString("", false)
 		if user.ResetPassword {
-			return user, true, fmt.Errorf("password reset required")
+			return user, true, errors.New("password reset required")
 		}
 		return user, false, nil
 	}
@@ -142,11 +143,11 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 		user.Hash = null.NewString("", false)
 		user.Salt = null.NewString("", false)
 		if user.ResetPassword {
-			return user, true, fmt.Errorf("password reset required")
+			return user, true, errors.New("password reset required")
 		}
 		return user, false, nil
 	}
-	return userParam, false, fmt.Errorf("invalid credentials")
+	return userParam, false, errors.New("invalid credentials")
 }
 
 func (s *Store) AddUser(ctx context.Context, userParam User) (User, error) {

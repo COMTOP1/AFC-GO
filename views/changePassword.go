@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -37,7 +38,7 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 
 		errString := minRequirementsMet(password)
 		if len(errString) > 0 {
-			data.Error = fmt.Sprintf("new password doesn't meet the old requirements: %s", errString)
+			data.Error = "new password doesn't meet the old requirements: " + errString
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -59,5 +60,5 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }

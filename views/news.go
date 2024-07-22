@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -125,7 +126,7 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) NewsEditFunc(c echo.Context) error {
@@ -190,7 +191,7 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 			newsDB.FileName = null.NewString("", false)
 		} else if len(tempRemoveNewsImage) != 0 {
 			log.Printf("failed to parse removeNewsImage for newsEdit: %s", tempRemoveNewsImage)
-			data.Error = fmt.Sprintf("failed to parse removeNewsImage for newsEdit: %s", tempRemoveNewsImage)
+			data.Error = "failed to parse removeNewsImage for newsEdit: " + tempRemoveNewsImage
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -210,7 +211,7 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) NewsDeleteFunc(c echo.Context) error {
@@ -248,5 +249,5 @@ func (v *Views) NewsDeleteFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/news")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }

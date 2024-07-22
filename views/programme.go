@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -105,7 +106,7 @@ func (v *Views) ProgrammeSeasonSelectFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/programmes/%d", seasonID))
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) ProgrammeAddFunc(c echo.Context) error {
@@ -165,7 +166,7 @@ func (v *Views) ProgrammeAddFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) ProgrammeDeleteFunc(c echo.Context) error {
@@ -201,7 +202,7 @@ func (v *Views) ProgrammeDeleteFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/programmes")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) ProgrammeSeasonAddFunc(c echo.Context) error {
@@ -232,7 +233,7 @@ func (v *Views) ProgrammeSeasonAddFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) ProgrammeSeasonEditFunc(c echo.Context) error {
@@ -273,7 +274,7 @@ func (v *Views) ProgrammeSeasonEditFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) ProgrammeSeasonDeleteFunc(c echo.Context) error {
@@ -299,7 +300,7 @@ func (v *Views) ProgrammeSeasonDeleteFunc(c echo.Context) error {
 			programmeDB.SeasonID = 0
 			_, err = v.programme.EditProgramme(c.Request().Context(), programmeDB)
 			if err != nil {
-				return fmt.Errorf("failed to edit programme for programmeSeasonDelete")
+				return errors.New("failed to edit programme for programmeSeasonDelete")
 			}
 		}
 
@@ -317,5 +318,5 @@ func (v *Views) ProgrammeSeasonDeleteFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/programmes")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }

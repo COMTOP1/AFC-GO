@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -50,14 +51,14 @@ func (v *Views) RequireNotManager(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		c1 := v.getSessionDataNoMsg(c)
 		if c1 == nil {
-			return fmt.Errorf("failed to get session data")
+			return errors.New("failed to get session data")
 		}
 
 		if c1.User.ID > 0 && c1.User.Role != role.Manager {
 			return next(c)
 		}
 
-		return echo.NewHTTPError(http.StatusForbidden, fmt.Errorf("you are not authorised for accessing this"))
+		return echo.NewHTTPError(http.StatusForbidden, errors.New("you are not authorised for accessing this"))
 	}
 }
 
@@ -65,17 +66,17 @@ func (v *Views) RequireClubSecretaryHigher(next echo.HandlerFunc) echo.HandlerFu
 	return func(c echo.Context) error {
 		c1 := v.getSessionDataNoMsg(c)
 		if c1 == nil {
-			return fmt.Errorf("failed to get session data")
+			return errors.New("failed to get session data")
 		}
 
 		if c1.User.ID <= 0 {
-			return echo.NewHTTPError(http.StatusForbidden, fmt.Errorf("you are not authorised for accessing this"))
+			return echo.NewHTTPError(http.StatusForbidden, errors.New("you are not authorised for accessing this"))
 		}
 
 		if c1.User.Role == role.ClubSecretary || c1.User.Role == role.Chairperson || c1.User.Role == role.Webmaster {
 			return next(c)
 		}
 
-		return echo.NewHTTPError(http.StatusForbidden, fmt.Errorf("you are not authorised for accessing this"))
+		return echo.NewHTTPError(http.StatusForbidden, errors.New("you are not authorised for accessing this"))
 	}
 }

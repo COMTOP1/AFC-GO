@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -105,7 +106,7 @@ func (v *Views) WhatsOnSelectFunc(c echo.Context) error {
 			return c.Redirect(http.StatusFound, "/whatson")
 		}
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) WhatsOnArticleFunc(c echo.Context) error {
@@ -196,7 +197,7 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) WhatsOnEditFunc(c echo.Context) error {
@@ -267,7 +268,7 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 			whatsOnDB.FileName = null.NewString("", false)
 		} else if len(tempRemoveWhatsOnImage) != 0 {
 			log.Printf("failed to parse removeWhatsOnImage for whatsOnEdit: %s", tempRemoveWhatsOnImage)
-			data.Error = fmt.Sprintf("failed to parse removeWhatsOnImage for whatsOnEdit: %s", tempRemoveWhatsOnImage)
+			data.Error = "failed to parse removeWhatsOnImage for whatsOnEdit: " + tempRemoveWhatsOnImage
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -287,7 +288,7 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
@@ -325,5 +326,5 @@ func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/whatson")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }

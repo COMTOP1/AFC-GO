@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -62,7 +63,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		name := c.FormValue("name")
 		if len(name) == 0 {
 			log.Println("name must not be empty")
-			data.Error = fmt.Sprintf("name must not be empty")
+			data.Error = "name must not be empty"
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -94,7 +95,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		diff := time.Now().Compare(parse)
 		if diff != 1 {
 			log.Printf("dateOfBirth date be before today for playerAdd")
-			data.Error = fmt.Sprintf("dateOfBirth date be before today for playerAdd")
+			data.Error = "dateOfBirth date be before today for playerAdd"
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -105,7 +106,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 			isCaptain = true
 		} else if len(tempIsCaptain) != 0 {
 			log.Printf("failed to parse isCaptain for playerAdd: %s", tempIsCaptain)
-			data.Error = fmt.Sprintf("failed to parse isCaptain for playerAdd: %s", tempIsCaptain)
+			data.Error = "failed to parse isCaptain for playerAdd: " + tempIsCaptain
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -146,7 +147,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) PlayerEditFunc(c echo.Context) error {
@@ -200,7 +201,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 		diff := time.Now().Compare(parse)
 		if diff != 1 {
 			log.Printf("dateOfBirth date be before today for playerEdit")
-			data.Error = fmt.Sprintf("dateOfBirth date be before today for playerEdit")
+			data.Error = "dateOfBirth date be before today for playerEdit"
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -211,7 +212,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 			playerDB.IsCaptain = true
 		} else if len(tempIsCaptain) != 0 {
 			log.Printf("failed to parse isCaptain for playerEdit: %s", tempIsCaptain)
-			data.Error = fmt.Sprintf("failed to parse isCaptain for playerEdit: %s", tempIsCaptain)
+			data.Error = "failed to parse isCaptain for playerEdit: " + tempIsCaptain
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -254,7 +255,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 			playerDB.FileName = null.NewString("", false)
 		} else if len(tempRemovePlayerImage) != 0 {
 			log.Printf("failed to parse removePlayerImage for playerEdit: %s", tempRemovePlayerImage)
-			data.Error = fmt.Sprintf("failed to parse removePlayerImage for playerEdit: %s", tempRemovePlayerImage)
+			data.Error = "failed to parse removePlayerImage for playerEdit: " + tempRemovePlayerImage
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -274,7 +275,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }
 
 func (v *Views) PlayerDeleteFunc(c echo.Context) error {
@@ -312,5 +313,5 @@ func (v *Views) PlayerDeleteFunc(c echo.Context) error {
 
 		return c.Redirect(http.StatusFound, "/players")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }

@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -64,7 +65,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 					URL           string `json:"url"`
 				}{
 					ResetPassword: true,
-					URL:           fmt.Sprintf("/reset/%s", url1),
+					URL:           "/reset/" + url1,
 				}
 				return c.JSON(http.StatusOK, data)
 			}
@@ -127,5 +128,5 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		}
 		return c.JSON(http.StatusOK, data)
 	}
-	return fmt.Errorf("failed to parse method")
+	return errors.New("failed to parse method")
 }

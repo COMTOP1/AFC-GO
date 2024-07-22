@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -25,13 +26,13 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 	id, found := v.cache.Get(url)
 	if !found {
-		return fmt.Errorf("failed to get url for reset")
+		return errors.New("failed to get url for reset")
 	}
 
 	originalUser, err := v.user.GetUser(c.Request().Context(), user.User{ID: id.(int)})
 	if err != nil {
 		v.cache.Delete(url)
-		return fmt.Errorf("url is invalid, failed to get user : %w", err)
+		return fmt.Errorf("url is invalid, failed to get user: %w", err)
 	}
 
 	switch c.Request().Method {
@@ -182,7 +183,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 			message.Message = fmt.Sprintf("Reset email sent to: \"%s\"", userDB.Email)
 		} else {
 			message.Message = fmt.Sprintf("No mailer present\nPlease forward the link to this email: %s, reset link: https://%s/reset/%s", userDB.Email, v.conf.DomainName, url)
-			message.Error = fmt.Errorf("no mailer present")
+			message.Error = errors.New("no mailer present")
 			log.Printf("no Mailer present")
 			log.Printf("password reset requested for email: %s by user: %d", userDB.Email, c1.User.ID)
 		}
@@ -190,5 +191,5 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, message)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, fmt.Errorf("invalid method used"))
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
 }

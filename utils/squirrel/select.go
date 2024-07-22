@@ -3,7 +3,7 @@ package squirrel
 import (
 	"bytes"
 	"database/sql"
-	"fmt"
+	"errors"
 	"strconv"
 	"strings"
 
@@ -69,7 +69,7 @@ func (d *selectData) ToSql() (sqlStr string, args []interface{}, err error) {
 //nolint:revive
 func (d *selectData) toSqlRaw(subQuery bool) (sqlStr string, args []interface{}, err error) {
 	if len(d.Columns) == 0 {
-		err = fmt.Errorf("select statements must have at least one result column")
+		err = errors.New("select statements must have at least one result column")
 		return
 	}
 
