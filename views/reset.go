@@ -14,7 +14,6 @@ import (
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/infrastructure/mail"
-	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
 )
@@ -72,15 +71,8 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
-		var roleDB role.Role
-
-		roleDB, err = role.GetRole(originalUser.TempRole)
-		if err != nil {
-			log.Printf("failed to parse role for reset: %+v", err)
-		}
-		originalUser.Role = roleDB
-
-		err = v.user.EditUserPassword(c.Request().Context(), originalUser, v.conf.Security.Iterations, v.conf.Security.KeyLength)
+		err = v.user.EditUserPassword(c.Request().Context(), originalUser, v.conf.Security.ScryptWorkFactor,
+			v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
 		if err != nil {
 			log.Printf("failed to reset password: %+v", err)
 			data.Error = fmt.Sprintf("failed to reset password: %+v", err)
@@ -123,14 +115,6 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 		}
 
 		userDB.ResetPassword = true
-
-		var roleDB role.Role
-
-		roleDB, err = role.GetRole(userDB.TempRole)
-		if err != nil {
-			log.Printf("failed to parse role for reset: %+v", err)
-		}
-		userDB.Role = roleDB
 
 		_, err = v.user.EditUser(c.Request().Context(), userDB)
 		if err != nil {

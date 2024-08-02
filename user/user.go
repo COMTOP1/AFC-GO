@@ -106,7 +106,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 			user.Password = null.NewString("", false)
 			user.Hash = null.StringFrom(hash)
 			user.Salt = null.StringFrom(hex.EncodeToString([]byte(salt)))
-			_, err = s.EditUser(ctx, user)
+			err = s.editUser(ctx, user)
 			if err != nil {
 				return userParam, false, fmt.Errorf("failed to update user password security: %w", err)
 			}
@@ -124,7 +124,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 		user.Password = null.NewString("", false)
 		user.Hash = null.StringFrom(hash)
 		user.Salt = null.StringFrom(hex.EncodeToString(saltDecode))
-		_, err = s.EditUser(ctx, user)
+		err = s.editUser(ctx, user)
 		if err != nil {
 			return userParam, false, fmt.Errorf("failed to update user password security: %w", err)
 		}
@@ -171,10 +171,6 @@ func (s *Store) EditUser(ctx context.Context, userParam User) (User, error) {
 	if userParam.TeamID != userDB.TeamID {
 		userDB.TeamID = userParam.TeamID
 	}
-	userDB.Role, err = role.GetRole(userDB.TempRole)
-	if err != nil {
-		return userParam, fmt.Errorf("failed to parse role for editUser: %w", err)
-	}
 	if userParam.Role != userDB.Role {
 		userDB.Role = userParam.Role
 	}
@@ -191,7 +187,7 @@ func (s *Store) EditUser(ctx context.Context, userParam User) (User, error) {
 	return userParam, nil
 }
 
-func (s *Store) EditUserPassword(ctx context.Context, userParam User, iter, keyLen int) error {
+func (s *Store) EditUserPassword(ctx context.Context, userParam User, workFactor, blockSize, parallelismFactor, keyLen int) error {
 	user, err := s.getUserFull(ctx, userParam)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
@@ -203,7 +199,8 @@ func (s *Store) EditUserPassword(ctx context.Context, userParam User, iter, keyL
 			return fmt.Errorf("failed to decode hex of salt verifyUser: %w", err)
 		}
 	}
-	user.Hash = null.StringFrom(hex.EncodeToString(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen)))
+	scryptHash, err := utils.HashPassScrypt([]byte(userParam.Password.String), saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
+	user.Hash = null.StringFrom(scryptHash)
 	user.ResetPassword = false
 	user.Role = userParam.Role
 	err = s.editUser(ctx, user)

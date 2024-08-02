@@ -11,7 +11,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/guregu/null.v4"
 
-	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/user"
 )
 
@@ -91,13 +90,6 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to clear message: %w", err)
 		}
-
-		u.Role, err = role.GetRole(u.TempRole)
-		if err != nil {
-			return fmt.Errorf("failed to get role for login: %w", err)
-		}
-
-		u.TempRole = ""
 
 		session.Values["user"] = u
 

@@ -7,12 +7,13 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 
+	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/utils"
 )
 
 func (s *Store) getUsers(ctx context.Context) ([]User, error) {
-	var usersDB []User
+	var usersDB, users []User
 	builder := sq.Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
 		From("afc.users").
 		OrderBy("id")
@@ -24,11 +25,21 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
-	return usersDB, nil
+
+	for _, user := range usersDB {
+		user.Role, err = role.GetRole(user.TempRole)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse role: %w", err)
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
-	var usersDB []User
+	var usersDB, users []User
 	caseBuilder := sq.Case().
 		When("role = 'CHAIRPERSON'", "1").
 		When("role = 'CLUB_SECRETARY'", "2").
@@ -52,7 +63,17 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
-	return usersDB, nil
+
+	for _, user := range usersDB {
+		user.Role, err = role.GetRole(user.TempRole)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse role: %w", err)
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) ([]User, error) {
@@ -86,6 +107,11 @@ func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
 	if err != nil {
 		return User{}, fmt.Errorf("failed to get user: %w", err)
 	}
+	userDB.Role, err = role.GetRole(userDB.TempRole)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to parse role: %w", err)
+	}
+	userDB.TempRole = ""
 	return userDB, nil
 }
 
@@ -103,6 +129,11 @@ func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 	if err != nil {
 		return User{}, fmt.Errorf("failed to get user: %w", err)
 	}
+	userDB.Role, err = role.GetRole(userDB.TempRole)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to parse role: %w", err)
+	}
+	userDB.TempRole = ""
 	return userDB, nil
 }
 

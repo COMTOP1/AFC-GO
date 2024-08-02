@@ -152,16 +152,9 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 	if !ok {
 		u = user.User{Authenticated: false}
 	} else {
-		if len(u.TempRole) > 0 {
-			u.Role, err = role.GetRole(u.TempRole)
-			if err != nil {
-				log.Printf("failed to get role for getSessionData: %+v", err)
-			}
-		} else {
-			u.Role, err = role.GetRole(string(u.Role))
-			if err != nil {
-				log.Printf("failed to get role for getSessionData: %+v", err)
-			}
+		_, err = role.GetRole(string(u.Role))
+		if err != nil {
+			log.Printf("failed to get role for getSessionData: %+v", err)
 		}
 	}
 
@@ -217,16 +210,9 @@ func (v *Views) getSessionDataNoMsg(eC echo.Context) *Context {
 	if !ok {
 		u = user.User{Authenticated: false}
 	} else {
-		if len(u.TempRole) > 0 {
-			u.Role, err = role.GetRole(u.TempRole)
-			if err != nil {
-				log.Printf("failed to get role for getSessionData: %+v", err)
-			}
-		} else {
-			u.Role, err = role.GetRole(string(u.Role))
-			if err != nil {
-				log.Printf("failed to get role for getSessionData: %+v", err)
-			}
+		_, err = role.GetRole(string(u.Role))
+		if err != nil {
+			log.Printf("failed to get role for getSessionData: %+v", err)
 		}
 	}
 
@@ -557,11 +543,7 @@ func DBUserToTemplateFormat(userDB user.User) UserTemplate {
 		userTemplate.Phone = userDB.Phone.String
 	}
 	userTemplate.TeamID = userDB.TeamID
-	roleDB, err := role.GetRole(userDB.TempRole)
-	userTemplate.Role = roleDB.String()
-	if err != nil {
-		userTemplate.Role = fmt.Sprintf("failed to get role for users: %+v", err)
-	}
+	userTemplate.Role = userDB.Role.String()
 	if len(userDB.FileName.String) > 0 && userDB.FileName.Valid {
 		userTemplate.IsFileValid = true
 	}
@@ -580,12 +562,8 @@ func DBUsersToTemplateFormat(usersDB []user.User) []UserTemplate {
 			userTemplate.Phone = userDB.Phone.String
 		}
 		userTemplate.TeamID = userDB.TeamID
-		roleDB, err := role.GetRole(userDB.TempRole)
-		userTemplate.Role = roleDB.String()
-		userTemplate.RoleTemplate = strings.ToLower(roleDB.DBString())
-		if err != nil {
-			userTemplate.Role = fmt.Sprintf("failed to get role for users: %+v", err)
-		}
+		userTemplate.Role = userDB.Role.String()
+		userTemplate.RoleTemplate = strings.ToLower(userDB.Role.DBString())
 		if len(userDB.FileName.String) > 0 && userDB.FileName.Valid {
 			userTemplate.IsFileValid = true
 		}
@@ -601,11 +579,7 @@ func DBUsersContactToTemplateFormat(usersDB []user.User) ([]ContactUserTemplate,
 		userContactTemplate.ID = userDB.ID
 		userContactTemplate.Name = userDB.Name
 		userContactTemplate.Email = userDB.Email
-		temp, err := role.GetRole(userDB.TempRole)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse role for contactTemplate: %w", err)
-		}
-		userContactTemplate.Role = temp.String()
+		userContactTemplate.Role = userDB.Role.String()
 		usersContactTemplate = append(usersContactTemplate, userContactTemplate)
 	}
 	return usersContactTemplate, nil

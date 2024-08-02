@@ -44,7 +44,8 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 
 		c1.User.Password = null.StringFrom(password)
 
-		err = v.user.EditUserPassword(c.Request().Context(), c1.User, v.conf.Security.Iterations, v.conf.Security.KeyLength)
+		err = v.user.EditUserPassword(c.Request().Context(), c1.User, v.conf.Security.ScryptWorkFactor,
+			v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
 		if err != nil {
 			log.Printf("failed to change password: %+v", err)
 			data.Error = fmt.Sprintf("failed to change password: %+v", err)
