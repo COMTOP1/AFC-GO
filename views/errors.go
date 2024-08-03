@@ -2,7 +2,9 @@ package views
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -47,4 +49,20 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 
 func (v *Views) Error404(c echo.Context) error {
 	return v.template.RenderTemplate(c.Response().Writer, nil, templates.NotFound404Template, templates.RegularType)
+}
+
+func (v *Views) invalidMethodUsed(c echo.Context) *echo.HTTPError {
+	return &echo.HTTPError{
+		Code:     http.StatusMethodNotAllowed,
+		Message:  "invalid method used",
+		Internal: fmt.Errorf("invalid method used, path: %s, method: %s", c.Path(), c.Request().Method),
+	}
+}
+
+func (v *Views) error(code int, publicMessage string, internalMessage error) *echo.HTTPError {
+	return &echo.HTTPError{
+		Code:     code,
+		Message:  publicMessage,
+		Internal: internalMessage,
+	}
 }
