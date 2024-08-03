@@ -1,7 +1,6 @@
 package views
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -44,20 +43,20 @@ func (v *Views) UploadImageFunc(c echo.Context) error {
 		if c1.User.FileName.Valid {
 			err := os.Remove(filepath.Join(v.conf.FileDir, c1.User.FileName.String))
 			if err != nil {
-				log.Printf("failed to delete image for uploadImage: %+v", err)
+				log.Printf("failed to delete image for uploadImage, user id: %d, error: %+v", c1.User.ID, err)
 			}
 		}
 
 		file, err := c.FormFile("upload")
 		if err != nil {
-			log.Printf("failed to get file for uploadImage: %+v", err)
+			log.Printf("failed to get file for uploadImage, user id: %d, error: %+v", c1.User.ID, err)
 			data.Error = fmt.Sprintf("failed to get file for uploadImage: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 		var fileName string
 		fileName, err = v.fileUpload(file)
 		if err != nil {
-			log.Printf("failed to upload file for uploadImage: %+v", err)
+			log.Printf("failed to upload file for uploadImage, user id: %d, error: %+v", c1.User.ID, err)
 			data.Error = fmt.Sprintf("failed to upload file for uploadImage: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -66,7 +65,7 @@ func (v *Views) UploadImageFunc(c echo.Context) error {
 
 		err = v.user.EditUserImage(c.Request().Context(), c1.User)
 		if err != nil {
-			log.Printf("failed to edit user for uploadImage: %+v", err)
+			log.Printf("failed to edit user for uploadImage, user id: %d, error: %+v", c1.User.ID, err)
 			data.Error = fmt.Sprintf("failed to edit user for uploadImage: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -75,12 +74,12 @@ func (v *Views) UploadImageFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for uploadImage: %+v", err)
+			log.Printf("failed to set data for uploadImage, user id: %d, error: %+v", c1.User.ID, err)
 		}
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 func (v *Views) RemoveImageFunc(c echo.Context) error {
@@ -94,7 +93,7 @@ func (v *Views) RemoveImageFunc(c echo.Context) error {
 		if c1.User.FileName.Valid {
 			err := os.Remove(filepath.Join(v.conf.FileDir, c1.User.FileName.String))
 			if err != nil {
-				log.Printf("failed to delete image for removeImage: %+v", err)
+				log.Printf("failed to delete image for removeImage, user id: %d, error: %+v", c1.User.ID, err)
 			}
 		}
 
@@ -102,7 +101,7 @@ func (v *Views) RemoveImageFunc(c echo.Context) error {
 
 		err := v.user.EditUserImage(c.Request().Context(), c1.User)
 		if err != nil {
-			log.Printf("failed to edit user for removeImage: %+v", err)
+			log.Printf("failed to edit user for removeImage, user id: %d, error: %+v", c1.User.ID, err)
 			data.Error = fmt.Sprintf("failed to edit user for removeImage: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -111,10 +110,10 @@ func (v *Views) RemoveImageFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for removedImage: %+v", err)
+			log.Printf("failed to set data for removedImage, user id: %d, error: %+v", c1.User.ID, err)
 		}
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
