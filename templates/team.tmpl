@@ -24,7 +24,7 @@
                     {{if ne (len .Managers) 0}}
                         <h3 class="secondaryHeader">Team Manager(s)</h3>
                         {{range .Managers}}
-                            {{.}}<br>
+                            {{.Name}} (<a href="mailto:{{.Email}}" style="text-decoration: underline;">{{.Email}}</a>)<br>
                         {{end}}<br>
                     {{end}}
                     <h3 class="secondaryHeader">Team Coach</h3>

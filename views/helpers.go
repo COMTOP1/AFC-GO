@@ -68,6 +68,11 @@ type (
 		IsFileValid bool
 	}
 
+	ManagerTemplate struct {
+		Name  string
+		Email string
+	}
+
 	PlayerTemplate struct {
 		ID              int
 		Name            string
@@ -437,10 +442,14 @@ func DBSponsorsToTemplateFormat(sponsorsDB []sponsor.Sponsor) []SponsorTemplate 
 	return sponsorsTemplate
 }
 
-func DBManagersToTemplateFormat(managersDB []user.User) []string {
-	managersString := make([]string, 0, len(managersDB))
+func DBManagersToTemplateFormat(managersDB []user.User) []ManagerTemplate {
+	managersString := make([]ManagerTemplate, 0, len(managersDB))
 	for _, manager := range managersDB {
-		managersString = append(managersString, manager.Name)
+		m := ManagerTemplate{
+			Name:  manager.Name,
+			Email: manager.Email,
+		}
+		managersString = append(managersString, m)
 	}
 	return managersString
 }

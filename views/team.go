@@ -92,7 +92,7 @@ func (v *Views) TeamFunc(c echo.Context) error {
 	data := struct {
 		Year     int
 		Team     team.Team
-		Managers []string
+		Managers []ManagerTemplate
 		Sponsors []SponsorTemplate
 		Players  []PlayerTemplate
 		User     user.User
