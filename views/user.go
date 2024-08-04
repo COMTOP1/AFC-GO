@@ -1,7 +1,6 @@
 package views
 
 import (
-	"errors"
 	"fmt"
 	"html"
 	"html/template"
@@ -79,26 +78,26 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		res, err := verifier.Verify(email)
 		if err != nil {
-			log.Printf("failed to parse email for userAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to parse email for userAdd: %+v", err)
+			log.Printf("failed to parse email for user add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to parse email for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 		if !res.Syntax.Valid {
-			log.Println("failed to parse email for userAdd: syntax is invalid")
-			data.Error = "failed to parse email for userAdd: syntax is invalid"
+			log.Println("failed to parse email for user add, error: syntax is invalid")
+			data.Error = "failed to parse email for user add: syntax is invalid"
 			return c.JSON(http.StatusOK, data)
 		}
 
 		formRole, err := role.GetRole(c.FormValue("role"))
 		if err != nil {
-			log.Printf("failed to get role for userAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to get role for userAdd: %+v", err)
+			log.Printf("failed to get role for user add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to get role for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		teamID, err := strconv.Atoi(c.FormValue("userTeam"))
 		if err != nil {
-			log.Printf("failed to get teamID for userAdd: %+v, proceeding with no team", err)
+			log.Printf("failed to get teamID for user add, error: %+v, proceeding with no team", err)
 			teamID = 0
 		}
 		if teamID < 0 {
@@ -109,8 +108,8 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		if formRole.String() == role.Manager.String() {
 			_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
 			if err != nil {
-				log.Printf("failed to get team for userAdd: %+v, id: %d", err, teamID)
-				data.Error = fmt.Sprintf("failed to get team for userAdd: %+v, id: %d", err, teamID)
+				log.Printf("failed to get team for user add, team id: %d, error: %+v", teamID, err)
+				data.Error = fmt.Sprintf("failed to get team for user add, team id: %d: %+v", teamID, err)
 				return c.JSON(http.StatusOK, data)
 			}
 		} else {
@@ -119,22 +118,22 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		password, err := utils.GenerateRandom(utils.GeneratePassword)
 		if err != nil {
-			log.Printf("failed to generate password for userAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to generate password for userAdd: %+v", err)
+			log.Printf("failed to generate password for user add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to generate password for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		salt, err := utils.GenerateRandom(utils.GenerateSalt)
 		if err != nil {
-			log.Printf("failed to generate salt for userAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to generate salt for userAdd: %+v", err)
+			log.Printf("failed to generate salt for user add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to generate salt for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		hash, err := utils.HashPassScrypt([]byte(password), []byte(salt), v.conf.Security.ScryptWorkFactor, v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
 		if err != nil {
-			log.Printf("failed to generate password hash for userAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to generate password hash for userAdd: %+v", err)
+			log.Printf("failed to generate password hash for user add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to generate password hash for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -144,8 +143,8 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for userAdd: %+v", err)
-				data.Error = fmt.Sprintf("failed to get file for userAdd: %+v", err)
+				log.Printf("failed to get file for user add, error: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for user add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			hasUpload = false
@@ -153,8 +152,8 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		if hasUpload {
 			fileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for userAdd: %+v", err)
-				data.Error = fmt.Sprintf("failed to upload file for userAdd: %+v", err)
+				log.Printf("failed to upload file for user add, error: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for user add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 		}
@@ -173,8 +172,8 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		_, err = v.user.AddUser(c.Request().Context(), u)
 		if err != nil {
-			log.Printf("failed to add user for userAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to add user for userAdd: %+v", err)
+			log.Printf("failed to add user for user add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to add user for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -186,7 +185,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			if err != nil {
 				c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - no mailer present. Please send the username and password to this email: %s, password: %s", email, password))
 				c1.MsgType = "is-warning"
-				log.Printf("failed to get email for userAdd: %+v", err)
+				log.Printf("failed to get email for user add, error: %+v", err)
 				log.Println("proceeding")
 			} else {
 
@@ -212,7 +211,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 				if err != nil {
 					c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s", email, password))
 					c1.MsgType = "is-warning"
-					log.Printf("failed to send email for userAdd: %+v", err)
+					log.Printf("failed to send email for user add, error: %+v", err)
 					log.Println("proceeding")
 				} else {
 					c1.Message = fmt.Sprintf("successfully created user, sent signup email to: \"%s\"", email)
@@ -234,7 +233,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
@@ -243,11 +242,12 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		userID, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			return fmt.Errorf("failed to parse id for userEdit: %w", err)
+			return fmt.Errorf("failed to parse id for user edit, error: %w", err)
 		}
+
 		userDB, err := v.user.GetUser(c.Request().Context(), user.User{ID: userID})
 		if err != nil {
-			return fmt.Errorf("failed to get user for userEdit: %w", err)
+			return fmt.Errorf("failed to get user for user edit, user id: %d, error: %w", userID, err)
 		}
 
 		verifier := emailverifier.NewVerifier()
@@ -272,13 +272,13 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		res, err := verifier.Verify(tempEmail)
 		if err != nil {
-			log.Printf("failed to parse email for userEdit: %+v", err)
-			data.Error = fmt.Sprintf("failed to parse email for userEdit: %+v", err)
+			log.Printf("failed to parse email for user edit, user id: %d, error: %+v", userID, err)
+			data.Error = fmt.Sprintf("failed to parse email for user edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 		if !res.Syntax.Valid {
-			log.Println("failed to parse email for userEdit: syntax is invalid")
-			data.Error = "failed to parse email for userEdit: syntax is invalid"
+			log.Println("failed to parse email for user edit: syntax is invalid")
+			data.Error = "failed to parse email for user edit: syntax is invalid"
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -286,8 +286,8 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		formRole, err := role.GetRole(c.FormValue("role"))
 		if err != nil {
-			log.Printf("failed to get role for userEdit: %+v", err)
-			data.Error = fmt.Sprintf("failed to get role for userEdit: %+v", err)
+			log.Printf("failed to get role for user edit, user id: %d, error: %+v", userID, err)
+			data.Error = fmt.Sprintf("failed to get role for user edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -295,7 +295,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		teamID, err := strconv.Atoi(c.FormValue("userTeam"))
 		if err != nil {
-			log.Printf("failed to get teamID for userEdit: %+v, proceeding with no team", err)
+			log.Printf("failed to get teamID for user edit, user id: %d, error: %+v, proceeding with no team", userID, err)
 			teamID = 0
 		}
 		if teamID < 0 {
@@ -306,8 +306,8 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		if formRole.String() == role.Manager.String() {
 			_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
 			if err != nil {
-				log.Printf("failed to get team for userEdit: %+v, id: %d", err, teamID)
-				data.Error = fmt.Sprintf("failed to get team for userEdit: %+v, id: %d", err, teamID)
+				log.Printf("failed to get team for user edit, user id: %d, team id: %d, error: %+v", userID, teamID, err)
+				data.Error = fmt.Sprintf("failed to get team for user edit, team id: %d: %+v", teamID, err)
 				return c.JSON(http.StatusOK, data)
 			}
 		} else {
@@ -321,8 +321,8 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for userEdit: %+v", err)
-				data.Error = fmt.Sprintf("failed to get file for userEdit: %+v", err)
+				log.Printf("failed to get file for user edit, user id: %d, error: %+v", userID, err)
+				data.Error = fmt.Sprintf("failed to get file for user edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			hasUpload = false
@@ -331,14 +331,14 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 			var tempFileName string
 			tempFileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for userEdit: %+v", err)
-				data.Error = fmt.Sprintf("failed to upload file for userEdit: %+v", err)
+				log.Printf("failed to upload file for user edit, user id: %d, error: %+v", userID, err)
+				data.Error = fmt.Sprintf("failed to upload file for user edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if userDB.FileName.Valid {
 				err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
 				if err != nil {
-					log.Printf("failed to delete old image for userEdit: %+v", err)
+					log.Printf("failed to delete old image for user edit, user id: %d, error: %+v", userID, err)
 				}
 			}
 			userDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
@@ -349,20 +349,20 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 			if userDB.FileName.Valid {
 				err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
 				if err != nil {
-					log.Printf("failed to delete image for userEdit: %+v", err)
+					log.Printf("failed to delete image for user edit, user id: %d, error: %+v", userID, err)
 				}
 			}
 			userDB.FileName = null.NewString("", false)
 		} else if len(tempRemoveUserImage) != 0 {
-			log.Printf("failed to parse removeUserImage for userEdit: %s", tempRemoveUserImage)
-			data.Error = "failed to parse removeUserImage for userEdit: " + tempRemoveUserImage
+			log.Printf("failed to parse removeUserImage for user edit, user id: %d, error: %s", userID, tempRemoveUserImage)
+			data.Error = "failed to parse removeUserImage for user edit: " + tempRemoveUserImage
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.user.EditUser(c.Request().Context(), userDB)
 		if err != nil {
-			log.Printf("failed to edit user for userEdit: %+v", err)
-			data.Error = fmt.Sprintf("failed to edit user for userEdit: %+v", err)
+			log.Printf("failed to edit user for user edit, user id: %d, error: %+v", userID, err)
+			data.Error = fmt.Sprintf("failed to edit user for user edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -370,12 +370,12 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for userEdit: %+v", err)
+			log.Printf("failed to set data for user edit, user id: %d, error: %+v", userID, err)
 		}
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
@@ -384,34 +384,34 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			return fmt.Errorf("failed to get id for userDelete: %w", err)
+			return fmt.Errorf("failed to get id for user delete, error: %w", err)
 		}
 
 		userDB, err := v.user.GetUser(c.Request().Context(), user.User{ID: id})
 		if err != nil {
-			return fmt.Errorf("failed to get user for userDelete: %w", err)
+			return fmt.Errorf("failed to get user for user delete, user id: %d, error: %w", id, err)
 		}
 
 		if userDB.FileName.Valid {
 			err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
 			if err != nil {
-				log.Printf("failed to delete user image for userDelete: %+v", err)
+				log.Printf("failed to delete user image for user delete, user id: %d, error: %+v", id, err)
 			}
 		}
 
 		err = v.user.DeleteUser(c.Request().Context(), userDB)
 		if err != nil {
-			return fmt.Errorf("failed to delete user for userDelete: %w", err)
+			return fmt.Errorf("failed to delete user for user delete, user id: %d, error: %w", id, err)
 		}
 
 		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", userDB.Name)
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for userDelete: %+v", err)
+			log.Printf("failed to set data for user delete, user id: %d, error: %+v", id, err)
 		}
 
 		return c.Redirect(http.StatusFound, "/users")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
