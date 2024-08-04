@@ -78,7 +78,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
 		if err != nil {
 			log.Printf("failed to get team for player add, team id: %d, error: %+v", teamID, err)
-			data.Error = fmt.Sprintf("failed to get team for player add, team id: %d, error: %+v", teamID, err)
+			data.Error = fmt.Sprintf("failed to get team for player add, team id: %d: %+v", teamID, err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -87,7 +87,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		parse, err := time.Parse("02/01/2006", dateOfBirth)
 		if err != nil {
 			log.Printf("failed to parse dateOfBirth for player add, error: %+v", err)
-			data.Error = fmt.Sprintf("failed to parse dateOfBirth for player add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to parse dateOfBirth for player add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -116,7 +116,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
 				log.Printf("failed to get file for player add, error: %+v", err)
-				data.Error = fmt.Sprintf("failed to get file for player add, error: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for player add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			hasUpload = false
@@ -125,7 +125,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 			fileName, err = v.fileUpload(file)
 			if err != nil {
 				log.Printf("failed to upload file for player add, error: %+v", err)
-				data.Error = fmt.Sprintf("failed to upload file for player add, error: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for player add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 		}
@@ -133,7 +133,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		_, err = v.player.AddPlayer(c.Request().Context(), player.Player{Name: name, FileName: null.NewString(fileName, len(fileName) > 0), DateOfBirth: null.TimeFrom(parse), Position: null.NewString(position, len(position) > 0), IsCaptain: isCaptain, TeamID: teamID})
 		if err != nil {
 			log.Printf("failed to add player for player add, error: %+v", err)
-			data.Error = fmt.Sprintf("failed to add player for player add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to add player for player add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -183,7 +183,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 		_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: tempTeamID})
 		if err != nil {
 			log.Printf("failed to get team for player edit, player id: %d, team id: %d, error: %+v", playerID, tempTeamID, err)
-			data.Error = fmt.Sprintf("failed to get team for player edit, team id: %d, error: %+v", tempTeamID, err)
+			data.Error = fmt.Sprintf("failed to get team for player edit, team id: %d: %+v", tempTeamID, err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -194,7 +194,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 		parse, err := time.Parse("02/01/2006", dateOfBirth)
 		if err != nil {
 			log.Printf("failed to parse dateOfBirth for player edit, player id: %d, error: %+v", playerID, err)
-			data.Error = fmt.Sprintf("failed to parse dateOfBirth for player edit, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to parse dateOfBirth for player edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -222,7 +222,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
 				log.Printf("failed to get file for player edit, player id: %d, error: %+v", playerID, err)
-				data.Error = fmt.Sprintf("failed to get file for player edit, error: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for player edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			hasUpload = false
@@ -232,7 +232,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 			tempFileName, err = v.fileUpload(file)
 			if err != nil {
 				log.Printf("failed to upload file for player edit, player id: %d, error: %+v", playerID, err)
-				data.Error = fmt.Sprintf("failed to upload file for player edit, error: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for player edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if playerDB.FileName.Valid {
@@ -255,14 +255,14 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 			playerDB.FileName = null.NewString("", false)
 		} else if len(tempRemovePlayerImage) != 0 {
 			log.Printf("failed to parse removePlayerImage for player edit, player id: %d, error: %s", playerID, tempRemovePlayerImage)
-			data.Error = "failed to parse removePlayerImage for player edit, error: " + tempRemovePlayerImage
+			data.Error = "failed to parse removePlayerImage for player edit: " + tempRemovePlayerImage
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.player.EditPlayer(c.Request().Context(), playerDB)
 		if err != nil {
 			log.Printf("failed to edit player for player edit, player id: %d, error: %+v", playerID, err)
-			data.Error = fmt.Sprintf("failed to edit player for player edit, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to edit player for player edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
