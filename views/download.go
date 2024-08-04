@@ -40,7 +40,7 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 
 	if len(source) != 1 {
 		return v.error(http.StatusBadRequest,
-			fmt.Sprintf("download failed to get source: source format does not conform: %s", source),
+			"download failed to get source: source format does not conform: "+source,
 			fmt.Errorf("download failed to get source: source format does not conform: \"%s\", url: \"%s\"",
 				source, c.Request().URL.String()))
 	}
