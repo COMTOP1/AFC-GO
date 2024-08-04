@@ -17,7 +17,7 @@ func (s *Store) getSponsors(ctx context.Context) ([]Sponsor, error) {
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getSponsors: %w", err))
+		panic(fmt.Errorf("failed to build sql for get sponsors: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &sponsorsDB, sql, args...)
 	if err != nil {
@@ -33,7 +33,7 @@ func (s *Store) getSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getSponsors: %w", err))
+		panic(fmt.Errorf("failed to build sql for get sponsors: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &sponsorsDB, sql, args...)
 	if err != nil {
@@ -50,7 +50,7 @@ func (s *Store) getSponsorsTeam(ctx context.Context, teamParam team.Team) ([]Spo
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getSponsorsSeason: %w", err))
+		panic(fmt.Errorf("failed to build sql for get sponsors team: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &sponsorsDB, sql, args...)
 	if err != nil {
@@ -59,14 +59,14 @@ func (s *Store) getSponsorsTeam(ctx context.Context, teamParam team.Team) ([]Spo
 	return sponsorsDB, nil
 }
 
-func (s *Store) getSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, error) {
+func (s *Store) getSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, error) {
 	var seasonDB Sponsor
 	builder := utils.PSQL().Select("id", "name", "website", "file_name", "purpose", "team_id").
 		From("afc.sponsors").
-		Where(sq.Eq{"id": seasonParam.ID})
+		Where(sq.Eq{"id": sponsorParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getSponsor: %w", err))
+		panic(fmt.Errorf("failed to build sql for get sponsor: %w", err))
 	}
 	err = s.db.GetContext(ctx, &seasonDB, sql, args...)
 	if err != nil {
@@ -75,13 +75,13 @@ func (s *Store) getSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, e
 	return seasonDB, nil
 }
 
-func (s *Store) addSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, error) {
+func (s *Store) addSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, error) {
 	builder := utils.PSQL().Insert("afc.sponsors").
 		Columns("name", "website", "file_name", "purpose", "team_id").
-		Values(seasonParam.Name, seasonParam.Website, seasonParam.FileName, seasonParam.Purpose, seasonParam.TeamID)
+		Values(sponsorParam.Name, sponsorParam.Website, sponsorParam.FileName, sponsorParam.Purpose, sponsorParam.TeamID)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addSponsor: %w", err))
+		panic(fmt.Errorf("failed to build sql for add sponsor: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -91,22 +91,22 @@ func (s *Store) addSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, e
 	if err != nil {
 		return Sponsor{}, fmt.Errorf("failed to add sponsor: %w", err)
 	}
-	return seasonParam, nil
+	return sponsorParam, nil
 }
 
-func (s *Store) editSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, error) {
+func (s *Store) editSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, error) {
 	builder := utils.PSQL().Update("afc.sponsors").
 		SetMap(map[string]interface{}{
-			"name":      seasonParam.Name,
-			"website":   seasonParam.Website,
-			"file_name": seasonParam.FileName,
-			"purpose":   seasonParam.Purpose,
-			"team_id":   seasonParam.TeamID,
+			"name":      sponsorParam.Name,
+			"website":   sponsorParam.Website,
+			"file_name": sponsorParam.FileName,
+			"purpose":   sponsorParam.Purpose,
+			"team_id":   sponsorParam.TeamID,
 		}).
-		Where(sq.Eq{"id": seasonParam.ID})
+		Where(sq.Eq{"id": sponsorParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for editSponsor: %w", err))
+		panic(fmt.Errorf("failed to build sql for edit sponsor: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -116,15 +116,15 @@ func (s *Store) editSponsor(ctx context.Context, seasonParam Sponsor) (Sponsor, 
 	if err != nil {
 		return Sponsor{}, fmt.Errorf("failed to edit sponsor: %w", err)
 	}
-	return seasonParam, nil
+	return sponsorParam, nil
 }
 
-func (s *Store) deleteSponsor(ctx context.Context, seasonParam Sponsor) error {
+func (s *Store) deleteSponsor(ctx context.Context, sponsorParam Sponsor) error {
 	builder := utils.PSQL().Delete("afc.sponsors").
-		Where(sq.Eq{"id": seasonParam.ID})
+		Where(sq.Eq{"id": sponsorParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteSponsor: %w", err))
+		panic(fmt.Errorf("failed to build sql for delete sponsor: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
