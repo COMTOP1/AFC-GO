@@ -16,7 +16,7 @@ func (s *Store) getDocuments(ctx context.Context) ([]Document, error) {
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getDocuments: %w", err))
+		panic(fmt.Errorf("failed to build sql for get documents: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &documentsDB, sql, args...)
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *Store) getDocument(ctx context.Context, documentParam Document) (Docume
 		Where(sq.Eq{"id": documentParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getDocument: %w", err))
+		panic(fmt.Errorf("failed to build sql for get document: %w", err))
 	}
 	err = s.db.GetContext(ctx, &documentDB, sql, args...)
 	if err != nil {
@@ -47,7 +47,7 @@ func (s *Store) addDocument(ctx context.Context, documentParam Document) (Docume
 		Values(documentParam.Name, documentParam.FileName)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addDocument: %w", err))
+		panic(fmt.Errorf("failed to build sql for add document: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *Store) deleteDocument(ctx context.Context, d Document) error {
 		Where(sq.Eq{"id": d.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteDocument: %w", err))
+		panic(fmt.Errorf("failed to build sql for delete document: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {

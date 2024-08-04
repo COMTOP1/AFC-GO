@@ -17,7 +17,7 @@ func (s *Store) getNews(ctx context.Context) ([]News, error) {
 		OrderBy("date DESC")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getNews: %w", err))
+		panic(fmt.Errorf("failed to build sql for get news: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &newsDB, sql, args...)
 	if err != nil {
@@ -34,7 +34,7 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getNewsLatest: %w", err))
+		panic(fmt.Errorf("failed to build sql for get news latest: %w", err))
 	}
 	err = s.db.GetContext(ctx, &newsDB, sql, args...)
 	if err != nil {
@@ -53,7 +53,7 @@ func (s *Store) getNewsArticle(ctx context.Context, newsParam News) (News, error
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getNewsArticle: %w", err))
+		panic(fmt.Errorf("failed to build sql for get news article: %w", err))
 	}
 	err = s.db.GetContext(ctx, &newsDB, sql, args...)
 	if err != nil {
@@ -68,7 +68,7 @@ func (s *Store) addNews(ctx context.Context, newsParam News) (News, error) {
 		Values(newsParam.Title, newsParam.FileName, newsParam.Content, newsParam.Date)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addNews: %w", err))
+		panic(fmt.Errorf("failed to build sql for add news: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -92,7 +92,7 @@ func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for editNews: %w", err))
+		panic(fmt.Errorf("failed to build sql for edit news: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -110,7 +110,7 @@ func (s *Store) deleteNews(ctx context.Context, newsParam News) error {
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteNews: %w", err))
+		panic(fmt.Errorf("failed to build sql for delete news: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {

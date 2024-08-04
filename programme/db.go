@@ -25,7 +25,7 @@ func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {
 		UnionAll(builder2)
 	sql, args, err := builder1.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getProgrammes: %w", err))
+		panic(fmt.Errorf("failed to build sql for get programmes: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &programmesDB, sql, args...)
 	if err != nil {
@@ -49,7 +49,7 @@ func (s *Store) getProgrammesSeason(ctx context.Context, seasonParam Season) ([]
 		UnionAll(builder2)
 	sql, args, err := builder1.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getProgrammesSeason: %w", err))
+		panic(fmt.Errorf("failed to build sql for get programmes season: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &programmesDB, sql, args...)
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *Store) getProgramme(ctx context.Context, programmeParam Programme) (Pro
 		Where(sq.Eq{"id": programmeParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getProgramme: %w", err))
+		panic(fmt.Errorf("failed to build sql for get programme: %w", err))
 	}
 	err = s.db.GetContext(ctx, &programmeDB, sql, args...)
 	if err != nil {
@@ -80,7 +80,7 @@ func (s *Store) addProgramme(ctx context.Context, programmeParam Programme) (Pro
 		Values(programmeParam.Name, programmeParam.FileName, programmeParam.DateOfProgramme, programmeParam.SeasonID)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addProgramme: %w", err))
+		panic(fmt.Errorf("failed to build sql for add programme: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -104,7 +104,7 @@ func (s *Store) editProgramme(ctx context.Context, programmeParam Programme) (Pr
 		Where(sq.Eq{"id": programmeParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for editProgramme: %w", err))
+		panic(fmt.Errorf("failed to build sql for edit programme: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -122,7 +122,7 @@ func (s *Store) deleteProgramme(ctx context.Context, programmeParam Programme) e
 		Where(sq.Eq{"id": programmeParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteProgramme: %w", err))
+		panic(fmt.Errorf("failed to build sql for delete programme: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -138,7 +138,7 @@ func (s *Store) getSeasons(ctx context.Context) ([]Season, error) {
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getSeasons: %w", err))
+		panic(fmt.Errorf("failed to build sql for get seasons: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &seasonsDB, sql, args...)
 	if err != nil {
@@ -154,7 +154,7 @@ func (s *Store) getSeason(ctx context.Context, seasonParam Season) (Season, erro
 		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getSeason: %w", err))
+		panic(fmt.Errorf("failed to build sql for get season: %w", err))
 	}
 	err = s.db.GetContext(ctx, &seasonDB, sql, args...)
 	if err != nil {
@@ -169,7 +169,7 @@ func (s *Store) addSeason(ctx context.Context, seasonParam Season) (Season, erro
 		Values(seasonParam.Season)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addSeason: %w", err))
+		panic(fmt.Errorf("failed to build sql for add season: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -190,7 +190,7 @@ func (s *Store) editSeason(ctx context.Context, seasonParam Season) (Season, err
 		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for editSeason: %w", err))
+		panic(fmt.Errorf("failed to build sql for edit season: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -208,7 +208,7 @@ func (s *Store) deleteSeason(ctx context.Context, seasonParam Season) error {
 		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteSeason: %w", err))
+		panic(fmt.Errorf("failed to build sql for delete season: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {

@@ -16,7 +16,7 @@ func (s *Store) getImages(ctx context.Context) ([]Image, error) {
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getImages: %w", err))
+		panic(fmt.Errorf("failed to build sql for get images: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &imagesDB, sql, args...)
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *Store) getImage(ctx context.Context, imageParam Image) (Image, error) {
 		Where(sq.Eq{"id": imageParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getImage: %w", err))
+		panic(fmt.Errorf("failed to build sql for get image: %w", err))
 	}
 	err = s.db.GetContext(ctx, &imageDB, sql, args...)
 	if err != nil {
@@ -47,7 +47,7 @@ func (s *Store) addImage(ctx context.Context, imageParam Image) (Image, error) {
 		Values(imageParam.FileName, imageParam.Caption)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addImage: %w", err))
+		panic(fmt.Errorf("failed to build sql for add image: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *Store) deleteImage(ctx context.Context, imageParam Image) error {
 		Where(sq.Eq{"id": imageParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deleteImage: %w", err))
+		panic(fmt.Errorf("failed to build sql for delete image: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {

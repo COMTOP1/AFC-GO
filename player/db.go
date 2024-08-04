@@ -17,7 +17,7 @@ func (s *Store) getPlayers(ctx context.Context) ([]Player, error) {
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getPlayers: %w", err))
+		panic(fmt.Errorf("failed to build sql for get players: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &playersDB, sql, args...)
 	if err != nil {
@@ -34,7 +34,7 @@ func (s *Store) getPlayersTeam(ctx context.Context, teamParam team.Team) ([]Play
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getPlayersTeam: %w", err))
+		panic(fmt.Errorf("failed to build sql for get players team: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &playersDB, sql, args...)
 	if err != nil {
@@ -50,7 +50,7 @@ func (s *Store) getPlayer(ctx context.Context, playerParam Player) (Player, erro
 		Where(sq.Eq{"id": playerParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getPlayer: %w", err))
+		panic(fmt.Errorf("failed to build sql for get player: %w", err))
 	}
 	err = s.db.GetContext(ctx, &playerDB, sql, args...)
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *Store) addPlayer(ctx context.Context, playerParam Player) (Player, erro
 		Values(playerParam.Name, playerParam.FileName, playerParam.DateOfBirth, playerParam.Position, playerParam.IsCaptain, playerParam.TeamID)
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for addPlayer: %w", err))
+		panic(fmt.Errorf("failed to build sql for add player: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -91,7 +91,7 @@ func (s *Store) editPlayer(ctx context.Context, playerParam Player) (Player, err
 		Where(sq.Eq{"id": playerParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for editPlayer: %w", err))
+		panic(fmt.Errorf("failed to build sql for edit player: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -112,7 +112,7 @@ func (s *Store) deletePlayer(ctx context.Context, playerParam Player) error {
 		Where(sq.Eq{"id": playerParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for deletePlayer: %w", err))
+		panic(fmt.Errorf("failed to build sql for delete player: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {

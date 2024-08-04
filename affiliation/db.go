@@ -16,7 +16,7 @@ func (s *Store) getAffiliations(ctx context.Context) ([]Affiliation, error) {
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getAffiliations: %w", err))
+		panic(fmt.Errorf("failed to build sql for get affiliations: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &affiliationsDB, sql, args...)
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *Store) getAffiliationsMinimal(ctx context.Context) ([]Affiliation, erro
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getAffiliations: %w", err))
+		panic(fmt.Errorf("failed to build sql for get affiliations: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &affiliationsDB, sql, args...)
 	if err != nil {
@@ -48,7 +48,7 @@ func (s *Store) getAffiliation(ctx context.Context, affiliationParam Affiliation
 		Where(sq.Eq{"id": affiliationParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
-		panic(fmt.Errorf("failed to build sql for getAffiliation: %w", err))
+		panic(fmt.Errorf("failed to build sql for get affiliation: %w", err))
 	}
 	err = s.db.GetContext(ctx, &affiliationDB, sql, args...)
 	if err != nil {
