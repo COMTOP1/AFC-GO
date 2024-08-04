@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -15,12 +16,14 @@ func (v *Views) ContactFunc(c echo.Context) error {
 
 	dbContactUsers, err := v.user.GetUsersContact(c.Request().Context())
 	if err != nil {
-		return fmt.Errorf("failed to get contact users: %w", err)
+		return v.error(http.StatusInternalServerError, "failed to get contacts",
+			fmt.Errorf("failed to get contact users: %w", err))
 	}
 
 	contactTmpl, err := DBUsersContactToTemplateFormat(dbContactUsers)
 	if err != nil {
-		return fmt.Errorf("failed to format contact users: %w", err)
+		return v.error(http.StatusInternalServerError, "failed to get contacts",
+			fmt.Errorf("failed to format contact users: %w", err))
 	}
 
 	year, _, _ := time.Now().Date()
