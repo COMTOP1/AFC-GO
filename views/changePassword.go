@@ -1,7 +1,6 @@
 package views
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -47,7 +46,7 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 		err = v.user.EditUserPassword(c.Request().Context(), c1.User, v.conf.Security.ScryptWorkFactor,
 			v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
 		if err != nil {
-			log.Printf("failed to change password: %+v", err)
+			log.Printf("failed to change password, user id: %d, error: %+v", c1.User.ID, err)
 			data.Error = fmt.Sprintf("failed to change password: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -56,10 +55,10 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for change password: %+v", err)
+			log.Printf("failed to set data for change password, user id: %d, error: %+v", c1.User.ID, err)
 		}
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
