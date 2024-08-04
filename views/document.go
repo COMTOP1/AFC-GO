@@ -1,7 +1,6 @@
 package views
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -25,7 +24,8 @@ func (v *Views) DocumentsFunc(c echo.Context) error {
 
 	d1, err = v.document.GetDocuments(c.Request().Context())
 	if err != nil {
-		return fmt.Errorf("failed to get documents for documents: %w", err)
+		return v.error(http.StatusInternalServerError, "failed to get documents",
+			fmt.Errorf("failed to get documents for documents: %w", err))
 	}
 
 	year, _, _ := time.Now().Date()
@@ -59,21 +59,21 @@ func (v *Views) DocumentAddFunc(c echo.Context) error {
 
 		file, err := c.FormFile("upload")
 		if err != nil {
-			log.Printf("failed to get file for documentAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to get file for documentAdd: %+v", err)
+			log.Printf("failed to get file for document add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to get file for document add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 		fileName, err := v.fileUpload(file)
 		if err != nil {
-			log.Printf("failed to upload file for documentAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to upload file for documentAdd: %+v", err)
+			log.Printf("failed to upload file for document add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to upload file for document add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.document.AddDocument(c.Request().Context(), document.Document{Name: name, FileName: fileName})
 		if err != nil {
-			log.Printf("failed to add document for documentAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to add document for documentAdd: %+v", err)
+			log.Printf("failed to add document for document add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to add document for document add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -81,12 +81,12 @@ func (v *Views) DocumentAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for documentAdd: %+v", err)
+			log.Printf("failed to set data for document add, error: %+v", err)
 		}
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 func (v *Views) DocumentDeleteFunc(c echo.Context) error {
@@ -95,32 +95,32 @@ func (v *Views) DocumentDeleteFunc(c echo.Context) error {
 
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			return fmt.Errorf("failed to get id for documentDelete: %w", err)
+			return fmt.Errorf("failed to get id for document delete, error: %w", err)
 		}
 
 		documentDB, err := v.document.GetDocument(c.Request().Context(), document.Document{ID: id})
 		if err != nil {
-			return fmt.Errorf("failed to get user for documentDelete: %w", err)
+			return fmt.Errorf("failed to get user for document delete, document id: %d, error: %w", id, err)
 		}
 
 		err = os.Remove(filepath.Join(v.conf.FileDir, documentDB.FileName))
 		if err != nil {
-			log.Printf("failed to delete document file for documentDelete: %+v", err)
+			log.Printf("failed to delete document file for document delete, document id: %d, error: %+v", id, err)
 		}
 
 		err = v.document.DeleteDocument(c.Request().Context(), documentDB)
 		if err != nil {
-			return fmt.Errorf("failed to delete user for documentDelete: %w", err)
+			return fmt.Errorf("failed to delete user for document delete, document id: %d, error: %w", id, err)
 		}
 
 		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", documentDB.Name)
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for documentDelete: %+v", err)
+			log.Printf("failed to set data for document delete, document id: %d, error: %+v", id, err)
 		}
 
 		return c.Redirect(http.StatusFound, "/documents")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
