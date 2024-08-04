@@ -76,13 +76,13 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 	if user.Hash.Valid {
 		hashDecode, err = hex.DecodeString(user.Hash.String)
 		if err != nil {
-			return userParam, false, fmt.Errorf("failed to decode hex of hash verifyUser: %w", err)
+			return userParam, false, fmt.Errorf("failed to decode hex of hash verify user: %w", err)
 		}
 	}
 	if user.Salt.Valid {
 		saltDecode, err = hex.DecodeString(user.Salt.String)
 		if err != nil {
-			return userParam, false, fmt.Errorf("failed to decode hex of salt verifyUser: %w", err)
+			return userParam, false, fmt.Errorf("failed to decode hex of salt verify user: %w", err)
 		}
 	}
 	if user.Password.Valid {
@@ -157,7 +157,7 @@ func (s *Store) AddUser(ctx context.Context, userParam User) (User, error) {
 func (s *Store) EditUser(ctx context.Context, userParam User) (User, error) {
 	userDB, err := s.getUserFull(ctx, userParam)
 	if err != nil {
-		return userParam, fmt.Errorf("failed to get user for editUser: %w", err)
+		return userParam, fmt.Errorf("failed to get user for edit user: %w", err)
 	}
 	if userParam.Email != userDB.Email && len(userParam.Email) > 0 {
 		userDB.Email = userParam.Email
@@ -192,21 +192,29 @@ func (s *Store) EditUserPassword(ctx context.Context, userParam User, workFactor
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
+
 	var saltDecode []byte
 	if user.Salt.Valid {
 		saltDecode, err = hex.DecodeString(user.Salt.String)
 		if err != nil {
-			return fmt.Errorf("failed to decode hex of salt verifyUser: %w", err)
+			return fmt.Errorf("failed to decode hex of salt verify user: %w", err)
 		}
 	}
+
 	scryptHash, err := utils.HashPassScrypt([]byte(userParam.Password.String), saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
+	if err != nil {
+		return fmt.Errorf("failed to generate password hash verify: %w", err)
+	}
+
 	user.Hash = null.StringFrom(scryptHash)
 	user.ResetPassword = false
 	user.Role = userParam.Role
+
 	err = s.editUser(ctx, user)
 	if err != nil {
-		return fmt.Errorf("failed to edit user for editUserPassword: %w", err)
+		return fmt.Errorf("failed to edit user for edit user password: %w", err)
 	}
+
 	return nil
 }
 
@@ -219,7 +227,7 @@ func (s *Store) EditUserImage(ctx context.Context, userParam User) error {
 	user.FileName = userParam.FileName
 	err = s.editUser(ctx, user)
 	if err != nil {
-		return fmt.Errorf("failed to edit user for editUserPassword: %w", err)
+		return fmt.Errorf("failed to edit user for edit user password: %w", err)
 	}
 	return nil
 }
