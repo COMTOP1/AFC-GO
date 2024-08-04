@@ -127,6 +127,8 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
+		description := c.FormValue("description")
+
 		league := c.FormValue("league")
 		division := c.FormValue("division")
 
@@ -205,7 +207,21 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 			}
 		}
 
-		_, err = v.team.AddTeam(c.Request().Context(), team.Team{Name: name, League: null.NewString(league, len(league) > 0), Division: null.NewString(division, len(division) > 0), LeagueTable: null.NewString(leagueTable, len(leagueTable) > 0), Fixtures: null.NewString(fixtures, len(fixtures) > 0), Coach: null.NewString(coach, len(coach) > 0), Physio: null.NewString(physio, len(physio) > 0), FileName: null.NewString(fileName, len(fileName) > 0), IsActive: isActive, IsYouth: isYouth, Ages: ages})
+		_, err = v.team.AddTeam(c.Request().Context(),
+			team.Team{
+				Name:        name,
+				Description: null.NewString(description, len(description) > 0),
+				League:      null.NewString(league, len(league) > 0),
+				Division:    null.NewString(division, len(division) > 0),
+				LeagueTable: null.NewString(leagueTable, len(leagueTable) > 0),
+				Fixtures:    null.NewString(fixtures, len(fixtures) > 0),
+				Coach:       null.NewString(coach, len(coach) > 0),
+				Physio:      null.NewString(physio, len(physio) > 0),
+				FileName:    null.NewString(fileName, len(fileName) > 0),
+				IsActive:    isActive,
+				IsYouth:     isYouth,
+				Ages:        ages,
+			})
 		if err != nil {
 			log.Printf("failed to add team for team add: %+v", err)
 			data.Error = fmt.Sprintf("failed to add team for team add: %+v", err)
@@ -251,6 +267,9 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 		}
 
 		teamDB.Name = name
+
+		tempDescription := c.FormValue("description")
+		teamDB.Description = null.NewString(tempDescription, len(tempDescription) > 0)
 
 		tempLeague := c.FormValue("league")
 		teamDB.League = null.NewString(tempLeague, len(tempLeague) > 0)

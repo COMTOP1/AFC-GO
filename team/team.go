@@ -17,6 +17,7 @@ type (
 	Team struct {
 		ID          int         `db:"id" json:"id"`
 		Name        string      `db:"name" json:"name"`
+		Description null.String `db:"description" json:"description"`
 		League      null.String `db:"league" json:"league"`
 		Division    null.String `db:"division" json:"division"`
 		LeagueTable null.String `db:"league_table" json:"league_table"`
@@ -60,6 +61,9 @@ func (s *Store) EditTeam(ctx context.Context, teamParam Team) (Team, error) {
 	}
 	if teamDB.Name != teamParam.Name {
 		teamDB.Name = teamParam.Name
+	}
+	if teamParam.Description.Valid && (!teamDB.Description.Valid || teamDB.Description.String != teamParam.Description.String) {
+		teamDB.Description = teamParam.Description
 	}
 	if teamParam.League.Valid && (!teamDB.League.Valid || teamDB.League.String != teamParam.League.String) {
 		teamDB.League = teamParam.League

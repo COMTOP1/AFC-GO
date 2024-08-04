@@ -5,6 +5,7 @@
         <div class="pageHeaderBanner" style="text-align: center">
             <h2 class="pageHeader">
                 {{.Team.Name}}</h2>
+            {{if .Team.Description.Valid}}<p>{{.Team.Description.String}}</p>{{end}}
             {{if $priv}}
                 <div style="margin: 15px 30px">
                     <a class="button is-warning" onclick="editTeamModal()">Edit Team</a>
@@ -150,6 +151,17 @@
                                                 placeholder="Name"
                                                 value="{{.Team.Name}}"
                                         />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="description">Description (optional)</label>
+                                    <div class="control">
+                                        <textarea
+                                                id="description"
+                                                class="input"
+                                                name="description"
+                                                placeholder="Description"
+                                        >{{if .Team.Description.Valid}}{{.Team.Description.String}}{{end}}</textarea>
                                     </div>
                                 </div>
                                 <div class="field">
