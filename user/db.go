@@ -78,7 +78,7 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 
 func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) ([]User, error) {
 	var usersDB []User
-	builder := utils.PSQL().Select("id", "name").
+	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
 		From("afc.users").
 		Where(sq.Eq{"team_id": strconv.FormatUint(uint64(teamParam.ID), 10)}).
 		OrderBy("id")
