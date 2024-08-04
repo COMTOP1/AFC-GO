@@ -1,7 +1,6 @@
 package views
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -27,7 +26,8 @@ func (v *Views) NewsFunc(c echo.Context) error {
 
 	n1, err = v.news.GetNews(c.Request().Context())
 	if err != nil {
-		return fmt.Errorf("failed to get news for news: %w", err)
+		return v.error(http.StatusInternalServerError, "failed to get news",
+			fmt.Errorf("failed to get news for news: %w", err))
 	}
 
 	year, _, _ := time.Now().Date()
@@ -52,11 +52,14 @@ func (v *Views) NewsArticleFunc(c echo.Context) error {
 
 	newsID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for newsArticle: %w", err))
+		return v.error(http.StatusBadRequest, "invalid id provided for news article",
+			fmt.Errorf("failed to parse id for news article: %w", err))
 	}
+
 	newsDB, err := v.news.GetNewsArticle(c.Request().Context(), news.News{ID: newsID})
 	if err != nil {
-		return fmt.Errorf("failed to get news for newsArticle: %w", err)
+		return v.error(http.StatusInternalServerError, "failed to get news article",
+			fmt.Errorf("failed to get news for news article, news id: %d, error: %w", newsID, err))
 	}
 
 	year, _, _ := time.Now().Date()
@@ -95,8 +98,8 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for newsAdd: %+v", err)
-				data.Error = fmt.Sprintf("failed to get file for newsAdd: %+v", err)
+				log.Printf("failed to get file for news add, error: %+v", err)
+				data.Error = fmt.Sprintf("failed to get file for news add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			hasUpload = false
@@ -104,16 +107,16 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 		if hasUpload {
 			fileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for newsAdd: %+v", err)
-				data.Error = fmt.Sprintf("failed to upload file for newsAdd: %+v", err)
+				log.Printf("failed to upload file for news add, error: %+v", err)
+				data.Error = fmt.Sprintf("failed to upload file for news add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 		}
 
 		_, err = v.news.AddNews(c.Request().Context(), news.News{Title: title, Content: null.NewString(content, len(content) > 0), FileName: null.NewString(fileName, len(fileName) > 0)})
 		if err != nil {
-			log.Printf("failed to add news for newsAdd: %+v", err)
-			data.Error = fmt.Sprintf("failed to add news for newsAdd: %+v", err)
+			log.Printf("failed to add news for news add, error: %+v", err)
+			data.Error = fmt.Sprintf("failed to add news for news add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -121,12 +124,12 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for newsAdd: %+v", err)
+			log.Printf("failed to set data for news add, error: %+v", err)
 		}
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 func (v *Views) NewsEditFunc(c echo.Context) error {
@@ -135,11 +138,11 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 
 		newsID, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for newsEdit: %w", err))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for news edit, error: %w", err))
 		}
 		newsDB, err := v.news.GetNewsArticle(c.Request().Context(), news.News{ID: newsID})
 		if err != nil {
-			return fmt.Errorf("failed to get news for newsEdit: %w", err)
+			return fmt.Errorf("failed to get news for news edit, news id: %d, error: %w", newsID, err)
 		}
 
 		newsDB.Title = c.FormValue("title")
@@ -157,8 +160,8 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for newsEdit: %+v", err)
-				data.Error = fmt.Sprintf("failed to get file for newsEdit: %+v", err)
+				log.Printf("failed to get file for news edit, news id: %d, error: %+v", newsID, err)
+				data.Error = fmt.Sprintf("failed to get file for news edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			hasUpload = false
@@ -167,14 +170,14 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 			var tempFileName string
 			tempFileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for newsEdit: %+v", err)
-				data.Error = fmt.Sprintf("failed to upload file for newsEdit: %+v", err)
+				log.Printf("failed to upload file for news edit, news id: %d, error: %+v", newsID, err)
+				data.Error = fmt.Sprintf("failed to upload file for news edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if newsDB.FileName.Valid {
 				err = os.Remove(filepath.Join(v.conf.FileDir, newsDB.FileName.String))
 				if err != nil {
-					log.Printf("failed to delete old image for newsEdit: %+v", err)
+					log.Printf("failed to delete old image for news edit, news id: %d, error: %+v", newsID, err)
 				}
 			}
 			newsDB.FileName = null.NewString(tempFileName, len(tempContent) > 0)
@@ -185,20 +188,20 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 			if newsDB.FileName.Valid {
 				err = os.Remove(filepath.Join(v.conf.FileDir, newsDB.FileName.String))
 				if err != nil {
-					log.Printf("failed to delete image for newsEdit: %+v", err)
+					log.Printf("failed to delete image for news edit, news id: %d, error: %+v", newsID, err)
 				}
 			}
 			newsDB.FileName = null.NewString("", false)
 		} else if len(tempRemoveNewsImage) != 0 {
-			log.Printf("failed to parse removeNewsImage for newsEdit: %s", tempRemoveNewsImage)
-			data.Error = "failed to parse removeNewsImage for newsEdit: " + tempRemoveNewsImage
+			log.Printf("failed to parse removeNewsImage for news edit, news id: %d, error: %s", newsID, tempRemoveNewsImage)
+			data.Error = "failed to parse removeNewsImage for news edit: " + tempRemoveNewsImage
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.news.EditNews(c.Request().Context(), newsDB)
 		if err != nil {
-			log.Printf("failed to add news for newsEdit: %+v", err)
-			data.Error = fmt.Sprintf("failed to add news for newsEdit: %+v", err)
+			log.Printf("failed to add news for news edit, news id: %d, error: %+v", newsID, err)
+			data.Error = fmt.Sprintf("failed to add news for news edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
@@ -206,12 +209,12 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for newsEdit: %+v", err)
+			log.Printf("failed to set data for news edit, news id: %d, error: %+v", newsID, err)
 		}
 
 		return c.JSON(http.StatusOK, data)
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
 
 func (v *Views) NewsDeleteFunc(c echo.Context) error {
@@ -220,34 +223,34 @@ func (v *Views) NewsDeleteFunc(c echo.Context) error {
 
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			return fmt.Errorf("failed to get id for newsDelete: %w", err)
+			return fmt.Errorf("failed to get id for news delete, error: %w", err)
 		}
 
 		newsDB, err := v.news.GetNewsArticle(c.Request().Context(), news.News{ID: id})
 		if err != nil {
-			return fmt.Errorf("failed to get news for newsDelete: %w", err)
+			return fmt.Errorf("failed to get news for news delete, news id: %d, error: %w", id, err)
 		}
 
 		if newsDB.FileName.Valid {
 			err = os.Remove(filepath.Join(v.conf.FileDir, newsDB.FileName.String))
 			if err != nil {
-				log.Printf("failed to delete news image for newsDelete: %+v", err)
+				log.Printf("failed to delete news image for news delete, news id: %d, error: %+v", id, err)
 			}
 		}
 
 		err = v.news.DeleteNews(c.Request().Context(), newsDB)
 		if err != nil {
-			return fmt.Errorf("failed to delete news for newsDelete: %w", err)
+			return fmt.Errorf("failed to delete news for news delete, news id: %d, error: %w", id, err)
 		}
 
 		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", newsDB.Title)
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for newsDelete: %+v", err)
+			log.Printf("failed to set data for news delete, news id: %d, error: %+v", id, err)
 		}
 
 		return c.Redirect(http.StatusFound, "/news")
 	}
-	return echo.NewHTTPError(http.StatusMethodNotAllowed, errors.New("invalid method used"))
+	return v.invalidMethodUsed(c)
 }
