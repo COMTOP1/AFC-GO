@@ -116,7 +116,7 @@
             Football.<br><br><br></p>
         {{if ne .NewsLatest.ID 0}}
             <div class="listItem latest"
-                 style="bottom: 0; background-color: white; left: 0; text-align: center; cursor: pointer;"
+                 style="bottom: 0; background-color: white; left: 0; text-align: center; cursor: pointer;" aria-label="Go to the latest news (opens in a new tab)"
                  onclick="location.target='_blank';location.href='/news/{{.NewsLatest.ID}}';">
                 Latest from news
                 <img data-src="/download?s=n&id={{.NewsLatest.ID}}" alt="Latest news image"
@@ -129,7 +129,7 @@
         {{end}}
         {{if ne .WhatsOnLatest.ID 0}}
             <div class="listItem latest"
-                 style="bottom: 0; background-color: white; left: 190px; text-align: center; cursor: pointer;"
+                 style="bottom: 0; background-color: white; left: 190px; text-align: center; cursor: pointer;" aria-label="Go to the latest what's on (opens in a new tab)"
                  onclick="location.target='_blank';location.href='/whatson/{{.WhatsOnLatest.ID}}';">
                 Coming up next
                 <img data-src="/download?s=w&id={{.WhatsOnLatest.ID}}" alt="Latest what's on image"
@@ -148,7 +148,7 @@
             <div class="photoBanner">
                 {{ $i := 0 }}
                 {{ range .Sponsors }}
-                    <a href="{{.Website.String}}" target="_blank" class="sponsorImage">
+                    <a href="{{.Website.String}}" target="_blank" class="sponsorImage" aria-label="Go to sponsor: '{{.Name}}' website (opens in a new tab)">
                         {{/*                        <div class="sponsorImageCentre">*/}}
                         <img data-src="/download?s=s&id={{.ID}}" alt="Image for sponsor: {{.Name}}" src="/public/AFC.png"
                              onerror="this.onerror=null;this.src='/public/AFC.png';"
@@ -158,7 +158,7 @@
                     {{ $i = inc $i }}
                 {{end}}
                 {{range .Sponsors}}
-                    <a href="{{.Website.String}}" target="_blank" class="sponsorImage">
+                    <a href="{{.Website.String}}" target="_blank" class="sponsorImage" aria-label="Go to sponsor: '{{.Name}}' website (opens in a new tab)">
                         <img data-src="/download?s=s&id={{.ID}}" alt="Image for sponsor: {{.Name}}" src="/public/AFC.png"
                              onerror="this.onerror=null;this.src='/public/AFC.png';" class="lazy sponsorImage" title="Image for sponsor: {{.Name}}">
                     </a>
@@ -173,7 +173,7 @@
                     <div class="listItemAffiliation">
                         <div class="imgContainer">
                             {{if .Website.Valid}}
-                            <a href="{{.Website.String}}" target="_blank">{{end}}
+                            <a href="{{.Website.String}}" target="_blank" aria-label="Go to affiliation: '{{.Name}}' website (opens in a new tab)">{{end}}
                                 <div class="affiliationImageCentre">
                                     <img class="affiliationImage lazy" data-src="/download?s=a&id={{.ID}}"
                                          alt="Image for affiliation: {{.Name}}"
