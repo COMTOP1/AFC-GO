@@ -119,9 +119,9 @@
                  style="bottom: 0; background-color: white; left: 0; text-align: center; cursor: pointer;"
                  onclick="location.target='_blank';location.href='/news/{{.NewsLatest.ID}}';">
                 Latest from news
-                <img data-src="/download?s=n&id={{.NewsLatest.ID}}" alt="/public/AFC.png"
+                <img data-src="/download?s=n&id={{.NewsLatest.ID}}" alt="Latest news image"
                      onerror="this.onerror=null;this.src='/public/AFC.png';"
-                     class="latestImage lazy" src="/public/AFC.png">
+                     class="latestImage lazy" src="/public/AFC.png" title="Latest news image">
                 <h2 class="latestTitle">{{.NewsLatest.Title}}</h2>
                 <p style="text-align: left; padding: 10px 10px 10px 0;">{{.NewsLatest.Date}}
                 </p>
@@ -132,9 +132,9 @@
                  style="bottom: 0; background-color: white; left: 190px; text-align: center; cursor: pointer;"
                  onclick="location.target='_blank';location.href='/whatson/{{.WhatsOnLatest.ID}}';">
                 Coming up next
-                <img data-src="/download?s=w&id={{.WhatsOnLatest.ID}}" alt="/public/AFC.png"
+                <img data-src="/download?s=w&id={{.WhatsOnLatest.ID}}" alt="Latest what's on image"
                      onerror="this.onerror=null;this.src='/public/AFC.png';"
-                     class="latestImage lazy" src="/public/AFC.png">
+                     class="latestImage lazy" src="/public/AFC.png" title="Latest what's on image">
                 <h2 class="latestTitle">{{.WhatsOnLatest.Title}}</h2>
                 <p style="text-align: left; padding: 10px 10px 10px 0;">Date of Event - {{.WhatsOnLatest.DateOfEvent}}
                 </p>
@@ -150,17 +150,17 @@
                 {{ range .Sponsors }}
                     <a href="{{.Website.String}}" target="_blank" class="sponsorImage">
                         {{/*                        <div class="sponsorImageCentre">*/}}
-                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png" src="/public/AFC.png"
+                        <img data-src="/download?s=s&id={{.ID}}" alt="Image for sponsor: {{.Name}}" src="/public/AFC.png"
                              onerror="this.onerror=null;this.src='/public/AFC.png';"
-                             class="{{if eq $i 0}}first {{end}}lazy sponsorImage">
+                             class="{{if eq $i 0}}first {{end}}lazy sponsorImage" title="Image for sponsor: {{.Name}}">
                         {{/*                        </div>*/}}
                     </a>
                     {{ $i = inc $i }}
                 {{end}}
                 {{range .Sponsors}}
                     <a href="{{.Website.String}}" target="_blank" class="sponsorImage">
-                        <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png" src="/public/AFC.png"
-                             onerror="this.onerror=null;this.src='/public/AFC.png';" class="lazy sponsorImage">
+                        <img data-src="/download?s=s&id={{.ID}}" alt="Image for sponsor: {{.Name}}" src="/public/AFC.png"
+                             onerror="this.onerror=null;this.src='/public/AFC.png';" class="lazy sponsorImage" title="Image for sponsor: {{.Name}}">
                     </a>
                 {{end}}
             </div>
@@ -176,9 +176,9 @@
                             <a href="{{.Website.String}}" target="_blank">{{end}}
                                 <div class="affiliationImageCentre">
                                     <img class="affiliationImage lazy" data-src="/download?s=a&id={{.ID}}"
-                                         alt="/public/AFC.png"
+                                         alt="Image for affiliation: {{.Name}}"
                                          onerror="this.onerror=null;this.src='/public/AFC.png';"
-                                         src="/public/AFC.png"></div>
+                                         src="/public/AFC.png" title="Image for affiliation: {{.Name}}"></div>
                                 {{if .Website.Valid}}</a>{{end}}
                             {{if $priv}}
                                 <a class="button is-danger" onclick="deleteAffiliationModal({{.ID}}, '{{.Name}}')"
@@ -250,10 +250,10 @@
                                         </label>
                                     </div>
                                     <label class="label" for="preview">Preview</label>
-                                    <img id="preview" alt="/public/AFC.png"
+                                    <img id="preview" alt="Add affiliation preview image"
                                          onerror="this.onerror=null;this.src='/public/AFC.png';"
                                          src="/public/AFC.png"
-                                         style="border: 5px; max-height: 200px; max-width: 200px;">
+                                         style="border: 5px; max-height: 200px; max-width: 200px;" title="Add affiliation preview image">
                                 </div>
                                 <a class="button is-info" onclick="addAffiliation()" id="addAffiliationButton">
                                     Add Affiliation
