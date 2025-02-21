@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	sq "github.com/Masterminds/squirrel"
 
@@ -90,7 +89,7 @@ func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) (
 
 	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
 		From("afc.users").
-		Where(sq.Eq{"team_id": strconv.FormatUint(uint64(teamParam.ID), 10)}).
+		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("id")
 
 	sql, args, err := builder.ToSql()
