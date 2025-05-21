@@ -18,6 +18,7 @@ import (
 
 	"github.com/COMTOP1/AFC-GO/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/role"
+	"github.com/COMTOP1/AFC-GO/setting"
 	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/templates"
 	"github.com/COMTOP1/AFC-GO/user"
@@ -37,23 +38,83 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		return fmt.Errorf("failed to get teams for users: %w", err)
 	}
 
+	displayEmail, err := v.setting.GetSetting(c.Request().Context(), "displayEmail")
+	if err != nil {
+		log.Printf("failed to get displayEmail for users, error: %+v, continuing", err)
+	}
+
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year    int
-		Users   []UserTemplate
-		Teams   []TeamTemplate
-		User    user.User
-		Context *Context
+		Year         int
+		DisplayEmail string
+		Users        []UserTemplate
+		Teams        []TeamTemplate
+		User         user.User
+		Context      *Context
 	}{
-		Year:    year,
-		Users:   DBUsersToTemplateFormat(usersDB),
-		Teams:   DBTeamsToTemplateFormat(teamsDB),
-		User:    c1.User,
-		Context: c1,
+		Year:         year,
+		DisplayEmail: displayEmail.SettingText,
+		Users:        DBUsersToTemplateFormat(usersDB),
+		Teams:        DBTeamsToTemplateFormat(teamsDB),
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.UsersTemplate, templates.RegularType)
+}
+
+func (v *Views) UsersSetDisplayEmailFunc(c echo.Context) error {
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		verifier := emailverifier.NewVerifier()
+
+		var data struct {
+			Error string `json:"error"`
+		}
+
+		tempEmail := c.FormValue("email")
+
+		if len(tempEmail) != 0 {
+			res, err := verifier.Verify(tempEmail)
+			if err != nil {
+				log.Printf("failed to parse email for display email, error: %+v", err)
+				data.Error = fmt.Sprintf("failed to parse email for display email: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+			if !res.Syntax.Valid {
+				log.Println("failed to parse email for display email: syntax is invalid")
+				data.Error = "failed to parse email for display email: syntax is invalid"
+				return c.JSON(http.StatusOK, data)
+			}
+
+			_, err = v.setting.EditSetting(c.Request().Context(), setting.Setting{
+				ID:          "displayEmail",
+				SettingText: tempEmail,
+			})
+			if err != nil {
+				log.Printf("failed to edit setting for display email, error: %+v", err)
+				data.Error = fmt.Sprintf("failed to edit setting for display email: %+v", err)
+				return c.JSON(http.StatusOK, data)
+			}
+		} else {
+			err := v.setting.DeleteSetting(c.Request().Context(), "displayEmail")
+			if err != nil {
+				log.Printf("failed to delete setting for display email, error: %+v", err)
+			}
+		}
+
+		c1.Message = "successfully edited display email"
+		c1.MsgType = "is-success"
+		err := v.setMessagesInSession(c, c1)
+		if err != nil {
+			log.Printf("failed to set data for display email, error: %+v", err)
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
+	return v.invalidMethodUsed(c)
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {
