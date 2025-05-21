@@ -23,6 +23,7 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 		panic(fmt.Errorf("failed to build sql for get users: %w", err))
 	}
 
+	//nolint:musttag
 	err = s.db.SelectContext(ctx, &usersDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
@@ -67,6 +68,7 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 		panic(fmt.Errorf("failed to build sql for get users contact: %w", err))
 	}
 
+	//nolint:musttag
 	err = s.db.SelectContext(ctx, &usersDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
@@ -97,6 +99,7 @@ func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) (
 		panic(fmt.Errorf("failed to build sql for get users managers team: %w", err))
 	}
 
+	//nolint:musttag
 	err = s.db.SelectContext(ctx, &usersDB, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
@@ -118,6 +121,7 @@ func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
 		panic(fmt.Errorf("failed to build sql for get user: %w", err))
 	}
 
+	//nolint:musttag
 	err = s.db.GetContext(ctx, &userDB, sql, args...)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to get user: %w", err)
@@ -146,6 +150,7 @@ func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 		panic(fmt.Errorf("failed to build sql for get user: %w", err))
 	}
 
+	//nolint:musttag
 	err = s.db.GetContext(ctx, &userDB, sql, args...)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to get user: %w", err)

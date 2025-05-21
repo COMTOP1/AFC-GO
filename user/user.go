@@ -68,7 +68,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 	if err != nil {
 		return userParam, false, fmt.Errorf("failed to get user: %w", err)
 	}
-	if user.ResetPassword == true {
+	if user.ResetPassword {
 		userParam.ID = user.ID
 		return userParam, true, errors.New("password reset required")
 	}
