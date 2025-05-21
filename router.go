@@ -176,7 +176,9 @@ func (r *Router) loadRoutes() {
 	playerID.Match(validMethods, "/edit", r.views.PlayerEditFunc)
 	playerID.Match(validMethods, "/delete", r.views.PlayerDeleteFunc)
 
-	base.Match(validMethods, "users", r.views.UsersFunc, r.views.RequiresLogin, r.views.RequireClubSecretaryHigher)
+	users := base.Group("users", r.views.RequiresLogin, r.views.RequireClubSecretaryHigher)
+	users.Match(validMethods, "", r.views.UsersFunc)
+	users.Match(validMethods, "/setdisplayemail", r.views.UsersSetDisplayEmailFunc)
 
 	user := base.Group("user", r.views.RequiresLogin, r.views.RequireClubSecretaryHigher)
 	user.Match(validMethods, "/add", r.views.UserAddFunc)
