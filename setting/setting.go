@@ -29,7 +29,7 @@ func (s *Store) GetSettings(ctx context.Context) ([]Setting, error) {
 	return s.getSettings(ctx)
 }
 
-func (s *Store) GetAffiliation(ctx context.Context, settingID string) (Setting, error) {
+func (s *Store) GetSetting(ctx context.Context, settingID string) (Setting, error) {
 	return s.getSetting(ctx, settingID)
 }
 
