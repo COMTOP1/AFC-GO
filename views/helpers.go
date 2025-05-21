@@ -305,37 +305,26 @@ func (v *Views) fileUpload(file *multipart.FileHeader) (string, error) {
 	switch file.Header.Get("content-type") {
 	case "application/pdf":
 		fileType = ".pdf"
-		break
 	case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
 		fileType = ".docx"
-		break
 	case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
 		fileType = ".pptx"
-		break
 	case "text/plain":
 		fileType = ".txt"
-		break
 	case "image/apng":
 		fileType = ".apng"
-		break
 	case "image/avif":
 		fileType = ".avif"
-		break
 	case "image/gif":
 		fileType = ".gif"
-		break
 	case "image/jpeg":
 		fileType = ".jpg"
-		break
 	case "image/png":
 		fileType = ".png"
-		break
 	case "image/svg+xml":
 		fileType = ".svg"
-		break
 	case "image/webp":
 		fileType = ".webp"
-		break
 	default:
 		return "", fmt.Errorf("invalid file type: %s", file.Header.Get("content-type"))
 	}
