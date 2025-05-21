@@ -19,6 +19,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/player"
 	"github.com/COMTOP1/AFC-GO/programme"
 	"github.com/COMTOP1/AFC-GO/role"
+	"github.com/COMTOP1/AFC-GO/setting"
 	"github.com/COMTOP1/AFC-GO/sponsor"
 	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/templates"
@@ -68,6 +69,7 @@ type (
 		news        *news.Store
 		player      *player.Store
 		programme   *programme.Store
+		setting     *setting.Store
 		sponsor     *sponsor.Store
 		team        *team.Store
 		template    *templates.Templater
@@ -92,6 +94,7 @@ func New(conf *Config, host string) *Views {
 	v.news = news.NewNewsRepo(dbStore)
 	v.player = player.NewPlayerRepo(dbStore)
 	v.programme = programme.NewProgrammeRepo(dbStore)
+	v.setting = setting.NewSettingRepo(dbStore)
 	v.sponsor = sponsor.NewSponsorRepo(dbStore)
 	v.team = team.NewTeamRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
