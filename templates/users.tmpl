@@ -6,6 +6,18 @@
                 Users
             </h2>
             {{if or (eq .User.Role "Club Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
+                <p>Would you like to set an email to be displayed in place of all individual's emails?<br>
+                Be cautious as this will apply to all officials listed under the contact page,
+                    but team managers will remain.<br />
+                {{if gt (len .DisplayEmail) 0}}
+                    Current display email: {{.displayEmail}}
+                {{else}}
+                    There is no display email set.
+                {{end}}
+                </p>
+                <div style="margin: 15px 0 15px 0">
+                    <a class="button is-info" onclick="openDisplayEmailModal()">Open display email modal</a>
+                </div>
                 <div style="margin: 15px 0 15px 0">
                     <a class="button is-info" onclick="addUserModal()">Add User</a>
                 </div>
@@ -330,6 +342,46 @@
             </div>
         </div>
     </div>
+    <div id="displayEmailModal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <article class="media">
+                    <div class="media-content">
+                        <div class="content">
+                            <p class="title">Edit display email</p>
+                            <p>Enter the display email below.<br />
+                            <strong>Please note, this is a public change and will overwrite all user emails!</strong></p>
+                            <form id="displayEmailForm" enctype="multipart/form-data">
+                                <div class="field">
+                                    <label class="label" for="email">Display Email</label>
+                                    <div class="control">
+                                        <input
+                                                id="email"
+                                                class="input"
+                                                type="text"
+                                                name="email"
+                                                placeholder="email@afcaldermason.co.uk"
+                                                {{if gt (len .DisplayEmail) 0}}
+                                                value="{{.DisplayEmail}}"
+                                                {{end}}
+                                        />
+                                    </div>
+                                </div>
+                                <a class="button is-danger" onclick="displayEmail()" id="displayEmailButton">
+                                    Edit Display Email
+                                </a>
+                            </form>
+                            <div id="displayEmailErrorParent" style="display: none">
+                                <br><br>
+                                <div class="notification is-danger" id="displayEmailError"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </div>
     <div id="resetPasswordModal" class="modal">
         <div class="modal-background"></div>
         <div class="modal-content">
@@ -459,6 +511,36 @@
                         $("#addUserError").html(data.error);
                         document.getElementById("addUserErrorParent").style.display = null;
                         document.getElementById("addUserButton").disabled = false;
+                    } else {
+                        window.location.href = "/users";
+                    }
+                },
+            })
+        }
+
+        function openDisplayEmailModal() {
+            document.getElementById("displayEmailModal").classList.add("is-active");
+        }
+
+        function displayEmail() {
+            document.getElementById("displayEmailErrorParent").style.display = 'none';
+            document.getElementById("displayEmailButton").disabled = true;
+            let form = $('#displayEmailForm')[0];
+
+            // Create an FormData object
+            let data = new FormData(form);
+            $.ajax({
+                url: '/users/setdisplayemail',
+                type: 'post',
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    if (data.error.length > 0) {
+                        $("#displayEmailError").html(data.error);
+                        document.getElementById("displayEmailErrorParent").style.display = null;
+                        document.getElementById("displayEmailButton").disabled = false;
                     } else {
                         window.location.href = "/users";
                     }
