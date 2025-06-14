@@ -84,14 +84,15 @@ func (v *Views) _infoEditPost(c echo.Context) error {
 	content := c.FormValue("htmlContent")
 
 	p := bluemonday.NewPolicy()
-	p.AllowElements("a", "ul", "ol", "li", "hcustom", "b", "i", "u", "strike", "div", "br", "p",
+	p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
 		"blockquote", "pre", "hr")
+	p.AllowAttrs("class").OnElements("h2")
 	p.AllowAttrs("href", "style").OnElements("a")
 	p.AllowURLSchemes("mailto", "http", "https")
 	p.RequireNoFollowOnLinks(false)
 
 	// Justification - via inline style
-	p.AllowAttrs("style").OnElements("div", "p", "hcustom")
+	p.AllowAttrs("style").OnElements("div", "p", "h2", "span")
 
 	safe := p.Sanitize(content)
 

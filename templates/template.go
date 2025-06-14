@@ -100,26 +100,15 @@ func (t *Templater) GetEmailTemplate(emailTemplate Template) (*template.Template
 // getFuncMaps returns all the in built functions that templates can use
 func (t *Templater) getFuncMaps() template.FuncMap {
 	p := bluemonday.NewPolicy()
-	// Common structural tags
-	p.AllowElements("div", "br", "p", "blockquote", "pre", "hr")
-
-	// Text formatting
-	p.AllowElements("b", "i", "u", "strike")
-
-	// Custom heading from your toolbar
-	p.AllowElements("hcustom")
-
-	// Lists
-	p.AllowElements("ul", "ol", "li")
-
-	// Links
-	p.AllowElements("a")
+	p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
+		"blockquote", "pre", "hr")
+	p.AllowAttrs("class").OnElements("h2")
 	p.AllowAttrs("href", "style").OnElements("a")
 	p.AllowURLSchemes("mailto", "http", "https")
 	p.RequireNoFollowOnLinks(false)
 
 	// Justification - via inline style
-	p.AllowAttrs("style").OnElements("div", "p", "hcustom")
+	p.AllowAttrs("style").OnElements("div", "p", "h2", "span")
 
 	return template.FuncMap{
 		"add": func(a, b int) int {

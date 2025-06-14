@@ -1,7 +1,7 @@
 {{define "title"}}Information{{end}}
 {{define "content"}}
     <style>
-        hCustom {
+        .hCustom {
             text-decoration: underline;
             text-decoration-color: red;
             font-weight: bold;
@@ -14,7 +14,7 @@
         {{if gt (len .InfoContent) 0}}
             {{infoTemplate .InfoContent}}
         {{else}}
-            <hcustom>Club history</hcustom>
+            <h2 class="hcustom">Club history</h2>
             <p style="padding: 0 10px 0 0;">Our club was founded as AWRE Football Club in 1952 by Charles Green, Ted Hall,
                 Gordon Carter, and Don Sharp, and were nicknamed "The Atom Men" after the newly founded Atomic Weapons Research
                 Establishment. As the AWRE complex was still under construction when the club was established, the players used
@@ -62,7 +62,7 @@
 {{/*            Clubs statement-->*/}}
 {{/*            <h2 class="welcomeHeader" style="color: #1F1F1F">Useful links</h2>*/}}
 {{/*            <!--Apologies, we currently don't have anything to go here, this website is currently under development-->*/}}
-            <hcustom>Join us @</hcustom>
+            <h2 class="hCustom">Join us @</h2>
             secretary@afcaldermaston.co.uk<br><br>
             safeguardingofficer@afcaldermaston.co.uk
 {{/*            <!--Apologies, we currently don't have anything to go here, this website is currently under development-->*/}}
