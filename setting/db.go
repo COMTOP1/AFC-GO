@@ -43,8 +43,13 @@ func (s *Store) getSetting(ctx context.Context, settingID string) (Setting, erro
 
 func (s *Store) addSetting(ctx context.Context, settingParam Setting) (Setting, error) {
 	builder := utils.PSQL().Insert("afc.settings").
-		Columns("setting_text").
-		Values(settingParam.SettingText)
+		Columns(
+			"id",
+			"setting_text",
+		).Values(
+		settingParam.ID,
+		settingParam.SettingText,
+	)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for addSetting: %w", err))
