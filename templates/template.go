@@ -10,6 +10,8 @@ import (
 	"log"
 	"math/big"
 
+	"github.com/microcosm-cc/bluemonday"
+
 	"github.com/COMTOP1/AFC-GO/team"
 )
 
@@ -97,6 +99,28 @@ func (t *Templater) GetEmailTemplate(emailTemplate Template) (*template.Template
 
 // getFuncMaps returns all the in built functions that templates can use
 func (t *Templater) getFuncMaps() template.FuncMap {
+	p := bluemonday.NewPolicy()
+	// Common structural tags
+	p.AllowElements("div", "br", "p", "blockquote", "pre", "hr")
+
+	// Text formatting
+	p.AllowElements("b", "i", "u", "strike")
+
+	// Custom heading from your toolbar
+	p.AllowElements("hcustom")
+
+	// Lists
+	p.AllowElements("ul", "ol", "li")
+
+	// Links
+	p.AllowElements("a")
+	p.AllowAttrs("href", "style").OnElements("a")
+	p.AllowURLSchemes("mailto", "http", "https")
+	p.RequireNoFollowOnLinks(false)
+
+	// Justification - via inline style
+	p.AllowAttrs("style").OnElements("div", "p", "hcustom")
+
 	return template.FuncMap{
 		"add": func(a, b int) int {
 			return a + b
@@ -126,7 +150,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			return nBig.Int64()
 		},
 		"infoTemplate": func(content string) template.HTML {
-			return template.HTML(content)
+			safe := p.Sanitize(content)
+			//nolint:gosec
+			return template.HTML(safe)
 		},
 	}
 }
