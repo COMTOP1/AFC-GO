@@ -136,12 +136,10 @@
             }, f = function (t) {
                 let e = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : null;
                 const did = document.execCommand(t, !1, e);
-                console.log(t, arguments, e, did)
                 return did;
             }, f1 = function (t) {
                 let e = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : null;
                 const did = document.execCommand("insertHTML", false, "<h2 class='hCustom'>"+ document.getSelection()+"</h2>");
-                console.log(t, arguments, e, did)
                 return did;
             }, p = {
                 bold: {
