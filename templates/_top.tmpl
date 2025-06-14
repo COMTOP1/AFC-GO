@@ -68,7 +68,11 @@
                             {{if or (eq .User.Role "Club Secretary") (or (eq .User.Role "Chairperson") (eq .User.Role "Webmaster"))}}
                             <a class="navbar-item" href="/users">
                                 Users
-                            </a>{{end}}
+                            </a>
+                            <a class="navbar-item" href="/info/edit">
+                                Info Edit
+                            </a>
+                            {{end}}
                             <a class="navbar-item" href="/players">
                                 Players
                             </a>
