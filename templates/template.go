@@ -28,6 +28,7 @@ const (
 	AccountTemplate        Template = "account.tmpl"
 	NotFound404Template    Template = "404.tmpl"
 	InfoTemplate           Template = "info.tmpl"
+	InfoEditTemplate       Template = "infoEdit.tmpl"
 	HomeTemplate           Template = "home.tmpl"
 	ContactTemplate        Template = "contact.tmpl"
 	ResetTemplate          Template = "reset.tmpl"
