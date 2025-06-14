@@ -11,11 +11,13 @@
                     </div>
                     <p>{{.Name}}<br>
                         {{.Role}}<br>
+                    {{$email := ""}}
                     {{if gt (len $.DisplayEmail) 0}}
-                        {{$.DisplayEmail}}
+                        {{$email = $.DisplayEmail}}
                     {{else}}
-                        {{.Email}}
-                    {{end}}</p>
+                        {{$email = .Email}}
+                    {{end}}
+                    <a href="mailto:{{$email}}" style="text-decoration: underline;">{{$email}}</a></p>
                 </div>
             {{end}}
         </div>
