@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -26,14 +27,21 @@ func (v *Views) ContactFunc(c echo.Context) error {
 			fmt.Errorf("failed to format contact users: %w", err))
 	}
 
+	displayEmail, err := v.setting.GetSetting(c.Request().Context(), "displayEmail")
+	if err != nil {
+		log.Printf("failed to get displayEmail for contact, error: %+v, continuing", err)
+	}
+
 	year, _, _ := time.Now().Date()
 
 	data := struct {
 		Year         int
+		DisplayEmail string
 		ContactUsers []ContactUserTemplate
 		User         user.User
 	}{
 		Year:         year,
+		DisplayEmail: displayEmail.SettingText,
 		ContactUsers: contactTmpl,
 		User:         c1.User,
 	}

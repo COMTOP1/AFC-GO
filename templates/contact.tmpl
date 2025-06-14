@@ -11,7 +11,11 @@
                     </div>
                     <p>{{.Name}}<br>
                         {{.Role}}<br>
-                        {{.Email}}</p>
+                    {{if gt (len $.DisplayEmail) 0}}
+                        {{$.DisplayEmail}}
+                    {{else}}
+                        {{.Email}}
+                    {{end}}</p>
                 </div>
             {{end}}
         </div>
