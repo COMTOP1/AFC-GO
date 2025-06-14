@@ -125,6 +125,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 			return nBig.Int64()
 		},
+		"infoTemplate": func(content string) template.HTML {
+			return template.HTML(content)
+		},
 	}
 }
 
