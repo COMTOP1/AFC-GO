@@ -84,20 +84,8 @@ func (v *Views) _infoEditPost(c echo.Context) error {
 	content := c.FormValue("htmlContent")
 
 	p := bluemonday.NewPolicy()
-	// Common structural tags
-	p.AllowElements("div", "br", "p", "blockquote", "pre", "hr")
-
-	// Text formatting
-	p.AllowElements("b", "i", "u", "strike")
-
-	// Custom heading from your toolbar
-	p.AllowElements("hcustom")
-
-	// Lists
-	p.AllowElements("ul", "ol", "li")
-
-	// Links
-	p.AllowElements("a")
+	p.AllowElements("a", "ul", "ol", "li", "hcustom", "b", "i", "u", "strike", "div", "br", "p",
+		"blockquote", "pre", "hr")
 	p.AllowAttrs("href", "style").OnElements("a")
 	p.AllowURLSchemes("mailto", "http", "https")
 	p.RequireNoFollowOnLinks(false)
