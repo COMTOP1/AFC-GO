@@ -10,7 +10,7 @@
     font-style: normal
 }
 
-.fa {
+.fa, .fa-brands {
     display: inline-block;
     font: normal normal normal 14px/1 FontAwesome;
     font-size: inherit;
@@ -689,7 +689,7 @@
     content: "\f080"
 }
 
-.fa-twitter-square:before {
+.fa-twitter-square:before, .fa-x-twitter-square:before {
     content: "\f081"
 }
 
@@ -781,7 +781,7 @@
     content: "\f098"
 }
 
-.fa-twitter:before {
+.fa-twitter:before, .fa-x-twitter:before {
     content: "\f099"
 }
 
