@@ -1,9 +1,12 @@
 package views
 
 import (
+	"context"
 	"encoding/gob"
 	"encoding/hex"
 	"log"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gorilla/securecookie"
@@ -26,6 +29,8 @@ import (
 	"github.com/COMTOP1/AFC-GO/user"
 	"github.com/COMTOP1/AFC-GO/whatson"
 )
+
+const visitorCount = "visitorCount"
 
 type (
 	Config struct {
@@ -75,6 +80,12 @@ type (
 		template    *templates.Templater
 		user        *user.Store
 		whatsOn     *whatson.Store
+
+		// Visitor tracking
+		count         int
+		countMutex    sync.Mutex
+		flushInterval time.Duration
+		stopChan      chan struct{}
 	}
 
 	TemplateHelper struct {
@@ -84,7 +95,7 @@ type (
 	}
 )
 
-func New(conf *Config, host string) *Views {
+func New(conf *Config, host string, interval time.Duration) *Views {
 	v := &Views{}
 	// Connecting to stores
 	dbStore := db.NewStore(conf.DatabaseURL, host)
@@ -144,5 +155,90 @@ func New(conf *Config, host string) *Views {
 		Password: conf.Mail.Password,
 	})
 
+	v.flushInterval = interval
+	v.stopChan = make(chan struct{})
+
+	go v.startFlusher()
+
 	return v
+}
+
+func (v *Views) RecordVisit(visitorID string) {
+	if _, found := v.cache.Get(visitorID); !found {
+		v.cache.Set(visitorID, true, cache.DefaultExpiration)
+
+		v.countMutex.Lock()
+		v.count++
+		v.countMutex.Unlock()
+	}
+}
+
+func (v *Views) startFlusher() {
+	ticker := time.NewTicker(v.flushInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			v.flushToDB()
+		case <-v.stopChan:
+			return
+		}
+	}
+}
+
+func (v *Views) flushToDB() {
+	v.countMutex.Lock()
+	countToFlush := v.count
+	v.count = 0
+	v.countMutex.Unlock()
+
+	if countToFlush == 0 {
+		return
+	}
+
+	v.cache.Set(visitorCount, countToFlush, cache.DefaultExpiration)
+
+	ctx := context.Background()
+	currentSetting, err := v.setting.GetSetting(ctx, visitorCount)
+	if err != nil {
+		_, err = v.setting.AddSetting(ctx, setting.Setting{
+			ID:          visitorCount,
+			SettingText: strconv.Itoa(countToFlush),
+		})
+		if err != nil {
+			log.Printf("Error creating visitorCount: %v", err)
+		}
+		return
+	}
+
+	currentValue, _ := strconv.Atoi(currentSetting.SettingText)
+	newValue := currentValue + countToFlush
+
+	_, err = v.setting.EditSetting(ctx, setting.Setting{
+		ID:          visitorCount,
+		SettingText: strconv.Itoa(newValue),
+	})
+	if err != nil {
+		log.Printf("Error updating visitorCount: %v", err)
+	}
+
+	v.cache.Set(visitorCount, newValue, cache.DefaultExpiration)
+}
+
+func (v *Views) Stop() {
+	close(v.stopChan)
+}
+
+func (v *Views) GetVisitorCount() int {
+	val, ok := v.cache.Get(visitorCount)
+	if !ok {
+		return 0
+	}
+
+	count, ok := val.(int)
+	if !ok {
+		return 0
+	}
+	return count
 }

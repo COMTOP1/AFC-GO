@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 
@@ -131,7 +132,7 @@ func main() {
 		},
 	}
 
-	v := views.New(conf, dbHost)
+	v := views.New(conf, dbHost, 30*time.Second)
 
 	router := NewRouter(&RouterConf{
 		Config: conf,
@@ -139,5 +140,6 @@ func main() {
 	})
 
 	err = router.Start()
+	v.Stop()
 	log.Fatalf("The web server couldn't be started!\n\n%s\n\nExiting!", err)
 }
