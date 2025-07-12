@@ -67,6 +67,8 @@ func (r *Router) loadRoutes() {
 
 	r.router.GET("/public/*", echo.WrapHandler(http.StripPrefix("/public/", assetHandler)))
 
+	r.router.Use(r.views.VisitorTrackingMiddleware)
+
 	validMethods := []string{http.MethodGet, http.MethodPost}
 
 	base := r.router.Group("/")

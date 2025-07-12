@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 
@@ -78,5 +79,28 @@ func (v *Views) RequireClubSecretaryHigher(next echo.HandlerFunc) echo.HandlerFu
 		}
 
 		return echo.NewHTTPError(http.StatusForbidden, errors.New("you are not authorised for accessing this"))
+	}
+}
+
+func (v *Views) VisitorTrackingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		const cookieName = "afc_aldermaston_visited"
+
+		_, err := c.Cookie(cookieName)
+		if errors.Is(err, http.ErrNoCookie) {
+			c.SetCookie(&http.Cookie{
+				Name:    cookieName,
+				Value:   "visited",
+				Expires: time.Now().Add(24 * time.Hour),
+				Domain:  "afcaldermaston.co.uk",
+				Path:    "/",
+			})
+
+			// Use IP as session ID (could be replaced with UUID for privacy)
+			visitorID := c.RealIP()
+			v.RecordVisit(visitorID)
+		}
+
+		return next(c)
 	}
 }
