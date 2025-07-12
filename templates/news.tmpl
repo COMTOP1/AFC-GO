@@ -69,9 +69,10 @@
                                 <div class="field">
                                     <label class="label" for="content">Content</label>
                                     <div class="control">
-                                        <textarea class="textarea" placeholder="Content..." rows="10" id="content"
-                                                  name="content"></textarea>
+                                        <div id="editor" class="pell"></div>
+                                        <input type="hidden" name="htmlContent" id="html-input">
                                     </div>
+                                    {{ template "pellOutput" }}
                                 </div>
                                 <div class="field">
                                     <label class="label" for="image">Image (leave blank for the AFC logo)</label>
@@ -110,6 +111,8 @@
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
     <script>
+        let htmlText = "";
+
         let addNewsUpload = $('#addNewsUpload')
         addNewsUpload.change(function () {
             $('#addNewsUploadName').text(addNewsUpload[0].files[0].name);
@@ -168,4 +171,5 @@
             })
         }
     </script>
+    {{ template "pellLogic" }}
 {{end}}

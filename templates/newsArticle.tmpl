@@ -24,12 +24,12 @@
                  onerror="this.onerror=null;this.src='/public/AFC.png';"
                  style="width: auto; max-height: 500px;"
                  class="lazy articleImageVertical"><br><br>
-            <p style="text-align: left; font-size: 18px; white-space: pre-line;">{{.News.Content}}
+            <p style="text-align: left; font-size: 18px; white-space: pre-line;">{{htmlTemplate .News.Content}}
             </p>
         </div>
         <div class="articleBody">
             <div style="float:left; width: 50%;">
-                <p style="text-align: left; font-size: 18px; white-space: pre-line;">{{.News.Content}}
+                <p style="text-align: left; font-size: 18px; white-space: pre-line;">{{htmlTemplate .News.Content}}
                 </p></div>
             <div style="float:right; text-align: center; width: 50%;">
                 <img data-src="/download?s=n&id={{.News.ID}}&r={{randomImgInt}}"
@@ -72,9 +72,10 @@
                                 <div class="field">
                                     <label class="label" for="content">Content</label>
                                     <div class="control">
-                                        <textarea class="textarea" placeholder="Content..." rows="10" id="content"
-                                                  name="content">{{.News.Content}}</textarea>
+                                        <div id="editor" class="pell"></div>
+                                        <input type="hidden" name="htmlContent" id="html-input">
                                     </div>
+                                    {{ template "pellOutput" }}
                                 </div>
                                 <div class="field">
                                     <label class="label" for="image">Image (leave blank for the AFC logo)</label>
@@ -137,6 +138,8 @@
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
     <script>
+        let htmlText = "{{.News.Content}}";
+
         let editNewsUpload = $('#editNewsUpload')
         editNewsUpload.change(function () {
             $('#editNewsUploadName').text(editNewsUpload[0].files[0].name);
@@ -214,4 +217,5 @@
             })
         }
     </script>
+    {{ template "pellLogic" }}
 {{end}}
