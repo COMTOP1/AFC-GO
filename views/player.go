@@ -35,17 +35,19 @@ func (v *Views) PlayersFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year    int
-		Players []PlayerTemplate
-		Teams   []TeamTemplate
-		User    user.User
-		Context *Context
+		Year         int
+		VisitorCount int
+		Players      []PlayerTemplate
+		Teams        []TeamTemplate
+		User         user.User
+		Context      *Context
 	}{
-		Year:    year,
-		Players: DBPlayersToTemplateFormat(playersDB, teamsDB),
-		Teams:   DBTeamsToTemplateFormat(teamsDB),
-		User:    c1.User,
-		Context: c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		Players:      DBPlayersToTemplateFormat(playersDB, teamsDB),
+		Teams:        DBTeamsToTemplateFormat(teamsDB),
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.PlayersTemplate, templates.RegularType)

@@ -36,11 +36,13 @@ func (v *Views) ContactFunc(c echo.Context) error {
 
 	data := struct {
 		Year         int
+		VisitorCount int
 		DisplayEmail string
 		ContactUsers []ContactUserTemplate
 		User         user.User
 	}{
 		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
 		DisplayEmail: displayEmail.SettingText,
 		ContactUsers: contactTmpl,
 		User:         c1.User,

@@ -29,15 +29,17 @@ func (v *Views) GalleryFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year    int
-		Images  []image.Image
-		User    user.User
-		Context *Context
+		Year         int
+		VisitorCount int
+		Images       []image.Image
+		User         user.User
+		Context      *Context
 	}{
-		Year:    year,
-		Images:  imagesDB,
-		User:    c1.User,
-		Context: c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		Images:       imagesDB,
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.GalleryTemplate, templates.RegularType)

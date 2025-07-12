@@ -18,6 +18,7 @@ import (
 
 type ProgrammeTemplateStruct struct {
 	Year           int
+	VisitorCount   int
 	Programmes     []ProgrammeTemplate
 	Seasons        []programme.Season
 	SelectedSeason int
@@ -43,11 +44,12 @@ func (v *Views) ProgrammesFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := ProgrammeTemplateStruct{
-		Year:       year,
-		Programmes: DBProgrammesToTemplateFormat(programmesDB, seasonsDB),
-		Seasons:    seasonsDB,
-		User:       c1.User,
-		Context:    c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		Programmes:   DBProgrammesToTemplateFormat(programmesDB, seasonsDB),
+		Seasons:      seasonsDB,
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.ProgrammesTemplate, templates.RegularType)
@@ -88,6 +90,7 @@ func (v *Views) ProgrammesSeasonsFunc(c echo.Context) error {
 
 	data := ProgrammeTemplateStruct{
 		Year:           year,
+		VisitorCount:   v.GetVisitorCount(),
 		Programmes:     DBProgrammesToTemplateFormat(programmesDB, seasonsDB),
 		Seasons:        seasonsDB,
 		SelectedSeason: id,

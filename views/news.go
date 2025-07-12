@@ -34,15 +34,17 @@ func (v *Views) NewsFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year    int
-		News    []NewsTemplate
-		User    user.User
-		Context *Context
+		Year         int
+		VisitorCount int
+		News         []NewsTemplate
+		User         user.User
+		Context      *Context
 	}{
-		Year:    year,
-		News:    DBNewsToTemplateFormat(n1),
-		User:    c1.User,
-		Context: c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		News:         DBNewsToTemplateFormat(n1),
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.NewsTemplate, templates.RegularType)
@@ -66,15 +68,17 @@ func (v *Views) NewsArticleFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year    int
-		News    NewsTemplate
-		User    user.User
-		Context *Context
+		Year         int
+		VisitorCount int
+		News         NewsTemplate
+		User         user.User
+		Context      *Context
 	}{
-		Year:    year,
-		News:    DBNewsToArticleTemplateFormat(newsDB),
-		User:    c1.User,
-		Context: c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		News:         DBNewsToArticleTemplateFormat(newsDB),
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.NewsArticleTemplate, templates.RegularType)

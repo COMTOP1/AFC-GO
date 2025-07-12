@@ -39,6 +39,7 @@ func (v *Views) HomeFunc(c echo.Context) error {
 
 	data := struct {
 		Year          int
+		VisitorCount  int
 		Affiliations  []affiliation.Affiliation
 		Sponsors      []sponsor.Sponsor
 		NewsLatest    NewsTemplate
@@ -47,6 +48,7 @@ func (v *Views) HomeFunc(c echo.Context) error {
 		Context       *Context
 	}{
 		Year:          year,
+		VisitorCount:  v.GetVisitorCount(),
 		Affiliations:  affiliations,
 		Sponsors:      sponsors,
 		NewsLatest:    DBNewsToArticleTemplateFormat(newsLatest),

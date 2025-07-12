@@ -20,13 +20,15 @@ func (v *Views) AccountFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year    int
-		User    UserTemplate
-		Context *Context
+		Year         int
+		VisitorCount int
+		User         UserTemplate
+		Context      *Context
 	}{
-		Year:    year,
-		User:    DBUserToTemplateFormat(c1.User),
-		Context: c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		User:         DBUserToTemplateFormat(c1.User),
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.AccountTemplate, templates.RegularType)

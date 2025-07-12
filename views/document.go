@@ -31,15 +31,17 @@ func (v *Views) DocumentsFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year      int
-		Documents []DocumentTemplate
-		User      user.User
-		Context   *Context
+		Year         int
+		VisitorCount int
+		Documents    []DocumentTemplate
+		User         user.User
+		Context      *Context
 	}{
-		Year:      year,
-		Documents: DBDocumentsToTemplateFormat(d1),
-		User:      c1.User,
-		Context:   c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		Documents:    DBDocumentsToTemplateFormat(d1),
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.DocumentsTemplate, templates.RegularType)

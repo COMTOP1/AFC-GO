@@ -31,19 +31,21 @@ func (v *Views) WhatsOnFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year       int
-		WhatsOn    []WhatsOnTemplate
-		User       user.User
-		TimePeriod string
-		Selected   string
-		Context    *Context
+		Year         int
+		VisitorCount int
+		WhatsOn      []WhatsOnTemplate
+		User         user.User
+		TimePeriod   string
+		Selected     string
+		Context      *Context
 	}{
-		Year:       year,
-		WhatsOn:    DBWhatsOnToTemplateFormat(whatsOnsDB),
-		User:       c1.User,
-		TimePeriod: "all the what's on articles",
-		Selected:   "all",
-		Context:    c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		WhatsOn:      DBWhatsOnToTemplateFormat(whatsOnsDB),
+		User:         c1.User,
+		TimePeriod:   "all the what's on articles",
+		Selected:     "all",
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnTemplate, templates.RegularType)
@@ -79,19 +81,21 @@ func (v *Views) WhatsOnTomePeriodFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year       int
-		WhatsOn    []WhatsOnTemplate
-		User       user.User
-		TimePeriod string
-		Selected   string
-		Context    *Context
+		Year         int
+		VisitorCount int
+		WhatsOn      []WhatsOnTemplate
+		User         user.User
+		TimePeriod   string
+		Selected     string
+		Context      *Context
 	}{
-		Year:       year,
-		WhatsOn:    DBWhatsOnToTemplateFormat(whatsOnsDB),
-		User:       c1.User,
-		TimePeriod: fmt.Sprintf("all the %s what's on articles", timePeriod),
-		Selected:   timePeriod,
-		Context:    c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		WhatsOn:      DBWhatsOnToTemplateFormat(whatsOnsDB),
+		User:         c1.User,
+		TimePeriod:   fmt.Sprintf("all the %s what's on articles", timePeriod),
+		Selected:     timePeriod,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnTemplate, templates.RegularType)
@@ -129,15 +133,17 @@ func (v *Views) WhatsOnArticleFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year    int
-		WhatsOn WhatsOnTemplate
-		User    user.User
-		Context *Context
+		Year         int
+		VisitorCount int
+		WhatsOn      WhatsOnTemplate
+		User         user.User
+		Context      *Context
 	}{
-		Year:    year,
-		WhatsOn: DBWhatsOnToArticleTemplateFormat(whatsOnFromDB),
-		User:    c1.User,
-		Context: c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		WhatsOn:      DBWhatsOnToArticleTemplateFormat(whatsOnFromDB),
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnArticleTemplate, templates.RegularType)

@@ -25,13 +25,15 @@ func (v *Views) InfoFunc(c echo.Context) error {
 	}
 
 	data := struct {
-		Year        int
-		InfoContent string
-		User        user.User
+		Year         int
+		VisitorCount int
+		InfoContent  string
+		User         user.User
 	}{
-		Year:        year,
-		InfoContent: infoContent.SettingText,
-		User:        c1.User,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		InfoContent:  infoContent.SettingText,
+		User:         c1.User,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.InfoTemplate, templates.RegularType)
@@ -63,15 +65,17 @@ func (v *Views) _infoEditGet(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year        int
-		InfoContent string
-		User        user.User
-		Context     *Context
+		Year         int
+		VisitorCount int
+		InfoContent  string
+		User         user.User
+		Context      *Context
 	}{
-		Year:        year,
-		InfoContent: infoContent.SettingText,
-		User:        c1.User,
-		Context:     c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		InfoContent:  infoContent.SettingText,
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.InfoEditTemplate, templates.RegularType)

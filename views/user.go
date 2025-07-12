@@ -47,6 +47,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 
 	data := struct {
 		Year         int
+		VisitorCount int
 		DisplayEmail string
 		Users        []UserTemplate
 		Teams        []TeamTemplate
@@ -54,6 +55,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		Context      *Context
 	}{
 		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
 		DisplayEmail: displayEmail.SettingText,
 		Users:        DBUsersToTemplateFormat(usersDB),
 		Teams:        DBTeamsToTemplateFormat(teamsDB),

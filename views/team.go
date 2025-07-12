@@ -38,15 +38,17 @@ func (v *Views) TeamsFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year    int
-		Teams   []TeamTemplate
-		User    user.User
-		Context *Context
+		Year         int
+		VisitorCount int
+		Teams        []TeamTemplate
+		User         user.User
+		Context      *Context
 	}{
-		Year:    year,
-		Teams:   DBTeamsToTemplateFormat(teams),
-		User:    c1.User,
-		Context: c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		Teams:        DBTeamsToTemplateFormat(teams),
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.TeamsTemplate, templates.RegularType)
@@ -90,21 +92,23 @@ func (v *Views) TeamFunc(c echo.Context) error {
 	year, _, _ := time.Now().Date()
 
 	data := struct {
-		Year     int
-		Team     team.Team
-		Managers []ManagerTemplate
-		Sponsors []SponsorTemplate
-		Players  []PlayerTemplate
-		User     user.User
-		Context  *Context
+		Year         int
+		VisitorCount int
+		Team         team.Team
+		Managers     []ManagerTemplate
+		Sponsors     []SponsorTemplate
+		Players      []PlayerTemplate
+		User         user.User
+		Context      *Context
 	}{
-		Year:     year,
-		Team:     teamDB,
-		Managers: DBManagersToTemplateFormat(managersDB),
-		Sponsors: DBSponsorsToTemplateFormat(sponsorsDB),
-		Players:  DBPlayersTeamToTemplateFormat(playersDB),
-		User:     c1.User,
-		Context:  c1,
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		Team:         teamDB,
+		Managers:     DBManagersToTemplateFormat(managersDB),
+		Sponsors:     DBSponsorsToTemplateFormat(sponsorsDB),
+		Players:      DBPlayersTeamToTemplateFormat(playersDB),
+		User:         c1.User,
+		Context:      c1,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.TeamTemplate, templates.RegularType)

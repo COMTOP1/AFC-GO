@@ -6,7 +6,7 @@
            class="fa fa-twitter" aria-label="AFC Aldermaston Twitter (X) link" target="_blank"></a>
     </div>
     <footer>
-        <img src="https://hitwebcounter.com/counter/counter.php?page=7737765&style=0024&nbdigits=5&type=ip&initCount=0" title="Free Counter" Alt="web counter" border="0" class="lazy" data-src="https://hitwebcounter.com/counter/counter.php?page=7737765&style=0024&nbdigits=5&type=ip&initCount=0" {{if eq .User.ID 0}}style="visibility: hidden;"{{end}} /><br>
+        {{if ne .User.ID 0}}<small>Visitor count: {{.VisitorCount}}</small><br>{{end}}
         <small>&copy; Copyright 2020 - {{.Year}}, AFC Aldermaston, website provided by <a
                     href="https://bswdi.co.uk"
                     style="text-decoration: underline; font-weight: 900;"
