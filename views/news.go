@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/microcosm-cc/bluemonday"
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/news"
@@ -84,7 +85,20 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 		c1 := v.getSessionData(c)
 
 		title := c.FormValue("title")
-		content := c.FormValue("content")
+		content := c.FormValue("htmlContent")
+
+		p := bluemonday.NewPolicy()
+		p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
+			"blockquote", "pre", "hr")
+		p.AllowAttrs("class").OnElements("h2")
+		p.AllowAttrs("href", "style").OnElements("a")
+		p.AllowURLSchemes("mailto", "http", "https")
+		p.RequireNoFollowOnLinks(false)
+
+		// Justification - via inline style
+		p.AllowAttrs("style").OnElements("div", "p", "h2", "span")
+
+		safe := p.Sanitize(content)
 
 		data := struct {
 			Error string `json:"error"`
@@ -113,7 +127,7 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 			}
 		}
 
-		_, err = v.news.AddNews(c.Request().Context(), news.News{Title: title, Content: null.NewString(content, len(content) > 0), FileName: null.NewString(fileName, len(fileName) > 0)})
+		_, err = v.news.AddNews(c.Request().Context(), news.News{Title: title, Content: null.NewString(safe, len(safe) > 0), FileName: null.NewString(fileName, len(fileName) > 0)})
 		if err != nil {
 			log.Printf("failed to add news for news add, error: %+v", err)
 			data.Error = fmt.Sprintf("failed to add news for news add: %+v", err)
@@ -146,8 +160,22 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 		}
 
 		newsDB.Title = c.FormValue("title")
-		tempContent := c.FormValue("content")
-		newsDB.Content = null.NewString(tempContent, len(tempContent) > 0)
+		tempContent := c.FormValue("htmlContent")
+
+		p := bluemonday.NewPolicy()
+		p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
+			"blockquote", "pre", "hr")
+		p.AllowAttrs("class").OnElements("h2")
+		p.AllowAttrs("href", "style").OnElements("a")
+		p.AllowURLSchemes("mailto", "http", "https")
+		p.RequireNoFollowOnLinks(false)
+
+		// Justification - via inline style
+		p.AllowAttrs("style").OnElements("div", "p", "h2", "span")
+
+		safe := p.Sanitize(tempContent)
+
+		newsDB.Content = null.NewString(safe, len(safe) > 0)
 
 		data := struct {
 			Error string `json:"error"`
@@ -180,7 +208,7 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 					log.Printf("failed to delete old image for news edit, news id: %d, error: %+v", newsID, err)
 				}
 			}
-			newsDB.FileName = null.NewString(tempFileName, len(tempContent) > 0)
+			newsDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
 		}
 
 		tempRemoveNewsImage := c.FormValue("removeNewsImage")
