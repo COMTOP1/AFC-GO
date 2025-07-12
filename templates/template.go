@@ -138,7 +138,7 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			}
 			return nBig.Int64()
 		},
-		"infoTemplate": func(content string) template.HTML {
+		"htmlTemplate": func(content string) template.HTML {
 			safe := p.Sanitize(content)
 			//nolint:gosec
 			return template.HTML(safe)
