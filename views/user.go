@@ -91,14 +91,27 @@ func (v *Views) UsersSetDisplayEmailFunc(c echo.Context) error {
 				return c.JSON(http.StatusOK, data)
 			}
 
-			_, err = v.setting.EditSetting(c.Request().Context(), setting.Setting{
-				ID:          "displayEmail",
-				SettingText: tempEmail,
-			})
+			_, err = v.setting.GetSetting(c.Request().Context(), "displayEmail")
 			if err != nil {
-				log.Printf("failed to edit setting for display email, error: %+v", err)
-				data.Error = fmt.Sprintf("failed to edit setting for display email: %+v", err)
-				return c.JSON(http.StatusOK, data)
+				_, err = v.setting.AddSetting(c.Request().Context(), setting.Setting{
+					ID:          "displayEmail",
+					SettingText: tempEmail,
+				})
+				if err != nil {
+					log.Printf("failed to add setting for display email, error: %+v", err)
+					data.Error = fmt.Sprintf("failed to add setting for display email: %+v", err)
+					return c.JSON(http.StatusOK, data)
+				}
+			} else {
+				_, err = v.setting.EditSetting(c.Request().Context(), setting.Setting{
+					ID:          "displayEmail",
+					SettingText: tempEmail,
+				})
+				if err != nil {
+					log.Printf("failed to edit setting for display email, error: %+v", err)
+					data.Error = fmt.Sprintf("failed to edit setting for display email: %+v", err)
+					return c.JSON(http.StatusOK, data)
+				}
 			}
 		} else {
 			err := v.setting.DeleteSetting(c.Request().Context(), "displayEmail")
