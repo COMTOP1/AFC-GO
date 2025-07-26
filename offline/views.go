@@ -3,10 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
-
-	"github.com/COMTOP1/AFC-GO/infrastructure/mail"
 )
 
 type (
@@ -19,8 +16,6 @@ type (
 	Views struct {
 		cache    *cache.Cache
 		conf     *Config
-		cookie   *sessions.CookieStore
-		mailer   *mail.MailerInit
 		template *Templater
 	}
 )
