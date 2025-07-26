@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+    <head>
+        <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png">
+        <link rel="manifest" href="/public/site.webmanifest">
+        <link rel="shortcut icon" href="/public/favicon.ico">
+        <meta name="msapplication-TileColor" content="#fc0f2b">
+        <meta name="msapplication-config" content="/public/browserconfig.xml">
+        <meta name="theme-color" content="#fc0f2b">
+        <script src="https://kit.fontawesome.com/e8d79b292e.js" crossorigin="anonymous"></script>
+        <meta charset="UTF-8">
+        <meta name="keywords" content="afc,A.F.C.,AFC,aldermaston,football">
+        <meta name="description" content="AFC Aldermaston Football Club website">
+        <meta name="abstract" content="AFC Aldermaston">
+        <meta http-equiv="Content-Language" content="EN-GB">
+        <meta name="author" content="BSWDI">
+        <meta name="distribution" content="Global">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="copyright"
+              content="© Copyright 2020 - {{.Year}}, AFC Aldermaston, website provided by BSWDI">
+        <script src="/public/lazy.js"></script>
+        <script src="/public/js.cookie-2.1.4.min.js"></script>
+        <script src="/public/jquery.min.js"></script>
+        <link href="/public/stylesheet.css" rel="stylesheet">
+        <link href="/public/bulma-calendar.min.css" rel="stylesheet">
+        <script src="/public/bulma-calendar.min.js"></script>
+        <title>Official website of AFC Aldermaston - {{block "title" .}}A page{{end}}</title>
+    </head>
+<body>
+    {{block "top-block" .}}
+        {{template "top" .}}
+    {{end}}
+    {{block "content-block" .}}
+        {{template "content" .}}
+    {{end}}
+    {{block "footer-block" .}}
+        {{template "footer" .}}
+    {{end}}
+</body>
+</html>
