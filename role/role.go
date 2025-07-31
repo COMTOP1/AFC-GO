@@ -8,6 +8,7 @@ import (
 type Role string
 
 const (
+	Photographer        Role = "Photographer"
 	Manager             Role = "Manager"
 	ProgrammeEditor     Role = "Programme Editor"
 	LeagueSecretary     Role = "League Secretary"
@@ -20,6 +21,8 @@ const (
 
 func (r Role) DBString() string {
 	switch r {
+	case Photographer:
+		return "PHOTOGRAPHER"
 	case Manager:
 		return "MANAGER"
 	case ProgrammeEditor:
@@ -43,6 +46,8 @@ func (r Role) DBString() string {
 
 func GetRole(role string) (Role, error) {
 	switch strings.ToLower(role) {
+	case "photographer":
+		return Photographer, nil
 	case "manager":
 		return Manager, nil
 	case "programme_editor":

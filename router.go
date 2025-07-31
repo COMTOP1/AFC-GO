@@ -95,7 +95,7 @@ func (r *Router) loadRoutes() {
 	// base is the functions that don't require being logged in
 	base.GET("", r.views.HomeFunc)
 
-	affiliation := base.Group("affiliation", r.views.RequiresLogin, r.views.RequireNotManager)
+	affiliation := base.Group("affiliation", r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	affiliation.Match(validMethods, "/add", r.views.AffiliationAddFunc)
 	affiliation.Match(validMethods, "/:id/delete", r.views.AffiliationDeleteFunc)
 
@@ -107,7 +107,7 @@ func (r *Router) loadRoutes() {
 	base.Match(validMethods, "contact", r.views.ContactFunc)
 	base.Match(validMethods, "documents", r.views.DocumentsFunc)
 
-	document := base.Group("document", r.views.RequiresLogin, r.views.RequireNotManager)
+	document := base.Group("document", r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	document.Match(validMethods, "/add", r.views.DocumentAddFunc)
 	document.Match(validMethods, "/:id/delete", r.views.DocumentDeleteFunc)
 
@@ -119,13 +119,13 @@ func (r *Router) loadRoutes() {
 	image.Match(validMethods, "/:id/delete", r.views.ImageDeleteFunc)
 
 	base.Match(validMethods, "info", r.views.InfoFunc)
-	base.Match(validMethods, "info/edit", r.views.InfoEditFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	base.Match(validMethods, "info/edit", r.views.InfoEditFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 
 	news := base.Group("news")
-	news.Match(validMethods, "/add", r.views.NewsAddFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	news.Match(validMethods, "/add", r.views.NewsAddFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	newsID := news.Group("/:id")
-	newsID.Match(validMethods, "/edit", r.views.NewsEditFunc, r.views.RequiresLogin, r.views.RequireNotManager)
-	newsID.Match(validMethods, "/delete", r.views.NewsDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	newsID.Match(validMethods, "/edit", r.views.NewsEditFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
+	newsID.Match(validMethods, "/delete", r.views.NewsDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	newsID.Match(validMethods, "", r.views.NewsArticleFunc)
 	news.Match(validMethods, "", r.views.NewsFunc)
 
@@ -134,11 +134,11 @@ func (r *Router) loadRoutes() {
 	programmes.Match(validMethods, "", r.views.ProgrammesFunc)
 	base.Match(validMethods, "programmeselect", r.views.ProgrammeSeasonSelectFunc)
 	programme := base.Group("programme")
-	programme.Match(validMethods, "/add", r.views.ProgrammeAddFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	programme.Match(validMethods, "/add", r.views.ProgrammeAddFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	programmeID := programme.Group("/:id")
-	programmeID.Match(validMethods, "/delete", r.views.ProgrammeDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	programmeID.Match(validMethods, "/delete", r.views.ProgrammeDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 
-	season := base.Group("season", r.views.RequiresLogin, r.views.RequireNotManager)
+	season := base.Group("season", r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	season.Match(validMethods, "/add", r.views.ProgrammeSeasonAddFunc)
 	seasonsID := season.Group("/:id")
 	seasonsID.Match(validMethods, "/edit", r.views.ProgrammeSeasonEditFunc)
@@ -146,24 +146,24 @@ func (r *Router) loadRoutes() {
 
 	base.Match(validMethods, "sponsors", r.views.SponsorsFunc)
 
-	sponsor := base.Group("sponsor", r.views.RequiresLogin, r.views.RequireNotManager)
+	sponsor := base.Group("sponsor", r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	sponsor.Match(validMethods, "/add", r.views.SponsorAddFunc)
 	sponsor.Match(validMethods, "/:id/delete", r.views.SponsorDeleteFunc)
 
 	base.Match(validMethods, "teams", r.views.TeamsFunc)
 
 	team := base.Group("team")
-	team.Match(validMethods, "/add", r.views.TeamAddFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	team.Match(validMethods, "/add", r.views.TeamAddFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	teamID := team.Group("/:id")
-	teamID.Match(validMethods, "/edit", r.views.TeamEditFunc, r.views.RequiresLogin, r.views.RequireNotManager)
-	teamID.Match(validMethods, "/delete", r.views.TeamDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	teamID.Match(validMethods, "/edit", r.views.TeamEditFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
+	teamID.Match(validMethods, "/delete", r.views.TeamDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	teamID.Match(validMethods, "", r.views.TeamFunc)
 
 	whatson := base.Group("whatson")
-	whatson.Match(validMethods, "/add", r.views.WhatsOnAddFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	whatson.Match(validMethods, "/add", r.views.WhatsOnAddFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	whatsonID := whatson.Group("/:id")
-	whatsonID.Match(validMethods, "/edit", r.views.WhatsOnEditFunc, r.views.RequiresLogin, r.views.RequireNotManager)
-	whatsonID.Match(validMethods, "/delete", r.views.WhatsOnDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManager)
+	whatsonID.Match(validMethods, "/edit", r.views.WhatsOnEditFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
+	whatsonID.Match(validMethods, "/delete", r.views.WhatsOnDeleteFunc, r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	whatsonID.Match(validMethods, "", r.views.WhatsOnArticleFunc)
 	whatson.Match(validMethods, "period/:timePeriod", r.views.WhatsOnTomePeriodFunc)
 	whatson.Match(validMethods, "", r.views.WhatsOnFunc)
@@ -173,7 +173,7 @@ func (r *Router) loadRoutes() {
 
 	base.Match(validMethods, "players", r.views.PlayersFunc, r.views.RequiresLogin)
 
-	player := base.Group("player", r.views.RequiresLogin, r.views.RequireNotManager)
+	player := base.Group("player", r.views.RequiresLogin, r.views.RequireNotManagerNotPhotographer)
 	player.Match(validMethods, "/add", r.views.PlayerAddFunc)
 	playerID := player.Group("/:id")
 	playerID.Match(validMethods, "/edit", r.views.PlayerEditFunc)
