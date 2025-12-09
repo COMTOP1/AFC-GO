@@ -1,6 +1,6 @@
 module github.com/COMTOP1/AFC-GO
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/AfterShip/email-verifier v1.4.1
@@ -16,7 +16,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/xhit/go-simple-mail/v2 v2.16.0
-	golang.org/x/crypto v0.39.0
+	golang.org/x/crypto v0.46.0
 	gopkg.in/guregu/null.v4 v4.0.0
 )
 
@@ -24,7 +24,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
-	github.com/hbollon/go-edlib v1.6.0 // indirect
+	github.com/hbollon/go-edlib v1.7.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
@@ -32,8 +32,8 @@ require (
 	github.com/toorop/go-dkim v0.0.0-20250226130143-9025cce95817 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
 )
