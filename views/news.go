@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -207,7 +208,7 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 				return c.JSON(http.StatusOK, data)
 			}
 			if newsDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, newsDB.FileName.String))
+				err = os.Remove(filepath.Join(v.conf.FileDir, path.Clean(newsDB.FileName.String)))
 				if err != nil {
 					log.Printf("failed to delete old image for news edit, news id: %d, error: %+v", newsID, err)
 				}
@@ -218,7 +219,7 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 		tempRemoveNewsImage := c.FormValue("removeNewsImage")
 		if tempRemoveNewsImage == "Y" {
 			if newsDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, newsDB.FileName.String))
+				err = os.Remove(filepath.Join(v.conf.FileDir, path.Clean(newsDB.FileName.String)))
 				if err != nil {
 					log.Printf("failed to delete image for news edit, news id: %d, error: %+v", newsID, err)
 				}
