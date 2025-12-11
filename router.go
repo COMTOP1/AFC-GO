@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -55,6 +56,10 @@ func (r *Router) middleware() {
 	r.router.Use(middleware.BodyLimit("15M"))
 	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
+		Skipper: func(c echo.Context) bool {
+			// Disable gzip on file downloads
+			return strings.HasPrefix(c.Path(), "/download")
+		},
 	}))
 }
 
