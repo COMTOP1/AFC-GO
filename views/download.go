@@ -2,10 +2,13 @@ package views
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -187,30 +190,14 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 
 func (v *Views) _downloadFunc(c echo.Context, fileName, page string, id int) error {
 	path := filepath.Join(v.conf.FileDir, fileName)
-	f, err := os.Open(path)
+	_, err := os.Stat(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if strings.Contains(err.Error(), "no such file") {
+			log.Printf("failed to get file for %s download: no such file, id: %d", page, id)
 			return c.String(http.StatusNotFound,
 				fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
 		}
-		return err
+		return fmt.Errorf("failed to get file for %s download: %w, id: %d", page, err, id)
 	}
-	defer f.Close()
-
-	stat, err := f.Stat()
-	if err != nil {
-		return err
-	}
-
-	// Correct headers
-	c.Response().Header().Set("Content-Type", "application/pdf")
-	c.Response().Header().Set(
-		"Content-Disposition",
-		fmt.Sprintf("inline; filename=\"%s\"", fileName),
-	)
-
-	// This is the magic: supports Range: bytes=...
-	http.ServeContent(c.Response(), c.Request(), fileName, stat.ModTime(), f)
-
-	return nil
+	return c.Redirect(http.StatusFound, "/file/"+url.PathEscape(fileName))
 }
