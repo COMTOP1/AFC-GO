@@ -1,6 +1,6 @@
 module github.com/COMTOP1/AFC-GO
 
-go 1.24.0
+go 1.25
 
 require (
 	github.com/AfterShip/email-verifier v1.4.1
@@ -10,9 +10,9 @@ require (
 	github.com/gorilla/sessions v1.4.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
-	github.com/labstack/echo/v4 v4.14.0
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.11.1
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/xhit/go-simple-mail/v2 v2.16.0
