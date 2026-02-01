@@ -1,3 +1,4 @@
+//nolint:gorevive
 package utils
 
 import (
