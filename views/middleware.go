@@ -123,11 +123,14 @@ func (v *Views) VisitorTrackingMiddleware(next echo.HandlerFunc) echo.HandlerFun
 		_, err := c.Cookie(cookieName)
 		if errors.Is(err, http.ErrNoCookie) {
 			c.SetCookie(&http.Cookie{
-				Name:    cookieName,
-				Value:   "visited",
-				Expires: time.Now().Add(24 * time.Hour),
-				Domain:  "afcaldermaston.co.uk",
-				Path:    "/",
+				Name:     cookieName,
+				Value:    "visited",
+				Expires:  time.Now().Add(24 * time.Hour),
+				Domain:   "afcaldermaston.co.uk",
+				Path:     "/",
+				SameSite: http.SameSiteStrictMode,
+				Secure:   true,
+				HttpOnly: true,
 			})
 
 			// Use IP as session ID (could be replaced with UUID for privacy)
