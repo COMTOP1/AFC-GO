@@ -12,6 +12,11 @@ import (
 	"github.com/COMTOP1/AFC-GO/views"
 )
 
+var (
+	Version = "unknown"
+	Commit  = "unknown"
+)
+
 func main() {
 	var local, global bool
 	var err error
@@ -20,6 +25,8 @@ func main() {
 
 	err = godotenv.Overload(".env.local") // Load .env.local
 	local = err == nil
+
+	fmt.Printf("Version: %s\nCommit: %s\n", Version, Commit)
 
 	dbHost := os.Getenv("DB_HOSTNAME")
 	dbUser := os.Getenv("DB_USERNAME")
