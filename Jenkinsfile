@@ -18,7 +18,7 @@ pipeline {
       steps {
         script {
           def GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H' | head -c 7", returnStdout: true)
-          docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+          docker.withRegistry('https://' + registryEndpoint) {
             image = docker.build(imageName, "--build-arg AFC_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} --build-arg AFC_COMMIT_ARG=${GIT_COMMIT_HASH} --no-cache .")
           }
         }
@@ -28,7 +28,7 @@ pipeline {
     stage('Push image to registry') {
       steps {
         script {
-          docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+          docker.withRegistry('https://' + registryEndpoint) {
             image.push()
             if (env.BRANCH_IS_PRIMARY) {
               image.push('latest')
