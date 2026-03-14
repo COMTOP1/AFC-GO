@@ -68,6 +68,8 @@ func main() {
 		dbPass,
 	)
 
+	fmt.Println(dbConnectionString)
+
 	address := os.Getenv("ADDRESS")
 
 	iter, err := strconv.Atoi(os.Getenv("ITERATIONS"))
