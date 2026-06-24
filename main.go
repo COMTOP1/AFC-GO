@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/joho/godotenv"
 
