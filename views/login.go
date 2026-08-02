@@ -93,14 +93,6 @@ func (v *Views) LoginFunc(c echo.Context) error {
 
 		session.Values["user"] = u
 
-		c.SetCookie(&http.Cookie{
-			Name:     "test-pass",
-			Value:    "hello",
-			MaxAge:   60,
-			Secure:   false,
-			HttpOnly: false,
-		})
-
 		if c.FormValue("remember") != "on" {
 			session.Options.MaxAge = 86400 * 31
 		}
