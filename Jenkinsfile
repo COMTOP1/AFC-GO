@@ -33,6 +33,9 @@ pipeline {
             if (env.BRANCH_IS_PRIMARY) {
               image.push('latest')
             }
+            if (env.CHANGE_ID) {
+              image.push("pr-${env.CHANGE_ID}")
+            }
           }
         }
       }
@@ -40,15 +43,52 @@ pipeline {
 
     stage('Deploy') {
       stages {
+        stage('Preview') {
+          when {
+            changeRequest target: 'main'
+          }
+          stages {
+            stage('Cleanup previews') {
+              agent {
+                label 'nomad'
+              }
+              steps {
+                deployPreview action: 'cleanup'
+                deployPreview action: 'cleanupMerge'
+              }
+            }
+            stage('Preview') {
+              steps {
+                deployPreview action: 'deploy', job: 'afc-go/preview', jobName: 'afc-go-preview', urlSuffix: 'preview.afcaldermaston.co.uk'
+              }
+            }
+          }
+        }
+
         stage('Development') {
           when {
             expression { env.BRANCH_IS_PRIMARY }
           }
-          steps {
-            build(job: 'Deploy Nomad Job', parameters: [
-              string(name: 'JOB_FILE', value: 'afc-go-dev.nomad'),
-              text(name: 'TAG_REPLACEMENTS', value: "${registryEndpoint}/${imageName}")
-            ])
+          stages {
+            stage('Deploy to development') {
+              steps {
+                build job: 'Deploy Nomad Job', parameters: [
+                  string(name: 'JOB_FILE', value: 'afc-go-dev.nomad'),
+                  text(name: 'TAG_REPLACEMENTS', value: "${registryEndpoint}/${imageName}")
+                ], wait: true
+              }
+            }
+
+            stage('Post-deploy cleanup & migrate') {
+              agent {
+                label 'nomad'
+              }
+              steps {
+                checkout scm
+                deployPreview action: 'cleanup'
+                deployPreview action: 'cleanupMerge'
+              }
+            }
           }
         }
 
