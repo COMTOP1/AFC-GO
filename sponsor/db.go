@@ -13,7 +13,7 @@ import (
 func (s *Store) getSponsors(ctx context.Context) ([]Sponsor, error) {
 	var sponsorsDB []Sponsor
 	builder := sq.Select("id", "name", "website", "file_name", "purpose", "team_id").
-		From("afc.sponsors").
+		From("sponsors").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -29,7 +29,7 @@ func (s *Store) getSponsors(ctx context.Context) ([]Sponsor, error) {
 func (s *Store) getSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
 	var sponsorsDB []Sponsor
 	builder := sq.Select("id", "website").
-		From("afc.sponsors").
+		From("sponsors").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -45,7 +45,7 @@ func (s *Store) getSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
 func (s *Store) getSponsorsTeam(ctx context.Context, teamParam team.Team) ([]Sponsor, error) {
 	var sponsorsDB []Sponsor
 	builder := utils.PSQL().Select("id", "name", "website", "purpose").
-		From("afc.sponsors").
+		From("sponsors").
 		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
@@ -62,7 +62,7 @@ func (s *Store) getSponsorsTeam(ctx context.Context, teamParam team.Team) ([]Spo
 func (s *Store) getSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, error) {
 	var seasonDB Sponsor
 	builder := utils.PSQL().Select("id", "name", "website", "file_name", "purpose", "team_id").
-		From("afc.sponsors").
+		From("sponsors").
 		Where(sq.Eq{"id": sponsorParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -76,7 +76,7 @@ func (s *Store) getSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, 
 }
 
 func (s *Store) addSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, error) {
-	builder := utils.PSQL().Insert("afc.sponsors").
+	builder := utils.PSQL().Insert("sponsors").
 		Columns("name", "website", "file_name", "purpose", "team_id").
 		Values(sponsorParam.Name, sponsorParam.Website, sponsorParam.FileName, sponsorParam.Purpose, sponsorParam.TeamID)
 	sql, args, err := builder.ToSql()
@@ -95,7 +95,7 @@ func (s *Store) addSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, 
 }
 
 func (s *Store) editSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, error) {
-	builder := utils.PSQL().Update("afc.sponsors").
+	builder := utils.PSQL().Update("sponsors").
 		SetMap(map[string]interface{}{
 			"name":      sponsorParam.Name,
 			"website":   sponsorParam.Website,
@@ -120,7 +120,7 @@ func (s *Store) editSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor,
 }
 
 func (s *Store) deleteSponsor(ctx context.Context, sponsorParam Sponsor) error {
-	builder := utils.PSQL().Delete("afc.sponsors").
+	builder := utils.PSQL().Delete("sponsors").
 		Where(sq.Eq{"id": sponsorParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

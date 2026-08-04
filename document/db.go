@@ -12,7 +12,7 @@ import (
 func (s *Store) getDocuments(ctx context.Context) ([]Document, error) {
 	var documentsDB []Document
 	builder := sq.Select("id", "name", "file_name").
-		From("afc.documents").
+		From("documents").
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -28,7 +28,7 @@ func (s *Store) getDocuments(ctx context.Context) ([]Document, error) {
 func (s *Store) getDocument(ctx context.Context, documentParam Document) (Document, error) {
 	var documentDB Document
 	builder := utils.PSQL().Select("id", "name", "file_name").
-		From("afc.documents").
+		From("documents").
 		Where(sq.Eq{"id": documentParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -42,7 +42,7 @@ func (s *Store) getDocument(ctx context.Context, documentParam Document) (Docume
 }
 
 func (s *Store) addDocument(ctx context.Context, documentParam Document) (Document, error) {
-	builder := utils.PSQL().Insert("afc.documents").
+	builder := utils.PSQL().Insert("documents").
 		Columns("name", "file_name").
 		Values(documentParam.Name, documentParam.FileName)
 	sql, args, err := builder.ToSql()
@@ -61,7 +61,7 @@ func (s *Store) addDocument(ctx context.Context, documentParam Document) (Docume
 }
 
 func (s *Store) deleteDocument(ctx context.Context, d Document) error {
-	builder := utils.PSQL().Delete("afc.documents").
+	builder := utils.PSQL().Delete("documents").
 		Where(sq.Eq{"id": d.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

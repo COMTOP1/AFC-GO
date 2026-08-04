@@ -14,7 +14,7 @@ import (
 func (s *Store) getWhatsOn(ctx context.Context) ([]WhatsOn, error) {
 	var whatsOnsDB []WhatsOn
 	builder := sq.Select("id", "title", "file_name", "content", "date", "date_of_event").
-		From("afc.whatson").
+		From("whatson").
 		OrderBy("date_of_event")
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -30,7 +30,7 @@ func (s *Store) getWhatsOn(ctx context.Context) ([]WhatsOn, error) {
 func (s *Store) getWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
 	var whatsOnsDB []WhatsOn
 	builder := utils.PSQL().Select("id", "title", "file_name", "content", "date", "date_of_event").
-		From("afc.whatson").
+		From("whatson").
 		Where(sq.GtOrEq{"date_of_event": time.Now().Format("2006-01-02")}).
 		OrderBy("date_of_event")
 	sql, args, err := builder.ToSql()
@@ -47,7 +47,7 @@ func (s *Store) getWhatsOnFuture(ctx context.Context) ([]WhatsOn, error) {
 func (s *Store) getWhatsOnPast(ctx context.Context) ([]WhatsOn, error) {
 	var whatsOnsDB []WhatsOn
 	builder := utils.PSQL().Select("id", "title", "file_name", "content", "date", "date_of_event").
-		From("afc.whatson").
+		From("whatson").
 		Where(sq.Lt{"date_of_event": time.Now().Format("2006-01-02")}).
 		OrderBy("date_of_event DESC")
 	sql, args, err := builder.ToSql()
@@ -64,7 +64,7 @@ func (s *Store) getWhatsOnPast(ctx context.Context) ([]WhatsOn, error) {
 func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 	var whatsOnDB WhatsOn
 	builder := utils.PSQL().Select("id", "title", "date", "date_of_event").
-		From("afc.whatson").
+		From("whatson").
 		Where(sq.GtOrEq{"date_of_event": time.Now().Format("2006-01-02")}).
 		OrderBy("date_of_event ASC").
 		Limit(1)
@@ -86,7 +86,7 @@ func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 func (s *Store) getWhatsOnArticle(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn, error) {
 	var whatsOnDB WhatsOn
 	builder := utils.PSQL().Select("id", "title", "file_name", "content", "date", "date_of_event").
-		From("afc.whatson").
+		From("whatson").
 		Where(sq.Eq{"id": whatsOnParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -100,7 +100,7 @@ func (s *Store) getWhatsOnArticle(ctx context.Context, whatsOnParam WhatsOn) (Wh
 }
 
 func (s *Store) addWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn, error) {
-	builder := utils.PSQL().Insert("afc.whatson").
+	builder := utils.PSQL().Insert("whatson").
 		Columns("title", "file_name", "content", "date", "date_of_event").
 		Values(whatsOnParam.Title, whatsOnParam.FileName, whatsOnParam.Content, whatsOnParam.Date, whatsOnParam.DateOfEvent)
 	sql, args, err := builder.ToSql()
@@ -119,7 +119,7 @@ func (s *Store) addWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn, 
 }
 
 func (s *Store) editWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn, error) {
-	builder := utils.PSQL().Update("afc.whatson").
+	builder := utils.PSQL().Update("whatson").
 		SetMap(map[string]interface{}{
 			"title":         whatsOnParam.Title,
 			"file_name":     whatsOnParam.FileName,
@@ -144,7 +144,7 @@ func (s *Store) editWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn,
 }
 
 func (s *Store) deleteWhatsOn(ctx context.Context, whatsOnParam WhatsOn) error {
-	builder := utils.PSQL().Delete("afc.whatson").
+	builder := utils.PSQL().Delete("whatson").
 		Where(sq.Eq{"id": whatsOnParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

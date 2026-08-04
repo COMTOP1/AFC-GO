@@ -15,7 +15,7 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 	//nolint:prealloc
 	var usersDB, users []User
 	builder := sq.Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
-		From("afc.users").
+		From("users").
 		OrderBy("id")
 
 	sql, args, err := builder.ToSql()
@@ -59,7 +59,7 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 	}
 
 	builder := sq.Select("id", "name", "email", "role").
-		From("afc.users").
+		From("users").
 		Where("role IN ('PROGRAMME_EDITOR', 'LEAGUE_SECRETARY', 'TREASURER', 'SAFEGUARDING_OFFICER', 'CLUB_SECRETARY', 'CHAIRPERSON')").
 		OrderBy(caseSQL)
 
@@ -90,7 +90,7 @@ func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) (
 	var usersDB []User
 
 	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
-		From("afc.users").
+		From("users").
 		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("id")
 
@@ -112,7 +112,7 @@ func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
 	var userDB User
 
 	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
-		From("afc.users").
+		From("users").
 		Where(sq.Or{sq.Eq{"email": userParam.Email},
 			sq.Eq{"id": userParam.ID}})
 
@@ -141,7 +141,7 @@ func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 	var userDB User
 
 	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "password", "hash", "salt").
-		From("afc.users").
+		From("users").
 		Where(sq.Or{sq.Eq{"email": userParam.Email},
 			sq.Eq{"id": userParam.ID}})
 
@@ -167,7 +167,7 @@ func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 }
 
 func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
-	builder := utils.PSQL().Insert("afc.users").
+	builder := utils.PSQL().Insert("users").
 		Columns("name", "email", "phone", "team_id", "role", "file_name", "reset_password", "hash", "salt").
 		Values(userParam.Name, userParam.Email, userParam.Phone, userParam.TeamID, userParam.Role.DBString(), userParam.FileName, userParam.ResetPassword, userParam.Hash, userParam.Salt)
 
@@ -190,7 +190,7 @@ func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
 }
 
 func (s *Store) editUser(ctx context.Context, userParam User) error {
-	builder := utils.PSQL().Update("afc.users").
+	builder := utils.PSQL().Update("users").
 		SetMap(map[string]interface{}{
 			"name":           userParam.Name,
 			"email":          userParam.Email,
@@ -224,7 +224,7 @@ func (s *Store) editUser(ctx context.Context, userParam User) error {
 }
 
 func (s *Store) deleteUser(ctx context.Context, userParam User) error {
-	builder := utils.PSQL().Delete("afc.users").
+	builder := utils.PSQL().Delete("users").
 		Where(sq.Eq{"email": userParam.Email})
 
 	sql, args, err := builder.ToSql()

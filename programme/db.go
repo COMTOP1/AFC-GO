@@ -24,6 +24,7 @@ func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {
 		OrderBy("date_of_programme").
 		UnionAll(builder2)
 	sql, args, err := builder1.ToSql()
+	fmt.Printf("sql: %s\nargs: %#v\n", sql, args)
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for get programmes: %w", err))
 	}
@@ -61,7 +62,7 @@ func (s *Store) getProgrammesSeason(ctx context.Context, seasonParam Season) ([]
 func (s *Store) getProgramme(ctx context.Context, programmeParam Programme) (Programme, error) {
 	var programmeDB Programme
 	builder := utils.PSQL().Select("id", "name", "file_name", "date_of_programme", "programme_season_id").
-		From("afc.programmes").
+		From("programmes").
 		Where(sq.Eq{"id": programmeParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -75,7 +76,7 @@ func (s *Store) getProgramme(ctx context.Context, programmeParam Programme) (Pro
 }
 
 func (s *Store) addProgramme(ctx context.Context, programmeParam Programme) (Programme, error) {
-	builder := utils.PSQL().Insert("afc.programmes").
+	builder := utils.PSQL().Insert("programmes").
 		Columns("name", "file_name", "date_of_programme", "programme_season_id").
 		Values(programmeParam.Name, programmeParam.FileName, programmeParam.DateOfProgramme, programmeParam.SeasonID)
 	sql, args, err := builder.ToSql()
@@ -94,7 +95,7 @@ func (s *Store) addProgramme(ctx context.Context, programmeParam Programme) (Pro
 }
 
 func (s *Store) editProgramme(ctx context.Context, programmeParam Programme) (Programme, error) {
-	builder := utils.PSQL().Update("afc.programmes").
+	builder := utils.PSQL().Update("programmes").
 		SetMap(map[string]interface{}{
 			"name":                programmeParam.Name,
 			"file_name":           programmeParam.FileName,
@@ -118,7 +119,7 @@ func (s *Store) editProgramme(ctx context.Context, programmeParam Programme) (Pr
 }
 
 func (s *Store) deleteProgramme(ctx context.Context, programmeParam Programme) error {
-	builder := utils.PSQL().Delete("afc.programmes").
+	builder := utils.PSQL().Delete("programmes").
 		Where(sq.Eq{"id": programmeParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -134,7 +135,7 @@ func (s *Store) deleteProgramme(ctx context.Context, programmeParam Programme) e
 func (s *Store) getSeasons(ctx context.Context) ([]Season, error) {
 	var seasonsDB []Season
 	builder := sq.Select("id", "season").
-		From("afc.programme_seasons").
+		From("programme_seasons").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -150,7 +151,7 @@ func (s *Store) getSeasons(ctx context.Context) ([]Season, error) {
 func (s *Store) getSeason(ctx context.Context, seasonParam Season) (Season, error) {
 	var seasonDB Season
 	builder := utils.PSQL().Select("id", "season").
-		From("afc.programme_seasons").
+		From("programme_seasons").
 		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -164,7 +165,7 @@ func (s *Store) getSeason(ctx context.Context, seasonParam Season) (Season, erro
 }
 
 func (s *Store) addSeason(ctx context.Context, seasonParam Season) (Season, error) {
-	builder := utils.PSQL().Insert("afc.programme_seasons").
+	builder := utils.PSQL().Insert("programme_seasons").
 		Columns("season").
 		Values(seasonParam.Season)
 	sql, args, err := builder.ToSql()
@@ -183,7 +184,7 @@ func (s *Store) addSeason(ctx context.Context, seasonParam Season) (Season, erro
 }
 
 func (s *Store) editSeason(ctx context.Context, seasonParam Season) (Season, error) {
-	builder := utils.PSQL().Update("afc.programme_seasons").
+	builder := utils.PSQL().Update("programme_seasons").
 		SetMap(map[string]interface{}{
 			"season": seasonParam.Season,
 		}).
@@ -204,7 +205,7 @@ func (s *Store) editSeason(ctx context.Context, seasonParam Season) (Season, err
 }
 
 func (s *Store) deleteSeason(ctx context.Context, seasonParam Season) error {
-	builder := utils.PSQL().Delete("afc.programme_seasons").
+	builder := utils.PSQL().Delete("programme_seasons").
 		Where(sq.Eq{"id": seasonParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

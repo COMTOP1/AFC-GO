@@ -13,7 +13,7 @@ import (
 func (s *Store) getNews(ctx context.Context) ([]News, error) {
 	var newsDB []News
 	builder := sq.Select("id", "title", "file_name", "content", "date").
-		From("afc.news").
+		From("news").
 		OrderBy("date DESC")
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -29,7 +29,7 @@ func (s *Store) getNews(ctx context.Context) ([]News, error) {
 func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 	var newsDB News
 	builder := sq.Select("id", "title", "date").
-		From("afc.news").
+		From("news").
 		OrderBy("date DESC").
 		Limit(1)
 	sql, args, err := builder.ToSql()
@@ -49,7 +49,7 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 func (s *Store) getNewsArticle(ctx context.Context, newsParam News) (News, error) {
 	var newsDB News
 	builder := utils.PSQL().Select("id", "title", "file_name", "content", "date").
-		From("afc.news").
+		From("news").
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -63,7 +63,7 @@ func (s *Store) getNewsArticle(ctx context.Context, newsParam News) (News, error
 }
 
 func (s *Store) addNews(ctx context.Context, newsParam News) (News, error) {
-	builder := utils.PSQL().Insert("afc.news").
+	builder := utils.PSQL().Insert("news").
 		Columns("title", "file_name", "content", "date").
 		Values(newsParam.Title, newsParam.FileName, newsParam.Content, newsParam.Date)
 	sql, args, err := builder.ToSql()
@@ -82,7 +82,7 @@ func (s *Store) addNews(ctx context.Context, newsParam News) (News, error) {
 }
 
 func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
-	builder := utils.PSQL().Update("afc.news").
+	builder := utils.PSQL().Update("news").
 		SetMap(map[string]interface{}{
 			"title":     newsParam.Title,
 			"file_name": newsParam.FileName,
@@ -106,7 +106,7 @@ func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
 }
 
 func (s *Store) deleteNews(ctx context.Context, newsParam News) error {
-	builder := utils.PSQL().Delete("afc.news").
+	builder := utils.PSQL().Delete("news").
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {

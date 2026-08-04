@@ -12,7 +12,7 @@ import (
 func (s *Store) getSettings(ctx context.Context) ([]Setting, error) {
 	var settingsDB []Setting
 	builder := sq.Select("id", "setting_text").
-		From("afc.settings").
+		From("settings").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -28,7 +28,7 @@ func (s *Store) getSettings(ctx context.Context) ([]Setting, error) {
 func (s *Store) getSetting(ctx context.Context, settingID string) (Setting, error) {
 	var settingDB Setting
 	builder := utils.PSQL().Select("id", "setting_text").
-		From("afc.settings").
+		From("settings").
 		Where(sq.Eq{"id": settingID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -42,7 +42,7 @@ func (s *Store) getSetting(ctx context.Context, settingID string) (Setting, erro
 }
 
 func (s *Store) addSetting(ctx context.Context, settingParam Setting) (Setting, error) {
-	builder := utils.PSQL().Insert("afc.settings").
+	builder := utils.PSQL().Insert("settings").
 		Columns(
 			"id",
 			"setting_text",
@@ -66,7 +66,7 @@ func (s *Store) addSetting(ctx context.Context, settingParam Setting) (Setting, 
 }
 
 func (s *Store) editSetting(ctx context.Context, settingParam Setting) (Setting, error) {
-	builder := utils.PSQL().Update("afc.settings").
+	builder := utils.PSQL().Update("settings").
 		SetMap(map[string]interface{}{
 			"setting_text": settingParam.SettingText,
 		}).
@@ -87,7 +87,7 @@ func (s *Store) editSetting(ctx context.Context, settingParam Setting) (Setting,
 }
 
 func (s *Store) deleteSetting(ctx context.Context, settingID string) error {
-	builder := utils.PSQL().Delete("afc.settings").
+	builder := utils.PSQL().Delete("settings").
 		Where(sq.Eq{"id": settingID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
