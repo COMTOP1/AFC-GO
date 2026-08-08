@@ -97,22 +97,6 @@ func main() {
 		log.Fatalf("invalid option for key length: %+v", err)
 	}
 
-	var fileDir string
-
-	stat, err := os.Stat("/FileStore")
-	if err == nil && stat.IsDir() {
-		log.Println("using root /FileStore")
-		fileDir = "/FileStore"
-	} else {
-		stat, err = os.Stat("./FileStore")
-		if err == nil && stat.IsDir() {
-			log.Println("using local ./FileStore")
-			fileDir = "./FileStore"
-		} else {
-			log.Fatalf("failed to get fileStore - stat: %+v, error: %+v", stat, err)
-		}
-	}
-
 	mailPort, _ := strconv.Atoi(os.Getenv("MAIL_PORT"))
 
 	domainName := os.Getenv("DOMAIN_NAME")
@@ -128,7 +112,6 @@ func main() {
 		DatabaseURL:       dbConnectionString,
 		DomainName:        domainName,
 		SessionCookieName: sessionCookieName,
-		FileDir:           fileDir,
 		S3: storage.Config{
 			Endpoint:  os.Getenv("S3_ENDPOINT"),
 			Region:    s3Region,

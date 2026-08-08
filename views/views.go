@@ -39,7 +39,6 @@ type (
 		DatabaseURL       string
 		DomainName        string
 		SessionCookieName string
-		FileDir           string
 		S3                storage.Config
 		Mail              SMTPConfig
 		Security          SecurityConfig
