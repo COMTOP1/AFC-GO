@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -124,7 +121,7 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 			hasUpload = false
 		}
 		if hasUpload {
-			fileName, err = v.fileUpload(file)
+			fileName, err = v.fileUpload(c.Request().Context(), file, "news")
 			if err != nil {
 				log.Printf("failed to upload file for news add, error: %+v", err)
 				data.Error = fmt.Sprintf("failed to upload file for news add: %+v", err)
@@ -201,14 +198,14 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 		}
 		if hasUpload {
 			var tempFileName string
-			tempFileName, err = v.fileUpload(file)
+			tempFileName, err = v.fileUpload(c.Request().Context(), file, "news")
 			if err != nil {
 				log.Printf("failed to upload file for news edit, news id: %d, error: %+v", newsID, err)
 				data.Error = fmt.Sprintf("failed to upload file for news edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if newsDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, path.Clean(newsDB.FileName.String)))
+				err = v.storage.Delete(c.Request().Context(), newsDB.FileName.String)
 				if err != nil {
 					log.Printf("failed to delete old image for news edit, news id: %d, error: %+v", newsID, err)
 				}
@@ -219,7 +216,7 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 		tempRemoveNewsImage := c.FormValue("removeNewsImage")
 		if tempRemoveNewsImage == "Y" {
 			if newsDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, path.Clean(newsDB.FileName.String)))
+				err = v.storage.Delete(c.Request().Context(), newsDB.FileName.String)
 				if err != nil {
 					log.Printf("failed to delete image for news edit, news id: %d, error: %+v", newsID, err)
 				}
@@ -265,7 +262,7 @@ func (v *Views) NewsDeleteFunc(c echo.Context) error {
 		}
 
 		if newsDB.FileName.Valid {
-			err = os.Remove(filepath.Join(v.conf.FileDir, newsDB.FileName.String))
+			err = v.storage.Delete(c.Request().Context(), newsDB.FileName.String)
 			if err != nil {
 				log.Printf("failed to delete news image for news delete, news id: %d, error: %+v", id, err)
 			}

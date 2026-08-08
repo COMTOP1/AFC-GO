@@ -1,12 +1,10 @@
 package views
 
 import (
+	"context"
 	"fmt"
-	"io"
 	"log"
 	"mime/multipart"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -300,9 +298,10 @@ func minRequirementsMet(password string) (errString string) {
 	return errString
 }
 
-func (v *Views) fileUpload(file *multipart.FileHeader) (string, error) {
-	var fileName, fileType string
-	switch file.Header.Get("content-type") {
+func (v *Views) fileUpload(ctx context.Context, file *multipart.FileHeader, category string) (string, error) {
+	var fileType string
+	contentType := file.Header.Get("content-type")
+	switch contentType {
 	case "application/pdf":
 		fileType = ".pdf"
 	case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
@@ -326,10 +325,10 @@ func (v *Views) fileUpload(file *multipart.FileHeader) (string, error) {
 	case "image/webp":
 		fileType = ".webp"
 	default:
-		return "", fmt.Errorf("invalid file type: %s", file.Header.Get("content-type"))
+		return "", fmt.Errorf("invalid file type: %s", contentType)
 	}
 
-	fileName = uuid.NewString() + fileType
+	key := category + "/" + uuid.NewString() + fileType
 
 	src, err := file.Open()
 	if err != nil {
@@ -337,19 +336,11 @@ func (v *Views) fileUpload(file *multipart.FileHeader) (string, error) {
 	}
 	defer src.Close()
 
-	// Destination
-	dst, err := os.Create(filepath.Join(v.conf.FileDir, fileName))
-	if err != nil {
-		return "", fmt.Errorf("failed to create file for fileUpload: %w", err)
-	}
-	defer dst.Close()
-
-	// Copy
-	if _, err = io.Copy(dst, src); err != nil {
-		return "", fmt.Errorf("failed to copy contents to file for fileUpload: %w", err)
+	if err = v.storage.Put(ctx, key, src, file.Size, contentType); err != nil {
+		return "", fmt.Errorf("failed to upload file for fileUpload: %w", err)
 	}
 
-	return fileName, nil
+	return key, nil
 }
 
 func DBDocumentsToTemplateFormat(documentsDB []document.Document) []DocumentTemplate {
