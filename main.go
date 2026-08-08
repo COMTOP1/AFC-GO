@@ -10,6 +10,7 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"github.com/COMTOP1/AFC-GO/infrastructure/storage"
 	"github.com/COMTOP1/AFC-GO/views"
 )
 
@@ -116,6 +117,11 @@ func main() {
 
 	domainName := os.Getenv("DOMAIN_NAME")
 
+	s3Region := os.Getenv("S3_REGION")
+	if s3Region == "" {
+		s3Region = "us-east-1"
+	}
+
 	// Generate config
 	conf := &views.Config{
 		Address:           address,
@@ -123,6 +129,13 @@ func main() {
 		DomainName:        domainName,
 		SessionCookieName: sessionCookieName,
 		FileDir:           fileDir,
+		S3: storage.Config{
+			Endpoint:  os.Getenv("S3_ENDPOINT"),
+			Region:    s3Region,
+			Bucket:    os.Getenv("S3_BUCKET"),
+			AccessKey: os.Getenv("S3_ACCESS_KEY"),
+			SecretKey: os.Getenv("S3_SECRET_KEY"),
+		},
 		Mail: views.SMTPConfig{
 			Host:     os.Getenv("MAIL_HOST"),
 			Username: os.Getenv("MAIL_USER"),
