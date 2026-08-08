@@ -1,4 +1,35 @@
 {{define "title"}}Programmes{{end}}
+{{define "header-style"}}
+    <style>
+        .programmePdfViewer {
+            width: 95%;
+            max-height: 80vh;
+            margin: 0 auto;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #525659;
+            border-radius: 4px;
+        }
+
+        .programmePdfViewer canvas {
+            display: block;
+            margin: 10px auto;
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .programmePdfViewer .programmePdfMessage {
+            color: #fff;
+            padding: 20px;
+        }
+
+        .programmePdfViewer .programmePdfMessage a {
+            color: #fff;
+            text-decoration: underline;
+        }
+    </style>
+{{end}}
 {{define "content"}}
     {{$priv := and (ne $.User.ID 0) (ne $.User.Role "Manager")}}
     <main class="main" style="text-align: center">
@@ -66,13 +97,62 @@
                         <h2 class="subtitle">{{if .Season.IsValid}}Season - {{.Season.Name}}<br>{{end}}
                             Date of programme - {{.DateOfProgramme}}
                         </h2>
-                        <object data="/download?s=p&id={{.ID}}" width="95%" height="600px" embedded="true"></object>
+                        <div id="programmePdfViewer" class="programmePdfViewer" data-pdf-url="/download?s=p&id={{.ID}}">
+                            <p class="programmePdfMessage">Loading programme&hellip;</p>
+                        </div>
+                        <noscript>
+                            <p><a href="/download?s=p&id={{.ID}}">View the programme PDF</a></p>
+                        </noscript>
                         {{if $priv}}
                             <br><br><br>
                             <a class="button is-danger" onclick="deleteProgrammeModal({{.ID}}, '{{.Name}}')">Delete</a>
                         {{end}}
                     </div>
                 </div>
+                <script type="module">
+                    (async () => {
+                        const viewer = document.getElementById('programmePdfViewer');
+                        if (!viewer) {
+                            return;
+                        }
+                        const pdfUrl = viewer.dataset.pdfUrl;
+
+                        try {
+                            const pdfjsLib = await import('/public/pdfjs/pdf.min.mjs');
+                            pdfjsLib.GlobalWorkerOptions.workerSrc = '/public/pdfjs/pdf.worker.min.mjs';
+
+                            const pdf = await pdfjsLib.getDocument({url: pdfUrl}).promise;
+                            viewer.innerHTML = '';
+
+                            const containerWidth = viewer.clientWidth;
+                            const outputScale = window.devicePixelRatio || 1;
+
+                            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                                const page = await pdf.getPage(pageNum);
+                                const unscaledViewport = page.getViewport({scale: 1});
+                                const scale = containerWidth / unscaledViewport.width;
+                                const viewport = page.getViewport({scale});
+
+                                const canvas = document.createElement('canvas');
+                                canvas.width = Math.floor(viewport.width * outputScale);
+                                canvas.height = Math.floor(viewport.height * outputScale);
+                                canvas.style.width = Math.floor(viewport.width) + 'px';
+                                canvas.style.height = Math.floor(viewport.height) + 'px';
+                                viewer.appendChild(canvas);
+
+                                await page.render({
+                                    canvasContext: canvas.getContext('2d'),
+                                    viewport,
+                                    transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null,
+                                }).promise;
+                            }
+                        } catch (e) {
+                            console.error('failed to render programme PDF', e);
+                            viewer.innerHTML = '<p class="programmePdfMessage">Unable to preview the PDF. '
+                                + '<a href="' + pdfUrl + '">Download it here</a>.</p>';
+                        }
+                    })();
+                </script>
             {{end}}
             {{if gt (len .Programmes) 1}}
                 <div style="margin: 10px 0 10px 0; padding: 5px 0 5px 0;">
