@@ -19,7 +19,11 @@ func main() {
 
 	sourceDir := os.Getenv("FILESTORE_DIR")
 	if sourceDir == "" {
-		sourceDir = "./FileStore"
+		if stat, err := os.Stat("/FileStore"); err == nil && stat.IsDir() {
+			sourceDir = "/FileStore"
+		} else {
+			sourceDir = "./FileStore"
+		}
 	}
 
 	s3Region := os.Getenv("S3_REGION")

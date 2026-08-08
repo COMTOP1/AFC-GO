@@ -49,6 +49,10 @@ type (
 // The HTTP client forces HTTP/1.1: the Ceph RadosGW endpoint this app targets returns a
 // PROTOCOL_ERROR over HTTP/2.
 func NewStore(cfg Config) *Store {
+	if cfg.Endpoint == "" || cfg.Bucket == "" || cfg.AccessKey == "" || cfg.SecretKey == "" {
+		log.Fatalf("storage: missing required S3 config (endpoint, bucket, access key, and secret key must all be set)")
+	}
+
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig:   &tls.Config{},

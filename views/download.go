@@ -194,5 +194,6 @@ func (v *Views) _downloadFunc(c echo.Context, fileName, page string, id int) err
 		return c.String(http.StatusNotFound,
 			fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
 	}
+	c.Response().Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 	return c.Redirect(http.StatusFound, v.storage.PublicURL(fileName))
 }

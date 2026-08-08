@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/smithy-go"
 )
 
 type fakeS3 struct {
@@ -33,6 +34,15 @@ func (f *fakeS3) HeadObject(_ context.Context, _ *s3.HeadObjectInput, _ ...func(
 	}
 	return &s3.HeadObjectOutput{}, nil
 }
+
+type fakeAPIError struct {
+	code string
+}
+
+func (e *fakeAPIError) Error() string                 { return e.code }
+func (e *fakeAPIError) ErrorCode() string             { return e.code }
+func (e *fakeAPIError) ErrorMessage() string          { return e.code }
+func (e *fakeAPIError) ErrorFault() smithy.ErrorFault { return smithy.FaultUnknown }
 
 func newTestStore(client s3API) *Store {
 	return &Store{client: client, bucket: "test-bucket", endpoint: "https://cdn.example.com"}
@@ -75,6 +85,18 @@ func TestExistsReturnsTrueWhenHeadObjectSucceeds(t *testing.T) {
 
 func TestExistsReturnsFalseOnNotFound(t *testing.T) {
 	s := newTestStore(&fakeS3{headErr: &types.NotFound{}})
+
+	exists, err := s.Exists(context.Background(), "player/missing.png")
+	if err != nil {
+		t.Fatalf("Exists returned unexpected error: %v", err)
+	}
+	if exists {
+		t.Fatal("Exists = true, want false")
+	}
+}
+
+func TestExistsReturnsFalseOnAPIErrorNotFoundCode(t *testing.T) {
+	s := newTestStore(&fakeS3{headErr: &fakeAPIError{code: "NotFound"}})
 
 	exists, err := s.Exists(context.Background(), "player/missing.png")
 	if err != nil {
