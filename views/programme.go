@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,6 +27,9 @@ type ProgrammeTemplateStruct struct {
 }
 
 func (v *Views) ProgrammesFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ProgrammesFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	programmesDB, err := v.programme.GetProgrammes(c.Request().Context())
@@ -52,10 +55,13 @@ func (v *Views) ProgrammesFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.ProgrammesTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.ProgrammesTemplate, templates.RegularType)
 }
 
 func (v *Views) ProgrammesSeasonsFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ProgrammesSeasonsFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	id, err := strconv.Atoi(c.Param("id"))
@@ -98,10 +104,13 @@ func (v *Views) ProgrammesSeasonsFunc(c echo.Context) error {
 		Context:        c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.ProgrammesTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.ProgrammesTemplate, templates.RegularType)
 }
 
 func (v *Views) ProgrammeSeasonSelectFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ProgrammeSeasonSelectFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		seasonID, err := strconv.Atoi(c.FormValue("season"))
 		if err != nil {
@@ -119,6 +128,9 @@ func (v *Views) ProgrammeSeasonSelectFunc(c echo.Context) error {
 }
 
 func (v *Views) ProgrammeAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ProgrammeAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -132,7 +144,7 @@ func (v *Views) ProgrammeAddFunc(c echo.Context) error {
 
 		programmeSeason, err := strconv.Atoi(c.FormValue("programmeSeason"))
 		if err != nil {
-			log.Printf("failed to parse programmeSeason for programme add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to parse programmeSeason for programme add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to parse programmeSeason for programme add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -141,27 +153,27 @@ func (v *Views) ProgrammeAddFunc(c echo.Context) error {
 
 		parsed, err := time.Parse("02/01/2006", dateOfProgramme)
 		if err != nil {
-			log.Printf("failed to parse dateOfProgramme for programme add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to parse dateOfProgramme for programme add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to parse dateOfProgramme for programme add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		file, err := c.FormFile("upload")
 		if err != nil {
-			log.Printf("failed to get file for programme add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to get file for programme add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to get file for programme add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 		fileName, err := v.fileUpload(file)
 		if err != nil {
-			log.Printf("failed to upload file for programme add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to upload file for programme add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to upload file for programme add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.programme.AddProgramme(c.Request().Context(), programme.Programme{Name: name, FileName: fileName, DateOfProgramme: parsed, SeasonID: programmeSeason})
 		if err != nil {
-			log.Printf("failed to add programme for programme add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to add programme for programme add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to add programme for programme add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -170,7 +182,7 @@ func (v *Views) ProgrammeAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for programme add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for programme add, error: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -179,6 +191,9 @@ func (v *Views) ProgrammeAddFunc(c echo.Context) error {
 }
 
 func (v *Views) ProgrammeDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ProgrammeDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -194,7 +209,7 @@ func (v *Views) ProgrammeDeleteFunc(c echo.Context) error {
 
 		err = os.Remove(filepath.Join(v.conf.FileDir, programmeDB.FileName))
 		if err != nil {
-			log.Printf("failed to delete programme image for programme delete, programme id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to delete programme image for programme delete, programme id: %d, error: %+v", id, err))
 		}
 
 		err = v.programme.DeleteProgramme(c.Request().Context(), programmeDB)
@@ -206,7 +221,7 @@ func (v *Views) ProgrammeDeleteFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for programme delete, programme id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for programme delete, programme id: %d, error: %+v", id, err))
 		}
 
 		return c.Redirect(http.StatusFound, "/programmes")
@@ -215,6 +230,9 @@ func (v *Views) ProgrammeDeleteFunc(c echo.Context) error {
 }
 
 func (v *Views) ProgrammeSeasonAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ProgrammeSeasonAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -228,7 +246,7 @@ func (v *Views) ProgrammeSeasonAddFunc(c echo.Context) error {
 
 		_, err := v.programme.AddSeason(c.Request().Context(), programme.Season{Season: season})
 		if err != nil {
-			log.Printf("failed to add season for season add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to add season for season add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to add season for season add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -237,7 +255,7 @@ func (v *Views) ProgrammeSeasonAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for programme season add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for programme season add, error: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -246,6 +264,9 @@ func (v *Views) ProgrammeSeasonAddFunc(c echo.Context) error {
 }
 
 func (v *Views) ProgrammeSeasonEditFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ProgrammeSeasonEditFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -269,7 +290,7 @@ func (v *Views) ProgrammeSeasonEditFunc(c echo.Context) error {
 
 		_, err = v.programme.EditSeason(c.Request().Context(), seasonDB)
 		if err != nil {
-			log.Printf("failed to edit season for season edit, season id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to edit season for season edit, season id: %d, error: %+v", id, err))
 			data.Error = fmt.Sprintf("failed to edit season for season edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -278,7 +299,7 @@ func (v *Views) ProgrammeSeasonEditFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for programme season edit, season id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for programme season edit, season id: %d, error: %+v", id, err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -287,6 +308,9 @@ func (v *Views) ProgrammeSeasonEditFunc(c echo.Context) error {
 }
 
 func (v *Views) ProgrammeSeasonDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ProgrammeSeasonDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -322,7 +346,7 @@ func (v *Views) ProgrammeSeasonDeleteFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for programme season delete, season id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for programme season delete, season id: %d, error: %+v", id, err))
 		}
 
 		return c.Redirect(http.StatusFound, "/programmes")

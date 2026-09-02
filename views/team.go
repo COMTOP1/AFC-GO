@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -20,6 +20,9 @@ import (
 )
 
 func (v *Views) TeamsFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.TeamsFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	var teams []team.Team
@@ -51,10 +54,13 @@ func (v *Views) TeamsFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.TeamsTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.TeamsTemplate, templates.RegularType)
 }
 
 func (v *Views) TeamFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.TeamFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	teamID, err := strconv.Atoi(c.Param("id"))
@@ -111,10 +117,13 @@ func (v *Views) TeamFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.TeamTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.TeamTemplate, templates.RegularType)
 }
 
 func (v *Views) TeamAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.TeamAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -126,7 +135,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 
 		name := c.FormValue("name")
 		if len(name) == 0 {
-			log.Printf("name must contain a value for team add")
+			slog.Info("name must contain a value for team add")
 			data.Error = "name must contain a value"
 			return c.JSON(http.StatusOK, data)
 		}
@@ -140,7 +149,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 		if len(leagueTable) > 0 {
 			_, err := url.ParseRequestURI(leagueTable)
 			if err != nil {
-				log.Printf("failed to parse leagueTable for team add: %+v", err)
+				slog.Info(fmt.Sprintf("failed to parse leagueTable for team add: %+v", err))
 				data.Error = fmt.Sprintf("failed to parse leagueTable for team add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -150,7 +159,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 		if len(fixtures) > 0 {
 			_, err := url.ParseRequestURI(fixtures)
 			if err != nil {
-				log.Printf("failed to parse fixtures for team add: %+v", err)
+				slog.Info(fmt.Sprintf("failed to parse fixtures for team add: %+v", err))
 				data.Error = fmt.Sprintf("failed to parse fixtures for team add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -165,7 +174,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 		if tempIsActive == "Y" {
 			isActive = true
 		} else if len(tempIsActive) != 0 {
-			log.Printf("failed to parse isActive for team add: %s", tempIsActive)
+			slog.Info("failed to parse isActive for team add: " + tempIsActive)
 			data.Error = "failed to parse isActive for team add: " + tempIsActive
 			return c.JSON(http.StatusOK, data)
 		}
@@ -174,14 +183,14 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 		if tempIsYouth == "Y" {
 			isActive = true
 		} else if len(tempIsYouth) != 0 {
-			log.Printf("failed to parse isYouth for team add: %s", tempIsYouth)
+			slog.Info("failed to parse isYouth for team add: " + tempIsYouth)
 			data.Error = "failed to parse isYouth for team add: " + tempIsYouth
 			return c.JSON(http.StatusOK, data)
 		}
 
 		ages, err := strconv.Atoi(c.FormValue("ages"))
 		if err != nil {
-			log.Printf("failed to parse ages for playerAdd: %+v", err)
+			slog.Info(fmt.Sprintf("failed to parse ages for playerAdd: %+v", err))
 			data.Error = fmt.Sprintf("failed to parse ages for playerAdd: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -196,7 +205,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for team add: %+v", err)
+				slog.Info(fmt.Sprintf("failed to get file for team add: %+v", err))
 				data.Error = fmt.Sprintf("failed to get file for team add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -205,7 +214,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 		if hasUpload {
 			fileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for team add: %+v", err)
+				slog.Info(fmt.Sprintf("failed to upload file for team add: %+v", err))
 				data.Error = fmt.Sprintf("failed to upload file for team add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -227,7 +236,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 				Ages:        ages,
 			})
 		if err != nil {
-			log.Printf("failed to add team for team add: %+v", err)
+			slog.Info(fmt.Sprintf("failed to add team for team add: %+v", err))
 			data.Error = fmt.Sprintf("failed to add team for team add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -236,7 +245,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for team add: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for team add: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -245,6 +254,9 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 }
 
 func (v *Views) TeamEditFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.TeamEditFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -265,7 +277,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 
 		name := c.FormValue("name")
 		if len(name) == 0 {
-			log.Printf("name must contain a value for team edit")
+			slog.Info("name must contain a value for team edit")
 			data.Error = "name must contain a value"
 			return c.JSON(http.StatusOK, data)
 		}
@@ -284,7 +296,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 		if len(tempLeagueTable) > 0 {
 			_, err = url.ParseRequestURI(tempLeagueTable)
 			if err != nil {
-				log.Printf("failed to parse leagueTable for team edit, team id: %d, error: %+v", teamID, err)
+				slog.Info(fmt.Sprintf("failed to parse leagueTable for team edit, team id: %d, error: %+v", teamID, err))
 				data.Error = fmt.Sprintf("failed to parse leagueTable for team edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -296,7 +308,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 		if len(tempFixtures) > 0 {
 			_, err = url.ParseRequestURI(tempFixtures)
 			if err != nil {
-				log.Printf("failed to parse fixtures for team edit, team id: %d, error: %+v", teamID, err)
+				slog.Info(fmt.Sprintf("failed to parse fixtures for team edit, team id: %d, error: %+v", teamID, err))
 				data.Error = fmt.Sprintf("failed to parse fixtures for team edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -313,7 +325,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 		if tempIsActive == "Y" {
 			teamDB.IsActive = true
 		} else if len(tempIsActive) != 0 {
-			log.Printf("failed to parse isActive for team edit, team id: %d, error: %s", teamID, tempIsActive)
+			slog.Info(fmt.Sprintf("failed to parse isActive for team edit, team id: %d, error: %s", teamID, tempIsActive))
 			data.Error = "failed to parse isActive for team edit: " + tempIsActive
 			return c.JSON(http.StatusOK, data)
 		}
@@ -322,14 +334,14 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 		if tempIsYouth == "Y" {
 			teamDB.IsYouth = true
 		} else if len(tempIsYouth) != 0 {
-			log.Printf("failed to parse isYouth for team edit, team id: %d, error: %s", teamID, tempIsYouth)
+			slog.Info(fmt.Sprintf("failed to parse isYouth for team edit, team id: %d, error: %s", teamID, tempIsYouth))
 			data.Error = "failed to parse isYouth for team edit: " + tempIsYouth
 			return c.JSON(http.StatusOK, data)
 		}
 
 		ages, err := strconv.Atoi(c.FormValue("ages"))
 		if err != nil {
-			log.Printf("failed to parse ages for playerAdd, team id: %d, error: %+v", teamID, err)
+			slog.Info(fmt.Sprintf("failed to parse ages for playerAdd, team id: %d, error: %+v", teamID, err))
 			data.Error = fmt.Sprintf("failed to parse ages for playerAdd: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -345,7 +357,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for team edit, team id: %d, error: %+v", teamID, err)
+				slog.Info(fmt.Sprintf("failed to get file for team edit, team id: %d, error: %+v", teamID, err))
 				data.Error = fmt.Sprintf("failed to get file for team edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -355,14 +367,14 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 			var fileName string
 			fileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for team edit, team id: %d, error: %+v", teamID, err)
+				slog.Info(fmt.Sprintf("failed to upload file for team edit, team id: %d, error: %+v", teamID, err))
 				data.Error = fmt.Sprintf("failed to upload file for team edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if teamDB.FileName.Valid {
 				err = os.Remove(filepath.Join(v.conf.FileDir, teamDB.FileName.String))
 				if err != nil {
-					log.Printf("failed to delete old image for team edit, team id: %d, error: %+v", teamID, err)
+					slog.Info(fmt.Sprintf("failed to delete old image for team edit, team id: %d, error: %+v", teamID, err))
 				}
 			}
 			teamDB.FileName = null.StringFrom(fileName)
@@ -373,19 +385,19 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 			if teamDB.FileName.Valid {
 				err = os.Remove(filepath.Join(v.conf.FileDir, teamDB.FileName.String))
 				if err != nil {
-					log.Printf("failed to delete image for team edit, team id: %d, error: %+v", teamID, err)
+					slog.Info(fmt.Sprintf("failed to delete image for team edit, team id: %d, error: %+v", teamID, err))
 				}
 			}
 			teamDB.FileName = null.NewString("", false)
 		} else if len(tempRemoveTeamImage) != 0 {
-			log.Printf("failed to parse removeTeamImage for team edit, team id: %d, error: %s", teamID, tempRemoveTeamImage)
+			slog.Info(fmt.Sprintf("failed to parse removeTeamImage for team edit, team id: %d, error: %s", teamID, tempRemoveTeamImage))
 			data.Error = "failed to parse removeTeamImage for team edit: " + tempRemoveTeamImage
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.team.EditTeam(c.Request().Context(), teamDB)
 		if err != nil {
-			log.Printf("failed to edit team for team edit, team id: %d, error: %+v", teamID, err)
+			slog.Info(fmt.Sprintf("failed to edit team for team edit, team id: %d, error: %+v", teamID, err))
 			data.Error = fmt.Sprintf("failed to edit team for team edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -394,7 +406,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for team edit, team id: %d, error: %+v", teamID, err)
+			slog.Info(fmt.Sprintf("failed to set data for team edit, team id: %d, error: %+v", teamID, err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -403,6 +415,9 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 }
 
 func (v *Views) TeamDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.TeamDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -461,7 +476,7 @@ func (v *Views) TeamDeleteFunc(c echo.Context) error {
 		if teamDB.FileName.Valid {
 			err = os.Remove(filepath.Join(v.conf.FileDir, teamDB.FileName.String))
 			if err != nil {
-				log.Printf("failed to delete team file for team delete, team id: %d, error: %+v", id, err)
+				slog.Info(fmt.Sprintf("failed to delete team file for team delete, team id: %d, error: %+v", id, err))
 			}
 		}
 
@@ -474,7 +489,7 @@ func (v *Views) TeamDeleteFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for team delete, team id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for team delete, team id: %d, error: %+v", id, err))
 		}
 
 		return c.Redirect(http.StatusFound, "/teams")

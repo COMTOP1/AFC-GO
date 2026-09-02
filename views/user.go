@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"html"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -26,6 +26,9 @@ import (
 )
 
 func (v *Views) UsersFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.UsersFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	usersDB, err := v.user.GetUsers(c.Request().Context())
@@ -40,7 +43,7 @@ func (v *Views) UsersFunc(c echo.Context) error {
 
 	displayEmail, err := v.setting.GetSetting(c.Request().Context(), "displayEmail")
 	if err != nil {
-		log.Printf("failed to get displayEmail for users, error: %+v, continuing", err)
+		slog.Info(fmt.Sprintf("failed to get displayEmail for users, error: %+v, continuing", err))
 	}
 
 	year, _, _ := time.Now().Date()
@@ -63,10 +66,13 @@ func (v *Views) UsersFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.UsersTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.UsersTemplate, templates.RegularType)
 }
 
 func (v *Views) UsersSetDisplayEmailFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.UsersSetDisplayEmailFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -81,12 +87,12 @@ func (v *Views) UsersSetDisplayEmailFunc(c echo.Context) error {
 		if len(tempEmail) != 0 {
 			res, err := verifier.Verify(tempEmail)
 			if err != nil {
-				log.Printf("failed to parse email for display email, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to parse email for display email, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to parse email for display email: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if !res.Syntax.Valid {
-				log.Println("failed to parse email for display email: syntax is invalid")
+				slog.Info("failed to parse email for display email: syntax is invalid")
 				data.Error = "failed to parse email for display email: syntax is invalid"
 				return c.JSON(http.StatusOK, data)
 			}
@@ -98,7 +104,7 @@ func (v *Views) UsersSetDisplayEmailFunc(c echo.Context) error {
 					SettingText: tempEmail,
 				})
 				if err != nil {
-					log.Printf("failed to add setting for display email, error: %+v", err)
+					slog.Info(fmt.Sprintf("failed to add setting for display email, error: %+v", err))
 					data.Error = fmt.Sprintf("failed to add setting for display email: %+v", err)
 					return c.JSON(http.StatusOK, data)
 				}
@@ -108,7 +114,7 @@ func (v *Views) UsersSetDisplayEmailFunc(c echo.Context) error {
 					SettingText: tempEmail,
 				})
 				if err != nil {
-					log.Printf("failed to edit setting for display email, error: %+v", err)
+					slog.Info(fmt.Sprintf("failed to edit setting for display email, error: %+v", err))
 					data.Error = fmt.Sprintf("failed to edit setting for display email: %+v", err)
 					return c.JSON(http.StatusOK, data)
 				}
@@ -116,7 +122,7 @@ func (v *Views) UsersSetDisplayEmailFunc(c echo.Context) error {
 		} else {
 			err := v.setting.DeleteSetting(c.Request().Context(), "displayEmail")
 			if err != nil {
-				log.Printf("failed to delete setting for display email, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to delete setting for display email, error: %+v", err))
 			}
 		}
 
@@ -124,7 +130,7 @@ func (v *Views) UsersSetDisplayEmailFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err := v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for display email, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for display email, error: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -133,6 +139,9 @@ func (v *Views) UsersSetDisplayEmailFunc(c echo.Context) error {
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.UserAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -147,44 +156,44 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		phone := c.FormValue("phone")
 
 		if len(name) == 0 {
-			log.Println("name must not be empty")
+			slog.Info("name must not be empty")
 			data.Error = "name must not be empty"
 			return c.JSON(http.StatusOK, data)
 		}
 
 		res, err := verifier.Verify(email)
 		if err != nil {
-			log.Printf("failed to parse email for user add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to parse email for user add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to parse email for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 		if !res.Syntax.Valid {
-			log.Println("failed to parse email for user add, error: syntax is invalid")
+			slog.Info("failed to parse email for user add, error: syntax is invalid")
 			data.Error = "failed to parse email for user add: syntax is invalid"
 			return c.JSON(http.StatusOK, data)
 		}
 
 		formRole, err := role.GetRole(c.FormValue("role"))
 		if err != nil {
-			log.Printf("failed to get role for user add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to get role for user add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to get role for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		teamID, err := strconv.Atoi(c.FormValue("userTeam"))
 		if err != nil {
-			log.Printf("failed to get teamID for user add, error: %+v, proceeding with no team", err)
+			slog.Info(fmt.Sprintf("failed to get teamID for user add, error: %+v, proceeding with no team", err))
 			teamID = 0
 		}
 		if teamID < 0 {
-			log.Println("failed to parse negative number, proceeding with no team")
+			slog.Info("failed to parse negative number, proceeding with no team")
 			teamID = 0
 		}
 
 		if formRole.String() == role.Manager.String() {
 			_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
 			if err != nil {
-				log.Printf("failed to get team for user add, team id: %d, error: %+v", teamID, err)
+				slog.Info(fmt.Sprintf("failed to get team for user add, team id: %d, error: %+v", teamID, err))
 				data.Error = fmt.Sprintf("failed to get team for user add, team id: %d: %+v", teamID, err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -194,21 +203,21 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		password, err := utils.GenerateRandom(utils.GeneratePassword)
 		if err != nil {
-			log.Printf("failed to generate password for user add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to generate password for user add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to generate password for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		salt, err := utils.GenerateRandom(utils.GenerateSalt)
 		if err != nil {
-			log.Printf("failed to generate salt for user add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to generate salt for user add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to generate salt for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		hash, err := utils.HashPassScrypt([]byte(password), []byte(salt), v.conf.Security.ScryptWorkFactor, v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
 		if err != nil {
-			log.Printf("failed to generate password hash for user add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to generate password hash for user add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to generate password hash for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -219,7 +228,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for user add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to get file for user add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to get file for user add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -228,7 +237,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		if hasUpload {
 			fileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for user add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to upload file for user add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to upload file for user add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -248,12 +257,12 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 
 		_, err = v.user.AddUser(c.Request().Context(), u)
 		if err != nil {
-			log.Printf("failed to add user for user add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to add user for user add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to add user for user add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
-		mailer := v.mailer.ConnectMailer()
+		mailer := v.mailer.ConnectMailer(c.Request().Context())
 
 		if mailer != nil {
 			var tmpl *template.Template
@@ -261,8 +270,8 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			if err != nil {
 				c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - no mailer present. Please send the username and password to this email: %s, password: %s", email, password))
 				c1.MsgType = "is-warning"
-				log.Printf("failed to get email for user add, error: %+v", err)
-				log.Println("proceeding")
+				slog.Info(fmt.Sprintf("failed to get email for user add, error: %+v", err))
+				slog.Info("proceeding")
 			} else {
 
 				mailFile := mail.Mail{
@@ -283,12 +292,12 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 					},
 				}
 
-				err = mailer.SendMail(mailFile)
+				err = mailer.SendMail(c.Request().Context(), mailFile)
 				if err != nil {
 					c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s", email, password))
 					c1.MsgType = "is-warning"
-					log.Printf("failed to send email for user add, error: %+v", err)
-					log.Println("proceeding")
+					slog.Info(fmt.Sprintf("failed to send email for user add, error: %+v", err))
+					slog.Info("proceeding")
 				} else {
 					c1.Message = fmt.Sprintf("successfully created user, sent signup email to: \"%s\"", email)
 					c1.MsgType = "is-success"
@@ -297,14 +306,14 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		} else {
 			c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s", email, password))
 			c1.MsgType = "is-warning"
-			log.Println("no mailer present")
-			log.Println("proceeding")
+			slog.Info("no mailer present")
+			slog.Info("proceeding")
 		}
-		log.Printf("created user: %s, by: %d - %s", u.Email, c1.User.ID, c1.User.Email)
+		slog.Info(fmt.Sprintf("created user: %s, by: %d - %s", u.Email, c1.User.ID, c1.User.Email))
 
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for uploadImage: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for uploadImage: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -313,6 +322,9 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.UserEditFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -339,7 +351,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		userDB.Phone = null.NewString(tempPhone, len(tempPhone) > 0)
 
 		if len(tempName) == 0 {
-			log.Println("name must not be empty")
+			slog.Info("name must not be empty")
 			data.Error = "name must not be empty"
 			return c.JSON(http.StatusOK, data)
 		}
@@ -348,12 +360,12 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		res, err := verifier.Verify(tempEmail)
 		if err != nil {
-			log.Printf("failed to parse email for user edit, user id: %d, error: %+v", userID, err)
+			slog.Info(fmt.Sprintf("failed to parse email for user edit, user id: %d, error: %+v", userID, err))
 			data.Error = fmt.Sprintf("failed to parse email for user edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 		if !res.Syntax.Valid {
-			log.Println("failed to parse email for user edit: syntax is invalid")
+			slog.Info("failed to parse email for user edit: syntax is invalid")
 			data.Error = "failed to parse email for user edit: syntax is invalid"
 			return c.JSON(http.StatusOK, data)
 		}
@@ -362,7 +374,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		formRole, err := role.GetRole(c.FormValue("role"))
 		if err != nil {
-			log.Printf("failed to get role for user edit, user id: %d, error: %+v", userID, err)
+			slog.Info(fmt.Sprintf("failed to get role for user edit, user id: %d, error: %+v", userID, err))
 			data.Error = fmt.Sprintf("failed to get role for user edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -371,18 +383,18 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 
 		teamID, err := strconv.Atoi(c.FormValue("userTeam"))
 		if err != nil {
-			log.Printf("failed to get teamID for user edit, user id: %d, error: %+v, proceeding with no team", userID, err)
+			slog.Info(fmt.Sprintf("failed to get teamID for user edit, user id: %d, error: %+v, proceeding with no team", userID, err))
 			teamID = 0
 		}
 		if teamID < 0 {
-			log.Println("failed to parse negative number, proceeding with no team")
+			slog.Info("failed to parse negative number, proceeding with no team")
 			teamID = 0
 		}
 
 		if formRole.String() == role.Manager.String() {
 			_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
 			if err != nil {
-				log.Printf("failed to get team for user edit, user id: %d, team id: %d, error: %+v", userID, teamID, err)
+				slog.Info(fmt.Sprintf("failed to get team for user edit, user id: %d, team id: %d, error: %+v", userID, teamID, err))
 				data.Error = fmt.Sprintf("failed to get team for user edit, team id: %d: %+v", teamID, err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -397,7 +409,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for user edit, user id: %d, error: %+v", userID, err)
+				slog.Info(fmt.Sprintf("failed to get file for user edit, user id: %d, error: %+v", userID, err))
 				data.Error = fmt.Sprintf("failed to get file for user edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -407,14 +419,14 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 			var tempFileName string
 			tempFileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for user edit, user id: %d, error: %+v", userID, err)
+				slog.Info(fmt.Sprintf("failed to upload file for user edit, user id: %d, error: %+v", userID, err))
 				data.Error = fmt.Sprintf("failed to upload file for user edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if userDB.FileName.Valid {
 				err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
 				if err != nil {
-					log.Printf("failed to delete old image for user edit, user id: %d, error: %+v", userID, err)
+					slog.Info(fmt.Sprintf("failed to delete old image for user edit, user id: %d, error: %+v", userID, err))
 				}
 			}
 			userDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
@@ -425,19 +437,19 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 			if userDB.FileName.Valid {
 				err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
 				if err != nil {
-					log.Printf("failed to delete image for user edit, user id: %d, error: %+v", userID, err)
+					slog.Info(fmt.Sprintf("failed to delete image for user edit, user id: %d, error: %+v", userID, err))
 				}
 			}
 			userDB.FileName = null.NewString("", false)
 		} else if len(tempRemoveUserImage) != 0 {
-			log.Printf("failed to parse removeUserImage for user edit, user id: %d, error: %s", userID, tempRemoveUserImage)
+			slog.Info(fmt.Sprintf("failed to parse removeUserImage for user edit, user id: %d, error: %s", userID, tempRemoveUserImage))
 			data.Error = "failed to parse removeUserImage for user edit: " + tempRemoveUserImage
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.user.EditUser(c.Request().Context(), userDB)
 		if err != nil {
-			log.Printf("failed to edit user for user edit, user id: %d, error: %+v", userID, err)
+			slog.Info(fmt.Sprintf("failed to edit user for user edit, user id: %d, error: %+v", userID, err))
 			data.Error = fmt.Sprintf("failed to edit user for user edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -446,7 +458,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for user edit, user id: %d, error: %+v", userID, err)
+			slog.Info(fmt.Sprintf("failed to set data for user edit, user id: %d, error: %+v", userID, err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -455,6 +467,9 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.UserDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -471,7 +486,7 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 		if userDB.FileName.Valid {
 			err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
 			if err != nil {
-				log.Printf("failed to delete user image for user delete, user id: %d, error: %+v", id, err)
+				slog.Info(fmt.Sprintf("failed to delete user image for user delete, user id: %d, error: %+v", id, err))
 			}
 		}
 
@@ -484,7 +499,7 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for user delete, user id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for user delete, user id: %d, error: %+v", id, err))
 		}
 
 		return c.Redirect(http.StatusFound, "/users")

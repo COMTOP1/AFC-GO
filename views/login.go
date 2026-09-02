@@ -3,7 +3,7 @@ package views
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -17,6 +17,9 @@ import (
 // LoginFunc implements the login functionality, will
 // add a cookie to the cookie store for managing authentication
 func (v *Views) LoginFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.LoginFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	session, _ := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 	// We're ignoring the error here since sometimes the cookie keys change, and then we
 	// can overwrite it instead, it does need to stay as it is written to here
@@ -39,7 +42,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 		// Authentication
 		u, resetPw, err := v.user.VerifyUser(c.Request().Context(), u, v.conf.Security.Iterations, v.conf.Security.ScryptWorkFactor, v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
 		if err != nil {
-			log.Printf("failed login for \"%s\": %v", u.Email, err)
+			slog.Info(fmt.Sprintf("failed login for \"%s\": %v", u.Email, err))
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
 				return fmt.Errorf("failed to save session for login: %w", err)
@@ -102,7 +105,7 @@ func (v *Views) LoginFunc(c echo.Context) error {
 			return fmt.Errorf("failed to save user session for login: %w", err)
 		}
 
-		log.Printf("user \"%s\" is authenticated", u.Email)
+		slog.Info(fmt.Sprintf("user \"%s\" is authenticated", u.Email))
 		data := struct {
 			Error         string `json:"error"`
 			ResetPassword bool   `json:"resetPassword"`

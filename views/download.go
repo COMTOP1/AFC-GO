@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -26,6 +26,9 @@ import (
 )
 
 func (v *Views) DownloadFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.DownloadFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	source := c.QueryParam("s")
 
 	temp := c.QueryParam("id")
@@ -193,7 +196,7 @@ func (v *Views) _downloadFunc(c echo.Context, fileName, page string, id int) err
 	_, err := os.Stat(path)
 	if err != nil {
 		if strings.Contains(err.Error(), "no such file") {
-			log.Printf("failed to get file for %s download: no such file, id: %d", page, id)
+			slog.Info(fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
 			return c.String(http.StatusNotFound,
 				fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
 		}

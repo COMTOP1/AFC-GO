@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,6 +17,9 @@ import (
 )
 
 func (v *Views) DocumentsFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.DocumentsFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	var d1 []document.Document
@@ -44,10 +47,13 @@ func (v *Views) DocumentsFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.DocumentsTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.DocumentsTemplate, templates.RegularType)
 }
 
 func (v *Views) DocumentAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.DocumentAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -61,20 +67,20 @@ func (v *Views) DocumentAddFunc(c echo.Context) error {
 
 		file, err := c.FormFile("upload")
 		if err != nil {
-			log.Printf("failed to get file for document add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to get file for document add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to get file for document add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 		fileName, err := v.fileUpload(file)
 		if err != nil {
-			log.Printf("failed to upload file for document add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to upload file for document add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to upload file for document add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.document.AddDocument(c.Request().Context(), document.Document{Name: name, FileName: fileName})
 		if err != nil {
-			log.Printf("failed to add document for document add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to add document for document add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to add document for document add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -83,7 +89,7 @@ func (v *Views) DocumentAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for document add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for document add, error: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -92,6 +98,9 @@ func (v *Views) DocumentAddFunc(c echo.Context) error {
 }
 
 func (v *Views) DocumentDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.DocumentDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -107,7 +116,7 @@ func (v *Views) DocumentDeleteFunc(c echo.Context) error {
 
 		err = os.Remove(filepath.Join(v.conf.FileDir, documentDB.FileName))
 		if err != nil {
-			log.Printf("failed to delete document file for document delete, document id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to delete document file for document delete, document id: %d, error: %+v", id, err))
 		}
 
 		err = v.document.DeleteDocument(c.Request().Context(), documentDB)
@@ -119,7 +128,7 @@ func (v *Views) DocumentDeleteFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for document delete, document id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for document delete, document id: %d, error: %+v", id, err))
 		}
 
 		return c.Redirect(http.StatusFound, "/documents")
