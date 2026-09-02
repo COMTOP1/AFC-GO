@@ -4,12 +4,14 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho" //nolint:staticcheck // still functional; github.com/labstack/echo-opentelemetry is its replacement but isn't part of opentelemetry-go-contrib
 
 	"github.com/COMTOP1/AFC-GO/views"
 )
@@ -53,6 +55,10 @@ func (r *Router) Start() error {
 func (r *Router) middleware() {
 	r.router.Pre(middleware.RemoveTrailingSlash())
 	r.router.Use(middleware.Recover())
+	r.router.Use(otelecho.Middleware("afc-go", otelecho.WithSkipper(func(c echo.Context) bool {
+		// Skip tracing for health checks
+		return c.Path() == "/api/health"
+	})))
 	r.router.Use(middleware.BodyLimit("15M"))
 	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
@@ -85,7 +91,7 @@ func (r *Router) loadRoutes() {
 			Status: http.StatusOK,
 		})
 		if err != nil {
-			log.Println(err)
+			slog.Info(err.Error())
 			return &echo.HTTPError{
 				Code:     http.StatusBadRequest,
 				Message:  err.Error(),
