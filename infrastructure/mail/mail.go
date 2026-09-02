@@ -2,15 +2,19 @@ package mail
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
+	"log/slog"
 	"time"
 
 	mail "github.com/xhit/go-simple-mail/v2"
+	"go.opentelemetry.io/otel"
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/infrastructure/mail")
 
 type (
 	// Mailer is the struct used to send mail, can only be used once connected to mailer
@@ -79,13 +83,16 @@ func NewMailer(config Config) *MailerInit {
 }
 
 // ConnectMailer connects to the mail server
-func (m *MailerInit) ConnectMailer() *Mailer {
+func (m *MailerInit) ConnectMailer(ctx context.Context) *Mailer {
+	_, span := tracer.Start(ctx, "mail.ConnectMailer")
+	defer span.End()
 	smtpClient, err := m.SMTPServer.Connect()
 	if err != nil {
-		log.Printf("mailer failed: %+v", err)
+		span.RecordError(err)
+		slog.Info(fmt.Sprintf("mailer failed: %+v", err))
 		return nil
 	}
-	log.Printf("connected to mailer: %s", m.SMTPServer.Host)
+	slog.Info("connected to mailer: " + m.SMTPServer.Host)
 	return &Mailer{smtpClient, m.Defaults}
 }
 
@@ -98,15 +105,20 @@ func (m *Mailer) CheckSendable(item Mail) error {
 }
 
 // SendMail sends a template email
-func (m *Mailer) SendMail(item Mail) error {
+func (m *Mailer) SendMail(ctx context.Context, item Mail) error {
+	_, span := tracer.Start(ctx, "mail.SendMail")
+	defer span.End()
+
 	err := m.CheckSendable(item)
 	if err != nil {
+		span.RecordError(err)
 		return err
 	}
 	to, from, cc, bcc := m.setEmailHeader(item)
 	body := bytes.Buffer{}
 	err = item.Tpl.Execute(&body, item.TplData)
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to exec tpl: %w", err)
 	}
 	email := mail.NewMSG()
@@ -119,9 +131,14 @@ func (m *Mailer) SendMail(item Mail) error {
 	}
 	email.SetBody(mail.TextHTML, body.String())
 	if email.Error != nil {
+		span.RecordError(email.Error)
 		return fmt.Errorf("failed to set mail data: %w", email.Error)
 	}
-	return email.Send(m.SMTPClient)
+	err = email.Send(m.SMTPClient)
+	if err != nil {
+		span.RecordError(err)
+	}
+	return err
 }
 
 func (m *Mailer) setEmailHeader(item Mail) (to, from string, cc, bcc []string) {
