@@ -3,7 +3,7 @@ package views
 import (
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -138,7 +138,7 @@ type (
 func (v *Views) getSessionData(eC echo.Context) *Context {
 	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
 	if err != nil {
-		log.Printf("error getting session: %+v", err)
+		slog.Info(fmt.Sprintf("error getting session: %+v", err))
 		err = session.Save(eC.Request(), eC.Response())
 		if err != nil {
 			panic(fmt.Errorf("failed to save user session for getSessionData: %w", err))
@@ -159,7 +159,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 	} else {
 		_, err = role.GetRole(string(u.Role))
 		if err != nil {
-			log.Printf("failed to get role for getSessionData: %+v", err)
+			slog.Info(fmt.Sprintf("failed to get role for getSessionData: %+v", err))
 		}
 	}
 
@@ -171,7 +171,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 	if i.MsgViewed {
 		err = v.clearMessagesInSession(eC)
 		if err != nil {
-			log.Printf("failed to clear message for getSessionData")
+			slog.Info("failed to clear message for getSessionData")
 		}
 		i.Message = ""
 		i.MsgType = ""
@@ -182,7 +182,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 			MsgViewed: true,
 		})
 		if err != nil {
-			log.Printf("failed to set viewed message for getSessionData")
+			slog.Info("failed to set viewed message for getSessionData")
 		}
 	}
 	c := &Context{
@@ -196,7 +196,7 @@ func (v *Views) getSessionData(eC echo.Context) *Context {
 func (v *Views) getSessionDataNoMsg(eC echo.Context) *Context {
 	session, err := v.cookie.Get(eC.Request(), v.conf.SessionCookieName)
 	if err != nil {
-		log.Printf("error getting session: %+v", err)
+		slog.Info(fmt.Sprintf("error getting session: %+v", err))
 		err = session.Save(eC.Request(), eC.Response())
 		if err != nil {
 			panic(fmt.Errorf("failed to save user session for getSessionData: %w", err))
@@ -217,7 +217,7 @@ func (v *Views) getSessionDataNoMsg(eC echo.Context) *Context {
 	} else {
 		_, err = role.GetRole(string(u.Role))
 		if err != nil {
-			log.Printf("failed to get role for getSessionData: %+v", err)
+			slog.Info(fmt.Sprintf("failed to get role for getSessionData: %+v", err))
 		}
 	}
 
@@ -409,7 +409,7 @@ func DBProgrammesToTemplateFormat(programmesDB []programme.Programme, seasonsDB 
 				}
 			}
 			if !found {
-				log.Printf("failed to find season for programme: %d", programmeDB.ID)
+				slog.Info(fmt.Sprintf("failed to find season for programme: %d", programmeDB.ID))
 				programmeTemplate.Season = SeasonTemplate{IsValid: false}
 			}
 		}
@@ -459,7 +459,7 @@ func DBPlayersToTemplateFormat(playersDB []player.Player, teamsDB []team.Team) [
 			by, bm, bd := playerDB.DateOfBirth.Time.Date()
 			birthdate := time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC)
 			if today.Before(birthdate) {
-				log.Printf("failed to parse player dateOfBirth: %d", playerDB.ID)
+				slog.Info(fmt.Sprintf("failed to parse player dateOfBirth: %d", playerDB.ID))
 				playerTemplate.Age = -1
 			} else {
 				age := ty - by
@@ -480,7 +480,7 @@ func DBPlayersToTemplateFormat(playersDB []player.Player, teamsDB []team.Team) [
 		playerTemplate.IsCaptain = playerDB.IsCaptain
 		found := false
 		if playerDB.TeamID < 0 {
-			log.Printf("failed to find team for player: %d, teamID set below 1: %d", playerDB.ID, playerDB.TeamID)
+			slog.Info(fmt.Sprintf("failed to find team for player: %d, teamID set below 1: %d", playerDB.ID, playerDB.TeamID))
 			playerTemplate.Team = TeamTemplate{IsValid: false}
 		} else {
 			for _, teamDB := range teamsDB {
@@ -496,7 +496,7 @@ func DBPlayersToTemplateFormat(playersDB []player.Player, teamsDB []team.Team) [
 				}
 			}
 			if !found {
-				log.Printf("failed to find team for player: %d", playerDB.ID)
+				slog.Info(fmt.Sprintf("failed to find team for player: %d", playerDB.ID))
 				playerTemplate.Team = TeamTemplate{IsValid: false}
 			}
 		}

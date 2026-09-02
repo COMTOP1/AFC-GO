@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,6 +20,9 @@ import (
 )
 
 func (v *Views) WhatsOnFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.WhatsOnFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	whatsOnsDB, err := v.whatsOn.GetWhatsOn(c.Request().Context())
@@ -48,10 +51,13 @@ func (v *Views) WhatsOnFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.WhatsOnTemplate, templates.RegularType)
 }
 
 func (v *Views) WhatsOnTomePeriodFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.WhatsOnTomePeriodFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	timePeriod := c.Param("timePeriod")
@@ -98,10 +104,13 @@ func (v *Views) WhatsOnTomePeriodFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.WhatsOnTemplate, templates.RegularType)
 }
 
 func (v *Views) WhatsOnSelectFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.WhatsOnSelectFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		timePeriod := c.FormValue("timePeriod")
 
@@ -118,6 +127,9 @@ func (v *Views) WhatsOnSelectFunc(c echo.Context) error {
 }
 
 func (v *Views) WhatsOnArticleFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.WhatsOnArticleFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	whatsOnID, err := strconv.Atoi(c.Param("id"))
@@ -146,10 +158,13 @@ func (v *Views) WhatsOnArticleFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.WhatsOnArticleTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.WhatsOnArticleTemplate, templates.RegularType)
 }
 
 func (v *Views) WhatsOnAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.WhatsOnAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -179,7 +194,7 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 
 		dateOfEventParsed, err := time.Parse("02/01/2006", dateOfEvent)
 		if err != nil {
-			log.Printf("failed to parse dateOfEvent for whats on add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to parse dateOfEvent for whats on add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to parse dateOfEvent for whats on add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -190,7 +205,7 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for whats on add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to get file for whats on add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to get file for whats on add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -199,7 +214,7 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 		if hasUpload {
 			fileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for whats on add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to upload file for whats on add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to upload file for whats on add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -212,7 +227,7 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 			DateOfEvent: dateOfEventParsed,
 		})
 		if err != nil {
-			log.Printf("failed to add whatsOn for whats on add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to add whatsOn for whats on add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to add whatsOn for whats on add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -221,7 +236,7 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for whats on add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for whats on add, error: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -230,6 +245,9 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 }
 
 func (v *Views) WhatsOnEditFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.WhatsOnEditFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -270,7 +288,7 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 
 		tempDateOfEventParsed, err := time.Parse("02/01/2006", dateOfEvent)
 		if err != nil {
-			log.Printf("failed to parse dateOfEvent for whats on edit, whats on id: %d, error: %+v", whatsOnID, err)
+			slog.Info(fmt.Sprintf("failed to parse dateOfEvent for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
 			data.Error = fmt.Sprintf("failed to parse dateOfEvent for whats on edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -282,7 +300,7 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for whats on edit, whats on id: %d, error: %+v", whatsOnID, err)
+				slog.Info(fmt.Sprintf("failed to get file for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
 				data.Error = fmt.Sprintf("failed to get file for whats on edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -292,14 +310,14 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 			var tempFileName string
 			tempFileName, err = v.fileUpload(file)
 			if err != nil {
-				log.Printf("failed to upload file for whats on edit, whats on id: %d, error: %+v", whatsOnID, err)
+				slog.Info(fmt.Sprintf("failed to upload file for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
 				data.Error = fmt.Sprintf("failed to upload file for whats on edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if whatsOnDB.FileName.Valid {
 				err = os.Remove(filepath.Join(v.conf.FileDir, whatsOnDB.FileName.String))
 				if err != nil {
-					log.Printf("failed to delete old image for whats on edit, whats on id: %d, error: %+v", whatsOnID, err)
+					slog.Info(fmt.Sprintf("failed to delete old image for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
 				}
 			}
 			whatsOnDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
@@ -310,14 +328,14 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 
 			whatsOnDB.FileName = null.NewString("", false)
 		} else if len(tempRemoveWhatsOnImage) != 0 {
-			log.Printf("failed to parse removeWhatsOnImage for whats on edit, whats on id: %d, value: %s", whatsOnID, tempRemoveWhatsOnImage)
+			slog.Info(fmt.Sprintf("failed to parse removeWhatsOnImage for whats on edit, whats on id: %d, value: %s", whatsOnID, tempRemoveWhatsOnImage))
 			data.Error = "failed to parse removeWhatsOnImage for whats on edit, value: " + tempRemoveWhatsOnImage
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.whatsOn.EditWhatsOn(c.Request().Context(), whatsOnDB)
 		if err != nil {
-			log.Printf("failed to add whatsOn for whats on edit, whats on id: %d, error: %+v", whatsOnID, err)
+			slog.Info(fmt.Sprintf("failed to add whatsOn for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
 			data.Error = fmt.Sprintf("failed to add whatsOn for whats on edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -326,7 +344,7 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for whats on edit, whats on id: %d, error: %+v", whatsOnID, err)
+			slog.Info(fmt.Sprintf("failed to set data for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -335,6 +353,9 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 }
 
 func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.WhatsOnDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -351,7 +372,7 @@ func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
 		if whatsOnDB.FileName.Valid {
 			err = os.Remove(filepath.Join(v.conf.FileDir, whatsOnDB.FileName.String))
 			if err != nil {
-				log.Printf("failed to delete whatsOn image for whats on delete, whats on id: %d, error: %+v", id, err)
+				slog.Info(fmt.Sprintf("failed to delete whatsOn image for whats on delete, whats on id: %d, error: %+v", id, err))
 			}
 		}
 
@@ -364,7 +385,7 @@ func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for whats on delete, whats on id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for whats on delete, whats on id: %d, error: %+v", id, err))
 		}
 
 		return c.Redirect(http.StatusFound, "/whatson")

@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/gob"
 	"encoding/hex"
-	"log"
+	"fmt"
+	"log/slog"
 	"strconv"
 	"sync"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
+	"go.opentelemetry.io/otel"
 
 	"github.com/COMTOP1/AFC-GO/affiliation"
 	"github.com/COMTOP1/AFC-GO/document"
@@ -31,6 +33,8 @@ import (
 )
 
 const visitorCount = "visitorCount"
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/views")
 
 type (
 	Config struct {
@@ -119,14 +123,14 @@ func New(conf *Config, host string, interval time.Duration) *Views {
 	// Initialising session cookie
 	authKey, err := hex.DecodeString(conf.Security.AuthenticationKey)
 	if err != nil {
-		log.Printf("failed to decode authentication key: %+v", err)
+		slog.Info(fmt.Sprintf("failed to decode authentication key: %+v", err))
 	}
 	if len(authKey) == 0 {
 		authKey = securecookie.GenerateRandomKey(64)
 	}
 	encryptionKey, err := hex.DecodeString(conf.Security.EncryptionKey)
 	if err != nil {
-		log.Printf("failed to decode encryption key: %+v", err)
+		slog.Info(fmt.Sprintf("failed to decode encryption key: %+v", err))
 	}
 	if len(encryptionKey) == 0 {
 		encryptionKey = securecookie.GenerateRandomKey(32)
@@ -207,7 +211,7 @@ func (v *Views) flushToDB() {
 			SettingText: strconv.Itoa(countToFlush),
 		})
 		if err != nil {
-			log.Printf("Error creating visitorCount: %v", err)
+			slog.Info(fmt.Sprintf("Error creating visitorCount: %v", err))
 		}
 		return
 	}
@@ -220,7 +224,7 @@ func (v *Views) flushToDB() {
 		SettingText: strconv.Itoa(newValue),
 	})
 	if err != nil {
-		log.Printf("Error updating visitorCount: %v", err)
+		slog.Info(fmt.Sprintf("Error updating visitorCount: %v", err))
 	}
 
 	v.cache.Set(visitorCount, newValue, cache.DefaultExpiration)

@@ -11,22 +11,28 @@ import (
 )
 
 func (s *Store) getNews(ctx context.Context) ([]News, error) {
+	ctx, span := tracer.Start(ctx, "news.getNews")
+	defer span.End()
 	var newsDB []News
 	builder := sq.Select("id", "title", "file_name", "content", "date").
 		From("news").
 		OrderBy("date DESC")
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get news: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &newsDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return nil, fmt.Errorf("failed to get news: %w", err)
 	}
 	return newsDB, nil
 }
 
 func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
+	ctx, span := tracer.Start(ctx, "news.getNewsLatest")
+	defer span.End()
 	var newsDB News
 	builder := sq.Select("id", "title", "date").
 		From("news").
@@ -34,10 +40,12 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 		Limit(1)
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get news latest: %w", err))
 	}
 	err = s.db.GetContext(ctx, &newsDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		if strings.Contains(err.Error(), "no rows in result set") {
 			return News{}, nil
 		}
@@ -47,41 +55,52 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 }
 
 func (s *Store) getNewsArticle(ctx context.Context, newsParam News) (News, error) {
+	ctx, span := tracer.Start(ctx, "news.getNewsArticle")
+	defer span.End()
 	var newsDB News
 	builder := utils.PSQL().Select("id", "title", "file_name", "content", "date").
 		From("news").
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get news article: %w", err))
 	}
 	err = s.db.GetContext(ctx, &newsDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return News{}, fmt.Errorf("failed to get news article: %w", err)
 	}
 	return newsDB, nil
 }
 
 func (s *Store) addNews(ctx context.Context, newsParam News) (News, error) {
+	ctx, span := tracer.Start(ctx, "news.addNews")
+	defer span.End()
 	builder := utils.PSQL().Insert("news").
 		Columns("title", "file_name", "content", "date").
 		Values(newsParam.Title, newsParam.FileName, newsParam.Content, newsParam.Date)
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add news: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return News{}, fmt.Errorf("failed to add news: %w", err)
 	}
 	_, err = res.RowsAffected()
 	if err != nil {
+		span.RecordError(err)
 		return News{}, fmt.Errorf("failed to add news: %w", err)
 	}
 	return newsParam, nil
 }
 
 func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
+	ctx, span := tracer.Start(ctx, "news.editNews")
+	defer span.End()
 	builder := utils.PSQL().Update("news").
 		SetMap(map[string]interface{}{
 			"title":     newsParam.Title,
@@ -92,28 +111,35 @@ func (s *Store) editNews(ctx context.Context, newsParam News) (News, error) {
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for edit news: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return News{}, fmt.Errorf("failed to edit news: %w", err)
 	}
 	_, err = res.RowsAffected()
 	if err != nil {
+		span.RecordError(err)
 		return News{}, fmt.Errorf("failed to edit news: %w", err)
 	}
 	return newsParam, nil
 }
 
 func (s *Store) deleteNews(ctx context.Context, newsParam News) error {
+	ctx, span := tracer.Start(ctx, "news.deleteNews")
+	defer span.End()
 	builder := utils.PSQL().Delete("news").
 		Where(sq.Eq{"id": newsParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for delete news: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to delete news: %w", err)
 	}
 	return nil

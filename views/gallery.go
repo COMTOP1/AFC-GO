@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,6 +18,9 @@ import (
 )
 
 func (v *Views) GalleryFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.GalleryFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	imagesDB, err := v.image.GetImages(c.Request().Context())
@@ -42,10 +45,13 @@ func (v *Views) GalleryFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.GalleryTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.GalleryTemplate, templates.RegularType)
 }
 
 func (v *Views) ImageAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ImageAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -57,13 +63,13 @@ func (v *Views) ImageAddFunc(c echo.Context) error {
 
 		file, err := c.FormFile("upload")
 		if err != nil {
-			log.Printf("failed to get file for image add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to get file for image add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to get file for image add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 		fileName, err := v.fileUpload(file)
 		if err != nil {
-			log.Printf("failed to upload file for image add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to upload file for image add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to upload file for image add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -72,7 +78,7 @@ func (v *Views) ImageAddFunc(c echo.Context) error {
 
 		_, err = v.image.AddImage(c.Request().Context(), image.Image{FileName: fileName, Caption: null.NewString(caption, len(caption) > 0)})
 		if err != nil {
-			log.Printf("failed to add image for image add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to add image for image add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to add image for image add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -81,7 +87,7 @@ func (v *Views) ImageAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for image add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for image add, error: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -90,6 +96,9 @@ func (v *Views) ImageAddFunc(c echo.Context) error {
 }
 
 func (v *Views) ImageDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ImageDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -105,7 +114,7 @@ func (v *Views) ImageDeleteFunc(c echo.Context) error {
 
 		err = os.Remove(filepath.Join(v.conf.FileDir, imageDB.FileName))
 		if err != nil {
-			log.Printf("failed to delete image file for image delete, image id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to delete image file for image delete, image id: %d, error: %+v", id, err))
 		}
 
 		err = v.image.DeleteImage(c.Request().Context(), imageDB)
@@ -117,7 +126,7 @@ func (v *Views) ImageDeleteFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for image delete, image id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for image delete, image id: %d, error: %+v", id, err))
 		}
 
 		return c.Redirect(http.StatusFound, "/gallery")

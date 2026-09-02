@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -15,13 +15,16 @@ import (
 )
 
 func (v *Views) InfoFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.InfoFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	year, _, _ := time.Now().Date()
 
 	infoContent, err := v.setting.GetSetting(c.Request().Context(), "infoContent")
 	if err != nil {
-		log.Printf("failed to get info content for info, error: %+v, continuing", err)
+		slog.Info(fmt.Sprintf("failed to get info content for info, error: %+v, continuing", err))
 	}
 
 	data := struct {
@@ -36,10 +39,13 @@ func (v *Views) InfoFunc(c echo.Context) error {
 		User:         c1.User,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.InfoTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.InfoTemplate, templates.RegularType)
 }
 
 func (v *Views) InfoEditFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.InfoEditFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	switch c.Request().Method {
 	case http.MethodGet:
 		return v._infoEditGet(c)
@@ -51,11 +57,14 @@ func (v *Views) InfoEditFunc(c echo.Context) error {
 }
 
 func (v *Views) _infoEditGet(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views._infoEditGet")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	infoContent, err := v.setting.GetSetting(c.Request().Context(), "infoContent")
 	if err != nil {
-		log.Printf("failed to get infoContent for infoEditGet, error: %+v, continuing", err)
+		slog.Info(fmt.Sprintf("failed to get infoContent for infoEditGet, error: %+v, continuing", err))
 	}
 
 	if len(infoContent.SettingText) == 0 {
@@ -78,10 +87,13 @@ func (v *Views) _infoEditGet(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.InfoEditTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.InfoEditTemplate, templates.RegularType)
 }
 
 func (v *Views) _infoEditPost(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views._infoEditPost")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 	_ = c1
 

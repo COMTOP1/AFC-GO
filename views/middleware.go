@@ -3,7 +3,7 @@ package views
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -18,14 +18,14 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 		if err != nil {
-			log.Printf("failed to get session: %+v", err)
+			slog.Info(fmt.Sprintf("failed to get session: %+v", err))
 			session, err = v.cookie.New(c.Request(), v.conf.SessionCookieName)
 			if err != nil {
 				panic(fmt.Errorf("failed to make new session: %w", err))
 			}
 			err = session.Save(c.Request(), c.Response())
 			if err != nil {
-				log.Printf("failed to save session for logout: %+v", err)
+				slog.Info(fmt.Sprintf("failed to save session for logout: %+v", err))
 			}
 			return c.Redirect(http.StatusFound, "/")
 		}
@@ -35,14 +35,14 @@ func (v *Views) RequiresLogin(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		c1.User, err = v.user.GetUser(c.Request().Context(), c1.User)
 		if err != nil {
-			log.Printf("failed to get user from db: %+v", err)
+			slog.Info(fmt.Sprintf("failed to get user from db: %+v", err))
 			return c.Redirect(http.StatusFound, "/")
 		}
 		c1.User.Authenticated = true
 		session.Values["user"] = c1.User
 		err = session.Save(c.Request(), c.Response())
 		if err != nil {
-			log.Printf("failed to save session for logout: %+v", err)
+			slog.Info(fmt.Sprintf("failed to save session for logout: %+v", err))
 		}
 		return next(c)
 	}

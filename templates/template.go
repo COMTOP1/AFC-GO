@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
+	"log/slog"
 	"math/big"
 
 	"github.com/microcosm-cc/bluemonday"
+	"go.opentelemetry.io/otel"
 
 	"github.com/COMTOP1/AFC-GO/team"
 )
@@ -19,6 +20,8 @@ import (
 //
 //go:embed *.tmpl
 var tmpls embed.FS
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/templates")
 
 type Templater struct {
 	Team *team.Store
@@ -70,12 +73,14 @@ func (t Template) String() string {
 	return string(t)
 }
 
-func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Template, templateType TemplateType) error {
+func (t *Templater) RenderTemplate(ctx context.Context, w io.Writer, data interface{}, mainTmpl Template, templateType TemplateType) error {
+	_, span := tracer.Start(ctx, "templates.RenderTemplate")
+	defer span.End()
 	var err error
 
 	t1 := template.New("_base.tmpl")
 
-	t1.Funcs(t.getFuncMaps())
+	t1.Funcs(t.getFuncMaps(ctx))
 
 	switch templateType {
 	case NoNavType:
@@ -98,7 +103,7 @@ func (t *Templater) GetEmailTemplate(emailTemplate Template) (*template.Template
 }
 
 // getFuncMaps returns all the in built functions that templates can use
-func (t *Templater) getFuncMaps() template.FuncMap {
+func (t *Templater) getFuncMaps(ctx context.Context) template.FuncMap {
 	p := bluemonday.NewPolicy()
 	p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
 		"blockquote", "pre", "hr")
@@ -124,9 +129,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			return float64(a) / float64(b)
 		},
 		"getTeamName": func(teamID int) string {
-			t1, err := t.Team.GetTeam(context.Background(), team.Team{ID: teamID})
+			t1, err := t.Team.GetTeam(ctx, team.Team{ID: teamID})
 			if err != nil {
-				log.Printf("failed to get team for getTeamName: %+v", err)
+				slog.Info(fmt.Sprintf("failed to get team for getTeamName: %+v", err))
 				return ""
 			}
 			return t1.Name

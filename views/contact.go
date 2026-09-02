@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -13,6 +13,9 @@ import (
 )
 
 func (v *Views) ContactFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ContactFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	dbContactUsers, err := v.user.GetUsersContact(c.Request().Context())
@@ -29,7 +32,7 @@ func (v *Views) ContactFunc(c echo.Context) error {
 
 	displayEmail, err := v.setting.GetSetting(c.Request().Context(), "displayEmail")
 	if err != nil {
-		log.Printf("failed to get displayEmail for contact, error: %+v, continuing", err)
+		slog.Info(fmt.Sprintf("failed to get displayEmail for contact, error: %+v, continuing", err))
 	}
 
 	year, _, _ := time.Now().Date()
@@ -48,5 +51,5 @@ func (v *Views) ContactFunc(c echo.Context) error {
 		User:         c1.User,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.ContactTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.ContactTemplate, templates.RegularType)
 }

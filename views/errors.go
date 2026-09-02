@@ -3,7 +3,7 @@ package views
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -15,7 +15,7 @@ import (
 
 func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 	c1 := v.getSessionData(c)
-	log.Print(err)
+	slog.Info(fmt.Sprint(err))
 	var he *echo.HTTPError
 	var status int
 	if errors.As(err, &he) {
@@ -41,14 +41,17 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 		Year:  year,
 		User:  c1.User,
 	}
-	err1 := v.template.RenderTemplate(c.Response().Writer, data, templates.ErrorTemplate, templates.RegularType)
+	err1 := v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.ErrorTemplate, templates.RegularType)
 	if err1 != nil {
-		log.Printf("failed to render error page: %+v", err1)
+		slog.Info(fmt.Sprintf("failed to render error page: %+v", err1))
 	}
 }
 
 func (v *Views) Error404(c echo.Context) error {
-	return v.template.RenderTemplate(c.Response().Writer, nil, templates.NotFound404Template, templates.RegularType)
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.Error404")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, nil, templates.NotFound404Template, templates.RegularType)
 }
 
 func (v *Views) invalidMethodUsed(c echo.Context) *echo.HTTPError {

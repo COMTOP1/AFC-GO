@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -20,6 +20,9 @@ import (
 )
 
 func (v *Views) SponsorsFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.SponsorsFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	sponsorsDB, err := v.sponsor.GetSponsors(c.Request().Context())
@@ -52,10 +55,13 @@ func (v *Views) SponsorsFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.SponsorsTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.SponsorsTemplate, templates.RegularType)
 }
 
 func (v *Views) SponsorAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.SponsorAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -72,7 +78,7 @@ func (v *Views) SponsorAddFunc(c echo.Context) error {
 		if len(website) > 0 {
 			_, err := url.ParseRequestURI(website)
 			if err != nil {
-				log.Printf("failed to parse website for sponsor add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to parse website for sponsor add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to parse website for sponsor add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -86,14 +92,14 @@ func (v *Views) SponsorAddFunc(c echo.Context) error {
 		} else if len(teamValue) > 0 {
 			teamID, err := strconv.Atoi(teamValue)
 			if err != nil {
-				log.Printf("failed to parse team for sponsor add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to parse team for sponsor add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to parse team for sponsor add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 
 			_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
 			if err != nil {
-				log.Printf("failed to get team for sponsor add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to get team for sponsor add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to get team for sponsor add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -102,20 +108,20 @@ func (v *Views) SponsorAddFunc(c echo.Context) error {
 
 		file, err := c.FormFile("upload")
 		if err != nil {
-			log.Printf("failed to get file for sponsor add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to get file for sponsor add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to get file for sponsor add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 		fileName, err := v.fileUpload(file)
 		if err != nil {
-			log.Printf("failed to upload file for sponsor add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to upload file for sponsor add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to upload file for sponsor add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.sponsor.AddSponsor(c.Request().Context(), sponsor.Sponsor{Name: name, Website: null.NewString(website, len(website) > 0), FileName: null.NewString(fileName, len(fileName) > 0), TeamID: teamActual, Purpose: null.NewString(purpose, len(purpose) > 0)})
 		if err != nil {
-			log.Printf("failed to add sponsor for sponsor add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to add sponsor for sponsor add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to add sponsor for sponsor add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -124,7 +130,7 @@ func (v *Views) SponsorAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for sponsor add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for sponsor add, error: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -133,6 +139,9 @@ func (v *Views) SponsorAddFunc(c echo.Context) error {
 }
 
 func (v *Views) SponsorDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.SponsorDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -149,7 +158,7 @@ func (v *Views) SponsorDeleteFunc(c echo.Context) error {
 		if sponsorDB.FileName.Valid {
 			err = os.Remove(filepath.Join(v.conf.FileDir, sponsorDB.FileName.String))
 			if err != nil {
-				log.Printf("failed to delete sponsor image for sponsor delete, sponsor id: %d, error: %+v", id, err)
+				slog.Info(fmt.Sprintf("failed to delete sponsor image for sponsor delete, sponsor id: %d, error: %+v", id, err))
 			}
 		}
 
@@ -162,7 +171,7 @@ func (v *Views) SponsorDeleteFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for sponsor delete, sponsor id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for sponsor delete, sponsor id: %d, error: %+v", id, err))
 		}
 
 		return c.Redirect(http.StatusFound, "/sponsors")

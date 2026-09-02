@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -19,6 +19,9 @@ import (
 )
 
 func (v *Views) ResetURLFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ResetURLFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	url := c.Param("url")
@@ -52,7 +55,7 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 			Year:    year,
 		}
 
-		return v.template.RenderTemplate(c.Response(), data, templates.ResetTemplate, templates.NoNavType)
+		return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.ResetTemplate, templates.NoNavType)
 	case "POST":
 		data := struct {
 			Error string `json:"error"`
@@ -74,24 +77,24 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 		err = v.user.EditUserPassword(c.Request().Context(), originalUser, v.conf.Security.ScryptWorkFactor,
 			v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
 		if err != nil {
-			log.Printf("failed to reset password, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to reset password, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to reset password: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		v.cache.Delete(url)
-		log.Printf("updated user password: %s", originalUser.Email)
+		slog.Info("updated user password: " + originalUser.Email)
 
 		err = v.clearMessagesInSession(c)
 		if err != nil {
-			log.Printf("failed to clear message for reset, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to clear message for reset, error: %+v", err))
 		}
 
 		c1.Message = "successfully reset password"
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for reset url password, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for reset url password, error: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -101,6 +104,9 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 }
 
 func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ResetUserPasswordFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -129,12 +135,12 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 			Error   error  `json:"error"`
 		}
 
-		mailer := v.mailer.ConnectMailer()
+		mailer := v.mailer.ConnectMailer(c.Request().Context())
 
 		// Valid request, send email with reset code
 		if mailer != nil {
 			var emailTemplate *template.Template
-			emailTemplate, err = v.template.GetEmailTemplate(templates.ResetEmailTemplate)
+			emailTemplate, err = v.template.GetEmailTemplate(templates.Template(templates.ResetEmailTemplate))
 			if err != nil {
 				return fmt.Errorf("failed to render email for reset, user id: %d, error: %w", userID, err)
 			}
@@ -153,25 +159,25 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 				},
 			}
 
-			err = mailer.SendMail(file)
+			err = mailer.SendMail(c.Request().Context(), file)
 			if err != nil {
 				message.Message = fmt.Sprintf("Please forward the link to this email: %s, reset link: https://%s/reset/%s", userDB.Email, v.conf.DomainName, url)
 				message.Error = fmt.Errorf("failed to send mail: %w", err)
-				log.Printf("failed to send mail, user id %d, error: %+v", userID, err)
-				log.Printf("password reset requested for email: %s by user: %d", userDB.Email, c1.User.ID)
+				slog.Info(fmt.Sprintf("failed to send mail, user id %d, error: %+v", userID, err))
+				slog.Info(fmt.Sprintf("password reset requested for email: %s by user: %d", userDB.Email, c1.User.ID))
 				return c.JSON(http.StatusOK, message)
 			}
 			_ = mailer.Close()
 
-			log.Printf("password reset requested for email: %s by user: %d", userDB.Email, c1.User.ID)
+			slog.Info(fmt.Sprintf("password reset requested for email: %s by user: %d", userDB.Email, c1.User.ID))
 			message.Message = fmt.Sprintf("Reset email sent to: \"%s\"", userDB.Email)
 		} else {
 			message.Message = fmt.Sprintf("No mailer present\nPlease forward the link to this email: %s, reset link: https://%s/reset/%s", userDB.Email, v.conf.DomainName, url)
 			message.Error = errors.New("no mailer present")
-			log.Printf("no mailer present")
-			log.Printf("password reset requested for email: %s by user: %d", userDB.Email, c1.User.ID)
+			slog.Info("no mailer present")
+			slog.Info(fmt.Sprintf("password reset requested for email: %s by user: %d", userDB.Email, c1.User.ID))
 		}
-		log.Printf("reset for %d (%s) requested by %d (%s)", userDB.ID, userDB.Name, c1.User.ID, c1.User.Name)
+		slog.Info(fmt.Sprintf("reset for %d (%s) requested by %d (%s)", userDB.ID, userDB.Name, c1.User.ID, c1.User.Name))
 
 		return c.JSON(http.StatusOK, message)
 	}

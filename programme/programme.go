@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+
+	"go.opentelemetry.io/otel"
 )
 
 type (
@@ -26,6 +28,8 @@ type (
 		Season string `db:"season" json:"season"`
 	}
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/programme")
 
 // NewProgrammeRepo stores our dependency
 func NewProgrammeRepo(db *sqlx.DB) *Store {
