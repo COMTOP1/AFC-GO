@@ -10,22 +10,28 @@ import (
 )
 
 func (s *Store) getTeams(ctx context.Context) ([]Team, error) {
+	ctx, span := tracer.Start(ctx, "team.getTeams")
+	defer span.End()
 	var teamsDB []Team
 	builder := sq.Select("id", "name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
 		From("teams").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get teams: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &teamsDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return nil, fmt.Errorf("failed to get teams: %w", err)
 	}
 	return teamsDB, nil
 }
 
 func (s *Store) getTeamsActive(ctx context.Context) ([]Team, error) {
+	ctx, span := tracer.Start(ctx, "team.getTeamsActive")
+	defer span.End()
 	var teamsDB []Team
 	builder := utils.PSQL().Select("id", "name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
 		From("teams").
@@ -33,51 +39,64 @@ func (s *Store) getTeamsActive(ctx context.Context) ([]Team, error) {
 		OrderBy("name")
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get teams season: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &teamsDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return nil, fmt.Errorf("failed to get teams: %w", err)
 	}
 	return teamsDB, nil
 }
 
 func (s *Store) getTeam(ctx context.Context, teamParam Team) (Team, error) {
+	ctx, span := tracer.Start(ctx, "team.getTeam")
+	defer span.End()
 	var teamDB Team
 	builder := utils.PSQL().Select("id", "name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
 		From("teams").
 		Where(sq.Eq{"id": teamParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get team: %w", err))
 	}
 	err = s.db.GetContext(ctx, &teamDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return Team{}, fmt.Errorf("failed to get team: %w", err)
 	}
 	return teamDB, nil
 }
 
 func (s *Store) addTeam(ctx context.Context, teamParam Team) (Team, error) {
+	ctx, span := tracer.Start(ctx, "team.addTeam")
+	defer span.End()
 	builder := utils.PSQL().Insert("teams").
 		Columns("name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
 		Values(teamParam.Name, teamParam.Description, teamParam.League, teamParam.Division, teamParam.LeagueTable, teamParam.Fixtures, teamParam.Coach, teamParam.Physio, teamParam.FileName, teamParam.IsActive, teamParam.IsYouth, teamParam.Ages)
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add team: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return Team{}, fmt.Errorf("failed to add team: %w", err)
 	}
 	_, err = res.RowsAffected()
 	if err != nil {
+		span.RecordError(err)
 		return Team{}, fmt.Errorf("failed to add team: %w", err)
 	}
 	return teamParam, nil
 }
 
 func (s *Store) editTeam(ctx context.Context, teamParam Team) (Team, error) {
+	ctx, span := tracer.Start(ctx, "team.editTeam")
+	defer span.End()
 	builder := utils.PSQL().Update("teams").
 		SetMap(map[string]interface{}{
 			"name":         teamParam.Name,
@@ -96,28 +115,35 @@ func (s *Store) editTeam(ctx context.Context, teamParam Team) (Team, error) {
 		Where(sq.Eq{"id": teamParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for edit team: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return Team{}, fmt.Errorf("failed to edit team: %w", err)
 	}
 	_, err = res.RowsAffected()
 	if err != nil {
+		span.RecordError(err)
 		return Team{}, fmt.Errorf("failed to edit team: %w", err)
 	}
 	return teamParam, nil
 }
 
 func (s *Store) deleteTeam(ctx context.Context, teamParam Team) error {
+	ctx, span := tracer.Start(ctx, "team.deleteTeam")
+	defer span.End()
 	builder := utils.PSQL().Delete("teams").
 		Where(sq.Eq{"id": teamParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for delete team: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to delete team: %w", err)
 	}
 	return nil

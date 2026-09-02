@@ -12,6 +12,8 @@ import (
 )
 
 func (s *Store) getUsers(ctx context.Context) ([]User, error) {
+	ctx, span := tracer.Start(ctx, "user.getUsers")
+	defer span.End()
 	//nolint:prealloc
 	var usersDB, users []User
 	builder := sq.Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
@@ -20,18 +22,21 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get users: %w", err))
 	}
 
 	//nolint:musttag
 	err = s.db.SelectContext(ctx, &usersDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
 
 	for _, user := range usersDB {
 		user.Role, err = role.GetRole(user.TempRole)
 		if err != nil {
+			span.RecordError(err)
 			return nil, fmt.Errorf("failed to parse role: %w", err)
 		}
 
@@ -42,6 +47,8 @@ func (s *Store) getUsers(ctx context.Context) ([]User, error) {
 }
 
 func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
+	ctx, span := tracer.Start(ctx, "user.getUsersContact")
+	defer span.End()
 	//nolint:prealloc
 	var usersDB, users []User
 
@@ -55,6 +62,7 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 
 	caseSQL, _, err := caseBuilder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build case sql for get users contact: %w", err))
 	}
 
@@ -65,18 +73,21 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get users contact: %w", err))
 	}
 
 	//nolint:musttag
 	err = s.db.SelectContext(ctx, &usersDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
 
 	for _, user := range usersDB {
 		user.Role, err = role.GetRole(user.TempRole)
 		if err != nil {
+			span.RecordError(err)
 			return nil, fmt.Errorf("failed to parse role: %w", err)
 		}
 
@@ -87,6 +98,8 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 }
 
 func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) ([]User, error) {
+	ctx, span := tracer.Start(ctx, "user.getUsersManagersTeam")
+	defer span.End()
 	var usersDB []User
 
 	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
@@ -96,12 +109,14 @@ func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) (
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get users managers team: %w", err))
 	}
 
 	//nolint:musttag
 	err = s.db.SelectContext(ctx, &usersDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
 
@@ -109,6 +124,8 @@ func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) (
 }
 
 func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
+	ctx, span := tracer.Start(ctx, "user.getUser")
+	defer span.End()
 	var userDB User
 
 	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
@@ -118,17 +135,20 @@ func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get user: %w", err))
 	}
 
 	//nolint:musttag
 	err = s.db.GetContext(ctx, &userDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return User{}, fmt.Errorf("failed to get user: %w", err)
 	}
 
 	userDB.Role, err = role.GetRole(userDB.TempRole)
 	if err != nil {
+		span.RecordError(err)
 		return User{}, fmt.Errorf("failed to parse role: %w", err)
 	}
 
@@ -138,6 +158,8 @@ func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
 }
 
 func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
+	ctx, span := tracer.Start(ctx, "user.getUserFull")
+	defer span.End()
 	var userDB User
 
 	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "password", "hash", "salt").
@@ -147,17 +169,20 @@ func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get user: %w", err))
 	}
 
 	//nolint:musttag
 	err = s.db.GetContext(ctx, &userDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return User{}, fmt.Errorf("failed to get user: %w", err)
 	}
 
 	userDB.Role, err = role.GetRole(userDB.TempRole)
 	if err != nil {
+		span.RecordError(err)
 		return User{}, fmt.Errorf("failed to parse role: %w", err)
 	}
 
@@ -167,22 +192,27 @@ func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 }
 
 func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
+	ctx, span := tracer.Start(ctx, "user.addUser")
+	defer span.End()
 	builder := utils.PSQL().Insert("users").
 		Columns("name", "email", "phone", "team_id", "role", "file_name", "reset_password", "hash", "salt").
 		Values(userParam.Name, userParam.Email, userParam.Phone, userParam.TeamID, userParam.Role.DBString(), userParam.FileName, userParam.ResetPassword, userParam.Hash, userParam.Salt)
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add user: %w", err))
 	}
 
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return User{}, fmt.Errorf("failed to add user: %w", err)
 	}
 
 	_, err = res.RowsAffected()
 	if err != nil {
+		span.RecordError(err)
 		return User{}, fmt.Errorf("failed to add user: %w", err)
 	}
 
@@ -190,6 +220,8 @@ func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
 }
 
 func (s *Store) editUser(ctx context.Context, userParam User) error {
+	ctx, span := tracer.Start(ctx, "user.editUser")
+	defer span.End()
 	builder := utils.PSQL().Update("users").
 		SetMap(map[string]interface{}{
 			"name":           userParam.Name,
@@ -207,16 +239,19 @@ func (s *Store) editUser(ctx context.Context, userParam User) error {
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for edit user: %w", err))
 	}
 
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to edit user: %w", err)
 	}
 
 	_, err = res.RowsAffected()
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to edit user: %w", err)
 	}
 
@@ -224,16 +259,20 @@ func (s *Store) editUser(ctx context.Context, userParam User) error {
 }
 
 func (s *Store) deleteUser(ctx context.Context, userParam User) error {
+	ctx, span := tracer.Start(ctx, "user.deleteUser")
+	defer span.End()
 	builder := utils.PSQL().Delete("users").
 		Where(sq.Eq{"email": userParam.Email})
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for delete user: %w", err))
 	}
 
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to delete user: %w", err)
 	}
 

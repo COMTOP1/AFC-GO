@@ -5,6 +5,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
+
+	"go.opentelemetry.io/otel"
 )
 
 type (
@@ -19,6 +21,8 @@ type (
 		Caption  null.String `db:"caption" json:"caption"`
 	}
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/image")
 
 // NewImageRepo stores our dependency
 func NewImageRepo(db *sqlx.DB) *Store {

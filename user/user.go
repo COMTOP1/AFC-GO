@@ -14,6 +14,8 @@ import (
 	"github.com/COMTOP1/AFC-GO/role"
 	"github.com/COMTOP1/AFC-GO/team"
 	"github.com/COMTOP1/AFC-GO/utils"
+
+	"go.opentelemetry.io/otel"
 )
 
 type (
@@ -39,6 +41,8 @@ type (
 		Authenticated bool
 	}
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/user")
 
 // NewUserRepo stores our dependency
 func NewUserRepo(db *sqlx.DB) *Store {

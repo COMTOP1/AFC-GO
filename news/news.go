@@ -7,6 +7,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
+
+	"go.opentelemetry.io/otel"
 )
 
 type (
@@ -23,6 +25,8 @@ type (
 		Date     time.Time   `db:"date" json:"date"`
 	}
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/news")
 
 // NewNewsRepo stores our dependency
 func NewNewsRepo(db *sqlx.DB) *Store {

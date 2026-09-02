@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
+
+	"go.opentelemetry.io/otel"
 )
 
 type (
@@ -17,6 +19,8 @@ type (
 		SettingText string `db:"setting_text" json:"settingText"`
 	}
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/setting")
 
 // NewSettingRepo stores our dependency
 func NewSettingRepo(db *sqlx.DB) *Store {
