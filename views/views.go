@@ -278,6 +278,53 @@ func (v *Views) refreshVisitorCountCache(ctx context.Context) {
 
 func (v *Views) Stop() {
 	close(v.stopChan)
+	if v.redis != nil {
+		if err := v.redis.Close(); err != nil {
+			log.Printf("failed to close redis client: %+v", err)
+		}
+	}
+}
+
+const resetTokenPrefix = "afc:reset-token:"
+
+// SetResetToken stores a mapping of a one-time password reset token to a
+// user ID, expiring after ttl. When Redis is configured this is shared
+// across every app instance; otherwise it only lives in this instance's
+// memory, which requires sticky sessions/single-instance deployment for the
+// reset flow to work reliably.
+func (v *Views) SetResetToken(ctx context.Context, token string, userID int, ttl time.Duration) error {
+	if v.redis != nil {
+		return v.redis.Set(ctx, resetTokenPrefix+token, userID, ttl).Err()
+	}
+	v.cache.Set(token, userID, ttl)
+	return nil
+}
+
+// GetResetToken looks up the user ID a password reset token was issued for.
+func (v *Views) GetResetToken(ctx context.Context, token string) (int, bool) {
+	if v.redis != nil {
+		userID, err := v.redis.Get(ctx, resetTokenPrefix+token).Int()
+		if err != nil {
+			return 0, false
+		}
+		return userID, true
+	}
+	val, found := v.cache.Get(token)
+	if !found {
+		return 0, false
+	}
+	return val.(int), true
+}
+
+// DeleteResetToken invalidates a password reset token after use.
+func (v *Views) DeleteResetToken(ctx context.Context, token string) {
+	if v.redis != nil {
+		if err := v.redis.Del(ctx, resetTokenPrefix+token).Err(); err != nil {
+			log.Printf("failed to delete reset token from redis: %+v", err)
+		}
+		return
+	}
+	v.cache.Delete(token)
 }
 
 func (v *Views) GetVisitorCount() int {
