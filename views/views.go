@@ -194,6 +194,10 @@ func New(conf *Config, host string, interval time.Duration) *Views {
 	v.flushInterval = interval
 	v.stopChan = make(chan struct{})
 
+	// Seed the local visitor count cache from the DB so this instance doesn't
+	// report 0 visitors until its first flush.
+	v.refreshVisitorCountCache(context.Background())
+
 	go v.startFlusher()
 
 	return v
@@ -229,37 +233,46 @@ func (v *Views) flushToDB() {
 	v.count = 0
 	v.countMutex.Unlock()
 
-	if countToFlush == 0 {
-		return
-	}
-
-	v.cache.Set(visitorCount, countToFlush, cache.DefaultExpiration)
-
 	ctx := context.Background()
-	currentSetting, err := v.setting.GetSetting(ctx, visitorCount)
-	if err != nil {
-		_, err = v.setting.AddSetting(ctx, setting.Setting{
-			ID:          visitorCount,
-			SettingText: strconv.Itoa(countToFlush),
-		})
-		if err != nil {
-			log.Printf("Error creating visitorCount: %v", err)
-		}
+
+	if countToFlush == 0 {
+		// Nothing local to add, but another instance may have flushed visits
+		// of its own since we last checked - keep our cached total in sync.
+		v.refreshVisitorCountCache(ctx)
 		return
 	}
 
-	currentValue, _ := strconv.Atoi(currentSetting.SettingText)
-	newValue := currentValue + countToFlush
-
-	_, err = v.setting.EditSetting(ctx, setting.Setting{
-		ID:          visitorCount,
-		SettingText: strconv.Itoa(newValue),
-	})
+	newSetting, err := v.setting.IncrementSetting(ctx, visitorCount, countToFlush)
 	if err != nil {
-		log.Printf("Error updating visitorCount: %v", err)
+		log.Printf("Error incrementing visitorCount: %v", err)
+		return
+	}
+
+	newValue, err := strconv.Atoi(newSetting.SettingText)
+	if err != nil {
+		log.Printf("Error parsing visitorCount: %v", err)
+		return
 	}
 
 	v.cache.Set(visitorCount, newValue, cache.DefaultExpiration)
+}
+
+// refreshVisitorCountCache re-reads the visitor count from the DB and caches
+// it locally, so this instance reflects visits recorded by other instances.
+func (v *Views) refreshVisitorCountCache(ctx context.Context) {
+	currentSetting, err := v.setting.GetSetting(ctx, visitorCount)
+	if err != nil {
+		// Not created yet - it will be on the first increment.
+		return
+	}
+
+	currentValue, err := strconv.Atoi(currentSetting.SettingText)
+	if err != nil {
+		log.Printf("Error parsing visitorCount: %v", err)
+		return
+	}
+
+	v.cache.Set(visitorCount, currentValue, cache.DefaultExpiration)
 }
 
 func (v *Views) Stop() {
