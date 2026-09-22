@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/gob"
 	"encoding/hex"
 	"log"
