@@ -37,13 +37,21 @@ const (
 )
 
 func HashPass(password, salt []byte, iter, keyLen int) []byte {
-	return pbkdf2.Key(password, salt, iter, keyLen, sha512.New)
+	var key []byte
+	WithSecret(func() {
+		key = pbkdf2.Key(password, salt, iter, keyLen, sha512.New)
+	})
+	return key
 }
 
 func HashPassScrypt(password, salt []byte, workFactor, blockSize, parallelismFactor, keyLen int) (string, error) {
-	hash, err := scrypt.Key(password, salt, workFactor, blockSize, parallelismFactor, keyLen)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate hash: %w", err)
+	var hash []byte
+	var keyErr error
+	WithSecret(func() {
+		hash, keyErr = scrypt.Key(password, salt, workFactor, blockSize, parallelismFactor, keyLen)
+	})
+	if keyErr != nil {
+		return "", fmt.Errorf("failed to generate hash: %w", keyErr)
 	}
 	return hex.EncodeToString(hash), nil
 }
