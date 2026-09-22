@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/COMTOP1/AFC-GO/affiliation"
 	"github.com/COMTOP1/AFC-GO/document"
@@ -41,6 +42,23 @@ type (
 		FileDir           string
 		Mail              SMTPConfig
 		Security          SecurityConfig
+		Redis             RedisConfig
+	}
+
+	// RedisConfig stores the configuration for an optional Redis/Valkey
+	// cache, used to share state (e.g. password reset tokens) across
+	// multiple app instances. When Addresses is empty, an in-process cache
+	// is used instead, which is only suitable for a single instance.
+	RedisConfig struct {
+		// Addresses is one or more "host:port" pairs. More than one
+		// address puts the client into cluster mode, unless MasterName
+		// is set, in which case it uses Sentinel-based failover.
+		Addresses  []string
+		MasterName string
+		Username   string
+		Password   string
+		DB         int
+		TLS        bool
 	}
 
 	// SMTPConfig stores the SMTP Mailer configuration
@@ -66,6 +84,7 @@ type (
 	Views struct {
 		affiliation *affiliation.Store
 		cache       *cache.Cache
+		redis       redis.UniversalClient
 		conf        *Config
 		cookie      *sessions.CookieStore
 		document    *document.Store
@@ -115,6 +134,23 @@ func New(conf *Config, host string, interval time.Duration) *Views {
 
 	// Initialising cache
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)
+
+	// Initialising Redis/Valkey client, used to share state such as password
+	// reset tokens across instances. Falls back to the in-process cache
+	// above when no addresses are configured, e.g. for local development.
+	if len(conf.Redis.Addresses) > 0 {
+		opts := &redis.UniversalOptions{
+			Addrs:      conf.Redis.Addresses,
+			MasterName: conf.Redis.MasterName,
+			Username:   conf.Redis.Username,
+			Password:   conf.Redis.Password,
+			DB:         conf.Redis.DB,
+		}
+		if conf.Redis.TLS {
+			opts.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+		}
+		v.redis = redis.NewUniversalClient(opts)
+	}
 
 	// Initialising session cookie
 	authKey, err := hex.DecodeString(conf.Security.AuthenticationKey)

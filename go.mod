@@ -15,6 +15,7 @@ require (
 	github.com/lib/pq v1.12.3
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/redis/go-redis/v9 v9.22.0
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	golang.org/x/crypto v0.55.0
 	gopkg.in/guregu/null.v4 v4.0.0
@@ -22,6 +23,7 @@ require (
 
 require (
 	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/hbollon/go-edlib v1.7.0 // indirect
@@ -32,6 +34,7 @@ require (
 	github.com/toorop/go-dkim v0.0.0-20250226130143-9025cce95817 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
