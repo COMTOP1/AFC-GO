@@ -2,13 +2,11 @@ package templates
 
 import (
 	"context"
-	"crypto/rand"
 	"embed"
 	"fmt"
 	"html/template"
 	"io"
 	"log"
-	"math/big"
 
 	"github.com/microcosm-cc/bluemonday"
 
@@ -133,13 +131,6 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 				return ""
 			}
 			return t1.Name
-		},
-		"randomImgInt": func() int64 {
-			nBig, err := rand.Int(rand.Reader, big.NewInt(999999))
-			if err != nil {
-				panic(err)
-			}
-			return nBig.Int64()
 		},
 		"htmlTemplate": func(content string) template.HTML {
 			safe := p.Sanitize(content)
