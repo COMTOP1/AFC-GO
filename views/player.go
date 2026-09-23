@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -124,7 +122,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 			hasUpload = false
 		}
 		if hasUpload {
-			fileName, err = v.fileUpload(file)
+			fileName, err = v.fileUpload(c.Request().Context(), file, "player")
 			if err != nil {
 				log.Printf("failed to upload file for player add, error: %+v", err)
 				data.Error = fmt.Sprintf("failed to upload file for player add: %+v", err)
@@ -231,14 +229,14 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 		}
 		if hasUpload {
 			var tempFileName string
-			tempFileName, err = v.fileUpload(file)
+			tempFileName, err = v.fileUpload(c.Request().Context(), file, "player")
 			if err != nil {
 				log.Printf("failed to upload file for player edit, player id: %d, error: %+v", playerID, err)
 				data.Error = fmt.Sprintf("failed to upload file for player edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if playerDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, playerDB.FileName.String))
+				err = v.storage.Delete(c.Request().Context(), playerDB.FileName.String)
 				if err != nil {
 					log.Printf("failed to delete old image for player edit, player id: %d, error: %+v", playerID, err)
 				}
@@ -249,7 +247,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 		tempRemovePlayerImage := c.FormValue("removePlayerImage")
 		if tempRemovePlayerImage == "Y" {
 			if playerDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, playerDB.FileName.String))
+				err = v.storage.Delete(c.Request().Context(), playerDB.FileName.String)
 				if err != nil {
 					log.Printf("failed to delete image for player edit, player id: %d, error: %+v", playerID, err)
 				}
@@ -295,7 +293,7 @@ func (v *Views) PlayerDeleteFunc(c echo.Context) error {
 		}
 
 		if playerDB.FileName.Valid {
-			err = os.Remove(filepath.Join(v.conf.FileDir, playerDB.FileName.String))
+			err = v.storage.Delete(c.Request().Context(), playerDB.FileName.String)
 			if err != nil {
 				log.Printf("failed to delete player image for player delete, player id: %d, error: %+v", id, err)
 			}

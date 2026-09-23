@@ -5,8 +5,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -43,7 +41,7 @@ func (v *Views) AffiliationAddFunc(c echo.Context) error {
 			data.Error = fmt.Sprintf("failed to get file for affiliation add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
-		fileName, err := v.fileUpload(file)
+		fileName, err := v.fileUpload(c.Request().Context(), file, "affiliation")
 		if err != nil {
 			log.Printf("failed to upload file for affiliation add, error: %+v", err)
 			data.Error = fmt.Sprintf("failed to upload file for affiliation add: %+v", err)
@@ -85,7 +83,7 @@ func (v *Views) AffiliationDeleteFunc(c echo.Context) error {
 		}
 
 		if affiliationDB.FileName.Valid {
-			err = os.Remove(filepath.Join(v.conf.FileDir, affiliationDB.FileName.String))
+			err = v.storage.Delete(c.Request().Context(), affiliationDB.FileName.String)
 			if err != nil {
 				log.Printf("failed to delete affiliation image for affiliation delete, affiliation id: %d, error: %+v", id, err)
 			}

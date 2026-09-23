@@ -72,7 +72,7 @@
                 {{if .Team.FileName.Valid}}
                     <div style="float:right; text-align: right; width: 50%;">
                         <h2 class="secondaryHeader">Team photo</h2>
-                        <img data-src="/download?s=t&id={{.Team.ID}}&r={{randomImgInt}}"
+                        <img data-src="{{fileURL .Team.FileName.String}}"
                              alt="/public/AFC.png" src="/public/AFC.png"
                              onerror="this.onerror=null;this.src='/public/AFC.png';"
                              style="padding: 5px; max-height: 1000px; max-width: 700px; width: 100%;" class="lazy">
@@ -89,7 +89,7 @@
                     {{range .Sponsors}}
                         <div class="listItem" style="display: block; cursor: pointer">
                             {{if .Website.Valid}}<a href="{{.Website.String}}">{{end}}
-                                <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png"
+                                <img data-src="{{fileURL .FileName.String}}" alt="/public/AFC.png"
                                      onerror="this.onerror=null;this.src='/public/AFC.png';"
                                      class="latestImage lazy" src="/public/AFC.png">
                                 <h2 class="latestTitle">{{.Name}}</h2>
@@ -109,7 +109,7 @@
             <div class="flexContainer">
                 {{range .Players}}
                     <div class="listItem" style="display: block; cursor: pointer">
-                        <img data-src="/download?s=l&id={{.ID}}" alt="/public/AFC.png"
+                        <img data-src="{{fileURL .FileName.String}}" alt="/public/AFC.png"
                              onerror="this.onerror=null;this.src='/public/AFC.png';"
                              class="latestImage lazy" src="/public/AFC.png">
                         <h2 class="latestTitle">{{.Name}}</h2>
@@ -263,7 +263,7 @@
                                         </label>
                                     </div>
                                     <label class="label" for="preview">Preview</label>
-                                    <img id="preview" data-src="/download?s=t&id={{.Team.ID}}&r={{randomImgInt}}"
+                                    <img id="preview" data-src="{{fileURL .Team.FileName.String}}"
                                          alt="/public/AFC.png"
                                          onerror="this.onerror=null;this.src='/public/AFC.png';"
                                          src="/public/AFC.png"
@@ -378,7 +378,7 @@
             document.getElementById("editTeamImage").value = "";
             $('#editTeamImageName').text("{{if .Team.FileName.Valid}}Uploaded{{else}}No file{{end}}");
             {{if .Team.FileName.Valid}}
-            document.getElementById("preview").src = "/download?s=t&id={{.Team.ID}}&r={{randomImgInt}}";
+            document.getElementById("preview").src = "{{fileURL .Team.FileName.String}}";
             {{end}}
             document.getElementById("editTeamModal").classList.add("is-active");
         }

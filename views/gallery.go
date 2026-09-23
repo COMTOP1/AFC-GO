@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -61,7 +59,7 @@ func (v *Views) ImageAddFunc(c echo.Context) error {
 			data.Error = fmt.Sprintf("failed to get file for image add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
-		fileName, err := v.fileUpload(file)
+		fileName, err := v.fileUpload(c.Request().Context(), file, "gallery")
 		if err != nil {
 			log.Printf("failed to upload file for image add, error: %+v", err)
 			data.Error = fmt.Sprintf("failed to upload file for image add: %+v", err)
@@ -103,7 +101,7 @@ func (v *Views) ImageDeleteFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get image for image delete, image id: %d, error: %w", id, err)
 		}
 
-		err = os.Remove(filepath.Join(v.conf.FileDir, imageDB.FileName))
+		err = v.storage.Delete(c.Request().Context(), imageDB.FileName)
 		if err != nil {
 			log.Printf("failed to delete image file for image delete, image id: %d, error: %+v", id, err)
 		}

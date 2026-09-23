@@ -28,7 +28,7 @@ func (s *Store) getSponsors(ctx context.Context) ([]Sponsor, error) {
 
 func (s *Store) getSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
 	var sponsorsDB []Sponsor
-	builder := sq.Select("id", "website").
+	builder := sq.Select("id", "name", "website", "file_name").
 		From("sponsors").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
@@ -44,7 +44,7 @@ func (s *Store) getSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
 
 func (s *Store) getSponsorsTeam(ctx context.Context, teamParam team.Team) ([]Sponsor, error) {
 	var sponsorsDB []Sponsor
-	builder := utils.PSQL().Select("id", "name", "website", "purpose").
+	builder := utils.PSQL().Select("id", "name", "website", "purpose", "file_name").
 		From("sponsors").
 		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("name")

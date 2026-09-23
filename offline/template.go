@@ -1,12 +1,10 @@
 package main
 
 import (
-	"crypto/rand"
 	"embed"
 	"fmt"
 	"html/template"
 	"io"
-	"math/big"
 
 	"github.com/microcosm-cc/bluemonday"
 )
@@ -94,13 +92,6 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		},
 		"div": func(a, b int) float64 {
 			return float64(a) / float64(b)
-		},
-		"randomImgInt": func() int64 {
-			nBig, err := rand.Int(rand.Reader, big.NewInt(999999))
-			if err != nil {
-				panic(err)
-			}
-			return nBig.Int64()
 		},
 		"htmlTemplate": func(content string) template.HTML {
 			safe := p.Sanitize(content)

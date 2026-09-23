@@ -20,6 +20,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/image"
 	"github.com/COMTOP1/AFC-GO/infrastructure/db"
 	"github.com/COMTOP1/AFC-GO/infrastructure/mail"
+	"github.com/COMTOP1/AFC-GO/infrastructure/storage"
 	"github.com/COMTOP1/AFC-GO/news"
 	"github.com/COMTOP1/AFC-GO/player"
 	"github.com/COMTOP1/AFC-GO/programme"
@@ -40,7 +41,7 @@ type (
 		DatabaseURL       string
 		DomainName        string
 		SessionCookieName string
-		FileDir           string
+		S3                storage.Config
 		Mail              SMTPConfig
 		Security          SecurityConfig
 		Redis             RedisConfig
@@ -103,6 +104,7 @@ type (
 		programme   *programme.Store
 		setting     *setting.Store
 		sponsor     *sponsor.Store
+		storage     *storage.Store
 		team        *team.Store
 		template    *templates.Templater
 		user        *user.Store
@@ -134,11 +136,12 @@ func New(conf *Config, host string, interval time.Duration) *Views {
 	v.programme = programme.NewProgrammeRepo(dbStore)
 	v.setting = setting.NewSettingRepo(dbStore)
 	v.sponsor = sponsor.NewSponsorRepo(dbStore)
+	v.storage = storage.NewStore(conf.S3)
 	v.team = team.NewTeamRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
 	v.whatsOn = whatson.NewWhatsOnRepo(dbStore)
 
-	v.template = templates.NewTemplate(v.team)
+	v.template = templates.NewTemplate(v.team, v.storage)
 
 	// Initialising cache
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)

@@ -97,11 +97,11 @@
                         <h2 class="subtitle">{{if .Season.IsValid}}Season - {{.Season.Name}}<br>{{end}}
                             Date of programme - {{.DateOfProgramme}}
                         </h2>
-                        <div id="programmePdfViewer" class="programmePdfViewer" data-pdf-url="/download?s=p&id={{.ID}}">
+                        <div id="programmePdfViewer" class="programmePdfViewer" data-pdf-url="{{fileURL .FileName}}">
                             <p class="programmePdfMessage">Loading programme&hellip;</p>
                         </div>
                         <noscript>
-                            <p><a href="/download?s=p&id={{.ID}}">View the programme PDF</a></p>
+                            <p><a href="{{fileURL .FileName}}">View the programme PDF</a></p>
                         </noscript>
                         {{if $priv}}
                             <br><br><br>
@@ -167,8 +167,8 @@
                         {{else}}
                             <div class="listItem"
                                  style="text-align: center; width: 275px; height: auto; cursor: pointer;"
-                                 {{if not $priv}}onclick="location.href='/download?s=p&id={{.ID}}';"{{end}}>
-                                {{if $priv}}<a href="/download?s=p&id={{.ID}}">{{end}}
+                                 {{if not $priv}}onclick="location.href='{{fileURL .FileName}}';"{{end}}>
+                                {{if $priv}}<a href="{{fileURL .FileName}}">{{end}}
                                     <p class="subtitle">{{.Name}}
                                     </p>
                                     <p>{{if .Season.IsValid}}Season - {{.Season.Name}}<br>{{end}}Date of programme

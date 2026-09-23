@@ -19,7 +19,7 @@
             {{end}}
         </div>
         <div class="articleBodyVertical">
-            <img data-src="/download?s=w&id={{.WhatsOn.ID}}&r={{randomImgInt}}"
+            <img data-src="{{fileURL .WhatsOn.FileName.String}}"
                  alt="/public/AFC.png" src="/public/AFC.png"
                  onerror="this.onerror=null;this.src='/public/AFC.png';"
                  style="width: auto; max-height: 500px;"
@@ -32,7 +32,7 @@
                 <p style="text-align: left; font-size: 18px; white-space: pre-line;">{{htmlTemplate .WhatsOn.Content}}
                 </p></div>
             <div style="float:right; text-align: center; width: 50%;">
-                <img data-src="/download?s=w&id={{.WhatsOn.ID}}&r={{randomImgInt}}"
+                <img data-src="{{fileURL .WhatsOn.FileName.String}}"
                      alt="/public/AFC.png" src="/public/AFC.png"
                      onerror="this.onerror=null;this.src='/public/AFC.png';"
                      style="width: auto; max-height: 500px; max-width: 700px;"
@@ -93,7 +93,7 @@
                                         </label>
                                     </div>
                                     <label class="label" for="preview">Preview</label>
-                                    <img id="preview" data-src="/download?s=w&id={{.WhatsOn.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
+                                    <img id="preview" data-src="{{fileURL .WhatsOn.FileName.String}}" alt="/public/AFC.png"
                                          onerror="this.onerror=null;this.src='/public/AFC.png';"
                                          src="/public/AFC.png"
                                          style="border: 5px; max-height: 200px; max-width: 200px;" class="lazy">
@@ -215,7 +215,7 @@
             document.getElementById("editWhatsOnUpload").value = "";
             $('#editWhatsOnUploadName').text("{{if .WhatsOn.IsFileValid}}Uploaded{{else}}No file{{end}}");
             {{if .WhatsOn.IsFileValid}}
-            document.getElementById("preview").src = "/download?s=w&id={{.WhatsOn.ID}}&r={{randomImgInt}}";
+            document.getElementById("preview").src = "{{fileURL .WhatsOn.FileName.String}}";
             {{end}}
             document.getElementById("editWhatsOnModal").classList.add("is-active");
         }
