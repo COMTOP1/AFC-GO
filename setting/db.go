@@ -3,6 +3,7 @@ package setting
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	sq "github.com/Masterminds/squirrel"
 
@@ -84,6 +85,35 @@ func (s *Store) editSetting(ctx context.Context, settingParam Setting) (Setting,
 		return Setting{}, fmt.Errorf("failed to edit setting: %w", err)
 	}
 	return settingParam, nil
+}
+
+// incrementSetting atomically adds delta to a numeric setting, creating it if it
+// doesn't yet exist. The addition happens in a single upsert statement so
+// concurrent callers (e.g. multiple app instances) can't lose updates to each
+// other via a read-modify-write race.
+func (s *Store) incrementSetting(ctx context.Context, settingID string, delta int) (Setting, error) {
+	builder := utils.PSQL().Insert("settings").
+		Columns(
+			"id",
+			"setting_text",
+		).Values(
+		settingID,
+		strconv.Itoa(delta),
+	).Suffix(
+		"ON CONFLICT (id) DO UPDATE SET setting_text = " +
+			"(settings.setting_text::bigint + EXCLUDED.setting_text::bigint)::text " +
+			"RETURNING id, setting_text",
+	)
+	sql, args, err := builder.ToSql()
+	if err != nil {
+		panic(fmt.Errorf("failed to build sql for incrementSetting: %w", err))
+	}
+	var settingDB Setting
+	err = s.db.GetContext(ctx, &settingDB, sql, args...)
+	if err != nil {
+		return Setting{}, fmt.Errorf("failed to increment setting: %w", err)
+	}
+	return settingDB, nil
 }
 
 func (s *Store) deleteSetting(ctx context.Context, settingID string) error {

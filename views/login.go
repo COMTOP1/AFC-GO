@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/patrickmn/go-cache"
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/user"
@@ -56,7 +56,10 @@ func (v *Views) LoginFunc(c echo.Context) error {
 				}
 
 				url1 := uuid.NewString()
-				v.cache.Set(url1, u.ID, cache.DefaultExpiration)
+				err = v.SetResetToken(c.Request().Context(), url1, u.ID, time.Hour)
+				if err != nil {
+					return fmt.Errorf("failed to set reset token for login: %w", err)
+				}
 
 				data := struct {
 					Error         string `json:"error"`

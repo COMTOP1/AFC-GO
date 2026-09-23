@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 	_ "time/tzdata"
 
@@ -106,6 +107,21 @@ func main() {
 		s3Region = "us-east-1"
 	}
 
+	// Redis/Valkey is optional - when REDIS_ADDRESSES isn't set, an
+	// in-process cache is used instead (fine for a single instance, but
+	// state such as password reset tokens won't be shared if you run more
+	// than one instance).
+	var redisAddresses []string
+	if raw := os.Getenv("REDIS_ADDRESSES"); raw != "" {
+		for _, address := range strings.Split(raw, ",") {
+			if trimmed := strings.TrimSpace(address); trimmed != "" {
+				redisAddresses = append(redisAddresses, trimmed)
+			}
+		}
+	}
+	redisDB, _ := strconv.Atoi(os.Getenv("REDIS_DB"))
+	redisTLS, _ := strconv.ParseBool(os.Getenv("REDIS_TLS"))
+
 	// Generate config
 	conf := &views.Config{
 		Address:           address,
@@ -133,6 +149,15 @@ func main() {
 			ScryptBlockSize:         sBlockSize,
 			ScryptParallelismFactor: sParallelismFactor,
 			KeyLength:               keyLen,
+		},
+		Redis: views.RedisConfig{
+			Addresses:  redisAddresses,
+			MasterName: os.Getenv("REDIS_MASTER_NAME"),
+			Username:   os.Getenv("REDIS_USERNAME"),
+			Password:   os.Getenv("REDIS_PASSWORD"),
+			DB:         redisDB,
+			TLS:        redisTLS,
+			KeyPrefix:  os.Getenv("REDIS_KEY_PREFIX"),
 		},
 	}
 

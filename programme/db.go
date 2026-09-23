@@ -24,7 +24,6 @@ func (s *Store) getProgrammes(ctx context.Context) ([]Programme, error) {
 		OrderBy("date_of_programme").
 		UnionAll(builder2)
 	sql, args, err := builder1.ToSql()
-	fmt.Printf("sql: %s\nargs: %#v\n", sql, args)
 	if err != nil {
 		panic(fmt.Errorf("failed to build sql for get programmes: %w", err))
 	}

@@ -1,4 +1,4 @@
-FROM golang:1.26.2-alpine3.23 AS build
+FROM golang:1.26.7-alpine3.24 AS build
 
 LABEL site="afc"
 LABEL stage="builder"
@@ -32,7 +32,10 @@ RUN GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -o /bin/afc
 RUN GOOS=linux GOARCH=amd64 go build -o /bin/migrates3 ./cmd/migrates3
 
 # Run the executable
-FROM scratch
+FROM alpine:3.24 AS run
+
+RUN apk add --no-cache ca-certificates
+
 LABEL site="afc"
 # Copy binary
 COPY --from=build /bin/afc /bin/afc
