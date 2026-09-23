@@ -29,7 +29,7 @@
                             {{if and (not $priv) .Website.Valid}}
                     onclick="location.href='{{.Website.String}}';"{{end}}>
                         {{if and $priv .Website.Valid}}<a href="{{.Website.String}}">{{end}}
-                            <img data-src="/download?s=s&id={{.ID}}" alt="/public/AFC.png"
+                            <img data-src="{{fileURL .FileName.String}}" alt="/public/AFC.png"
                                  onerror="this.onerror=null;this.src='/public/AFC.png';"
                                  class="latestImage lazy" src="/public/AFC.png">
                             <h2 class="latestTitle">{{.Name}}</h2>

@@ -17,7 +17,7 @@
         <div class="flexContainer">
             {{range .Documents}}
                 <div class="listItem" style="display: block; cursor: pointer;">
-                    <a href="/download?s=d&id={{.ID}}">
+                    <a href="{{fileURL .FileName}}">
                         <h2 class="latestTitle">{{.Name}}</h2>
                         <p style="text-decoration: underline; color: #1F1F1F">Download
                         </p>

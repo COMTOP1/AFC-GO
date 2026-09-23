@@ -104,7 +104,7 @@ func (v *Views) TeamFunc(c echo.Context) error {
 		Team:         teamDB,
 		Managers:     DBManagersToTemplateFormat(managersDB),
 		Sponsors:     DBSponsorsToTemplateFormat(sponsorsDB),
-		Players:      DBPlayersTeamToTemplateFormat(playersDB),
+		Players:      DBPlayersTeamToTemplateFormat(playersDB, teamDB.IsYouth),
 		User:         c1.User,
 		Context:      c1,
 	}

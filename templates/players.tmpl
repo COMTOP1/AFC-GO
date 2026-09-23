@@ -42,13 +42,9 @@
                     <tr>
                         <th>{{.Name}}
                         </th>
-                        {{if ge .Age 18}}
-                            <th><img data-src="download?s=l&id={{.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
-                                     onerror="this.onerror=null;this.src='/public/AFC.png';" src="/public/AFC.png"
-                                     style="max-width: 150px; max-height: 150px;" class="lazy"/></th>
-                        {{else}}
-                            <th></th>
-                        {{end}}
+                        <th><img data-src="{{fileURL .FileName.String}}" alt="/public/AFC.png"
+                                 onerror="this.onerror=null;this.src='/public/AFC.png';" src="/public/AFC.png"
+                                 style="max-width: 150px; max-height: 150px;" class="lazy"/></th>
                         <th>{{.DateOfBirth}}
                         </th>
                         <th>{{if .IsCaptain}}Captain{{else}}No{{end}}
@@ -58,7 +54,7 @@
                         {{if $priv}}
                             <th>
                                 <a class="button is-warning"
-                                   onclick="editPlayerModal({{.ID}}, {{.Name}}, {{.IsFileValid}}, {{.DateOfBirthForm}}, {{.Position}}, {{.IsCaptain}}, {{.Team.ID}})">Edit</a>
+                                   onclick="editPlayerModal({{.ID}}, {{.Name}}, {{.IsFileValid}}, {{fileURL .FileName.String}}, {{.DateOfBirthForm}}, {{.Position}}, {{.IsCaptain}}, {{.Team.ID}})">Edit</a>
                             </th>
                             <th>
                                 <a class="button is-danger" onclick="deletePlayerModal({{.ID}}, '{{.Name}}')">Delete</a>
@@ -361,7 +357,7 @@
             $('#deletePlayerModalForm').submit();
         }
 
-        function editPlayerModal(id, name, isFileValid, dateOfBirth, position, isCaptain, teamID) {
+        function editPlayerModal(id, name, isFileValid, photoURL, dateOfBirth, position, isCaptain, teamID) {
             playerEditID = id;
             let selectOptions = document.getElementById("editPlayerTeam").options;
 
@@ -421,7 +417,9 @@
             editPlayerUploadName.text("No file");
             if (isFileValid) {
                 editPlayerUploadName.text("Uploaded");
-                document.getElementById("editPreview").src = "/download?s=l&id=" + id + "&r=" + Math.floor(Math.random() * 999999);
+            }
+            if (photoURL) {
+                document.getElementById("editPreview").src = photoURL;
             }
         }
 

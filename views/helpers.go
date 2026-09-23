@@ -47,15 +47,17 @@ type (
 	}
 
 	ContactUserTemplate struct {
-		ID    int
-		Name  string
-		Email string
-		Role  string
+		ID       int
+		Name     string
+		Email    string
+		Role     string
+		FileName null.String
 	}
 
 	DocumentTemplate struct {
-		ID   int
-		Name string
+		ID       int
+		Name     string
+		FileName string
 	}
 
 	NewsTemplate struct {
@@ -64,6 +66,7 @@ type (
 		Content     string
 		Date        string
 		IsFileValid bool
+		FileName    null.String
 	}
 
 	ManagerTemplate struct {
@@ -77,6 +80,7 @@ type (
 		DateOfBirth     string
 		DateOfBirthForm string
 		IsFileValid     bool
+		FileName        null.String
 		Age             int
 		Position        null.String
 		IsCaptain       bool
@@ -88,6 +92,7 @@ type (
 		Name            string
 		DateOfProgramme string
 		Season          SeasonTemplate
+		FileName        string
 	}
 
 	SeasonTemplate struct {
@@ -97,10 +102,11 @@ type (
 	}
 
 	SponsorTemplate struct {
-		ID      int
-		Name    string
-		Website null.String
-		Purpose null.String
+		ID       int
+		Name     string
+		Website  null.String
+		Purpose  null.String
+		FileName null.String
 	}
 
 	TeamTemplate struct {
@@ -120,6 +126,7 @@ type (
 		Role         string
 		RoleTemplate string
 		IsFileValid  bool
+		FileName     null.String
 	}
 
 	WhatsOnTemplate struct {
@@ -130,6 +137,7 @@ type (
 		DateOfEvent     string
 		DateOfEventForm string
 		IsFileValid     bool
+		FileName        null.String
 	}
 )
 
@@ -349,6 +357,7 @@ func DBDocumentsToTemplateFormat(documentsDB []document.Document) []DocumentTemp
 		var documentTemplate DocumentTemplate
 		documentTemplate.ID = documentDB.ID
 		documentTemplate.Name = documentDB.Name
+		documentTemplate.FileName = documentDB.FileName
 		documentsTemplate = append(documentsTemplate, documentTemplate)
 	}
 	return documentsTemplate
@@ -362,6 +371,7 @@ func DBNewsToTemplateFormat(newsDB []news.News) []NewsTemplate {
 		newsArticleTemplate.Title = newsArticleDB.Title
 		year, month, day := newsArticleDB.Date.Date()
 		newsArticleTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", newsArticleDB.Date.Weekday().String()[0:3], day, month.String()[0:3], year, newsArticleDB.Date.Format("15:04:05"))
+		newsArticleTemplate.FileName = newsArticleDB.FileName
 		newsTemplate = append(newsTemplate, newsArticleTemplate)
 	}
 	return newsTemplate
@@ -375,6 +385,7 @@ func DBNewsToArticleTemplateFormat(newsDB news.News) NewsTemplate {
 	year, month, day := newsDB.Date.Date()
 	newsTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", newsDB.Date.Weekday().String()[0:3], day, month.String()[0:3], year, newsDB.Date.Format("15:04:05"))
 	newsTemplate.IsFileValid = newsDB.FileName.Valid
+	newsTemplate.FileName = newsDB.FileName
 	return newsTemplate
 }
 
@@ -384,6 +395,7 @@ func DBProgrammesToTemplateFormat(programmesDB []programme.Programme, seasonsDB 
 		var programmeTemplate ProgrammeTemplate
 		programmeTemplate.ID = programmeDB.ID
 		programmeTemplate.Name = programmeDB.Name
+		programmeTemplate.FileName = programmeDB.FileName
 		year, month, day := programmeDB.DateOfProgramme.Date()
 		programmeTemplate.DateOfProgramme = fmt.Sprintf("%s %02d %s %d", programmeDB.DateOfProgramme.Weekday().String()[0:3], day, month.String()[0:3], year)
 		found := false
@@ -417,6 +429,7 @@ func DBSponsorsToTemplateFormat(sponsorsDB []sponsor.Sponsor) []SponsorTemplate 
 		sponsorTemplate.Name = sponsorDB.Name
 		sponsorTemplate.Website = sponsorDB.Website
 		sponsorTemplate.Purpose = sponsorDB.Purpose
+		sponsorTemplate.FileName = sponsorDB.FileName
 		sponsorsTemplate = append(sponsorsTemplate, sponsorTemplate)
 	}
 	return sponsorsTemplate
@@ -491,12 +504,18 @@ func DBPlayersToTemplateFormat(playersDB []player.Player, teamsDB []team.Team) [
 				playerTemplate.Team = TeamTemplate{IsValid: false}
 			}
 		}
+		// Photos of youth-team or under-18 players are never exposed, matching download.go's
+		// existing "l" source gating.
+		if playerTemplate.IsFileValid && !playerTemplate.Team.IsYouth &&
+			(!playerDB.DateOfBirth.Valid || playerTemplate.Age >= 18) {
+			playerTemplate.FileName = playerDB.FileName
+		}
 		playersTemplate = append(playersTemplate, playerTemplate)
 	}
 	return playersTemplate
 }
 
-func DBPlayersTeamToTemplateFormat(playersDB []player.Player) []PlayerTemplate {
+func DBPlayersTeamToTemplateFormat(playersDB []player.Player, isYouthTeam bool) []PlayerTemplate {
 	playersTemplate := make([]PlayerTemplate, 0, len(playersDB))
 	for _, playerDB := range playersDB {
 		var playerTemplate PlayerTemplate
@@ -504,6 +523,29 @@ func DBPlayersTeamToTemplateFormat(playersDB []player.Player) []PlayerTemplate {
 		playerTemplate.Name = playerDB.Name
 		playerTemplate.Position = playerDB.Position
 		playerTemplate.IsCaptain = playerDB.IsCaptain
+		if len(playerDB.FileName.String) > 0 && playerDB.FileName.Valid {
+			playerTemplate.IsFileValid = true
+		}
+		age := -1
+		if playerDB.DateOfBirth.Valid {
+			today := time.Now().In(playerDB.DateOfBirth.Time.Location())
+			ty, tm, td := today.Date()
+			today = time.Date(ty, tm, td, 0, 0, 0, 0, time.UTC)
+			by, bm, bd := playerDB.DateOfBirth.Time.Date()
+			birthdate := time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC)
+			if !today.Before(birthdate) {
+				age = ty - by
+				anniversary := birthdate.AddDate(age, 0, 0)
+				if anniversary.After(today) {
+					age--
+				}
+			}
+		}
+		// Photos of youth-team or under-18 players are never exposed, matching download.go's
+		// existing "l" source gating.
+		if playerTemplate.IsFileValid && !isYouthTeam && (!playerDB.DateOfBirth.Valid || age >= 18) {
+			playerTemplate.FileName = playerDB.FileName
+		}
 		playersTemplate = append(playersTemplate, playerTemplate)
 	}
 	return playersTemplate
@@ -536,6 +578,7 @@ func DBUserToTemplateFormat(userDB user.User) UserTemplate {
 	if len(userDB.FileName.String) > 0 && userDB.FileName.Valid {
 		userTemplate.IsFileValid = true
 	}
+	userTemplate.FileName = userDB.FileName
 	return userTemplate
 }
 
@@ -556,6 +599,7 @@ func DBUsersToTemplateFormat(usersDB []user.User) []UserTemplate {
 		if len(userDB.FileName.String) > 0 && userDB.FileName.Valid {
 			userTemplate.IsFileValid = true
 		}
+		userTemplate.FileName = userDB.FileName
 		usersTemplate = append(usersTemplate, userTemplate)
 	}
 	return usersTemplate
@@ -569,6 +613,7 @@ func DBUsersContactToTemplateFormat(usersDB []user.User) ([]ContactUserTemplate,
 		userContactTemplate.Name = userDB.Name
 		userContactTemplate.Email = userDB.Email
 		userContactTemplate.Role = userDB.Role.String()
+		userContactTemplate.FileName = userDB.FileName
 		usersContactTemplate = append(usersContactTemplate, userContactTemplate)
 	}
 	return usersContactTemplate, nil
@@ -584,6 +629,7 @@ func DBWhatsOnToTemplateFormat(whatsOnsDB []whatson.WhatsOn) []WhatsOnTemplate {
 		year, month, day := whatsOnDB.DateOfEvent.Date()
 		whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsOnDB.DateOfEvent.Weekday().String()[0:3], day, month.String()[0:3], year)
 		whatsOnTemplate.Date = fmt.Sprintf("%s %02d %s %d - %s", whatsOnDB.Date.Weekday().String()[0:3], day, month.String()[0:3], year, whatsOnDB.Date.Format("15:04:05"))
+		whatsOnTemplate.FileName = whatsOnDB.FileName
 		whatsOnsTemplate = append(whatsOnsTemplate, whatsOnTemplate)
 	}
 	return whatsOnsTemplate
@@ -601,5 +647,6 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 	whatsOnTemplate.DateOfEvent = fmt.Sprintf("%s %02d %s %d", whatsOnDB.DateOfEvent.Weekday().String()[0:3], day, month.String()[0:3], year)
 	whatsOnTemplate.DateOfEventForm = fmt.Sprintf("%02d/%02d/%04d", day, month, year)
 	whatsOnTemplate.IsFileValid = whatsOnDB.FileName.Valid
+	whatsOnTemplate.FileName = whatsOnDB.FileName
 	return whatsOnTemplate
 }

@@ -14,7 +14,7 @@
             {{.User.Role}}
             {{if .User.IsFileValid}}
                 <h3 class="secondaryHeader">Image</h3>
-                <th><img data-src="/download?s=u&id={{.User.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
+                <th><img data-src="{{fileURL .User.FileName.String}}" alt="/public/AFC.png"
                          onerror="this.onerror=null;this.src='/public/AFC.png';"
                          src="/public/AFC.png"
                          style="border: 5px; max-height: 200px; max-width: 200px;" class="lazy"></th>
@@ -65,7 +65,7 @@
                                         </label>
                                     </div>
                                     <label class="label" for="preview">Preview</label>
-                                    <img id="preview" data-src="/download?s=u&id={{.User.ID}}&r={{randomImgInt}}" alt="/public/AFC.png"
+                                    <img id="preview" data-src="{{fileURL .User.FileName.String}}" alt="/public/AFC.png"
                                          onerror="this.onerror=null;this.src='/public/AFC.png';"
                                          src="/public/AFC.png"
                                          style="border: 5px; max-height: 200px; max-width: 200px;" class="lazy">
@@ -199,7 +199,7 @@
             document.getElementById("uploadImage").value = "";
             $('#uploadImageName').text("{{if .User.IsFileValid}}Uploaded{{else}}No file{{end}}");
             {{if .User.IsFileValid}}
-            document.getElementById("preview").src = "/download?s=u&id={{.User.ID}}&r={{randomImgInt}}";
+            document.getElementById("preview").src = "{{fileURL .User.FileName.String}}";
             {{end}}
             document.getElementById("uploadImageModal").classList.add("is-active");
             document.getElementById("uploadImageErrorParent").style.display = "none";

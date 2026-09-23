@@ -12,6 +12,7 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 
+	"github.com/COMTOP1/AFC-GO/infrastructure/storage"
 	"github.com/COMTOP1/AFC-GO/team"
 )
 
@@ -21,7 +22,8 @@ import (
 var tmpls embed.FS
 
 type Templater struct {
-	Team *team.Store
+	Team    *team.Store
+	Storage *storage.Store
 }
 
 type Template string
@@ -59,9 +61,10 @@ const (
 )
 
 // NewTemplate returns the template format to be used
-func NewTemplate(team *team.Store) *Templater {
+func NewTemplate(team *team.Store, storage *storage.Store) *Templater {
 	return &Templater{
-		Team: team,
+		Team:    team,
+		Storage: storage,
 	}
 }
 
@@ -142,6 +145,12 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 			safe := p.Sanitize(content)
 			//nolint:gosec
 			return template.HTML(safe)
+		},
+		"fileURL": func(fileName string) string {
+			if fileName == "" {
+				return ""
+			}
+			return t.Storage.PublicURL(fileName)
 		},
 	}
 }
