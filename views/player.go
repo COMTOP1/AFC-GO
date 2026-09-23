@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,6 +18,9 @@ import (
 )
 
 func (v *Views) PlayersFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.PlayersFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	playersDB, err := v.player.GetPlayers(c.Request().Context())
@@ -48,10 +51,13 @@ func (v *Views) PlayersFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.PlayersTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.PlayersTemplate, templates.RegularType)
 }
 
 func (v *Views) PlayerAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.PlayerAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -61,7 +67,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 
 		name := c.FormValue("name")
 		if len(name) == 0 {
-			log.Println("name must not be empty for player add")
+			slog.Info("name must not be empty for player add")
 			data.Error = "name must not be empty"
 			return c.JSON(http.StatusOK, data)
 		}
@@ -70,14 +76,14 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 
 		teamID, err := strconv.Atoi(c.FormValue("playerTeam"))
 		if err != nil {
-			log.Printf("failed to parse playerTeam for player add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to parse playerTeam for player add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to parse playerTeam for player add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
 		if err != nil {
-			log.Printf("failed to get team for player add, team id: %d, error: %+v", teamID, err)
+			slog.Info(fmt.Sprintf("failed to get team for player add, team id: %d, error: %+v", teamID, err))
 			data.Error = fmt.Sprintf("failed to get team for player add, team id: %d: %+v", teamID, err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -86,14 +92,14 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 
 		parse, err := time.Parse("02/01/2006", dateOfBirth)
 		if err != nil {
-			log.Printf("failed to parse dateOfBirth for player add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to parse dateOfBirth for player add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to parse dateOfBirth for player add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		diff := time.Now().Compare(parse)
 		if diff != 1 {
-			log.Printf("dateOfBirth date be before today for player add")
+			slog.Info("dateOfBirth date be before today for player add")
 			data.Error = "dateOfBirth date be before today for player add"
 			return c.JSON(http.StatusOK, data)
 		}
@@ -104,7 +110,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		if tempIsCaptain == "Y" {
 			isCaptain = true
 		} else if len(tempIsCaptain) != 0 {
-			log.Printf("failed to parse isCaptain for player add, value: %s", tempIsCaptain)
+			slog.Info("failed to parse isCaptain for player add, value: " + tempIsCaptain)
 			data.Error = "failed to parse isCaptain for player add, value: " + tempIsCaptain
 			return c.JSON(http.StatusOK, data)
 		}
@@ -115,7 +121,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for player add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to get file for player add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to get file for player add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -124,7 +130,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		if hasUpload {
 			fileName, err = v.fileUpload(c.Request().Context(), file, "player")
 			if err != nil {
-				log.Printf("failed to upload file for player add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to upload file for player add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to upload file for player add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -132,7 +138,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 
 		_, err = v.player.AddPlayer(c.Request().Context(), player.Player{Name: name, FileName: null.NewString(fileName, len(fileName) > 0), DateOfBirth: null.TimeFrom(parse), Position: null.NewString(position, len(position) > 0), IsCaptain: isCaptain, TeamID: teamID})
 		if err != nil {
-			log.Printf("failed to add player for player add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to add player for player add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to add player for player add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -141,7 +147,7 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for player add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for player add, error: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -150,6 +156,9 @@ func (v *Views) PlayerAddFunc(c echo.Context) error {
 }
 
 func (v *Views) PlayerEditFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.PlayerEditFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -175,14 +184,14 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 
 		tempTeamID, err := strconv.Atoi(c.FormValue("playerTeam"))
 		if err != nil {
-			log.Printf("failed to parse playerTeam for player edit, player id: %d, error: %+v", playerID, err)
+			slog.Info(fmt.Sprintf("failed to parse playerTeam for player edit, player id: %d, error: %+v", playerID, err))
 			data.Error = fmt.Sprintf("failed to parse playerTeam for player edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: tempTeamID})
 		if err != nil {
-			log.Printf("failed to get team for player edit, player id: %d, team id: %d, error: %+v", playerID, tempTeamID, err)
+			slog.Info(fmt.Sprintf("failed to get team for player edit, player id: %d, team id: %d, error: %+v", playerID, tempTeamID, err))
 			data.Error = fmt.Sprintf("failed to get team for player edit, team id: %d: %+v", tempTeamID, err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -193,14 +202,14 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 
 		parse, err := time.Parse("02/01/2006", dateOfBirth)
 		if err != nil {
-			log.Printf("failed to parse dateOfBirth for player edit, player id: %d, error: %+v", playerID, err)
+			slog.Info(fmt.Sprintf("failed to parse dateOfBirth for player edit, player id: %d, error: %+v", playerID, err))
 			data.Error = fmt.Sprintf("failed to parse dateOfBirth for player edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
 
 		diff := time.Now().Compare(parse)
 		if diff != 1 {
-			log.Printf("dateOfBirth date be before today for player edit, player id: %d", playerID)
+			slog.Info(fmt.Sprintf("dateOfBirth date be before today for player edit, player id: %d", playerID))
 			data.Error = "dateOfBirth date be before today for player edit"
 			return c.JSON(http.StatusOK, data)
 		}
@@ -211,7 +220,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 		if tempIsCaptain == "Y" {
 			playerDB.IsCaptain = true
 		} else if len(tempIsCaptain) != 0 {
-			log.Printf("failed to parse isCaptain for player edit, player id: %d, value: %s", playerID, tempIsCaptain)
+			slog.Info(fmt.Sprintf("failed to parse isCaptain for player edit, player id: %d, value: %s", playerID, tempIsCaptain))
 			data.Error = "failed to parse isCaptain for player edit, value: " + tempIsCaptain
 			return c.JSON(http.StatusOK, data)
 		}
@@ -221,7 +230,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for player edit, player id: %d, error: %+v", playerID, err)
+				slog.Info(fmt.Sprintf("failed to get file for player edit, player id: %d, error: %+v", playerID, err))
 				data.Error = fmt.Sprintf("failed to get file for player edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -231,14 +240,14 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 			var tempFileName string
 			tempFileName, err = v.fileUpload(c.Request().Context(), file, "player")
 			if err != nil {
-				log.Printf("failed to upload file for player edit, player id: %d, error: %+v", playerID, err)
+				slog.Info(fmt.Sprintf("failed to upload file for player edit, player id: %d, error: %+v", playerID, err))
 				data.Error = fmt.Sprintf("failed to upload file for player edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if playerDB.FileName.Valid {
 				err = v.storage.Delete(c.Request().Context(), playerDB.FileName.String)
 				if err != nil {
-					log.Printf("failed to delete old image for player edit, player id: %d, error: %+v", playerID, err)
+					slog.Info(fmt.Sprintf("failed to delete old image for player edit, player id: %d, error: %+v", playerID, err))
 				}
 			}
 			playerDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
@@ -249,19 +258,19 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 			if playerDB.FileName.Valid {
 				err = v.storage.Delete(c.Request().Context(), playerDB.FileName.String)
 				if err != nil {
-					log.Printf("failed to delete image for player edit, player id: %d, error: %+v", playerID, err)
+					slog.Info(fmt.Sprintf("failed to delete image for player edit, player id: %d, error: %+v", playerID, err))
 				}
 			}
 			playerDB.FileName = null.NewString("", false)
 		} else if len(tempRemovePlayerImage) != 0 {
-			log.Printf("failed to parse removePlayerImage for player edit, player id: %d, error: %s", playerID, tempRemovePlayerImage)
+			slog.Info(fmt.Sprintf("failed to parse removePlayerImage for player edit, player id: %d, error: %s", playerID, tempRemovePlayerImage))
 			data.Error = "failed to parse removePlayerImage for player edit: " + tempRemovePlayerImage
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.player.EditPlayer(c.Request().Context(), playerDB)
 		if err != nil {
-			log.Printf("failed to edit player for player edit, player id: %d, error: %+v", playerID, err)
+			slog.Info(fmt.Sprintf("failed to edit player for player edit, player id: %d, error: %+v", playerID, err))
 			data.Error = fmt.Sprintf("failed to edit player for player edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -270,7 +279,7 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for player edit, player id: %d, error: %+v", playerID, err)
+			slog.Info(fmt.Sprintf("failed to set data for player edit, player id: %d, error: %+v", playerID, err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -279,6 +288,9 @@ func (v *Views) PlayerEditFunc(c echo.Context) error {
 }
 
 func (v *Views) PlayerDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.PlayerDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -295,7 +307,7 @@ func (v *Views) PlayerDeleteFunc(c echo.Context) error {
 		if playerDB.FileName.Valid {
 			err = v.storage.Delete(c.Request().Context(), playerDB.FileName.String)
 			if err != nil {
-				log.Printf("failed to delete player image for player delete, player id: %d, error: %+v", id, err)
+				slog.Info(fmt.Sprintf("failed to delete player image for player delete, player id: %d, error: %+v", id, err))
 			}
 		}
 
@@ -308,7 +320,7 @@ func (v *Views) PlayerDeleteFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for player delete, player id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for player delete, player id: %d, error: %+v", id, err))
 		}
 
 		return c.Redirect(http.StatusFound, "/players")

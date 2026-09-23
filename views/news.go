@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,6 +18,9 @@ import (
 )
 
 func (v *Views) NewsFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.NewsFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	var n1 []news.News
@@ -45,10 +48,13 @@ func (v *Views) NewsFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.NewsTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.NewsTemplate, templates.RegularType)
 }
 
 func (v *Views) NewsArticleFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.NewsArticleFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	newsID, err := strconv.Atoi(c.Param("id"))
@@ -79,10 +85,13 @@ func (v *Views) NewsArticleFunc(c echo.Context) error {
 		Context:      c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.NewsArticleTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.NewsArticleTemplate, templates.RegularType)
 }
 
 func (v *Views) NewsAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.NewsAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -114,7 +123,7 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for news add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to get file for news add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to get file for news add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -123,7 +132,7 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 		if hasUpload {
 			fileName, err = v.fileUpload(c.Request().Context(), file, "news")
 			if err != nil {
-				log.Printf("failed to upload file for news add, error: %+v", err)
+				slog.Info(fmt.Sprintf("failed to upload file for news add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to upload file for news add: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -131,7 +140,7 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 
 		_, err = v.news.AddNews(c.Request().Context(), news.News{Title: title, Content: null.NewString(safe, len(safe) > 0), FileName: null.NewString(fileName, len(fileName) > 0)})
 		if err != nil {
-			log.Printf("failed to add news for news add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to add news for news add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to add news for news add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -140,7 +149,7 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for news add, error: %+v", err)
+			slog.Info(fmt.Sprintf("failed to set data for news add, error: %+v", err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -149,6 +158,9 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 }
 
 func (v *Views) NewsEditFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.NewsEditFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -190,7 +202,7 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 		file, err := c.FormFile("upload")
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file") {
-				log.Printf("failed to get file for news edit, news id: %d, error: %+v", newsID, err)
+				slog.Info(fmt.Sprintf("failed to get file for news edit, news id: %d, error: %+v", newsID, err))
 				data.Error = fmt.Sprintf("failed to get file for news edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
@@ -200,14 +212,14 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 			var tempFileName string
 			tempFileName, err = v.fileUpload(c.Request().Context(), file, "news")
 			if err != nil {
-				log.Printf("failed to upload file for news edit, news id: %d, error: %+v", newsID, err)
+				slog.Info(fmt.Sprintf("failed to upload file for news edit, news id: %d, error: %+v", newsID, err))
 				data.Error = fmt.Sprintf("failed to upload file for news edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if newsDB.FileName.Valid {
 				err = v.storage.Delete(c.Request().Context(), newsDB.FileName.String)
 				if err != nil {
-					log.Printf("failed to delete old image for news edit, news id: %d, error: %+v", newsID, err)
+					slog.Info(fmt.Sprintf("failed to delete old image for news edit, news id: %d, error: %+v", newsID, err))
 				}
 			}
 			newsDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
@@ -218,19 +230,19 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 			if newsDB.FileName.Valid {
 				err = v.storage.Delete(c.Request().Context(), newsDB.FileName.String)
 				if err != nil {
-					log.Printf("failed to delete image for news edit, news id: %d, error: %+v", newsID, err)
+					slog.Info(fmt.Sprintf("failed to delete image for news edit, news id: %d, error: %+v", newsID, err))
 				}
 			}
 			newsDB.FileName = null.NewString("", false)
 		} else if len(tempRemoveNewsImage) != 0 {
-			log.Printf("failed to parse removeNewsImage for news edit, news id: %d, error: %s", newsID, tempRemoveNewsImage)
+			slog.Info(fmt.Sprintf("failed to parse removeNewsImage for news edit, news id: %d, error: %s", newsID, tempRemoveNewsImage))
 			data.Error = "failed to parse removeNewsImage for news edit: " + tempRemoveNewsImage
 			return c.JSON(http.StatusOK, data)
 		}
 
 		_, err = v.news.EditNews(c.Request().Context(), newsDB)
 		if err != nil {
-			log.Printf("failed to add news for news edit, news id: %d, error: %+v", newsID, err)
+			slog.Info(fmt.Sprintf("failed to add news for news edit, news id: %d, error: %+v", newsID, err))
 			data.Error = fmt.Sprintf("failed to add news for news edit: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -239,7 +251,7 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for news edit, news id: %d, error: %+v", newsID, err)
+			slog.Info(fmt.Sprintf("failed to set data for news edit, news id: %d, error: %+v", newsID, err))
 		}
 
 		return c.JSON(http.StatusOK, data)
@@ -248,6 +260,9 @@ func (v *Views) NewsEditFunc(c echo.Context) error {
 }
 
 func (v *Views) NewsDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.NewsDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -264,7 +279,7 @@ func (v *Views) NewsDeleteFunc(c echo.Context) error {
 		if newsDB.FileName.Valid {
 			err = v.storage.Delete(c.Request().Context(), newsDB.FileName.String)
 			if err != nil {
-				log.Printf("failed to delete news image for news delete, news id: %d, error: %+v", id, err)
+				slog.Info(fmt.Sprintf("failed to delete news image for news delete, news id: %d, error: %+v", id, err))
 			}
 		}
 
@@ -277,7 +292,7 @@ func (v *Views) NewsDeleteFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for news delete, news id: %d, error: %+v", id, err)
+			slog.Info(fmt.Sprintf("failed to set data for news delete, news id: %d, error: %+v", id, err))
 		}
 
 		return c.Redirect(http.StatusFound, "/news")

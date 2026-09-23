@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -20,6 +21,8 @@ type (
 		FileName null.String `db:"file_name" json:"file_name"`
 	}
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/affiliation")
 
 // NewAffiliationRepo stores our dependency
 func NewAffiliationRepo(db *sqlx.DB) *Store {

@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
+
+	"go.opentelemetry.io/otel"
 )
 
 type (
@@ -18,6 +20,8 @@ type (
 		FileName string `db:"file_name" json:"file_name"`
 	}
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/document")
 
 // NewDocumentRepo stores our dependency
 func NewDocumentRepo(db *sqlx.DB) *Store {

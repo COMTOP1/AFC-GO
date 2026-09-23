@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -18,13 +19,13 @@ func main() {
 
 	//nolint:gocritic
 	if !local && !global {
-		log.Println("using env variables")
+		slog.Info("using env variables")
 	} else if local && global {
-		log.Println("using global and local env files")
+		slog.Info("using global and local env files")
 	} else if !local {
-		log.Println("using global env file")
+		slog.Info("using global env file")
 	} else {
-		log.Println("using local env file")
+		slog.Info("using local env file")
 	}
 
 	address := os.Getenv("ADDRESS")
@@ -45,5 +46,6 @@ func main() {
 	})
 
 	err = router.Start()
-	log.Fatalf("The web server couldn't be started!\n\n%s\n\nExiting!", err)
+	slog.Error(fmt.Sprintf("The web server couldn't be started!\n\n%s\n\nExiting!", err))
+	os.Exit(1)
 }

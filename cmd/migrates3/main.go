@@ -3,24 +3,55 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"mime"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/joho/godotenv"
+	"go.opentelemetry.io/otel"
 
 	"github.com/COMTOP1/AFC-GO/infrastructure/storage"
+	"github.com/COMTOP1/AFC-GO/infrastructure/telemetry"
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/cmd/migrates3")
 
 func main() {
 	_ = godotenv.Load(".env")
 	_ = godotenv.Overload(".env.local")
 
+	otelServiceName := os.Getenv("OTEL_SERVICE_NAME")
+	if otelServiceName == "" {
+		otelServiceName = "afc-go-migrates3"
+	}
+
+	ctx := context.Background()
+	otelShutdown, err := telemetry.Setup(ctx, telemetry.Config{
+		ServiceName: otelServiceName,
+		Endpoint:    os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
+		Headers:     telemetry.ParseHeaders(os.Getenv("OTEL_EXPORTER_OTLP_HEADERS")),
+	})
+	if err != nil {
+		slog.Error(fmt.Sprintf("failed to set up telemetry: %+v", err))
+		os.Exit(1)
+	}
+	exitCode := run(ctx)
+
+	if shutdownErr := otelShutdown(context.Background()); shutdownErr != nil {
+		slog.Error(fmt.Sprintf("failed to shut down telemetry: %+v", shutdownErr))
+	}
+	os.Exit(exitCode)
+}
+
+func run(ctx context.Context) int {
+	ctx, span := tracer.Start(ctx, "migrates3.Run")
+	defer span.End()
+
 	sourceDir := os.Getenv("FILESTORE_DIR")
 	if sourceDir == "" {
-		if stat, err := os.Stat("/FileStore"); err == nil && stat.IsDir() {
+		if stat, statErr := os.Stat("/FileStore"); statErr == nil && stat.IsDir() {
 			sourceDir = "/FileStore"
 		} else {
 			sourceDir = "./FileStore"
@@ -32,7 +63,7 @@ func main() {
 		s3Region = "us-east-1"
 	}
 
-	store := storage.NewStore(storage.Config{
+	store := storage.NewStore(ctx, storage.Config{
 		Endpoint:  os.Getenv("S3_ENDPOINT"),
 		Region:    s3Region,
 		Bucket:    os.Getenv("S3_BUCKET"),
@@ -42,10 +73,10 @@ func main() {
 
 	entries, err := os.ReadDir(sourceDir)
 	if err != nil {
-		log.Fatalf("failed to read source directory %s: %+v", sanitizeLogValue(sourceDir), err) //nolint:gosec // sanitizeLogValue strips the newlines a log-injection attack relies on
+		span.RecordError(err)
+		slog.Error("failed to read source directory " + sanitizeLogValue(sourceDir) + ": " + err.Error()) //nolint:gosec // sanitizeLogValue strips the newlines a log-injection attack relies on
+		return 1
 	}
-
-	ctx := context.Background()
 
 	var uploaded, skipped, failed int
 
@@ -57,34 +88,37 @@ func main() {
 		key := entry.Name()
 		safeKey := sanitizeLogValue(key)
 
-		exists, err := store.Exists(ctx, key)
-		if err != nil {
-			log.Printf("failed to check existence of %q: %+v", safeKey, err) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
+		exists, existsErr := store.Exists(ctx, key)
+		if existsErr != nil {
+			span.RecordError(existsErr)
+			slog.Error(fmt.Sprintf("failed to check existence of %q: %+v", safeKey, existsErr)) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
 			failed++
 			continue
 		}
 		if exists {
-			log.Printf("skipping %q: already exists in bucket", safeKey) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
+			slog.Info(fmt.Sprintf("skipping %q: already exists in bucket", safeKey)) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
 			skipped++
 			continue
 		}
 
-		if err = uploadFile(ctx, store, sourceDir, key); err != nil {
-			log.Printf("failed to upload %q: %+v", safeKey, err) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
+		if uploadErr := uploadFile(ctx, store, sourceDir, key); uploadErr != nil {
+			span.RecordError(uploadErr)
+			slog.Error(fmt.Sprintf("failed to upload %q: %+v", safeKey, uploadErr)) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
 			failed++
 			continue
 		}
 
-		log.Printf("uploaded %q", safeKey) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
+		slog.Info(fmt.Sprintf("uploaded %q", safeKey)) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
 		uploaded++
 	}
 
-	log.Printf("migration complete: uploaded=%d skipped=%d failed=%d total=%d",
-		uploaded, skipped, failed, uploaded+skipped+failed)
+	slog.Info(fmt.Sprintf("migration complete: uploaded=%d skipped=%d failed=%d total=%d",
+		uploaded, skipped, failed, uploaded+skipped+failed))
 
 	if failed > 0 {
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }
 
 func uploadFile(ctx context.Context, store *storage.Store, sourceDir, key string) error {

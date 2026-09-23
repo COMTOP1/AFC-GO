@@ -7,6 +7,8 @@ import (
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/team"
+
+	"go.opentelemetry.io/otel"
 )
 
 type (
@@ -24,6 +26,8 @@ type (
 		TeamID   string      `db:"team_id" json:"team_id"`
 	}
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/sponsor")
 
 // NewSponsorRepo stores our dependency
 func NewSponsorRepo(db *sqlx.DB) *Store {

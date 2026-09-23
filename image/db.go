@@ -10,65 +10,82 @@ import (
 )
 
 func (s *Store) getImages(ctx context.Context) ([]Image, error) {
+	ctx, span := tracer.Start(ctx, "image.getImages")
+	defer span.End()
 	var imagesDB []Image
 	builder := sq.Select("id", "file_name", "caption").
 		From("images").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get images: %w", err))
 	}
 	err = s.db.SelectContext(ctx, &imagesDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return nil, fmt.Errorf("failed to get images: %w", err)
 	}
 	return imagesDB, nil
 }
 
 func (s *Store) getImage(ctx context.Context, imageParam Image) (Image, error) {
+	ctx, span := tracer.Start(ctx, "image.getImage")
+	defer span.End()
 	var imageDB Image
 	builder := utils.PSQL().Select("id", "file_name", "caption").
 		From("images").
 		Where(sq.Eq{"id": imageParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for get image: %w", err))
 	}
 	err = s.db.GetContext(ctx, &imageDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return Image{}, fmt.Errorf("failed to get image: %w", err)
 	}
 	return imageDB, nil
 }
 
 func (s *Store) addImage(ctx context.Context, imageParam Image) (Image, error) {
+	ctx, span := tracer.Start(ctx, "image.addImage")
+	defer span.End()
 	builder := utils.PSQL().Insert("images").
 		Columns("file_name", "caption").
 		Values(imageParam.FileName, imageParam.Caption)
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add image: %w", err))
 	}
 	res, err := s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return Image{}, fmt.Errorf("failed to add image: %w", err)
 	}
 	_, err = res.RowsAffected()
 	if err != nil {
+		span.RecordError(err)
 		return Image{}, fmt.Errorf("failed to add image: %w", err)
 	}
 	return imageParam, nil
 }
 
 func (s *Store) deleteImage(ctx context.Context, imageParam Image) error {
+	ctx, span := tracer.Start(ctx, "image.deleteImage")
+	defer span.End()
 	builder := utils.PSQL().Delete("images").
 		Where(sq.Eq{"id": imageParam.ID})
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for delete image: %w", err))
 	}
 	_, err = s.db.ExecContext(ctx, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to delete image: %w", err)
 	}
 	return nil

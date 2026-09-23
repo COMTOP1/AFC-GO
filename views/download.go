@@ -2,9 +2,10 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -22,6 +23,9 @@ import (
 )
 
 func (v *Views) DownloadFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.DownloadFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	source := c.QueryParam("s")
 
 	temp := c.QueryParam("id")
@@ -187,10 +191,15 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 func (v *Views) _downloadFunc(c echo.Context, fileName, page string, id int) error {
 	exists, err := v.storage.Exists(c.Request().Context(), fileName)
 	if err != nil {
-		return fmt.Errorf("failed to check file exists for %s download: %w, id: %d", page, err, id)
+		if strings.Contains(err.Error(), "no such file") {
+			slog.Info(fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
+			return c.String(http.StatusNotFound,
+				fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
+		}
+		return fmt.Errorf("failed to get file for %s download: %w, id: %d", page, err, id)
 	}
 	if !exists {
-		log.Printf("failed to get file for %s download: no such file, id: %d", page, id)
+		slog.Info(fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
 		return c.String(http.StatusNotFound,
 			fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
 	}

@@ -2,7 +2,9 @@ package db
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"log/slog"
+	"os"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // postgres driver
@@ -12,8 +14,9 @@ import (
 func NewStore(dataSourceName string, host string) *sqlx.DB {
 	db, err := sqlx.ConnectContext(context.Background(), "postgres", dataSourceName)
 	if err != nil {
-		log.Fatalf("db failed: %+v", err)
+		slog.Error(fmt.Sprintf("db failed: %+v", err))
+		os.Exit(1)
 	}
-	log.Printf("connected to db: %s", host)
+	slog.Info("connected to db: " + host)
 	return db
 }

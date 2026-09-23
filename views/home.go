@@ -13,6 +13,9 @@ import (
 )
 
 func (v *Views) HomeFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.HomeFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	c1 := v.getSessionData(c)
 
 	affiliations, err := v.affiliation.GetAffiliationsMinimal(c.Request().Context())
@@ -57,5 +60,5 @@ func (v *Views) HomeFunc(c echo.Context) error {
 		Context:       c1,
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, data, templates.HomeTemplate, templates.RegularType)
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.HomeTemplate, templates.RegularType)
 }

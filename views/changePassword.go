@@ -2,7 +2,7 @@ package views
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -11,6 +11,9 @@ import (
 
 // ChangePasswordFunc handles the password change from a user
 func (v *Views) ChangePasswordFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ChangePasswordFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	if c.Request().Method == http.MethodPost {
 		c1 := v.getSessionData(c)
 
@@ -46,7 +49,7 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 		err = v.user.EditUserPassword(c.Request().Context(), c1.User, v.conf.Security.ScryptWorkFactor,
 			v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
 		if err != nil {
-			log.Printf("failed to change password, user id: %d, error: %+v", c1.User.ID, err)
+			slog.Info(fmt.Sprintf("failed to change password, user id: %d, error: %+v", c1.User.ID, err))
 			data.Error = fmt.Sprintf("failed to change password: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
@@ -55,7 +58,7 @@ func (v *Views) ChangePasswordFunc(c echo.Context) error {
 		c1.MsgType = "is-success"
 		err = v.setMessagesInSession(c, c1)
 		if err != nil {
-			log.Printf("failed to set data for change password, user id: %d, error: %+v", c1.User.ID, err)
+			slog.Info(fmt.Sprintf("failed to set data for change password, user id: %d, error: %+v", c1.User.ID, err))
 		}
 
 		return c.JSON(http.StatusOK, data)

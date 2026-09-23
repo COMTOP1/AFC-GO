@@ -12,6 +12,9 @@ import (
 // LogoutFunc Implements the logout functionality.
 // Will delete the session information from the cookie store
 func (v *Views) LogoutFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.LogoutFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
 	session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
 	if err != nil {
 		return fmt.Errorf("failed to get session for logout: %w", err)
