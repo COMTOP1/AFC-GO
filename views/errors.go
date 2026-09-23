@@ -14,6 +14,11 @@ import (
 )
 
 func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.CustomHTTPErrorHandler")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
+	span.RecordError(err)
+
 	c1 := v.getSessionData(c)
 	slog.Info(fmt.Sprint(err))
 	var he *echo.HTTPError

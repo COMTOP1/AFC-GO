@@ -110,6 +110,8 @@ func (s *Store) editSetting(ctx context.Context, settingParam Setting) (Setting,
 // concurrent callers (e.g. multiple app instances) can't lose updates to each
 // other via a read-modify-write race.
 func (s *Store) incrementSetting(ctx context.Context, settingID string, delta int) (Setting, error) {
+	ctx, span := tracer.Start(ctx, "setting.incrementSetting")
+	defer span.End()
 	builder := utils.PSQL().Insert("settings").
 		Columns(
 			"id",
@@ -124,11 +126,13 @@ func (s *Store) incrementSetting(ctx context.Context, settingID string, delta in
 	)
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for incrementSetting: %w", err))
 	}
 	var settingDB Setting
 	err = s.db.GetContext(ctx, &settingDB, sql, args...)
 	if err != nil {
+		span.RecordError(err)
 		return Setting{}, fmt.Errorf("failed to increment setting: %w", err)
 	}
 	return settingDB, nil

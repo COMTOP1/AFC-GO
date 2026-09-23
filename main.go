@@ -130,22 +130,6 @@ func main() {
 		fatal(fmt.Sprintf("invalid option for key length: %+v", err))
 	}
 
-	var fileDir string
-
-	stat, err := os.Stat("/FileStore")
-	if err == nil && stat.IsDir() {
-		slog.Info("using root /FileStore")
-		fileDir = "/FileStore"
-	} else {
-		stat, err = os.Stat("./FileStore")
-		if err == nil && stat.IsDir() {
-			slog.Info("using local ./FileStore")
-			fileDir = "./FileStore"
-		} else {
-			fatal(fmt.Sprintf("failed to get fileStore - stat: %+v, error: %+v", stat, err))
-		}
-	}
-
 	mailPort, _ := strconv.Atoi(os.Getenv("MAIL_PORT"))
 
 	domainName := os.Getenv("DOMAIN_NAME")

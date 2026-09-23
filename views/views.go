@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/gob"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -140,7 +141,7 @@ func New(conf *Config, host string, interval time.Duration) *Views {
 	v.programme = programme.NewProgrammeRepo(dbStore)
 	v.setting = setting.NewSettingRepo(dbStore)
 	v.sponsor = sponsor.NewSponsorRepo(dbStore)
-	v.storage = storage.NewStore(conf.S3)
+	v.storage = storage.NewStore(context.Background(), conf.S3)
 	v.team = team.NewTeamRepo(dbStore)
 	v.user = user.NewUserRepo(dbStore)
 	v.whatsOn = whatson.NewWhatsOnRepo(dbStore)
@@ -169,6 +170,11 @@ func New(conf *Config, host string, interval time.Duration) *Views {
 	v.redisPrefix = conf.Redis.KeyPrefix
 	if v.redisPrefix == "" {
 		v.redisPrefix = "afc:"
+	}
+	if v.redis != nil {
+		slog.Info("using redis/valkey for shared cache")
+	} else {
+		slog.Info("no redis addresses configured, using in-process cache")
 	}
 
 	// Initialising session cookie
@@ -247,12 +253,13 @@ func (v *Views) startFlusher() {
 }
 
 func (v *Views) flushToDB() {
+	ctx, span := tracer.Start(context.Background(), "views.flushToDB")
+	defer span.End()
+
 	v.countMutex.Lock()
 	countToFlush := v.count
 	v.count = 0
 	v.countMutex.Unlock()
-
-	ctx := context.Background()
 
 	if countToFlush == 0 {
 		// Nothing local to add, but another instance may have flushed visits
@@ -263,12 +270,14 @@ func (v *Views) flushToDB() {
 
 	newSetting, err := v.setting.IncrementSetting(ctx, visitorCount, countToFlush)
 	if err != nil {
+		span.RecordError(err)
 		slog.Info(fmt.Sprintf("Error incrementing visitorCount: %v", err))
 		return
 	}
 
 	newValue, err := strconv.Atoi(newSetting.SettingText)
 	if err != nil {
+		span.RecordError(err)
 		slog.Info(fmt.Sprintf("Error parsing visitorCount: %v", err))
 		return
 	}
@@ -279,6 +288,9 @@ func (v *Views) flushToDB() {
 // refreshVisitorCountCache re-reads the visitor count from the DB and caches
 // it locally, so this instance reflects visits recorded by other instances.
 func (v *Views) refreshVisitorCountCache(ctx context.Context) {
+	ctx, span := tracer.Start(ctx, "views.refreshVisitorCountCache")
+	defer span.End()
+
 	currentSetting, err := v.setting.GetSetting(ctx, visitorCount)
 	if err != nil {
 		// Not created yet - it will be on the first increment.
@@ -287,7 +299,8 @@ func (v *Views) refreshVisitorCountCache(ctx context.Context) {
 
 	currentValue, err := strconv.Atoi(currentSetting.SettingText)
 	if err != nil {
-		log.Printf("Error parsing visitorCount: %v", err)
+		span.RecordError(err)
+		slog.Error(fmt.Sprintf("Error parsing visitorCount: %v", err))
 		return
 	}
 
@@ -295,10 +308,14 @@ func (v *Views) refreshVisitorCountCache(ctx context.Context) {
 }
 
 func (v *Views) Stop() {
+	_, span := tracer.Start(context.Background(), "views.Stop")
+	defer span.End()
+
 	close(v.stopChan)
 	if v.redis != nil {
 		if err := v.redis.Close(); err != nil {
-			log.Printf("failed to close redis client: %+v", err)
+			span.RecordError(err)
+			slog.Error(fmt.Sprintf("failed to close redis client: %+v", err))
 		}
 	}
 }
@@ -316,8 +333,15 @@ func (v *Views) resetTokenKey(token string) string {
 // memory, which requires sticky sessions/single-instance deployment for the
 // reset flow to work reliably.
 func (v *Views) SetResetToken(ctx context.Context, token string, userID int, ttl time.Duration) error {
+	ctx, span := tracer.Start(ctx, "views.SetResetToken")
+	defer span.End()
+
 	if v.redis != nil {
-		return v.redis.Set(ctx, v.resetTokenKey(token), userID, ttl).Err()
+		err := v.redis.Set(ctx, v.resetTokenKey(token), userID, ttl).Err()
+		if err != nil {
+			span.RecordError(err)
+		}
+		return err
 	}
 	v.cache.Set(token, userID, ttl)
 	return nil
@@ -325,9 +349,15 @@ func (v *Views) SetResetToken(ctx context.Context, token string, userID int, ttl
 
 // GetResetToken looks up the user ID a password reset token was issued for.
 func (v *Views) GetResetToken(ctx context.Context, token string) (int, bool) {
+	ctx, span := tracer.Start(ctx, "views.GetResetToken")
+	defer span.End()
+
 	if v.redis != nil {
 		userID, err := v.redis.Get(ctx, v.resetTokenKey(token)).Int()
 		if err != nil {
+			if !errors.Is(err, redis.Nil) {
+				span.RecordError(err)
+			}
 			return 0, false
 		}
 		return userID, true
@@ -341,9 +371,13 @@ func (v *Views) GetResetToken(ctx context.Context, token string) (int, bool) {
 
 // DeleteResetToken invalidates a password reset token after use.
 func (v *Views) DeleteResetToken(ctx context.Context, token string) {
+	ctx, span := tracer.Start(ctx, "views.DeleteResetToken")
+	defer span.End()
+
 	if v.redis != nil {
 		if err := v.redis.Del(ctx, v.resetTokenKey(token)).Err(); err != nil {
-			log.Printf("failed to delete reset token from redis: %+v", err)
+			span.RecordError(err)
+			slog.Error(fmt.Sprintf("failed to delete reset token from redis: %+v", err))
 		}
 		return
 	}
