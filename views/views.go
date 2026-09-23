@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/gob"
 	"encoding/hex"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/patrickmn/go-cache"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/COMTOP1/AFC-GO/affiliation"
 	"github.com/COMTOP1/AFC-GO/document"
@@ -41,6 +43,29 @@ type (
 		FileDir           string
 		Mail              SMTPConfig
 		Security          SecurityConfig
+		Redis             RedisConfig
+	}
+
+	// RedisConfig stores the configuration for an optional Redis/Valkey
+	// cache, used to share state (e.g. password reset tokens) across
+	// multiple app instances. When Addresses is empty, an in-process cache
+	// is used instead, which is only suitable for a single instance.
+	RedisConfig struct {
+		// Addresses is one or more "host:port" pairs. More than one
+		// address puts the client into cluster mode, unless MasterName
+		// is set, in which case it uses Sentinel-based failover.
+		Addresses  []string
+		MasterName string
+		Username   string
+		Password   string
+		DB         int
+		TLS        bool
+		// KeyPrefix namespaces every key this app writes to Redis/Valkey,
+		// e.g. "afc:dev:" or "afc:prod:". Set it differently per
+		// environment so a Valkey ACL user can be scoped to only that
+		// environment's keys (~afc:dev:* / ~afc:prod:*) on a shared
+		// instance or cluster. Defaults to "afc:" if empty.
+		KeyPrefix string
 	}
 
 	// SMTPConfig stores the SMTP Mailer configuration
@@ -66,6 +91,8 @@ type (
 	Views struct {
 		affiliation *affiliation.Store
 		cache       *cache.Cache
+		redis       redis.UniversalClient
+		redisPrefix string
 		conf        *Config
 		cookie      *sessions.CookieStore
 		document    *document.Store
@@ -116,6 +143,27 @@ func New(conf *Config, host string, interval time.Duration) *Views {
 	// Initialising cache
 	v.cache = cache.New(1*time.Hour, 1*time.Hour)
 
+	// Initialising Redis/Valkey client, used to share state such as password
+	// reset tokens across instances. Falls back to the in-process cache
+	// above when no addresses are configured, e.g. for local development.
+	if len(conf.Redis.Addresses) > 0 {
+		opts := &redis.UniversalOptions{
+			Addrs:      conf.Redis.Addresses,
+			MasterName: conf.Redis.MasterName,
+			Username:   conf.Redis.Username,
+			Password:   conf.Redis.Password,
+			DB:         conf.Redis.DB,
+		}
+		if conf.Redis.TLS {
+			opts.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+		}
+		v.redis = redis.NewUniversalClient(opts)
+	}
+	v.redisPrefix = conf.Redis.KeyPrefix
+	if v.redisPrefix == "" {
+		v.redisPrefix = "afc:"
+	}
+
 	// Initialising session cookie
 	authKey, err := hex.DecodeString(conf.Security.AuthenticationKey)
 	if err != nil {
@@ -158,6 +206,10 @@ func New(conf *Config, host string, interval time.Duration) *Views {
 	v.flushInterval = interval
 	v.stopChan = make(chan struct{})
 
+	// Seed the local visitor count cache from the DB so this instance doesn't
+	// report 0 visitors until its first flush.
+	v.refreshVisitorCountCache(context.Background())
+
 	go v.startFlusher()
 
 	return v
@@ -193,41 +245,102 @@ func (v *Views) flushToDB() {
 	v.count = 0
 	v.countMutex.Unlock()
 
-	if countToFlush == 0 {
-		return
-	}
-
-	v.cache.Set(visitorCount, countToFlush, cache.DefaultExpiration)
-
 	ctx := context.Background()
-	currentSetting, err := v.setting.GetSetting(ctx, visitorCount)
-	if err != nil {
-		_, err = v.setting.AddSetting(ctx, setting.Setting{
-			ID:          visitorCount,
-			SettingText: strconv.Itoa(countToFlush),
-		})
-		if err != nil {
-			log.Printf("Error creating visitorCount: %v", err)
-		}
+
+	if countToFlush == 0 {
+		// Nothing local to add, but another instance may have flushed visits
+		// of its own since we last checked - keep our cached total in sync.
+		v.refreshVisitorCountCache(ctx)
 		return
 	}
 
-	currentValue, _ := strconv.Atoi(currentSetting.SettingText)
-	newValue := currentValue + countToFlush
-
-	_, err = v.setting.EditSetting(ctx, setting.Setting{
-		ID:          visitorCount,
-		SettingText: strconv.Itoa(newValue),
-	})
+	newSetting, err := v.setting.IncrementSetting(ctx, visitorCount, countToFlush)
 	if err != nil {
-		log.Printf("Error updating visitorCount: %v", err)
+		log.Printf("Error incrementing visitorCount: %v", err)
+		return
+	}
+
+	newValue, err := strconv.Atoi(newSetting.SettingText)
+	if err != nil {
+		log.Printf("Error parsing visitorCount: %v", err)
+		return
 	}
 
 	v.cache.Set(visitorCount, newValue, cache.DefaultExpiration)
 }
 
+// refreshVisitorCountCache re-reads the visitor count from the DB and caches
+// it locally, so this instance reflects visits recorded by other instances.
+func (v *Views) refreshVisitorCountCache(ctx context.Context) {
+	currentSetting, err := v.setting.GetSetting(ctx, visitorCount)
+	if err != nil {
+		// Not created yet - it will be on the first increment.
+		return
+	}
+
+	currentValue, err := strconv.Atoi(currentSetting.SettingText)
+	if err != nil {
+		log.Printf("Error parsing visitorCount: %v", err)
+		return
+	}
+
+	v.cache.Set(visitorCount, currentValue, cache.DefaultExpiration)
+}
+
 func (v *Views) Stop() {
 	close(v.stopChan)
+	if v.redis != nil {
+		if err := v.redis.Close(); err != nil {
+			log.Printf("failed to close redis client: %+v", err)
+		}
+	}
+}
+
+// resetTokenKey returns the fully-namespaced Redis/Valkey key for a reset
+// token, scoped under this instance's configured environment prefix (see
+// RedisConfig.KeyPrefix).
+func (v *Views) resetTokenKey(token string) string {
+	return v.redisPrefix + "reset-token:" + token
+}
+
+// SetResetToken stores a mapping of a one-time password reset token to a
+// user ID, expiring after ttl. When Redis is configured this is shared
+// across every app instance; otherwise it only lives in this instance's
+// memory, which requires sticky sessions/single-instance deployment for the
+// reset flow to work reliably.
+func (v *Views) SetResetToken(ctx context.Context, token string, userID int, ttl time.Duration) error {
+	if v.redis != nil {
+		return v.redis.Set(ctx, v.resetTokenKey(token), userID, ttl).Err()
+	}
+	v.cache.Set(token, userID, ttl)
+	return nil
+}
+
+// GetResetToken looks up the user ID a password reset token was issued for.
+func (v *Views) GetResetToken(ctx context.Context, token string) (int, bool) {
+	if v.redis != nil {
+		userID, err := v.redis.Get(ctx, v.resetTokenKey(token)).Int()
+		if err != nil {
+			return 0, false
+		}
+		return userID, true
+	}
+	val, found := v.cache.Get(token)
+	if !found {
+		return 0, false
+	}
+	return val.(int), true
+}
+
+// DeleteResetToken invalidates a password reset token after use.
+func (v *Views) DeleteResetToken(ctx context.Context, token string) {
+	if v.redis != nil {
+		if err := v.redis.Del(ctx, v.resetTokenKey(token)).Err(); err != nil {
+			log.Printf("failed to delete reset token from redis: %+v", err)
+		}
+		return
+	}
+	v.cache.Delete(token)
 }
 
 func (v *Views) GetVisitorCount() int {
