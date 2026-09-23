@@ -161,6 +161,7 @@ func main() {
 			Password:   os.Getenv("REDIS_PASSWORD"),
 			DB:         redisDB,
 			TLS:        redisTLS,
+			KeyPrefix:  os.Getenv("REDIS_KEY_PREFIX"),
 		},
 	}
 

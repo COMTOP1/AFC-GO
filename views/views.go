@@ -60,6 +60,12 @@ type (
 		Password   string
 		DB         int
 		TLS        bool
+		// KeyPrefix namespaces every key this app writes to Redis/Valkey,
+		// e.g. "afc:dev:" or "afc:prod:". Set it differently per
+		// environment so a Valkey ACL user can be scoped to only that
+		// environment's keys (~afc:dev:* / ~afc:prod:*) on a shared
+		// instance or cluster. Defaults to "afc:" if empty.
+		KeyPrefix string
 	}
 
 	// SMTPConfig stores the SMTP Mailer configuration
@@ -86,6 +92,7 @@ type (
 		affiliation *affiliation.Store
 		cache       *cache.Cache
 		redis       redis.UniversalClient
+		redisPrefix string
 		conf        *Config
 		cookie      *sessions.CookieStore
 		document    *document.Store
@@ -151,6 +158,10 @@ func New(conf *Config, host string, interval time.Duration) *Views {
 			opts.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
 		}
 		v.redis = redis.NewUniversalClient(opts)
+	}
+	v.redisPrefix = conf.Redis.KeyPrefix
+	if v.redisPrefix == "" {
+		v.redisPrefix = "afc:"
 	}
 
 	// Initialising session cookie
@@ -285,7 +296,12 @@ func (v *Views) Stop() {
 	}
 }
 
-const resetTokenPrefix = "afc:reset-token:"
+// resetTokenKey returns the fully-namespaced Redis/Valkey key for a reset
+// token, scoped under this instance's configured environment prefix (see
+// RedisConfig.KeyPrefix).
+func (v *Views) resetTokenKey(token string) string {
+	return v.redisPrefix + "reset-token:" + token
+}
 
 // SetResetToken stores a mapping of a one-time password reset token to a
 // user ID, expiring after ttl. When Redis is configured this is shared
@@ -294,7 +310,7 @@ const resetTokenPrefix = "afc:reset-token:"
 // reset flow to work reliably.
 func (v *Views) SetResetToken(ctx context.Context, token string, userID int, ttl time.Duration) error {
 	if v.redis != nil {
-		return v.redis.Set(ctx, resetTokenPrefix+token, userID, ttl).Err()
+		return v.redis.Set(ctx, v.resetTokenKey(token), userID, ttl).Err()
 	}
 	v.cache.Set(token, userID, ttl)
 	return nil
@@ -303,7 +319,7 @@ func (v *Views) SetResetToken(ctx context.Context, token string, userID int, ttl
 // GetResetToken looks up the user ID a password reset token was issued for.
 func (v *Views) GetResetToken(ctx context.Context, token string) (int, bool) {
 	if v.redis != nil {
-		userID, err := v.redis.Get(ctx, resetTokenPrefix+token).Int()
+		userID, err := v.redis.Get(ctx, v.resetTokenKey(token)).Int()
 		if err != nil {
 			return 0, false
 		}
@@ -319,7 +335,7 @@ func (v *Views) GetResetToken(ctx context.Context, token string) (int, bool) {
 // DeleteResetToken invalidates a password reset token after use.
 func (v *Views) DeleteResetToken(ctx context.Context, token string) {
 	if v.redis != nil {
-		if err := v.redis.Del(ctx, resetTokenPrefix+token).Err(); err != nil {
+		if err := v.redis.Del(ctx, v.resetTokenKey(token)).Err(); err != nil {
 			log.Printf("failed to delete reset token from redis: %+v", err)
 		}
 		return
