@@ -6,9 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,7 +18,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
+	"go.opentelemetry.io/otel"
 )
+
+var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/infrastructure/storage")
 
 type (
 	// Config holds the connection details for an S3-compatible object store.
@@ -48,9 +52,10 @@ type (
 //
 // The HTTP client forces HTTP/1.1: the Ceph RadosGW endpoint this app targets returns a
 // PROTOCOL_ERROR over HTTP/2.
-func NewStore(cfg Config) *Store {
+func NewStore(ctx context.Context, cfg Config) *Store {
 	if cfg.Endpoint == "" || cfg.Bucket == "" || cfg.AccessKey == "" || cfg.SecretKey == "" {
-		log.Fatalf("storage: missing required S3 config (endpoint, bucket, access key, and secret key must all be set)")
+		slog.Error("storage: missing required S3 config (endpoint, bucket, access key, and secret key must all be set)")
+		os.Exit(1)
 	}
 
 	httpClient := &http.Client{
@@ -60,19 +65,22 @@ func NewStore(cfg Config) *Store {
 		},
 	}
 
-	awsCfg, err := config.LoadDefaultConfig(context.Background(),
+	awsCfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(cfg.Region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(cfg.AccessKey, cfg.SecretKey, "")),
 		config.WithHTTPClient(httpClient),
 	)
 	if err != nil {
-		log.Fatalf("failed to load aws config for storage: %+v", err)
+		slog.Error(fmt.Sprintf("failed to load aws config for storage: %+v", err))
+		os.Exit(1)
 	}
 
 	client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
 		o.BaseEndpoint = aws.String(cfg.Endpoint)
 		o.UsePathStyle = true
 	})
+
+	slog.Info("connected to storage: " + cfg.Endpoint)
 
 	return &Store{
 		client:   client,
@@ -83,6 +91,9 @@ func NewStore(cfg Config) *Store {
 
 // Put uploads body to key, setting contentType and size (Content-Length) on the object.
 func (s *Store) Put(ctx context.Context, key string, body io.Reader, size int64, contentType string) error {
+	ctx, span := tracer.Start(ctx, "storage.Put")
+	defer span.End()
+
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:        aws.String(s.bucket),
 		Key:           aws.String(key),
@@ -91,6 +102,7 @@ func (s *Store) Put(ctx context.Context, key string, body io.Reader, size int64,
 		ContentType:   aws.String(contentType),
 	})
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to put object %q: %w", key, err)
 	}
 	return nil
@@ -98,11 +110,15 @@ func (s *Store) Put(ctx context.Context, key string, body io.Reader, size int64,
 
 // Delete removes key from the bucket.
 func (s *Store) Delete(ctx context.Context, key string) error {
+	ctx, span := tracer.Start(ctx, "storage.Delete")
+	defer span.End()
+
 	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to delete object %q: %w", key, err)
 	}
 	return nil
@@ -110,6 +126,9 @@ func (s *Store) Delete(ctx context.Context, key string) error {
 
 // Exists reports whether key is present in the bucket.
 func (s *Store) Exists(ctx context.Context, key string) (bool, error) {
+	ctx, span := tracer.Start(ctx, "storage.Exists")
+	defer span.End()
+
 	_, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
@@ -128,6 +147,7 @@ func (s *Store) Exists(ctx context.Context, key string) (bool, error) {
 		return false, nil
 	}
 
+	span.RecordError(err)
 	return false, fmt.Errorf("failed to head object %q: %w", key, err)
 }
 
