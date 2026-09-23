@@ -28,7 +28,7 @@ RUN echo -n "-X 'main.Version=$AFC_VERSION_ARG" > ./ldflags && \
     echo -n "'" >> ./ldflags
 
 # Build the executable
-RUN GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -o /bin/afc
+RUN GOOS=linux GOARCH=amd64 GOEXPERIMENT=runtimesecret go build -ldflags="$(cat ./ldflags)" -o /bin/afc
 
 # Run the executable
 FROM alpine:3.24 AS run
