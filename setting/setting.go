@@ -41,6 +41,12 @@ func (s *Store) AddSetting(ctx context.Context, settingParam Setting) (Setting, 
 	return s.addSetting(ctx, settingParam)
 }
 
+// IncrementSetting atomically adds delta to a numeric setting, creating it
+// with that value if it doesn't yet exist, and returns the setting's new value.
+func (s *Store) IncrementSetting(ctx context.Context, settingID string, delta int) (Setting, error) {
+	return s.incrementSetting(ctx, settingID, delta)
+}
+
 func (s *Store) EditSetting(ctx context.Context, settingParam Setting) (Setting, error) {
 	return s.editSetting(ctx, settingParam)
 }

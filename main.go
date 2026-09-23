@@ -6,11 +6,13 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 	_ "time/tzdata"
 
 	"github.com/joho/godotenv"
 
+	"github.com/COMTOP1/AFC-GO/infrastructure/storage"
 	"github.com/COMTOP1/AFC-GO/infrastructure/telemetry"
 	"github.com/COMTOP1/AFC-GO/views"
 )
@@ -148,13 +150,39 @@ func main() {
 
 	domainName := os.Getenv("DOMAIN_NAME")
 
+	s3Region := os.Getenv("S3_REGION")
+	if s3Region == "" {
+		s3Region = "us-east-1"
+	}
+
+	// Redis/Valkey is optional - when REDIS_ADDRESSES isn't set, an
+	// in-process cache is used instead (fine for a single instance, but
+	// state such as password reset tokens won't be shared if you run more
+	// than one instance).
+	var redisAddresses []string
+	if raw := os.Getenv("REDIS_ADDRESSES"); raw != "" {
+		for _, address := range strings.Split(raw, ",") {
+			if trimmed := strings.TrimSpace(address); trimmed != "" {
+				redisAddresses = append(redisAddresses, trimmed)
+			}
+		}
+	}
+	redisDB, _ := strconv.Atoi(os.Getenv("REDIS_DB"))
+	redisTLS, _ := strconv.ParseBool(os.Getenv("REDIS_TLS"))
+
 	// Generate config
 	conf := &views.Config{
 		Address:           address,
 		DatabaseURL:       dbConnectionString,
 		DomainName:        domainName,
 		SessionCookieName: sessionCookieName,
-		FileDir:           fileDir,
+		S3: storage.Config{
+			Endpoint:  os.Getenv("S3_ENDPOINT"),
+			Region:    s3Region,
+			Bucket:    os.Getenv("S3_BUCKET"),
+			AccessKey: os.Getenv("S3_ACCESS_KEY"),
+			SecretKey: os.Getenv("S3_SECRET_KEY"),
+		},
 		Mail: views.SMTPConfig{
 			Host:     os.Getenv("MAIL_HOST"),
 			Username: os.Getenv("MAIL_USER"),
@@ -169,6 +197,15 @@ func main() {
 			ScryptBlockSize:         sBlockSize,
 			ScryptParallelismFactor: sParallelismFactor,
 			KeyLength:               keyLen,
+		},
+		Redis: views.RedisConfig{
+			Addresses:  redisAddresses,
+			MasterName: os.Getenv("REDIS_MASTER_NAME"),
+			Username:   os.Getenv("REDIS_USERNAME"),
+			Password:   os.Getenv("REDIS_PASSWORD"),
+			DB:         redisDB,
+			TLS:        redisTLS,
+			KeyPrefix:  os.Getenv("REDIS_KEY_PREFIX"),
 		},
 	}
 

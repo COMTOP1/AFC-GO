@@ -31,15 +31,17 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 	year, _, _ := time.Now().Date()
 	c.Response().WriteHeader(status)
 	data := struct {
-		Code  int
-		Error any
-		Year  int
-		User  user.User
+		Code         int
+		Error        any
+		Year         int
+		User         user.User
+		VisitorCount int
 	}{
-		Code:  status,
-		Error: message,
-		Year:  year,
-		User:  c1.User,
+		Code:         status,
+		Error:        message,
+		Year:         year,
+		User:         c1.User,
+		VisitorCount: v.GetVisitorCount(),
 	}
 	err1 := v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.ErrorTemplate, templates.RegularType)
 	if err1 != nil {
@@ -51,7 +53,20 @@ func (v *Views) Error404(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.Error404")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, nil, templates.NotFound404Template, templates.RegularType)
+	c1 := v.getSessionData(c)
+	year, _, _ := time.Now().Date()
+
+	data := struct {
+		Year         int
+		User         user.User
+		VisitorCount int
+	}{
+		Year:         year,
+		User:         c1.User,
+		VisitorCount: v.GetVisitorCount(),
+	}
+
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.NotFound404Template, templates.RegularType)
 }
 
 func (v *Views) invalidMethodUsed(c echo.Context) *echo.HTTPError {

@@ -34,7 +34,7 @@ func (s *Store) getPlayersTeam(ctx context.Context, teamParam team.Team) ([]Play
 	ctx, span := tracer.Start(ctx, "player.getPlayersTeam")
 	defer span.End()
 	var playersDB []Player
-	builder := utils.PSQL().Select("id", "name", "date_of_birth", "position", "captain").
+	builder := utils.PSQL().Select("id", "name", "file_name", "date_of_birth", "position", "captain").
 		From("players").
 		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("name")

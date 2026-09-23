@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -49,7 +47,7 @@ func (v *Views) UploadImageFunc(c echo.Context) error {
 		}{}
 
 		if c1.User.FileName.Valid {
-			err := os.Remove(filepath.Join(v.conf.FileDir, c1.User.FileName.String))
+			err := v.storage.Delete(c.Request().Context(), c1.User.FileName.String)
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to delete image for uploadImage, user id: %d, error: %+v", c1.User.ID, err))
 			}
@@ -62,7 +60,7 @@ func (v *Views) UploadImageFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 		var fileName string
-		fileName, err = v.fileUpload(file)
+		fileName, err = v.fileUpload(c.Request().Context(), file, "user")
 		if err != nil {
 			slog.Info(fmt.Sprintf("failed to upload file for uploadImage, user id: %d, error: %+v", c1.User.ID, err))
 			data.Error = fmt.Sprintf("failed to upload file for uploadImage: %+v", err)
@@ -102,7 +100,7 @@ func (v *Views) RemoveImageFunc(c echo.Context) error {
 		}{}
 
 		if c1.User.FileName.Valid {
-			err := os.Remove(filepath.Join(v.conf.FileDir, c1.User.FileName.String))
+			err := v.storage.Delete(c.Request().Context(), c1.User.FileName.String)
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to delete image for removeImage, user id: %d, error: %+v", c1.User.ID, err))
 			}

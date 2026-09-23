@@ -5,8 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -112,7 +110,7 @@ func (v *Views) SponsorAddFunc(c echo.Context) error {
 			data.Error = fmt.Sprintf("failed to get file for sponsor add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
-		fileName, err := v.fileUpload(file)
+		fileName, err := v.fileUpload(c.Request().Context(), file, "sponsor")
 		if err != nil {
 			slog.Info(fmt.Sprintf("failed to upload file for sponsor add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to upload file for sponsor add: %+v", err)
@@ -156,7 +154,7 @@ func (v *Views) SponsorDeleteFunc(c echo.Context) error {
 		}
 
 		if sponsorDB.FileName.Valid {
-			err = os.Remove(filepath.Join(v.conf.FileDir, sponsorDB.FileName.String))
+			err = v.storage.Delete(c.Request().Context(), sponsorDB.FileName.String)
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to delete sponsor image for sponsor delete, sponsor id: %d, error: %+v", id, err))
 			}

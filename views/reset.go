@@ -26,15 +26,15 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 
 	url := c.Param("url")
 
-	id, found := v.cache.Get(url)
+	id, found := v.GetResetToken(c.Request().Context(), url)
 	if !found {
 		return v.error(http.StatusBadRequest, "failed to get url for reset",
 			fmt.Errorf("failed to get url for reset, url: %s", url))
 	}
 
-	originalUser, err := v.user.GetUser(c.Request().Context(), user.User{ID: id.(int)})
+	originalUser, err := v.user.GetUser(c.Request().Context(), user.User{ID: id})
 	if err != nil {
-		v.cache.Delete(url)
+		v.DeleteResetToken(c.Request().Context(), url)
 		return v.error(http.StatusInternalServerError, "failed to get user for reset",
 			fmt.Errorf("url is invalid, failed to get user, error: %w", err))
 	}
@@ -44,15 +44,17 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 		year, _, _ := time.Now().Date()
 
 		data := struct {
-			Context *Context
-			User    user.User
-			URL     string
-			Year    int
+			Context      *Context
+			User         user.User
+			URL          string
+			Year         int
+			VisitorCount int
 		}{
-			Context: c1,
-			User:    user.User{},
-			URL:     url,
-			Year:    year,
+			Context:      c1,
+			User:         user.User{},
+			URL:          url,
+			Year:         year,
+			VisitorCount: v.GetVisitorCount(),
 		}
 
 		return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.ResetTemplate, templates.NoNavType)
@@ -82,7 +84,7 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, data)
 		}
 
-		v.cache.Delete(url)
+		v.DeleteResetToken(c.Request().Context(), url)
 		slog.Info("updated user password: " + originalUser.Email)
 
 		err = v.clearMessagesInSession(c)
@@ -128,7 +130,10 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 		}
 
 		url := uuid.NewString()
-		v.cache.Set(url, userDB.ID, 7*24*time.Hour)
+		err = v.SetResetToken(c.Request().Context(), url, userDB.ID, 7*24*time.Hour)
+		if err != nil {
+			return fmt.Errorf("failed to set reset token for reset user password, user id: %d, error: %w", userID, err)
+		}
 
 		var message struct {
 			Message string `json:"message"`

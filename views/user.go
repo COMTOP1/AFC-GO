@@ -6,8 +6,6 @@ import (
 	"html/template"
 	"log/slog"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -235,7 +233,7 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 			hasUpload = false
 		}
 		if hasUpload {
-			fileName, err = v.fileUpload(file)
+			fileName, err = v.fileUpload(c.Request().Context(), file, "user")
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to upload file for user add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to upload file for user add: %+v", err)
@@ -417,14 +415,14 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		}
 		if hasUpload {
 			var tempFileName string
-			tempFileName, err = v.fileUpload(file)
+			tempFileName, err = v.fileUpload(c.Request().Context(), file, "user")
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to upload file for user edit, user id: %d, error: %+v", userID, err))
 				data.Error = fmt.Sprintf("failed to upload file for user edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if userDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
+				err = v.storage.Delete(c.Request().Context(), userDB.FileName.String)
 				if err != nil {
 					slog.Info(fmt.Sprintf("failed to delete old image for user edit, user id: %d, error: %+v", userID, err))
 				}
@@ -435,7 +433,7 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		tempRemoveUserImage := c.FormValue("removeUserImage")
 		if tempRemoveUserImage == "Y" {
 			if userDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
+				err = v.storage.Delete(c.Request().Context(), userDB.FileName.String)
 				if err != nil {
 					slog.Info(fmt.Sprintf("failed to delete image for user edit, user id: %d, error: %+v", userID, err))
 				}
@@ -484,7 +482,7 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 		}
 
 		if userDB.FileName.Valid {
-			err = os.Remove(filepath.Join(v.conf.FileDir, userDB.FileName.String))
+			err = v.storage.Delete(c.Request().Context(), userDB.FileName.String)
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to delete user image for user delete, user id: %d, error: %+v", id, err))
 			}

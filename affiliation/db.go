@@ -33,7 +33,7 @@ func (s *Store) getAffiliationsMinimal(ctx context.Context) ([]Affiliation, erro
 	ctx, span := tracer.Start(ctx, "affiliation.getAffiliationsMinimal")
 	defer span.End()
 	var affiliationsDB []Affiliation
-	builder := sq.Select("id", "name", "website").
+	builder := sq.Select("id", "name", "website", "file_name").
 		From("affiliations").
 		OrderBy("name")
 	sql, args, err := builder.ToSql()

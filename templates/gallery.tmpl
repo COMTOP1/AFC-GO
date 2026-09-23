@@ -170,7 +170,7 @@
                 {{range .Images}}
                     {{$i1 = inc $i1}}
                     <div class="column" style="display: inline-block; float: none;">
-                        <img data-src="download?s=g&id={{.ID}}" style="width:100%" src="/public/AFC.png"
+                        <img data-src="{{fileURL .FileName}}" style="width:100%" src="/public/AFC.png"
                              onclick="openModal();currentSlide({{$i1}})" class="hover-shadow cursor lazy"
                              alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
                         {{if $priv}}
@@ -191,7 +191,7 @@
                     <div class="mySlides">
                         <div class="numbertext">{{$i2}} / {{$lenOfImages}}
                         </div>
-                        <img data-src="download?s=g&id={{.ID}}" style="width:100%" class="lazy" src="/public/AFC.png"
+                        <img data-src="{{fileURL .FileName}}" style="width:100%" class="lazy" src="/public/AFC.png"
                              alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
                     </div>
                 {{end}}
@@ -207,7 +207,7 @@
                 {{range .Images}}
                     {{$i3 = inc $i3}}
                     <div class="column">
-                        <img class="demo cursor lazy" data-src="download?s=g&id={{.ID}}" style="width:100%"
+                        <img class="demo cursor lazy" data-src="{{fileURL .FileName}}" style="width:100%"
                              src="/public/AFC.png"
                              onclick="currentSlide({{$i3}})" alt="{{if .Caption.Valid}}{{.Caption.String}}{{end}}">
                     </div>

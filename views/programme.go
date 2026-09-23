@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -164,7 +162,7 @@ func (v *Views) ProgrammeAddFunc(c echo.Context) error {
 			data.Error = fmt.Sprintf("failed to get file for programme add: %+v", err)
 			return c.JSON(http.StatusOK, data)
 		}
-		fileName, err := v.fileUpload(file)
+		fileName, err := v.fileUpload(c.Request().Context(), file, "programme")
 		if err != nil {
 			slog.Info(fmt.Sprintf("failed to upload file for programme add, error: %+v", err))
 			data.Error = fmt.Sprintf("failed to upload file for programme add: %+v", err)
@@ -207,7 +205,7 @@ func (v *Views) ProgrammeDeleteFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get programme for programme delete, programme id: %d, error: %w", id, err)
 		}
 
-		err = os.Remove(filepath.Join(v.conf.FileDir, programmeDB.FileName))
+		err = v.storage.Delete(c.Request().Context(), programmeDB.FileName)
 		if err != nil {
 			slog.Info(fmt.Sprintf("failed to delete programme image for programme delete, programme id: %d, error: %+v", id, err))
 		}

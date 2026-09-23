@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -192,8 +189,7 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 }
 
 func (v *Views) _downloadFunc(c echo.Context, fileName, page string, id int) error {
-	path := filepath.Join(v.conf.FileDir, fileName)
-	_, err := os.Stat(path)
+	exists, err := v.storage.Exists(c.Request().Context(), fileName)
 	if err != nil {
 		if strings.Contains(err.Error(), "no such file") {
 			slog.Info(fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
@@ -202,5 +198,11 @@ func (v *Views) _downloadFunc(c echo.Context, fileName, page string, id int) err
 		}
 		return fmt.Errorf("failed to get file for %s download: %w, id: %d", page, err, id)
 	}
-	return c.Redirect(http.StatusFound, "/file/"+url.PathEscape(fileName))
+	if !exists {
+		slog.Info(fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
+		return c.String(http.StatusNotFound,
+			fmt.Sprintf("failed to get file for %s download: no such file, id: %d", page, id))
+	}
+	c.Response().Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	return c.Redirect(http.StatusFound, v.storage.PublicURL(fileName))
 }

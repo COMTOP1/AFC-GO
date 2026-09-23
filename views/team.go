@@ -5,8 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -112,7 +110,7 @@ func (v *Views) TeamFunc(c echo.Context) error {
 		Team:         teamDB,
 		Managers:     DBManagersToTemplateFormat(managersDB),
 		Sponsors:     DBSponsorsToTemplateFormat(sponsorsDB),
-		Players:      DBPlayersTeamToTemplateFormat(playersDB),
+		Players:      DBPlayersTeamToTemplateFormat(playersDB, teamDB.IsYouth),
 		User:         c1.User,
 		Context:      c1,
 	}
@@ -212,7 +210,7 @@ func (v *Views) TeamAddFunc(c echo.Context) error {
 			hasUpload = false
 		}
 		if hasUpload {
-			fileName, err = v.fileUpload(file)
+			fileName, err = v.fileUpload(c.Request().Context(), file, "team")
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to upload file for team add: %+v", err))
 				data.Error = fmt.Sprintf("failed to upload file for team add: %+v", err)
@@ -365,14 +363,14 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 		}
 		if hasUpload {
 			var fileName string
-			fileName, err = v.fileUpload(file)
+			fileName, err = v.fileUpload(c.Request().Context(), file, "team")
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to upload file for team edit, team id: %d, error: %+v", teamID, err))
 				data.Error = fmt.Sprintf("failed to upload file for team edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if teamDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, teamDB.FileName.String))
+				err = v.storage.Delete(c.Request().Context(), teamDB.FileName.String)
 				if err != nil {
 					slog.Info(fmt.Sprintf("failed to delete old image for team edit, team id: %d, error: %+v", teamID, err))
 				}
@@ -383,7 +381,7 @@ func (v *Views) TeamEditFunc(c echo.Context) error {
 		tempRemoveTeamImage := c.FormValue("removeTeamImage")
 		if tempRemoveTeamImage == "Y" {
 			if teamDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, teamDB.FileName.String))
+				err = v.storage.Delete(c.Request().Context(), teamDB.FileName.String)
 				if err != nil {
 					slog.Info(fmt.Sprintf("failed to delete image for team edit, team id: %d, error: %+v", teamID, err))
 				}
@@ -474,7 +472,7 @@ func (v *Views) TeamDeleteFunc(c echo.Context) error {
 		}
 
 		if teamDB.FileName.Valid {
-			err = os.Remove(filepath.Join(v.conf.FileDir, teamDB.FileName.String))
+			err = v.storage.Delete(c.Request().Context(), teamDB.FileName.String)
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to delete team file for team delete, team id: %d, error: %+v", id, err))
 			}

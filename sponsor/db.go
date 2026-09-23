@@ -34,7 +34,7 @@ func (s *Store) getSponsorsMinimal(ctx context.Context) ([]Sponsor, error) {
 	ctx, span := tracer.Start(ctx, "sponsor.getSponsorsMinimal")
 	defer span.End()
 	var sponsorsDB []Sponsor
-	builder := sq.Select("id", "website").
+	builder := sq.Select("id", "name", "website", "file_name").
 		From("sponsors").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
@@ -54,7 +54,7 @@ func (s *Store) getSponsorsTeam(ctx context.Context, teamParam team.Team) ([]Spo
 	ctx, span := tracer.Start(ctx, "sponsor.getSponsorsTeam")
 	defer span.End()
 	var sponsorsDB []Sponsor
-	builder := utils.PSQL().Select("id", "name", "website", "purpose").
+	builder := utils.PSQL().Select("id", "name", "website", "purpose", "file_name").
 		From("sponsors").
 		Where(sq.Eq{"team_id": teamParam.ID}).
 		OrderBy("name")

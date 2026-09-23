@@ -34,7 +34,7 @@ func (s *Store) getNewsLatest(ctx context.Context) (News, error) {
 	ctx, span := tracer.Start(ctx, "news.getNewsLatest")
 	defer span.End()
 	var newsDB News
-	builder := sq.Select("id", "title", "date").
+	builder := sq.Select("id", "title", "file_name", "date").
 		From("news").
 		OrderBy("date DESC").
 		Limit(1)

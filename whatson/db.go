@@ -77,7 +77,7 @@ func (s *Store) getWhatsOnLatest(ctx context.Context) (WhatsOn, error) {
 	ctx, span := tracer.Start(ctx, "whatson.getWhatsOnLatest")
 	defer span.End()
 	var whatsOnDB WhatsOn
-	builder := utils.PSQL().Select("id", "title", "date", "date_of_event").
+	builder := utils.PSQL().Select("id", "title", "file_name", "date", "date_of_event").
 		From("whatson").
 		Where(sq.GtOrEq{"date_of_event": time.Now().Format("2006-01-02")}).
 		OrderBy("date_of_event ASC").

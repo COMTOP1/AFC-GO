@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -212,7 +210,7 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 			hasUpload = false
 		}
 		if hasUpload {
-			fileName, err = v.fileUpload(file)
+			fileName, err = v.fileUpload(c.Request().Context(), file, "whatson")
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to upload file for whats on add, error: %+v", err))
 				data.Error = fmt.Sprintf("failed to upload file for whats on add: %+v", err)
@@ -308,14 +306,14 @@ func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 		}
 		if hasUpload {
 			var tempFileName string
-			tempFileName, err = v.fileUpload(file)
+			tempFileName, err = v.fileUpload(c.Request().Context(), file, "whatson")
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to upload file for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
 				data.Error = fmt.Sprintf("failed to upload file for whats on edit: %+v", err)
 				return c.JSON(http.StatusOK, data)
 			}
 			if whatsOnDB.FileName.Valid {
-				err = os.Remove(filepath.Join(v.conf.FileDir, whatsOnDB.FileName.String))
+				err = v.storage.Delete(c.Request().Context(), whatsOnDB.FileName.String)
 				if err != nil {
 					slog.Info(fmt.Sprintf("failed to delete old image for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
 				}
@@ -370,7 +368,7 @@ func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
 		}
 
 		if whatsOnDB.FileName.Valid {
-			err = os.Remove(filepath.Join(v.conf.FileDir, whatsOnDB.FileName.String))
+			err = v.storage.Delete(c.Request().Context(), whatsOnDB.FileName.String)
 			if err != nil {
 				slog.Info(fmt.Sprintf("failed to delete whatsOn image for whats on delete, whats on id: %d, error: %+v", id, err))
 			}

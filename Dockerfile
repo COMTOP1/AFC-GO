@@ -29,10 +29,15 @@ RUN echo -n "-X 'main.Version=$AFC_VERSION_ARG" > ./ldflags && \
 
 # Build the executable
 RUN GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -o /bin/afc
+RUN GOOS=linux GOARCH=amd64 go build -o /bin/migrates3 ./cmd/migrates3
 
 # Run the executable
-FROM scratch
+FROM alpine:3.24 AS run
+
+RUN apk add --no-cache ca-certificates
+
 LABEL site="afc"
 # Copy binary
 COPY --from=build /bin/afc /bin/afc
+COPY --from=build /bin/migrates3 /bin/migrates3
 ENTRYPOINT ["/bin/afc"]

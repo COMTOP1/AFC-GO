@@ -2,17 +2,16 @@ package templates
 
 import (
 	"context"
-	"crypto/rand"
 	"embed"
 	"fmt"
 	"html/template"
 	"io"
 	"log/slog"
-	"math/big"
 
 	"github.com/microcosm-cc/bluemonday"
 	"go.opentelemetry.io/otel"
 
+	"github.com/COMTOP1/AFC-GO/infrastructure/storage"
 	"github.com/COMTOP1/AFC-GO/team"
 )
 
@@ -24,7 +23,8 @@ var tmpls embed.FS
 var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/templates")
 
 type Templater struct {
-	Team *team.Store
+	Team    *team.Store
+	Storage *storage.Store
 }
 
 type Template string
@@ -62,9 +62,10 @@ const (
 )
 
 // NewTemplate returns the template format to be used
-func NewTemplate(team *team.Store) *Templater {
+func NewTemplate(team *team.Store, storage *storage.Store) *Templater {
 	return &Templater{
-		Team: team,
+		Team:    team,
+		Storage: storage,
 	}
 }
 
@@ -136,17 +137,16 @@ func (t *Templater) getFuncMaps(ctx context.Context) template.FuncMap {
 			}
 			return t1.Name
 		},
-		"randomImgInt": func() int64 {
-			nBig, err := rand.Int(rand.Reader, big.NewInt(999999))
-			if err != nil {
-				panic(err)
-			}
-			return nBig.Int64()
-		},
 		"htmlTemplate": func(content string) template.HTML {
 			safe := p.Sanitize(content)
 			//nolint:gosec
 			return template.HTML(safe)
+		},
+		"fileURL": func(fileName string) string {
+			if fileName == "" {
+				return ""
+			}
+			return t.Storage.PublicURL(fileName)
 		},
 	}
 }

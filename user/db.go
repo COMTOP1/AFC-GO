@@ -66,7 +66,7 @@ func (s *Store) getUsersContact(ctx context.Context) ([]User, error) {
 		panic(fmt.Errorf("failed to build case sql for get users contact: %w", err))
 	}
 
-	builder := sq.Select("id", "name", "email", "role").
+	builder := sq.Select("id", "name", "email", "role", "file_name").
 		From("users").
 		Where("role IN ('PROGRAMME_EDITOR', 'LEAGUE_SECRETARY', 'TREASURER', 'SAFEGUARDING_OFFICER', 'CLUB_SECRETARY', 'CHAIRPERSON')").
 		OrderBy(caseSQL)
