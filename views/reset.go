@@ -41,15 +41,17 @@ func (v *Views) ResetURLFunc(c echo.Context) error {
 		year, _, _ := time.Now().Date()
 
 		data := struct {
-			Context *Context
-			User    user.User
-			URL     string
-			Year    int
+			Context      *Context
+			User         user.User
+			URL          string
+			Year         int
+			VisitorCount int
 		}{
-			Context: c1,
-			User:    user.User{},
-			URL:     url,
-			Year:    year,
+			Context:      c1,
+			User:         user.User{},
+			URL:          url,
+			Year:         year,
+			VisitorCount: v.GetVisitorCount(),
 		}
 
 		return v.template.RenderTemplate(c.Response(), data, templates.ResetTemplate, templates.NoNavType)
