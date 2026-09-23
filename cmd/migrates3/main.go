@@ -7,6 +7,7 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/joho/godotenv"
 
@@ -41,7 +42,7 @@ func main() {
 
 	entries, err := os.ReadDir(sourceDir)
 	if err != nil {
-		log.Fatalf("failed to read source directory %q: %+v", sourceDir, err)
+		log.Fatalf("failed to read source directory %s: %+v", sanitizeLogValue(sourceDir), err) //nolint:gosec // sanitizeLogValue strips the newlines a log-injection attack relies on
 	}
 
 	ctx := context.Background()
@@ -54,26 +55,27 @@ func main() {
 		}
 
 		key := entry.Name()
+		safeKey := sanitizeLogValue(key)
 
 		exists, err := store.Exists(ctx, key)
 		if err != nil {
-			log.Printf("failed to check existence of %q: %+v", key, err)
+			log.Printf("failed to check existence of %q: %+v", safeKey, err) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
 			failed++
 			continue
 		}
 		if exists {
-			log.Printf("skipping %q: already exists in bucket", key)
+			log.Printf("skipping %q: already exists in bucket", safeKey) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
 			skipped++
 			continue
 		}
 
 		if err = uploadFile(ctx, store, sourceDir, key); err != nil {
-			log.Printf("failed to upload %q: %+v", key, err)
+			log.Printf("failed to upload %q: %+v", safeKey, err) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
 			failed++
 			continue
 		}
 
-		log.Printf("uploaded %q", key)
+		log.Printf("uploaded %q", safeKey) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
 		uploaded++
 	}
 
@@ -86,7 +88,10 @@ func main() {
 }
 
 func uploadFile(ctx context.Context, store *storage.Store, sourceDir, key string) error {
-	path := filepath.Join(sourceDir, key)
+	path, err := safeJoin(sourceDir, key)
+	if err != nil {
+		return err
+	}
 
 	info, err := os.Stat(path)
 	if err != nil {
@@ -109,4 +114,25 @@ func uploadFile(ctx context.Context, store *storage.Store, sourceDir, key string
 	}
 
 	return nil
+}
+
+// safeJoin joins dir and name, rejecting any name that could escape dir via path traversal.
+// Directory entries from os.ReadDir are always bare file names, but this guards against a
+// crafted or unexpected entry regardless.
+func safeJoin(dir, name string) (string, error) {
+	if name == "" || name == "." || name == ".." || strings.ContainsAny(name, `/\`) {
+		return "", fmt.Errorf("invalid file name %q", sanitizeLogValue(name))
+	}
+	return filepath.Join(dir, name), nil
+}
+
+// sanitizeLogValue strips characters that would let a filesystem or environment value forge
+// extra log lines (log injection) when written to the log.
+func sanitizeLogValue(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r == '\n' || r == '\r' {
+			return -1
+		}
+		return r
+	}, s)
 }
