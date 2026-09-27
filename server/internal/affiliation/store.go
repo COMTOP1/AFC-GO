@@ -74,18 +74,14 @@ func (s *Store) addAffiliation(ctx context.Context, affiliationParam Affiliation
 	defer span.End()
 	builder := utils.PSQL().Insert("affiliations").
 		Columns("name", "website", "file_name").
-		Values(affiliationParam.Name, affiliationParam.Website, affiliationParam.FileName)
+		Values(affiliationParam.Name, affiliationParam.Website, affiliationParam.FileName).
+		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for addAffiliation: %w", err))
 	}
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		span.RecordError(err)
-		return Affiliation{}, fmt.Errorf("failed to add affiliation: %w", err)
-	}
-	_, err = res.RowsAffected()
+	err = s.db.GetContext(ctx, &affiliationParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
 		return Affiliation{}, fmt.Errorf("failed to add affiliation: %w", err)

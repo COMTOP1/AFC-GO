@@ -43,25 +43,26 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
-		affiliation *affiliation.Store
-		conf        *Config
-		cookie      *sessions.CookieStore
-		document    *document.Store
-		image       *image.Store
-		mailer      *mail.MailerInit
-		news        *news.Store
-		newsSvc     *news.Service
-		player      *player.Store
-		programme   *programme.Store
-		setting     *setting.Store
-		sponsor     *sponsor.Store
-		sponsorSvc  *sponsor.Service
-		storage     upload.Storage
-		team        *team.Store
-		template    *templates.Templater
-		user        *user.Store
-		whatsOn     *whatson.Store
-		whatsOnSvc  *whatson.Service
+		affiliation    *affiliation.Store
+		affiliationSvc *affiliation.Service
+		conf           *Config
+		cookie         *sessions.CookieStore
+		document       *document.Store
+		image          *image.Store
+		mailer         *mail.MailerInit
+		news           *news.Store
+		newsSvc        *news.Service
+		player         *player.Store
+		programme      *programme.Store
+		setting        *setting.Store
+		sponsor        *sponsor.Store
+		sponsorSvc     *sponsor.Service
+		storage        upload.Storage
+		team           *team.Store
+		template       *templates.Templater
+		user           *user.Store
+		whatsOn        *whatson.Store
+		whatsOnSvc     *whatson.Service
 
 		tokens   *auth.Tokens
 		visitors *visitors.Counter
@@ -82,20 +83,21 @@ type (
 		Visitors *visitors.Counter
 		Tokens   *auth.Tokens
 
-		Affiliation    *affiliation.Store
-		Document       *document.Store
-		Image          *image.Store
-		News           *news.Store
-		NewsService    *news.Service
-		Player         *player.Store
-		Programme      *programme.Store
-		Setting        *setting.Store
-		Sponsor        *sponsor.Store
-		SponsorService *sponsor.Service
-		Team           *team.Store
-		User           *user.Store
-		WhatsOn        *whatson.Store
-		WhatsOnService *whatson.Service
+		Affiliation        *affiliation.Store
+		AffiliationService *affiliation.Service
+		Document           *document.Store
+		Image              *image.Store
+		News               *news.Store
+		NewsService        *news.Service
+		Player             *player.Store
+		Programme          *programme.Store
+		Setting            *setting.Store
+		Sponsor            *sponsor.Store
+		SponsorService     *sponsor.Service
+		Team               *team.Store
+		User               *user.Store
+		WhatsOn            *whatson.Store
+		WhatsOnService     *whatson.Service
 	}
 )
 
@@ -105,27 +107,28 @@ func New(d Deps) *Views {
 	// registered by the auth package.
 	gob.Register(InternalContext{})
 	return &Views{
-		affiliation: d.Affiliation,
-		conf:        d.Conf,
-		cookie:      d.Sessions,
-		document:    d.Document,
-		image:       d.Image,
-		mailer:      d.Mailer,
-		news:        d.News,
-		newsSvc:     d.NewsService,
-		player:      d.Player,
-		programme:   d.Programme,
-		setting:     d.Setting,
-		sponsor:     d.Sponsor,
-		sponsorSvc:  d.SponsorService,
-		storage:     d.Storage,
-		team:        d.Team,
-		template:    templates.NewTemplate(d.Team, d.Storage),
-		tokens:      d.Tokens,
-		user:        d.User,
-		visitors:    d.Visitors,
-		whatsOn:     d.WhatsOn,
-		whatsOnSvc:  d.WhatsOnService,
+		affiliation:    d.Affiliation,
+		affiliationSvc: d.AffiliationService,
+		conf:           d.Conf,
+		cookie:         d.Sessions,
+		document:       d.Document,
+		image:          d.Image,
+		mailer:         d.Mailer,
+		news:           d.News,
+		newsSvc:        d.NewsService,
+		player:         d.Player,
+		programme:      d.Programme,
+		setting:        d.Setting,
+		sponsor:        d.Sponsor,
+		sponsorSvc:     d.SponsorService,
+		storage:        d.Storage,
+		team:           d.Team,
+		template:       templates.NewTemplate(d.Team, d.Storage),
+		tokens:         d.Tokens,
+		user:           d.User,
+		visitors:       d.Visitors,
+		whatsOn:        d.WhatsOn,
+		whatsOnSvc:     d.WhatsOnService,
 	}
 }
 

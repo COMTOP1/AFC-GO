@@ -103,6 +103,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	newsSvc := news.NewService(s.News, uploads)
 	whatsOnSvc := whatson.NewService(s.WhatsOn, uploads)
 	sponsorSvc := sponsor.NewService(s.Sponsor, s.Team, uploads)
+	affiliationSvc := affiliation.NewService(s.Affiliation, uploads)
 	sessions := auth.NewSessions(conf.Session, s.User)
 	tokens := auth.NewTokens(conf.Redis)
 	counter := visitors.New(s.Setting, 30*time.Second, "afcaldermaston.co.uk")
@@ -113,25 +114,26 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 			SessionCookieName: sessions.Name(),
 			Security:          conf.Passwords,
 		},
-		Sessions:       sessions.CookieStore(),
-		Storage:        objects,
-		Mailer:         mailer,
-		Visitors:       counter,
-		Tokens:         tokens,
-		Affiliation:    s.Affiliation,
-		Document:       s.Document,
-		Image:          s.Image,
-		News:           s.News,
-		NewsService:    newsSvc,
-		Player:         s.Player,
-		Programme:      s.Programme,
-		Setting:        s.Setting,
-		Sponsor:        s.Sponsor,
-		SponsorService: sponsorSvc,
-		Team:           s.Team,
-		User:           s.User,
-		WhatsOn:        s.WhatsOn,
-		WhatsOnService: whatsOnSvc,
+		Sessions:           sessions.CookieStore(),
+		Storage:            objects,
+		Mailer:             mailer,
+		Visitors:           counter,
+		Tokens:             tokens,
+		Affiliation:        s.Affiliation,
+		AffiliationService: affiliationSvc,
+		Document:           s.Document,
+		Image:              s.Image,
+		News:               s.News,
+		NewsService:        newsSvc,
+		Player:             s.Player,
+		Programme:          s.Programme,
+		Setting:            s.Setting,
+		Sponsor:            s.Sponsor,
+		SponsorService:     sponsorSvc,
+		Team:               s.Team,
+		User:               s.User,
+		WhatsOn:            s.WhatsOn,
+		WhatsOnService:     whatsOnSvc,
 	})
 
 	e := echo.New()
@@ -160,6 +162,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	news.NewHandlers(newsSvc).Register(api, guards)
 	whatson.NewHandlers(whatsOnSvc).Register(api, guards)
 	sponsor.NewHandlers(sponsorSvc).Register(api, guards)
+	affiliation.NewHandlers(affiliationSvc).Register(api, guards)
 
 	return &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens}
 }
