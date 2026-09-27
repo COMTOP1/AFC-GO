@@ -1,0 +1,86 @@
+basePath: /api/v1
+definitions:
+  auth.CurrentUser:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      name:
+        type: string
+      permissions:
+        $ref: '#/definitions/auth.Permissions'
+      phone:
+        type: string
+      role:
+        type: string
+      teamId:
+        type: integer
+    type: object
+  auth.Permissions:
+    properties:
+      canEdit:
+        type: boolean
+      canManageGallery:
+        type: boolean
+      canManageUsers:
+        type: boolean
+    type: object
+  web.APIError:
+    properties:
+      code:
+        type: integer
+      fields:
+        additionalProperties:
+          type: string
+        type: object
+      message:
+        type: string
+    type: object
+  web.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/web.APIError'
+    type: object
+  web.HealthResponse:
+    properties:
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: JSON API behind the AFC Aldermaston website.
+  title: AFC Aldermaston API
+  version: "1"
+paths:
+  /auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.CurrentUser'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Current user
+      tags:
+      - auth
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.HealthResponse'
+      summary: Health check
+      tags:
+      - system
+swagger: "2.0"

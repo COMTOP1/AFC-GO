@@ -1,39 +1,25 @@
-package main
+package app_test
 
 import (
 	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/storage"
-	"github.com/COMTOP1/AFC-GO/server/internal/legacy/views"
+	"github.com/COMTOP1/AFC-GO/server/internal/app"
+	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/server/internal/testdb"
+	"github.com/COMTOP1/AFC-GO/server/internal/upload/uploadtest"
 )
 
 // TestLegacyPagesSmoke guards the template site through the restructure:
 // every public page renders and every guarded page redirects when logged out.
 func TestLegacyPagesSmoke(t *testing.T) {
-	_, dsn := testdb.Open(t)
-
-	conf := &views.Config{
-		DatabaseURL:       dsn,
-		DomainName:        "localhost",
-		SessionCookieName: "session",
-		S3: storage.Config{
-			Endpoint: "http://s3.invalid", Region: "us-east-1", Bucket: "test",
-			AccessKey: "test", SecretKey: "test",
-		},
-		Security: views.SecurityConfig{
-			Iterations: 1, ScryptWorkFactor: 2, ScryptBlockSize: 1, ScryptParallelismFactor: 1, KeyLength: 32,
-		},
-	}
-	v := views.New(conf, "test", time.Hour)
-	t.Cleanup(v.Stop)
-	r := NewRouter(&RouterConf{Config: conf, Views: v})
+	db, _ := testdb.Open(t)
+	a := app.Build(testConfig(), app.NewStores(db), uploadtest.New(), mail.NewMailer(mail.Config{}))
+	t.Cleanup(a.Stop)
 
 	cases := []struct {
 		path string
@@ -60,9 +46,8 @@ func TestLegacyPagesSmoke(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.path, func(t *testing.T) {
-			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, tc.path, nil)
 			rec := httptest.NewRecorder()
-			r.router.ServeHTTP(rec, req)
+			a.Echo.ServeHTTP(rec, httptest.NewRequestWithContext(context.Background(), http.MethodGet, tc.path, nil))
 			assert.Equal(t, tc.want, rec.Code, "body: %.300s", rec.Body.String())
 		})
 	}

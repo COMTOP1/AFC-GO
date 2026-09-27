@@ -1,3 +1,9 @@
+// Command afc serves the AFC Aldermaston website and its JSON API.
+//
+//	@title			AFC Aldermaston API
+//	@version		1
+//	@description	JSON API behind the AFC Aldermaston website.
+//	@BasePath		/api/v1
 package main
 
 import (
@@ -7,14 +13,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 	_ "time/tzdata"
 
 	"github.com/joho/godotenv"
 
+	"github.com/COMTOP1/AFC-GO/server/internal/app"
+	"github.com/COMTOP1/AFC-GO/server/internal/auth"
+	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/storage"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/telemetry"
-	"github.com/COMTOP1/AFC-GO/server/internal/legacy/views"
 )
 
 var (
@@ -154,12 +161,18 @@ func main() {
 	redisDB, _ := strconv.Atoi(os.Getenv("REDIS_DB"))
 	redisTLS, _ := strconv.ParseBool(os.Getenv("REDIS_TLS"))
 
-	// Generate config
-	conf := &views.Config{
-		Address:           address,
-		DatabaseURL:       dbConnectionString,
-		DomainName:        domainName,
-		SessionCookieName: sessionCookieName,
+	a := app.New(app.Config{
+		Address:      address,
+		DomainName:   domainName,
+		DatabaseURL:  dbConnectionString,
+		DatabaseHost: dbHost,
+		Version:      Version,
+		Session: auth.Config{
+			CookieName:        sessionCookieName,
+			AuthenticationKey: os.Getenv("AUTHENTICATION_KEY"),
+			EncryptionKey:     os.Getenv("ENCRYPTION_KEY"),
+			Secure:            !strings.HasPrefix(domainName, "localhost"),
+		},
 		S3: storage.Config{
 			Endpoint:  os.Getenv("S3_ENDPOINT"),
 			Region:    s3Region,
@@ -167,22 +180,20 @@ func main() {
 			AccessKey: os.Getenv("S3_ACCESS_KEY"),
 			SecretKey: os.Getenv("S3_SECRET_KEY"),
 		},
-		Mail: views.SMTPConfig{
+		Mail: mail.Config{
 			Host:     os.Getenv("MAIL_HOST"),
 			Username: os.Getenv("MAIL_USER"),
 			Password: os.Getenv("MAIL_PASS"),
 			Port:     mailPort,
 		},
-		Security: views.SecurityConfig{
-			EncryptionKey:           os.Getenv("ENCRYPTION_KEY"),
-			AuthenticationKey:       os.Getenv("AUTHENTICATION_KEY"),
+		Passwords: auth.PasswordConfig{
 			Iterations:              iter,
 			ScryptWorkFactor:        sWorkFactor,
 			ScryptBlockSize:         sBlockSize,
 			ScryptParallelismFactor: sParallelismFactor,
 			KeyLength:               keyLen,
 		},
-		Redis: views.RedisConfig{
+		Redis: auth.RedisConfig{
 			Addresses:  redisAddresses,
 			MasterName: os.Getenv("REDIS_MASTER_NAME"),
 			Username:   os.Getenv("REDIS_USERNAME"),
@@ -191,16 +202,9 @@ func main() {
 			TLS:        redisTLS,
 			KeyPrefix:  os.Getenv("REDIS_KEY_PREFIX"),
 		},
-	}
-
-	v := views.New(conf, dbHost, 30*time.Second)
-
-	router := NewRouter(&RouterConf{
-		Config: conf,
-		Views:  v,
 	})
 
-	err = router.Start()
-	v.Stop()
+	err = a.Start()
+	a.Stop()
 	fatal(fmt.Sprintf("The web server couldn't be started!\n\n%s\n\nExiting!", err))
 }

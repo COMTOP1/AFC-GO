@@ -11,7 +11,6 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"go.opentelemetry.io/otel"
 
-	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/storage"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
 )
 
@@ -22,9 +21,14 @@ var tmpls embed.FS
 
 var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/server/internal/legacy/templates")
 
+// URLer builds public URLs for stored files (satisfied by upload.Storage).
+type URLer interface {
+	PublicURL(key string) string
+}
+
 type Templater struct {
 	Team    *team.Store
-	Storage *storage.Store
+	Storage URLer
 }
 
 type Template string
@@ -62,7 +66,7 @@ const (
 )
 
 // NewTemplate returns the template format to be used
-func NewTemplate(team *team.Store, storage *storage.Store) *Templater {
+func NewTemplate(team *team.Store, storage URLer) *Templater {
 	return &Templater{
 		Team:    team,
 		Storage: storage,
