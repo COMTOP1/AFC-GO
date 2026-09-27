@@ -64,6 +64,33 @@ func TestFormHelpers(t *testing.T) {
 	assert.True(t, got.NoFile)
 }
 
+func TestFormStringIgnoresQueryString(t *testing.T) {
+	e := apitest.NewEcho()
+	api := web.NewAPI(e, false)
+	type seen struct {
+		Title   *string `json:"title"`
+		Missing *string `json:"missing"`
+	}
+	api.POST("/form", func(c echo.Context) error {
+		var s seen
+		s.Title = web.FormString(c, "title")
+		s.Missing = web.FormString(c, "missing")
+		return c.JSON(http.StatusOK, s)
+	})
+
+	// "missing" is only in the query string, never in the multipart body;
+	// "title" is in both, with different values, so a pass-through bug
+	// (reading request.Form instead of request.PostForm) would be caught
+	// either way.
+	rec := apitest.New(e).Multipart(t, http.MethodPost, "/api/v1/form?missing=fromquery&title=fromquery",
+		map[string]string{"title": "frombody"})
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	got := apitest.Decode[seen](t, rec)
+	require.NotNil(t, got.Title)
+	assert.Equal(t, "frombody", *got.Title, "a field present in the body must use the body value, not the query string")
+	assert.Nil(t, got.Missing, "a field absent from the body must be nil even when the query string has it")
+}
+
 func TestFormBoolAndDateValidation(t *testing.T) {
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)

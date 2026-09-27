@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -50,12 +51,23 @@ func FormFile(c echo.Context, field string) (*upload.File, error) {
 
 // FormString returns the form value for field, or nil when the field was not
 // sent at all (as opposed to sent empty).
+//
+// Unlike echo's own FormParams (which merges the URL query string into
+// request.Form), this reads only the request body: request.PostForm holds
+// urlencoded body values plus, after ParseMultipartForm, the multipart
+// text fields. That keeps a query parameter of the same name from
+// masquerading as a form field, which matters for PATCH's absent-vs-sent
+// semantics (FormBool and FormDate rely on this too, via FormString).
 func FormString(c echo.Context, field string) *string {
-	form, err := c.FormParams()
-	if err != nil {
+	req := c.Request()
+	if strings.HasPrefix(req.Header.Get(echo.HeaderContentType), echo.MIMEMultipartForm) {
+		if err := req.ParseMultipartForm(32 << 20); err != nil && !errors.Is(err, http.ErrNotMultipart) { // 32 MB, echo's own default
+			return nil
+		}
+	} else if err := req.ParseForm(); err != nil {
 		return nil
 	}
-	values, ok := form[field]
+	values, ok := req.PostForm[field]
 	if !ok || len(values) == 0 {
 		return nil
 	}
