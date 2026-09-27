@@ -1,0 +1,133 @@
+package views
+
+import (
+	"fmt"
+	"log/slog"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/labstack/echo/v4"
+	"gopkg.in/guregu/null.v4"
+
+	"github.com/COMTOP1/AFC-GO/server/internal/image"
+	"github.com/COMTOP1/AFC-GO/server/internal/legacy/templates"
+	"github.com/COMTOP1/AFC-GO/server/internal/user"
+)
+
+func (v *Views) GalleryFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.GalleryFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
+	c1 := v.getSessionData(c)
+
+	imagesDB, err := v.image.GetImages(c.Request().Context())
+	if err != nil {
+		return v.error(http.StatusInternalServerError, "failed to get gallery images",
+			fmt.Errorf("failed to get images for gallery, error: %w", err))
+	}
+
+	year, _, _ := time.Now().Date()
+
+	data := struct {
+		Year         int
+		VisitorCount int
+		Images       []image.Image
+		User         user.User
+		Context      *Context
+	}{
+		Year:         year,
+		VisitorCount: v.GetVisitorCount(),
+		Images:       imagesDB,
+		User:         c1.User,
+		Context:      c1,
+	}
+
+	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.GalleryTemplate, templates.RegularType)
+}
+
+func (v *Views) ImageAddFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ImageAddFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		data := struct {
+			Error string `json:"error"`
+		}{
+			Error: "",
+		}
+
+		file, err := c.FormFile("upload")
+		if err != nil {
+			slog.Info(fmt.Sprintf("failed to get file for image add, error: %+v", err))
+			data.Error = fmt.Sprintf("failed to get file for image add: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+		fileName, err := v.fileUpload(c.Request().Context(), file, "gallery")
+		if err != nil {
+			slog.Info(fmt.Sprintf("failed to upload file for image add, error: %+v", err))
+			data.Error = fmt.Sprintf("failed to upload file for image add: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		caption := c.FormValue("caption")
+
+		_, err = v.image.AddImage(c.Request().Context(), image.Image{FileName: fileName, Caption: null.NewString(caption, len(caption) > 0)})
+		if err != nil {
+			slog.Info(fmt.Sprintf("failed to add image for image add, error: %+v", err))
+			data.Error = fmt.Sprintf("failed to add image for image add: %+v", err)
+			return c.JSON(http.StatusOK, data)
+		}
+
+		c1.Message = "successfully added image"
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			slog.Info(fmt.Sprintf("failed to set data for image add, error: %+v", err))
+		}
+
+		return c.JSON(http.StatusOK, data)
+	}
+	return v.invalidMethodUsed(c)
+}
+
+func (v *Views) ImageDeleteFunc(c echo.Context) error {
+	spanCtx, span := tracer.Start(c.Request().Context(), "views.ImageDeleteFunc")
+	defer span.End()
+	c.SetRequest(c.Request().WithContext(spanCtx))
+	if c.Request().Method == http.MethodPost {
+		c1 := v.getSessionData(c)
+
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			return fmt.Errorf("failed to get id for image delete, error: %w", err)
+		}
+
+		imageDB, err := v.image.GetImage(c.Request().Context(), image.Image{ID: id})
+		if err != nil {
+			return fmt.Errorf("failed to get image for image delete, image id: %d, error: %w", id, err)
+		}
+
+		err = v.storage.Delete(c.Request().Context(), imageDB.FileName)
+		if err != nil {
+			slog.Info(fmt.Sprintf("failed to delete image file for image delete, image id: %d, error: %+v", id, err))
+		}
+
+		err = v.image.DeleteImage(c.Request().Context(), imageDB)
+		if err != nil {
+			return fmt.Errorf("failed to delete image for image delete, image id: %d, error: %w", id, err)
+		}
+
+		c1.Message = "successfully deleted image"
+		c1.MsgType = "is-success"
+		err = v.setMessagesInSession(c, c1)
+		if err != nil {
+			slog.Info(fmt.Sprintf("failed to set data for image delete, image id: %d, error: %+v", id, err))
+		}
+
+		return c.Redirect(http.StatusFound, "/gallery")
+	}
+	return v.invalidMethodUsed(c)
+}
