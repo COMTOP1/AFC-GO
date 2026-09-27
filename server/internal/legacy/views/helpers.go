@@ -2,9 +2,11 @@ package views
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"mime/multipart"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -23,6 +25,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/role"
 	"github.com/COMTOP1/AFC-GO/server/internal/sponsor"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
+	"github.com/COMTOP1/AFC-GO/server/internal/upload"
 	"github.com/COMTOP1/AFC-GO/server/internal/user"
 	"github.com/COMTOP1/AFC-GO/server/internal/whatson"
 )
@@ -649,4 +652,32 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 	whatsOnTemplate.IsFileValid = whatsOnDB.FileName.Valid
 	whatsOnTemplate.FileName = whatsOnDB.FileName
 	return whatsOnTemplate
+}
+
+// legacyUpload returns the optional file in field, or nil when none was sent.
+func legacyUpload(c echo.Context, field string) (*upload.File, error) {
+	fh, err := c.FormFile(field)
+	if err != nil {
+		if errors.Is(err, http.ErrMissingFile) {
+			return nil, nil //nolint:nilerr // uploads are optional
+		}
+		return nil, fmt.Errorf("failed to get file: %w", err)
+	}
+	return upload.FromHeader(fh), nil
+}
+
+// flash queues a success message for the next page view.
+func (v *Views) flash(c echo.Context, c1 *Context, message string) {
+	c1.Message = message
+	c1.MsgType = "is-success"
+	if err := v.setMessagesInSession(c, c1); err != nil {
+		slog.Info(fmt.Sprintf("failed to set flash message: %+v", err))
+	}
+}
+
+// formYes maps a legacy "Y" checkbox to a bool; anything else is false.
+//
+//nolint:unused // added for later domain tasks to reuse (task 8 brief); news.go still inlines the "Y" check
+func formYes(c echo.Context, field string) bool {
+	return c.FormValue(field) == "Y"
 }

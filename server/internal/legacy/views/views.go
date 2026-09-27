@@ -50,6 +50,7 @@ type (
 		image       *image.Store
 		mailer      *mail.MailerInit
 		news        *news.Store
+		newsSvc     *news.Service
 		player      *player.Store
 		programme   *programme.Store
 		setting     *setting.Store
@@ -83,6 +84,7 @@ type (
 		Document    *document.Store
 		Image       *image.Store
 		News        *news.Store
+		NewsService *news.Service
 		Player      *player.Store
 		Programme   *programme.Store
 		Setting     *setting.Store
@@ -106,6 +108,7 @@ func New(d Deps) *Views {
 		image:       d.Image,
 		mailer:      d.Mailer,
 		news:        d.News,
+		newsSvc:     d.NewsService,
 		player:      d.Player,
 		programme:   d.Programme,
 		setting:     d.Setting,

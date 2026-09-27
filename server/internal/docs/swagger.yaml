@@ -28,6 +28,19 @@ definitions:
       canManageUsers:
         type: boolean
     type: object
+  news.Article:
+    properties:
+      content:
+        type: string
+      date:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      title:
+        type: string
+    type: object
   web.APIError:
     properties:
       code:
@@ -83,4 +96,131 @@ paths:
       summary: Health check
       tags:
       - system
+  /news:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/news.Article'
+            type: array
+      summary: List news
+      tags:
+      - news
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: HTML content (sanitised)
+        in: formData
+        name: content
+        type: string
+      - description: Image
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/news.Article'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a news article
+      tags:
+      - news
+  /news/{id}:
+    delete:
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a news article
+      tags:
+      - news
+    get:
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/news.Article'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Get a news article
+      tags:
+      - news
+    patch:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Title
+        in: formData
+        name: title
+        type: string
+      - description: HTML content (sanitised); empty clears it
+        in: formData
+        name: content
+        type: string
+      - description: Replacement image
+        in: formData
+        name: image
+        type: file
+      - description: Remove the current image
+        in: formData
+        name: removeImage
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/news.Article'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update a news article
+      tags:
+      - news
 swagger: "2.0"

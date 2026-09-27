@@ -100,6 +100,7 @@ func New(conf Config) *App {
 // fakes. Background work starts in Start.
 func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerInit) *App {
 	uploads := upload.New(objects)
+	newsSvc := news.NewService(s.News, uploads)
 	sessions := auth.NewSessions(conf.Session, s.User)
 	tokens := auth.NewTokens(conf.Redis)
 	counter := visitors.New(s.Setting, 30*time.Second, "afcaldermaston.co.uk")
@@ -119,6 +120,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 		Document:    s.Document,
 		Image:       s.Image,
 		News:        s.News,
+		NewsService: newsSvc,
 		Player:      s.Player,
 		Programme:   s.Programme,
 		Setting:     s.Setting,
@@ -151,6 +153,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	api := web.NewAPI(e, conf.Session.Secure)
 	guards := sessions.Guards()
 	auth.NewHandlers(sessions, uploads).Register(api, guards)
+	news.NewHandlers(newsSvc).Register(api, guards)
 
 	return &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens}
 }

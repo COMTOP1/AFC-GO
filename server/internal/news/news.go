@@ -2,7 +2,6 @@ package news
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -52,21 +51,10 @@ func (s *Store) AddNews(ctx context.Context, newsParam News) (News, error) {
 	return s.addNews(ctx, newsParam)
 }
 
+// EditNews writes n as given. Callers load the row first and change only the
+// fields they mean to, so empty values are deliberate (e.g. removing an image).
 func (s *Store) EditNews(ctx context.Context, newsParam News) (News, error) {
-	newsDB, err := s.GetNewsArticle(ctx, newsParam)
-	if err != nil {
-		return News{}, fmt.Errorf("failed to get news for editNews: %w", err)
-	}
-	if newsDB.Title != newsParam.Title {
-		newsDB.Title = newsParam.Title
-	}
-	if newsParam.FileName.Valid && (!newsDB.FileName.Valid || newsDB.FileName.String != newsParam.FileName.String) {
-		newsDB.FileName = newsParam.FileName
-	}
-	if newsParam.Content.Valid && (!newsDB.Content.Valid || newsDB.Content.String != newsParam.Content.String) {
-		newsDB.Content = newsParam.Content
-	}
-	return s.editNews(ctx, newsDB)
+	return s.editNews(ctx, newsParam)
 }
 
 func (s *Store) DeleteNews(ctx context.Context, newsParam News) error {

@@ -5,12 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/microcosm-cc/bluemonday"
-	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/legacy/templates"
 	"github.com/COMTOP1/AFC-GO/server/internal/news"
@@ -92,210 +89,91 @@ func (v *Views) NewsAddFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.NewsAddFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
+	}
+	c1 := v.getSessionData(c)
+	data := struct {
+		Error string `json:"error"`
+	}{}
 
-		title := c.FormValue("title")
-		content := c.FormValue("htmlContent")
-
-		p := bluemonday.NewPolicy()
-		p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
-			"blockquote", "pre", "hr")
-		p.AllowAttrs("class").OnElements("h2")
-		p.AllowAttrs("href", "style").OnElements("a")
-		p.AllowURLSchemes("mailto", "http", "https")
-		p.RequireNoFollowOnLinks(false)
-
-		// Justification - via inline style
-		p.AllowAttrs("style").OnElements("div", "p", "h2", "span")
-
-		safe := p.Sanitize(content)
-
-		data := struct {
-			Error string `json:"error"`
-		}{
-			Error: "",
-		}
-
-		var fileName string
-		hasUpload := true
-
-		file, err := c.FormFile("upload")
-		if err != nil {
-			if !strings.Contains(err.Error(), "no such file") {
-				slog.Info(fmt.Sprintf("failed to get file for news add, error: %+v", err))
-				data.Error = fmt.Sprintf("failed to get file for news add: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-			hasUpload = false
-		}
-		if hasUpload {
-			fileName, err = v.fileUpload(c.Request().Context(), file, "news")
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to upload file for news add, error: %+v", err))
-				data.Error = fmt.Sprintf("failed to upload file for news add: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-		}
-
-		_, err = v.news.AddNews(c.Request().Context(), news.News{Title: title, Content: null.NewString(safe, len(safe) > 0), FileName: null.NewString(fileName, len(fileName) > 0)})
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to add news for news add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to add news for news add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		c1.Message = fmt.Sprintf("successfully added \"%s\"", title)
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for news add, error: %+v", err))
-		}
-
+	image, err := legacyUpload(c, "upload")
+	if err != nil {
+		data.Error = fmt.Sprintf("failed to get file for news add: %+v", err)
 		return c.JSON(http.StatusOK, data)
 	}
-	return v.invalidMethodUsed(c)
+	article, err := v.newsSvc.Create(c.Request().Context(), news.CreateInput{
+		Title:   c.FormValue("title"),
+		Content: c.FormValue("htmlContent"),
+	}, image)
+	if err != nil {
+		slog.Info(fmt.Sprintf("failed to add news for news add, error: %+v", err))
+		data.Error = fmt.Sprintf("failed to add news for news add: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+
+	v.flash(c, c1, fmt.Sprintf("successfully added \"%s\"", article.Title))
+	return c.JSON(http.StatusOK, data)
 }
 
 func (v *Views) NewsEditFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.NewsEditFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
+	}
+	c1 := v.getSessionData(c)
+	newsID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for news edit, error: %w", err))
+	}
+	data := struct {
+		Error string `json:"error"`
+	}{}
 
-		newsID, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for news edit, error: %w", err))
-		}
-		newsDB, err := v.news.GetNewsArticle(c.Request().Context(), news.News{ID: newsID})
-		if err != nil {
-			return fmt.Errorf("failed to get news for news edit, news id: %d, error: %w", newsID, err)
-		}
-
-		newsDB.Title = c.FormValue("title")
-		tempContent := c.FormValue("htmlContent")
-
-		p := bluemonday.NewPolicy()
-		p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
-			"blockquote", "pre", "hr")
-		p.AllowAttrs("class").OnElements("h2")
-		p.AllowAttrs("href", "style").OnElements("a")
-		p.AllowURLSchemes("mailto", "http", "https")
-		p.RequireNoFollowOnLinks(false)
-
-		// Justification - via inline style
-		p.AllowAttrs("style").OnElements("div", "p", "h2", "span")
-
-		safe := p.Sanitize(tempContent)
-
-		newsDB.Content = null.NewString(safe, len(safe) > 0)
-
-		data := struct {
-			Error string `json:"error"`
-		}{
-			Error: "",
-		}
-
-		hasUpload := true
-
-		file, err := c.FormFile("upload")
-		if err != nil {
-			if !strings.Contains(err.Error(), "no such file") {
-				slog.Info(fmt.Sprintf("failed to get file for news edit, news id: %d, error: %+v", newsID, err))
-				data.Error = fmt.Sprintf("failed to get file for news edit: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-			hasUpload = false
-		}
-		if hasUpload {
-			var tempFileName string
-			tempFileName, err = v.fileUpload(c.Request().Context(), file, "news")
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to upload file for news edit, news id: %d, error: %+v", newsID, err))
-				data.Error = fmt.Sprintf("failed to upload file for news edit: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-			if newsDB.FileName.Valid {
-				err = v.storage.Delete(c.Request().Context(), newsDB.FileName.String)
-				if err != nil {
-					slog.Info(fmt.Sprintf("failed to delete old image for news edit, news id: %d, error: %+v", newsID, err))
-				}
-			}
-			newsDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
-		}
-
-		tempRemoveNewsImage := c.FormValue("removeNewsImage")
-		if tempRemoveNewsImage == "Y" {
-			if newsDB.FileName.Valid {
-				err = v.storage.Delete(c.Request().Context(), newsDB.FileName.String)
-				if err != nil {
-					slog.Info(fmt.Sprintf("failed to delete image for news edit, news id: %d, error: %+v", newsID, err))
-				}
-			}
-			newsDB.FileName = null.NewString("", false)
-		} else if len(tempRemoveNewsImage) != 0 {
-			slog.Info(fmt.Sprintf("failed to parse removeNewsImage for news edit, news id: %d, error: %s", newsID, tempRemoveNewsImage))
-			data.Error = "failed to parse removeNewsImage for news edit: " + tempRemoveNewsImage
-			return c.JSON(http.StatusOK, data)
-		}
-
-		_, err = v.news.EditNews(c.Request().Context(), newsDB)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to add news for news edit, news id: %d, error: %+v", newsID, err))
-			data.Error = fmt.Sprintf("failed to add news for news edit: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		c1.Message = fmt.Sprintf("successfully edited \"%s\"", newsDB.Title)
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for news edit, news id: %d, error: %+v", newsID, err))
-		}
-
+	remove := c.FormValue("removeNewsImage")
+	if remove != "" && remove != "Y" {
+		data.Error = "failed to parse removeNewsImage for news edit: " + remove
 		return c.JSON(http.StatusOK, data)
 	}
-	return v.invalidMethodUsed(c)
+	image, err := legacyUpload(c, "upload")
+	if err != nil {
+		data.Error = fmt.Sprintf("failed to get file for news edit: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+	title, content := c.FormValue("title"), c.FormValue("htmlContent")
+	article, err := v.newsSvc.Update(c.Request().Context(), newsID, news.UpdateInput{
+		Title:       &title,
+		Content:     &content,
+		RemoveImage: remove == "Y",
+	}, image)
+	if err != nil {
+		slog.Info(fmt.Sprintf("failed to edit news for news edit, news id: %d, error: %+v", newsID, err))
+		data.Error = fmt.Sprintf("failed to edit news for news edit: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+
+	v.flash(c, c1, fmt.Sprintf("successfully edited \"%s\"", article.Title))
+	return c.JSON(http.StatusOK, data)
 }
 
 func (v *Views) NewsDeleteFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.NewsDeleteFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
-
-		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			return fmt.Errorf("failed to get id for news delete, error: %w", err)
-		}
-
-		newsDB, err := v.news.GetNewsArticle(c.Request().Context(), news.News{ID: id})
-		if err != nil {
-			return fmt.Errorf("failed to get news for news delete, news id: %d, error: %w", id, err)
-		}
-
-		if newsDB.FileName.Valid {
-			err = v.storage.Delete(c.Request().Context(), newsDB.FileName.String)
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to delete news image for news delete, news id: %d, error: %+v", id, err))
-			}
-		}
-
-		err = v.news.DeleteNews(c.Request().Context(), newsDB)
-		if err != nil {
-			return fmt.Errorf("failed to delete news for news delete, news id: %d, error: %w", id, err)
-		}
-
-		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", newsDB.Title)
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for news delete, news id: %d, error: %+v", id, err))
-		}
-
-		return c.Redirect(http.StatusFound, "/news")
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
 	}
-	return v.invalidMethodUsed(c)
+	c1 := v.getSessionData(c)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return fmt.Errorf("failed to get id for news delete, error: %w", err)
+	}
+	article, err := v.newsSvc.Delete(c.Request().Context(), id)
+	if err != nil {
+		return fmt.Errorf("failed to delete news for news delete, news id: %d, error: %w", id, err)
+	}
+	v.flash(c, c1, fmt.Sprintf("successfully deleted \"%s\"", article.Title))
+	return c.Redirect(http.StatusFound, "/news")
 }

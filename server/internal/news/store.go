@@ -79,18 +79,14 @@ func (s *Store) addNews(ctx context.Context, newsParam News) (News, error) {
 	defer span.End()
 	builder := utils.PSQL().Insert("news").
 		Columns("title", "file_name", "content", "date").
-		Values(newsParam.Title, newsParam.FileName, newsParam.Content, newsParam.Date)
+		Values(newsParam.Title, newsParam.FileName, newsParam.Content, newsParam.Date).
+		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add news: %w", err))
 	}
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		span.RecordError(err)
-		return News{}, fmt.Errorf("failed to add news: %w", err)
-	}
-	_, err = res.RowsAffected()
+	err = s.db.GetContext(ctx, &newsParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
 		return News{}, fmt.Errorf("failed to add news: %w", err)
