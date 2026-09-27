@@ -27,8 +27,10 @@ func init() {
 }
 
 // Config configures the session cookie. Keys are hex encoded; an empty or
-// invalid key falls back to a random one (sessions then reset on restart,
-// exactly as today).
+// invalid (non-hex) key falls back to a random one (sessions then reset on
+// restart, exactly as today). A valid-hex key of an unexpected length (e.g. a
+// truncated AuthenticationKey) is still used as-is — production keeps using
+// its existing keys — but a startup warning is logged naming the weak key.
 type Config struct {
 	CookieName        string
 	AuthenticationKey string
@@ -70,12 +72,42 @@ func NewSessions(conf Config, users UserGetter) *Sessions {
 func decodeKey(hexKey string, size int, what string) []byte {
 	key, err := hex.DecodeString(hexKey)
 	if err != nil {
-		slog.Info(fmt.Sprintf("failed to decode %s key: %+v", what, err))
+		slog.Warn(fmt.Sprintf("failed to decode %s key: %+v; generating a random key instead (sessions will reset on restart)", what, err))
 	}
 	if len(key) == 0 {
-		key = securecookie.GenerateRandomKey(size)
+		if err == nil {
+			slog.Warn(what + " key is empty; generating a random key instead (sessions will reset on restart)")
+		}
+		return securecookie.GenerateRandomKey(size)
+	}
+	if msg := keyWarning(what, key, size); msg != "" {
+		slog.Warn(msg)
 	}
 	return key
+}
+
+// keyWarning reports a warning message when key is weak for its purpose
+// ("authentication" or "encryption"), or "" when its length is fine.
+// securecookie accepts an HMAC authentication key of any length, and a
+// too-short key is still used (production must keep using its existing
+// keys), but a short authentication key weakens the HMAC and an encryption
+// key that isn't a valid AES size can't be used for encryption at all. size
+// is the length decodeKey would generate for a missing key, quoted in the
+// message as the recommended length.
+func keyWarning(what string, key []byte, size int) string {
+	switch what {
+	case "authentication":
+		if len(key) < 32 {
+			return fmt.Sprintf("%s key is %d bytes, shorter than the recommended minimum of 32 bytes (generated keys use %d)", what, len(key), size)
+		}
+	case "encryption":
+		switch len(key) {
+		case 16, 24, 32:
+		default:
+			return fmt.Sprintf("%s key is %d bytes; AES requires a 16, 24 or 32 byte key (generated keys use %d)", what, len(key), size)
+		}
+	}
+	return ""
 }
 
 // CookieStore exposes the underlying store for the legacy views.
