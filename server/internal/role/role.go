@@ -72,3 +72,26 @@ func GetRole(role string) (Role, error) {
 func (r Role) String() string {
 	return string(r)
 }
+
+// CanEdit reports whether the role may manage site content (everyone except
+// Managers and Photographers), matching RequireNotManagerNotPhotographer.
+func (r Role) CanEdit() bool {
+	return r != Manager && r != Photographer
+}
+
+// CanManageGallery reports whether the role may add or remove gallery
+// images, matching RequireNotManager.
+func (r Role) CanManageGallery() bool {
+	return r != Manager
+}
+
+// IsClubSecretaryHigher matches RequireClubSecretaryHigher.
+func (r Role) IsClubSecretaryHigher() bool {
+	switch r {
+	case SafeguardingOfficer, ClubSecretary, Chairperson, Webmaster:
+		return true
+	case Photographer, Manager, ProgrammeEditor, LeagueSecretary, Treasurer:
+		return false
+	}
+	return false
+}
