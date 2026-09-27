@@ -96,18 +96,14 @@ func (s *Store) addSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor, 
 	defer span.End()
 	builder := utils.PSQL().Insert("sponsors").
 		Columns("name", "website", "file_name", "purpose", "team_id").
-		Values(sponsorParam.Name, sponsorParam.Website, sponsorParam.FileName, sponsorParam.Purpose, sponsorParam.TeamID)
+		Values(sponsorParam.Name, sponsorParam.Website, sponsorParam.FileName, sponsorParam.Purpose, sponsorParam.TeamID).
+		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add sponsor: %w", err))
 	}
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		span.RecordError(err)
-		return Sponsor{}, fmt.Errorf("failed to add sponsor: %w", err)
-	}
-	_, err = res.RowsAffected()
+	err = s.db.GetContext(ctx, &sponsorParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
 		return Sponsor{}, fmt.Errorf("failed to add sponsor: %w", err)

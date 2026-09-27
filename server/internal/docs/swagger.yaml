@@ -41,6 +41,21 @@ definitions:
       title:
         type: string
     type: object
+  sponsor.Public:
+    properties:
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      name:
+        type: string
+      purpose:
+        type: string
+      team:
+        type: string
+      website:
+        type: string
+    type: object
   web.APIError:
     properties:
       code:
@@ -238,6 +253,78 @@ paths:
       summary: Update a news article
       tags:
       - news
+  /sponsors:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/sponsor.Public'
+            type: array
+      summary: List sponsors
+      tags:
+      - sponsors
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Full URL
+        in: formData
+        name: website
+        type: string
+      - description: What they sponsor
+        in: formData
+        name: purpose
+        type: string
+      - description: A, O, Y or a team ID
+        in: formData
+        name: team
+        type: string
+      - description: Logo
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/sponsor.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a sponsor
+      tags:
+      - sponsors
+  /sponsors/{id}:
+    delete:
+      parameters:
+      - description: Sponsor ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a sponsor
+      tags:
+      - sponsors
   /whatson:
     get:
       parameters:

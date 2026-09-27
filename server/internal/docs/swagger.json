@@ -246,6 +246,116 @@
                 }
             }
         },
+        "/sponsors": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sponsors"
+                ],
+                "summary": "List sponsors",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/sponsor.Public"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sponsors"
+                ],
+                "summary": "Create a sponsor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Full URL",
+                        "name": "website",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "What they sponsor",
+                        "name": "purpose",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "A, O, Y or a team ID",
+                        "name": "team",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Logo",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/sponsor.Public"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sponsors/{id}": {
+            "delete": {
+                "tags": [
+                    "sponsors"
+                ],
+                "summary": "Delete a sponsor",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Sponsor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/whatson": {
             "get": {
                 "produces": [
@@ -528,6 +638,29 @@
                     "type": "string"
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "sponsor.Public": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "imageUrl": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "type": "string"
+                },
+                "team": {
+                    "type": "string"
+                },
+                "website": {
                     "type": "string"
                 }
             }

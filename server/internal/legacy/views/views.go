@@ -55,6 +55,7 @@ type (
 		programme   *programme.Store
 		setting     *setting.Store
 		sponsor     *sponsor.Store
+		sponsorSvc  *sponsor.Service
 		storage     upload.Storage
 		team        *team.Store
 		template    *templates.Templater
@@ -90,6 +91,7 @@ type (
 		Programme      *programme.Store
 		Setting        *setting.Store
 		Sponsor        *sponsor.Store
+		SponsorService *sponsor.Service
 		Team           *team.Store
 		User           *user.Store
 		WhatsOn        *whatson.Store
@@ -115,6 +117,7 @@ func New(d Deps) *Views {
 		programme:   d.Programme,
 		setting:     d.Setting,
 		sponsor:     d.Sponsor,
+		sponsorSvc:  d.SponsorService,
 		storage:     d.Storage,
 		team:        d.Team,
 		template:    templates.NewTemplate(d.Team, d.Storage),
