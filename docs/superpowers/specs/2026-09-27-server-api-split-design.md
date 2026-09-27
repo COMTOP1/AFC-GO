@@ -178,7 +178,7 @@ Notes:
 | `POST /auth/password` | 🔒 | `ChangePasswordFunc` |
 | `GET /auth/reset/{token}` | 🔓 | `ResetURLFunc` GET (token validity) |
 | `POST /auth/reset/{token}` | 🔓 | `ResetURLFunc` POST |
-| `GET /account` / `PATCH /account` | 🔒 | `AccountFunc` |
+| `GET /account` | 🔒 | `AccountFunc` (read-only today; profile edits go through `/users/{id}`) |
 | `PUT /account/image` / `DELETE /account/image` | 🔒 | `UploadImageFunc` / `RemoveImageFunc` |
 | `GET /news` / `POST /news` | 🔓 / ✏️ | `NewsFunc` / `NewsAddFunc` |
 | `GET /news/{id}` / `PATCH` / `DELETE` | 🔓 / ✏️ / ✏️ | `NewsArticleFunc` / `NewsEditFunc` / `NewsDeleteFunc` |
@@ -204,8 +204,29 @@ Notes:
 | `GET /files/{kind}/{id}` | 🔓 | `DownloadFunc` (`/download?s=&id=` stays as a legacy alias) |
 
 `kind` ∈ `affiliation, document, gallery, news, player, programme, sponsor, team, user, whatson`.
-`/files` behaves exactly like `_downloadFunc` today (redirect to the object's CDN URL), including
-any existing access checks for kinds that need them.
+`/files` behaves like `_downloadFunc` today: it checks the object exists and 302-redirects to its
+CDN URL. The same access rule applies to player photos: they are never served for a player on a
+youth team or aged under 18. Today that returns an empty `200`; the API returns `404`.
+
+### Player photo privacy
+
+Every response that includes a player (`/players`, `/teams/{id}`) omits `imageUrl` when the
+player is on a youth team or is under 18, reproducing the gating in `views/helpers.go`
+(`DBPlayersToTemplateFormat`, `DBPlayersTeamToTemplateFormat`). One `player.PhotoVisible(p,
+teamIsYouth, now)` function owns this rule and is used by the players list, the team page and
+`/files/player/{id}`.
+
+### Checkbox fields
+
+API inputs use real JSON booleans (`isActive`, `isYouth`, `isCaptain`). Legacy form adapters map
+`"Y"` → `true` and absent/empty → `false`. This deliberately fixes two legacy quirks that the
+shared service would otherwise have to encode:
+- Team add set `isActive` when the *youth* box was ticked.
+- Team and player edit could never clear `isActive`/`isYouth`/`isCaptain`, because an
+  unchecked box was treated as "leave unchanged".
+
+`isYouth` is still forced to `true` when `ages < 19`, as today. Removing a what's on image now
+also deletes the object from S3, as news, team, player and user already do.
 
 `programmeselect` and `whatsonselect` are form-redirect helpers for the template UI and have no
 API equivalent; query parameters replace them.
@@ -252,10 +273,15 @@ Rules:
   multipart into them; legacy views bind form values into them.
 - **Services own validation and side effects**: password rules (`minRequirementsMet`), email
   verification (`emailverifier`), bluemonday sanitising, the content-type allow-list plus the S3
-  upload (today's `fileUpload`; size stays enforced by the global 15MB `BodyLimit`), deleting old objects on replace or delete, and sending the
-  password-reset email. When no mailer is configured, today's fallback of returning the reset
-  link to the admin is kept (`POST /users/{id}/reset` responds `{"emailSent": false, "resetUrl": ...}`).
-  The `signupEmail` template exists but no code sends it; that stays as it is.
+  upload (today's `fileUpload`; size stays enforced by the global 15MB `BodyLimit`), deleting old
+  objects on replace or delete, and sending email. Two emails are sent today, and both keep their
+  fallbacks:
+  - **Signup** (`POST /users`): creates the user with a generated password and `reset_password`
+    set, then emails the credentials. If no mailer is configured or sending fails, the response
+    carries `{"emailSent": false, "tempPassword": "..."}` so the admin can pass it on, exactly
+    as the flash message does today.
+  - **Reset** (`POST /users/{id}/reset`): if no mailer is configured or sending fails, the
+    response carries `{"emailSent": false, "resetUrl": "..."}`.
 - **Authorisation**: route guards remain the only authorisation, exactly as today. Behaviour is
   preserved, not tightened: `views/user.go` has no self-delete or role-hierarchy checks, and
   none are added in this sub-project.
