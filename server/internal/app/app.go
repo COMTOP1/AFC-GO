@@ -101,6 +101,7 @@ func New(conf Config) *App {
 func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerInit) *App {
 	uploads := upload.New(objects)
 	newsSvc := news.NewService(s.News, uploads)
+	whatsOnSvc := whatson.NewService(s.WhatsOn, uploads)
 	sessions := auth.NewSessions(conf.Session, s.User)
 	tokens := auth.NewTokens(conf.Redis)
 	counter := visitors.New(s.Setting, 30*time.Second, "afcaldermaston.co.uk")
@@ -111,23 +112,24 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 			SessionCookieName: sessions.Name(),
 			Security:          conf.Passwords,
 		},
-		Sessions:    sessions.CookieStore(),
-		Storage:     objects,
-		Mailer:      mailer,
-		Visitors:    counter,
-		Tokens:      tokens,
-		Affiliation: s.Affiliation,
-		Document:    s.Document,
-		Image:       s.Image,
-		News:        s.News,
-		NewsService: newsSvc,
-		Player:      s.Player,
-		Programme:   s.Programme,
-		Setting:     s.Setting,
-		Sponsor:     s.Sponsor,
-		Team:        s.Team,
-		User:        s.User,
-		WhatsOn:     s.WhatsOn,
+		Sessions:       sessions.CookieStore(),
+		Storage:        objects,
+		Mailer:         mailer,
+		Visitors:       counter,
+		Tokens:         tokens,
+		Affiliation:    s.Affiliation,
+		Document:       s.Document,
+		Image:          s.Image,
+		News:           s.News,
+		NewsService:    newsSvc,
+		Player:         s.Player,
+		Programme:      s.Programme,
+		Setting:        s.Setting,
+		Sponsor:        s.Sponsor,
+		Team:           s.Team,
+		User:           s.User,
+		WhatsOn:        s.WhatsOn,
+		WhatsOnService: whatsOnSvc,
 	})
 
 	e := echo.New()
@@ -154,6 +156,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	guards := sessions.Guards()
 	auth.NewHandlers(sessions, uploads).Register(api, guards)
 	news.NewHandlers(newsSvc).Register(api, guards)
+	whatson.NewHandlers(whatsOnSvc).Register(api, guards)
 
 	return &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens}
 }

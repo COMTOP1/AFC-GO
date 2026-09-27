@@ -124,21 +124,17 @@ func (s *Store) addWhatsOn(ctx context.Context, whatsOnParam WhatsOn) (WhatsOn, 
 	defer span.End()
 	builder := utils.PSQL().Insert("whatson").
 		Columns("title", "file_name", "content", "date", "date_of_event").
-		Values(whatsOnParam.Title, whatsOnParam.FileName, whatsOnParam.Content, whatsOnParam.Date, whatsOnParam.DateOfEvent)
+		Values(whatsOnParam.Title, whatsOnParam.FileName, whatsOnParam.Content, whatsOnParam.Date, whatsOnParam.DateOfEvent).
+		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add whats on: %w", err))
 	}
-	res, err := s.db.ExecContext(ctx, sql, args...)
+	err = s.db.GetContext(ctx, &whatsOnParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
-		return WhatsOn{}, fmt.Errorf("failed to add whats on: %w", err)
-	}
-	_, err = res.RowsAffected()
-	if err != nil {
-		span.RecordError(err)
-		return WhatsOn{}, fmt.Errorf("failed to add whats on: %w", err)
+		return WhatsOn{}, fmt.Errorf("failed to add whatsOn: %w", err)
 	}
 	return whatsOnParam, nil
 }

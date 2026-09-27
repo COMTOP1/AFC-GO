@@ -60,6 +60,7 @@ type (
 		template    *templates.Templater
 		user        *user.Store
 		whatsOn     *whatson.Store
+		whatsOnSvc  *whatson.Service
 
 		tokens   *auth.Tokens
 		visitors *visitors.Counter
@@ -80,18 +81,19 @@ type (
 		Visitors *visitors.Counter
 		Tokens   *auth.Tokens
 
-		Affiliation *affiliation.Store
-		Document    *document.Store
-		Image       *image.Store
-		News        *news.Store
-		NewsService *news.Service
-		Player      *player.Store
-		Programme   *programme.Store
-		Setting     *setting.Store
-		Sponsor     *sponsor.Store
-		Team        *team.Store
-		User        *user.Store
-		WhatsOn     *whatson.Store
+		Affiliation    *affiliation.Store
+		Document       *document.Store
+		Image          *image.Store
+		News           *news.Store
+		NewsService    *news.Service
+		Player         *player.Store
+		Programme      *programme.Store
+		Setting        *setting.Store
+		Sponsor        *sponsor.Store
+		Team           *team.Store
+		User           *user.Store
+		WhatsOn        *whatson.Store
+		WhatsOnService *whatson.Service
 	}
 )
 
@@ -120,6 +122,7 @@ func New(d Deps) *Views {
 		user:        d.User,
 		visitors:    d.Visitors,
 		whatsOn:     d.WhatsOn,
+		whatsOnSvc:  d.WhatsOnService,
 	}
 }
 

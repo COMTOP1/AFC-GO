@@ -5,12 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/microcosm-cc/bluemonday"
-	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/legacy/templates"
 	"github.com/COMTOP1/AFC-GO/server/internal/user"
@@ -163,230 +160,101 @@ func (v *Views) WhatsOnAddFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.WhatsOnAddFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
+	}
+	c1 := v.getSessionData(c)
+	data := struct {
+		Error string `json:"error"`
+	}{}
 
-		title := c.FormValue("title")
-		content := c.FormValue("htmlContent")
-
-		p := bluemonday.NewPolicy()
-		p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
-			"blockquote", "pre", "hr")
-		p.AllowAttrs("class").OnElements("h2")
-		p.AllowAttrs("href", "style").OnElements("a")
-		p.AllowURLSchemes("mailto", "http", "https")
-		p.RequireNoFollowOnLinks(false)
-
-		// Justification - via inline style
-		p.AllowAttrs("style").OnElements("div", "p", "h2", "span")
-
-		safe := p.Sanitize(content)
-
-		data := struct {
-			Error string `json:"error"`
-		}{
-			Error: "",
-		}
-
-		dateOfEvent := c.Request().FormValue("dateOfEvent")
-
-		dateOfEventParsed, err := time.Parse("02/01/2006", dateOfEvent)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to parse dateOfEvent for whats on add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to parse dateOfEvent for whats on add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		var fileName string
-		hasUpload := true
-
-		file, err := c.FormFile("upload")
-		if err != nil {
-			if !strings.Contains(err.Error(), "no such file") {
-				slog.Info(fmt.Sprintf("failed to get file for whats on add, error: %+v", err))
-				data.Error = fmt.Sprintf("failed to get file for whats on add: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-			hasUpload = false
-		}
-		if hasUpload {
-			fileName, err = v.fileUpload(c.Request().Context(), file, "whatson")
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to upload file for whats on add, error: %+v", err))
-				data.Error = fmt.Sprintf("failed to upload file for whats on add: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-		}
-
-		_, err = v.whatsOn.AddWhatsOn(c.Request().Context(), whatson.WhatsOn{
-			Title:       title,
-			Content:     null.NewString(safe, len(safe) > 0),
-			FileName:    null.NewString(fileName, len(fileName) > 0),
-			DateOfEvent: dateOfEventParsed,
-		})
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to add whatsOn for whats on add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to add whatsOn for whats on add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		c1.Message = fmt.Sprintf("successfully added \"%s\"", title)
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for whats on add, error: %+v", err))
-		}
-
+	dateOfEvent, err := time.Parse("02/01/2006", c.FormValue("dateOfEvent"))
+	if err != nil {
+		data.Error = fmt.Sprintf("failed to parse dateOfEvent for whats on add: %+v", err)
 		return c.JSON(http.StatusOK, data)
 	}
-	return v.invalidMethodUsed(c)
+	image, err := legacyUpload(c, "upload")
+	if err != nil {
+		data.Error = fmt.Sprintf("failed to get file for whats on add: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+	event, err := v.whatsOnSvc.Create(c.Request().Context(), whatson.CreateInput{
+		Title:       c.FormValue("title"),
+		Content:     c.FormValue("htmlContent"),
+		DateOfEvent: dateOfEvent,
+	}, image)
+	if err != nil {
+		slog.Info(fmt.Sprintf("failed to add whatsOn for whats on add, error: %+v", err))
+		data.Error = fmt.Sprintf("failed to add whatsOn for whats on add: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+	v.flash(c, c1, fmt.Sprintf("successfully added \"%s\"", event.Title))
+	return c.JSON(http.StatusOK, data)
 }
 
 func (v *Views) WhatsOnEditFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.WhatsOnEditFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
+	}
+	c1 := v.getSessionData(c)
+	whatsOnID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for whats on edit, error: %w", err))
+	}
+	data := struct {
+		Error string `json:"error"`
+	}{}
 
-		whatsOnID, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("failed to parse id for whats on edit, error: %w", err))
-		}
-		whatsOnDB, err := v.whatsOn.GetWhatsOnArticle(c.Request().Context(), whatson.WhatsOn{ID: whatsOnID})
-		if err != nil {
-			return fmt.Errorf("failed to get whatsOn for whats on edit, whats on id: %d, error: %w", whatsOnID, err)
-		}
-
-		whatsOnDB.Title = c.FormValue("title")
-		tempContent := c.FormValue("htmlContent")
-
-		p := bluemonday.NewPolicy()
-		p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
-			"blockquote", "pre", "hr")
-		p.AllowAttrs("class").OnElements("h2")
-		p.AllowAttrs("href", "style").OnElements("a")
-		p.AllowURLSchemes("mailto", "http", "https")
-		p.RequireNoFollowOnLinks(false)
-
-		// Justification - via inline style
-		p.AllowAttrs("style").OnElements("div", "p", "h2", "span")
-
-		safe := p.Sanitize(tempContent)
-
-		whatsOnDB.Content = null.NewString(safe, len(safe) > 0)
-
-		data := struct {
-			Error string `json:"error"`
-		}{
-			Error: "",
-		}
-
-		dateOfEvent := c.Request().FormValue("dateOfEvent")
-
-		tempDateOfEventParsed, err := time.Parse("02/01/2006", dateOfEvent)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to parse dateOfEvent for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
-			data.Error = fmt.Sprintf("failed to parse dateOfEvent for whats on edit: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		whatsOnDB.DateOfEvent = tempDateOfEventParsed
-
-		hasUpload := true
-
-		file, err := c.FormFile("upload")
-		if err != nil {
-			if !strings.Contains(err.Error(), "no such file") {
-				slog.Info(fmt.Sprintf("failed to get file for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
-				data.Error = fmt.Sprintf("failed to get file for whats on edit: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-			hasUpload = false
-		}
-		if hasUpload {
-			var tempFileName string
-			tempFileName, err = v.fileUpload(c.Request().Context(), file, "whatson")
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to upload file for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
-				data.Error = fmt.Sprintf("failed to upload file for whats on edit: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-			if whatsOnDB.FileName.Valid {
-				err = v.storage.Delete(c.Request().Context(), whatsOnDB.FileName.String)
-				if err != nil {
-					slog.Info(fmt.Sprintf("failed to delete old image for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
-				}
-			}
-			whatsOnDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
-		}
-
-		tempRemoveWhatsOnImage := c.FormValue("removeWhatsOnImage")
-		if tempRemoveWhatsOnImage == "Y" {
-
-			whatsOnDB.FileName = null.NewString("", false)
-		} else if len(tempRemoveWhatsOnImage) != 0 {
-			slog.Info(fmt.Sprintf("failed to parse removeWhatsOnImage for whats on edit, whats on id: %d, value: %s", whatsOnID, tempRemoveWhatsOnImage))
-			data.Error = "failed to parse removeWhatsOnImage for whats on edit, value: " + tempRemoveWhatsOnImage
-			return c.JSON(http.StatusOK, data)
-		}
-
-		_, err = v.whatsOn.EditWhatsOn(c.Request().Context(), whatsOnDB)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to add whatsOn for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
-			data.Error = fmt.Sprintf("failed to add whatsOn for whats on edit: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		c1.Message = fmt.Sprintf("successfully edited \"%s\"", whatsOnDB.Title)
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
-		}
-
+	dateOfEvent, err := time.Parse("02/01/2006", c.FormValue("dateOfEvent"))
+	if err != nil {
+		data.Error = fmt.Sprintf("failed to parse dateOfEvent for whats on edit: %+v", err)
 		return c.JSON(http.StatusOK, data)
 	}
-	return v.invalidMethodUsed(c)
+	remove := c.FormValue("removeWhatsOnImage")
+	if remove != "" && remove != "Y" {
+		data.Error = "failed to parse removeWhatsOnImage for whats on edit, value: " + remove
+		return c.JSON(http.StatusOK, data)
+	}
+	image, err := legacyUpload(c, "upload")
+	if err != nil {
+		data.Error = fmt.Sprintf("failed to get file for whats on edit: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+	title, content := c.FormValue("title"), c.FormValue("htmlContent")
+	event, err := v.whatsOnSvc.Update(c.Request().Context(), whatsOnID, whatson.UpdateInput{
+		Title:       &title,
+		Content:     &content,
+		DateOfEvent: &dateOfEvent,
+		RemoveImage: remove == "Y",
+	}, image)
+	if err != nil {
+		slog.Info(fmt.Sprintf("failed to edit whatsOn for whats on edit, whats on id: %d, error: %+v", whatsOnID, err))
+		data.Error = fmt.Sprintf("failed to edit whatsOn for whats on edit: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+	v.flash(c, c1, fmt.Sprintf("successfully edited \"%s\"", event.Title))
+	return c.JSON(http.StatusOK, data)
 }
 
 func (v *Views) WhatsOnDeleteFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.WhatsOnDeleteFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
-
-		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			return fmt.Errorf("failed to get id for whats on delete, error: %w", err)
-		}
-
-		whatsOnDB, err := v.whatsOn.GetWhatsOnArticle(c.Request().Context(), whatson.WhatsOn{ID: id})
-		if err != nil {
-			return fmt.Errorf("failed to get whatsOn for whats on delete, whats on id: %d, error: %w", id, err)
-		}
-
-		if whatsOnDB.FileName.Valid {
-			err = v.storage.Delete(c.Request().Context(), whatsOnDB.FileName.String)
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to delete whatsOn image for whats on delete, whats on id: %d, error: %+v", id, err))
-			}
-		}
-
-		err = v.whatsOn.DeleteWhatsOn(c.Request().Context(), whatsOnDB)
-		if err != nil {
-			return fmt.Errorf("failed to delete whatsOn for whats on delete, whats on id: %d, error: %w", id, err)
-		}
-
-		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", whatsOnDB.Title)
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for whats on delete, whats on id: %d, error: %+v", id, err))
-		}
-
-		return c.Redirect(http.StatusFound, "/whatson")
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
 	}
-	return v.invalidMethodUsed(c)
+	c1 := v.getSessionData(c)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return fmt.Errorf("failed to get id for whats on delete, error: %w", err)
+	}
+	event, err := v.whatsOnSvc.Delete(c.Request().Context(), id)
+	if err != nil {
+		return fmt.Errorf("failed to delete whatsOn for whats on delete, whats on id: %d, error: %w", id, err)
+	}
+	v.flash(c, c1, fmt.Sprintf("successfully deleted \"%s\"", event.Title))
+	return c.Redirect(http.StatusFound, "/whatson")
 }
