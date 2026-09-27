@@ -72,10 +72,6 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 	if err != nil {
 		return userParam, false, fmt.Errorf("failed to get user: %w", err)
 	}
-	if user.ResetPassword {
-		userParam.ID = user.ID
-		return userParam, true, errors.New("password reset required")
-	}
 	var hashDecode, saltDecode []byte
 	if user.Hash.Valid {
 		hashDecode, err = hex.DecodeString(user.Hash.String)
@@ -143,15 +139,26 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 	if err != nil {
 		return userParam, false, fmt.Errorf("failed to generate password hash verify: %w", err)
 	}
-	if scryptHash == user.Hash.String {
-		user.Hash = null.NewString("", false)
-		user.Salt = null.NewString("", false)
-		if user.ResetPassword {
-			return user, true, errors.New("password reset required")
+	match := scryptHash == user.Hash.String
+	if !match && user.Salt.Valid {
+		// Accounts created by the signup flow hash with the salt's hex text
+		// as raw bytes rather than the decoded salt; accept that form too.
+		var rawHash string
+		rawHash, err = utils.HashPassScrypt([]byte(userParam.Password.String), []byte(user.Salt.String), workFactor, blockSize, parallelismFactor, keyLen)
+		if err != nil {
+			return userParam, false, fmt.Errorf("failed to generate password hash verify: %w", err)
 		}
-		return user, false, nil
+		match = rawHash == user.Hash.String
 	}
-	return userParam, false, errors.New("invalid credentials")
+	if !match {
+		return userParam, false, errors.New("invalid credentials")
+	}
+	user.Hash = null.NewString("", false)
+	user.Salt = null.NewString("", false)
+	if user.ResetPassword {
+		return user, true, errors.New("password reset required")
+	}
+	return user, false, nil
 }
 
 func (s *Store) AddUser(ctx context.Context, userParam User) (User, error) {
