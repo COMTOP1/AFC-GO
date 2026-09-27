@@ -655,6 +655,8 @@ func DBWhatsOnToArticleTemplateFormat(whatsOnDB whatson.WhatsOn) WhatsOnTemplate
 }
 
 // legacyUpload returns the optional file in field, or nil when none was sent.
+//
+//nolint:unparam // every legacy form names its file field "upload"; kept explicit at call sites
 func legacyUpload(c echo.Context, field string) (*upload.File, error) {
 	fh, err := c.FormFile(field)
 	if err != nil {
