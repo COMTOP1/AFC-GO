@@ -71,6 +71,7 @@ func (v *Views) Error404(c echo.Context) error {
 		VisitorCount: v.GetVisitorCount(),
 	}
 
+	c.Response().WriteHeader(http.StatusNotFound)
 	return v.template.RenderTemplate(c.Request().Context(), c.Response().Writer, data, templates.NotFound404Template, templates.RegularType)
 }
 
