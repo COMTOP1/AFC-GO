@@ -354,3 +354,15 @@ Each step compiles, passes lint and tests, and leaves the site deployable.
 - DB schema changes, auth model changes (no JWT/OAuth), pagination (lists are small today and
   unpaginated).
 - `holding/` and `main.go.old`.
+
+## Addendum (found while planning)
+
+- **Security:** `user.Store.VerifyUser` reports "password reset required" for
+  reset-flagged accounts *before* checking the password, and login then issues a
+  reset link, so anyone who knows the email of a new or admin-reset user can set their
+  password. The API must not reproduce this. The fix lives in `VerifyUser` (plan
+  Task 21), which also fixes the legacy site, and should be hotfixed to `main`
+  independently.
+- **`GET /teams/{id}`** is served by the `site` package, not `team`: `player`,
+  `sponsor` and `user` import `team`, so only a package above them can assemble
+  the team page. Team deletion unlinks dependents via a `team.Detacher` interface.
