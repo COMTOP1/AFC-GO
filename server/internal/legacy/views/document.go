@@ -52,84 +52,44 @@ func (v *Views) DocumentAddFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.DocumentAddFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
-
-		name := c.FormValue("name")
-
-		data := struct {
-			Error string `json:"error"`
-		}{
-			Error: "",
-		}
-
-		file, err := c.FormFile("upload")
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to get file for document add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to get file for document add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-		fileName, err := v.fileUpload(c.Request().Context(), file, "document")
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to upload file for document add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to upload file for document add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		_, err = v.document.AddDocument(c.Request().Context(), document.Document{Name: name, FileName: fileName})
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to add document for document add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to add document for document add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		c1.Message = fmt.Sprintf("successfully added \"%s\"", name)
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for document add, error: %+v", err))
-		}
-
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
+	}
+	c1 := v.getSessionData(c)
+	data := struct {
+		Error string `json:"error"`
+	}{}
+	file, err := legacyUpload(c, "upload")
+	if err != nil {
+		data.Error = fmt.Sprintf("failed to get file for document add: %+v", err)
 		return c.JSON(http.StatusOK, data)
 	}
-	return v.invalidMethodUsed(c)
+	created, err := v.documentSvc.Create(c.Request().Context(), document.CreateInput{Name: c.FormValue("name")}, file)
+	if err != nil {
+		slog.Info(fmt.Sprintf("failed to add document for document add, error: %+v", err))
+		data.Error = fmt.Sprintf("failed to add document for document add: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+	v.flash(c, c1, fmt.Sprintf("successfully added \"%s\"", created.Name))
+	return c.JSON(http.StatusOK, data)
 }
 
 func (v *Views) DocumentDeleteFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.DocumentDeleteFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
-
-		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			return fmt.Errorf("failed to get id for document delete, error: %w", err)
-		}
-
-		documentDB, err := v.document.GetDocument(c.Request().Context(), document.Document{ID: id})
-		if err != nil {
-			return fmt.Errorf("failed to get user for document delete, document id: %d, error: %w", id, err)
-		}
-
-		err = v.storage.Delete(c.Request().Context(), documentDB.FileName)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to delete document file for document delete, document id: %d, error: %+v", id, err))
-		}
-
-		err = v.document.DeleteDocument(c.Request().Context(), documentDB)
-		if err != nil {
-			return fmt.Errorf("failed to delete user for document delete, document id: %d, error: %w", id, err)
-		}
-
-		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", documentDB.Name)
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for document delete, document id: %d, error: %+v", id, err))
-		}
-
-		return c.Redirect(http.StatusFound, "/documents")
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
 	}
-	return v.invalidMethodUsed(c)
+	c1 := v.getSessionData(c)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return fmt.Errorf("failed to get id for document delete, error: %w", err)
+	}
+	deleted, err := v.documentSvc.Delete(c.Request().Context(), id)
+	if err != nil {
+		return fmt.Errorf("failed to delete document for document delete, document id: %d, error: %w", id, err)
+	}
+	v.flash(c, c1, fmt.Sprintf("successfully deleted \"%s\"", deleted.Name))
+	return c.Redirect(http.StatusFound, "/documents")
 }

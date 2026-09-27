@@ -48,6 +48,7 @@ type (
 		conf           *Config
 		cookie         *sessions.CookieStore
 		document       *document.Store
+		documentSvc    *document.Service
 		image          *image.Store
 		mailer         *mail.MailerInit
 		news           *news.Store
@@ -86,6 +87,7 @@ type (
 		Affiliation        *affiliation.Store
 		AffiliationService *affiliation.Service
 		Document           *document.Store
+		DocumentService    *document.Service
 		Image              *image.Store
 		News               *news.Store
 		NewsService        *news.Service
@@ -112,6 +114,7 @@ func New(d Deps) *Views {
 		conf:           d.Conf,
 		cookie:         d.Sessions,
 		document:       d.Document,
+		documentSvc:    d.DocumentService,
 		image:          d.Image,
 		mailer:         d.Mailer,
 		news:           d.News,

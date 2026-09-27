@@ -54,18 +54,14 @@ func (s *Store) addDocument(ctx context.Context, documentParam Document) (Docume
 	defer span.End()
 	builder := utils.PSQL().Insert("documents").
 		Columns("name", "file_name").
-		Values(documentParam.Name, documentParam.FileName)
+		Values(documentParam.Name, documentParam.FileName).
+		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add document: %w", err))
 	}
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		span.RecordError(err)
-		return Document{}, fmt.Errorf("failed to add document: %w", err)
-	}
-	_, err = res.RowsAffected()
+	err = s.db.GetContext(ctx, &documentParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
 		return Document{}, fmt.Errorf("failed to add document: %w", err)

@@ -39,6 +39,15 @@ definitions:
       canManageUsers:
         type: boolean
     type: object
+  document.Public:
+    properties:
+      fileUrl:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   news.Article:
     properties:
       content:
@@ -189,6 +198,66 @@ paths:
       summary: Current user
       tags:
       - auth
+  /documents:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/document.Public'
+            type: array
+      summary: List documents
+      tags:
+      - documents
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Display name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: PDF, DOCX, PPTX, TXT or image
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/document.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Upload a document
+      tags:
+      - documents
+  /documents/{id}:
+    delete:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a document
+      tags:
+      - documents
   /health:
     get:
       produces:
