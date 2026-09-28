@@ -22,3 +22,22 @@ func LoggedIn(c echo.Context) bool {
 	ok, _ := c.Get(LoggedInKey).(bool)
 	return ok
 }
+
+// ActorKey is set on the request context once a guard has loaded a
+// logged-in user, alongside LoggedInKey. It carries just enough of the user
+// (id and email) for audit logging in domain packages that can't import
+// auth (auth imports user, so user can't import auth back without a cycle).
+const ActorKey = "web.actor"
+
+// Actor is who performed a write, for audit logging.
+type Actor struct {
+	ID    int
+	Email string
+}
+
+// CurrentActor returns the acting user for this request, set by a guard in
+// the auth package once a session is loaded.
+func CurrentActor(c echo.Context) (Actor, bool) {
+	a, ok := c.Get(ActorKey).(Actor)
+	return a, ok
+}

@@ -72,6 +72,7 @@ func (s *Sessions) load(c echo.Context) (user.User, error) {
 	fresh.Authenticated = true
 	c.Set(contextKey, fresh)
 	c.Set(web.LoggedInKey, true)
+	c.Set(web.ActorKey, web.Actor{ID: fresh.ID, Email: fresh.Email})
 	return fresh, nil
 }
 

@@ -59,6 +59,7 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 	if c.Request().Method != http.MethodPost {
 		return v.invalidMethodUsed(c)
 	}
+	c1 := v.getSessionData(c)
 	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return fmt.Errorf("failed to parse user id for reset, error: %w", err)
@@ -71,6 +72,9 @@ func (v *Views) ResetUserPasswordFunc(c echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to reset password, user id: %d, error: %w", userID, err)
 	}
+	slog.InfoContext(c.Request().Context(), fmt.Sprintf(
+		"user admin: reset password for user id=%d email=%q by actor id=%d email=%q",
+		userID, u.Email, c1.User.ID, c1.User.Email))
 	var message struct {
 		Message string `json:"message"`
 		Error   error  `json:"error"`

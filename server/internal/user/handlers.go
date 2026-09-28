@@ -1,12 +1,22 @@
 package user
 
 import (
+	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
+
+// auditActor identifies who is making a user-administration change, for the
+// audit trail. Anonymous is unreachable in practice (every route here is
+// behind guards.ClubSecretaryHigher), but the zero value still logs safely.
+func auditActor(c echo.Context) web.Actor {
+	a, _ := web.CurrentActor(c)
+	return a
+}
 
 // Handlers serves /users. Every route needs Club Secretary or higher.
 type Handlers struct {
@@ -101,6 +111,10 @@ func (h *Handlers) create(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	actor := auditActor(c)
+	slog.InfoContext(c.Request().Context(), fmt.Sprintf(
+		"user admin: created user id=%d email=%q by actor id=%d email=%q",
+		out.User.ID, out.User.Email, actor.ID, actor.Email))
 	return c.JSON(http.StatusCreated, out)
 }
 
@@ -153,6 +167,10 @@ func (h *Handlers) update(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	actor := auditActor(c)
+	slog.InfoContext(c.Request().Context(), fmt.Sprintf(
+		"user admin: updated user id=%d email=%q by actor id=%d email=%q",
+		out.ID, out.Email, actor.ID, actor.Email))
 	return c.JSON(http.StatusOK, out)
 }
 
@@ -169,9 +187,14 @@ func (h *Handlers) remove(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if _, err = h.svc.Delete(c.Request().Context(), id); err != nil {
+	deleted, err := h.svc.Delete(c.Request().Context(), id)
+	if err != nil {
 		return err
 	}
+	actor := auditActor(c)
+	slog.InfoContext(c.Request().Context(), fmt.Sprintf(
+		"user admin: deleted user id=%d email=%q by actor id=%d email=%q",
+		deleted.ID, deleted.Email, actor.ID, actor.Email))
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -193,5 +216,15 @@ func (h *Handlers) reset(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	// Best-effort: fetch the target's email for the audit line. The email
+	// and reset link/temp password themselves are never logged.
+	email := ""
+	if target, getErr := h.svc.Get(c.Request().Context(), id); getErr == nil {
+		email = target.Email
+	}
+	actor := auditActor(c)
+	slog.InfoContext(c.Request().Context(), fmt.Sprintf(
+		"user admin: reset password for user id=%d email=%q by actor id=%d email=%q",
+		id, email, actor.ID, actor.Email))
 	return c.JSON(http.StatusOK, out)
 }

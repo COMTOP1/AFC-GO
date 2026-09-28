@@ -112,6 +112,9 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 		msg = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s",
 			created.User.Email, created.TempPassword))
 	}
+	slog.InfoContext(c.Request().Context(), fmt.Sprintf(
+		"user admin: created user id=%d email=%q by actor id=%d email=%q",
+		created.User.ID, created.User.Email, c1.User.ID, c1.User.Email))
 	v.flash(c, c1, msg)
 	return c.JSON(http.StatusOK, data)
 }
@@ -154,6 +157,9 @@ func (v *Views) UserEditFunc(c echo.Context) error {
 		data.Error = fmt.Sprintf("failed to edit user for user edit: %+v", err)
 		return c.JSON(http.StatusOK, data)
 	}
+	slog.InfoContext(c.Request().Context(), fmt.Sprintf(
+		"user admin: updated user id=%d email=%q by actor id=%d email=%q",
+		updated.ID, updated.Email, c1.User.ID, c1.User.Email))
 	v.flash(c, c1, fmt.Sprintf("successfully edited \"%s\"", updated.Name))
 	return c.JSON(http.StatusOK, data)
 }
@@ -174,6 +180,9 @@ func (v *Views) UserDeleteFunc(c echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete user for user delete, user id: %d, error: %w", id, err)
 	}
+	slog.InfoContext(c.Request().Context(), fmt.Sprintf(
+		"user admin: deleted user id=%d email=%q by actor id=%d email=%q",
+		deleted.ID, deleted.Email, c1.User.ID, c1.User.Email))
 	v.flash(c, c1, fmt.Sprintf("successfully deleted \"%s\"", deleted.Name))
 	return c.Redirect(http.StatusFound, "/users")
 }
