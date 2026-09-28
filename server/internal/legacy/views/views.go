@@ -14,7 +14,6 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/document"
 	"github.com/COMTOP1/AFC-GO/server/internal/files"
 	"github.com/COMTOP1/AFC-GO/server/internal/image"
-	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/server/internal/legacy/templates"
 	"github.com/COMTOP1/AFC-GO/server/internal/news"
 	"github.com/COMTOP1/AFC-GO/server/internal/player"
@@ -56,7 +55,6 @@ type (
 		fileSvc        *files.Service
 		gallerySvc     *image.Service
 		image          *image.Store
-		mailer         *mail.MailerInit
 		news           *news.Store
 		newsSvc        *news.Service
 		player         *player.Store
@@ -91,7 +89,6 @@ type (
 		Conf     *Config
 		Sessions *sessions.CookieStore
 		Storage  upload.Storage
-		Mailer   *mail.MailerInit
 		Visitors *visitors.Counter
 		Tokens   *auth.Tokens
 
@@ -140,7 +137,6 @@ func New(d Deps) *Views {
 		fileSvc:        d.FileService,
 		gallerySvc:     d.GalleryService,
 		image:          d.Image,
-		mailer:         d.Mailer,
 		news:           d.News,
 		newsSvc:        d.NewsService,
 		player:         d.Player,

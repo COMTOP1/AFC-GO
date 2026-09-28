@@ -148,7 +148,6 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 		},
 		Sessions:           sessions.CookieStore(),
 		Storage:            objects,
-		Mailer:             mailer,
 		Visitors:           counter,
 		Tokens:             tokens,
 		AccountService:     accountSvc,
