@@ -507,10 +507,7 @@ func DBPlayersToTemplateFormat(playersDB []player.Player, teamsDB []team.Team) [
 				playerTemplate.Team = TeamTemplate{IsValid: false}
 			}
 		}
-		// Photos of youth-team or under-18 players are never exposed, matching download.go's
-		// existing "l" source gating.
-		if playerTemplate.IsFileValid && !playerTemplate.Team.IsYouth &&
-			(!playerDB.DateOfBirth.Valid || playerTemplate.Age >= 18) {
+		if player.PhotoVisible(playerDB, playerTemplate.Team.IsYouth, time.Now()) {
 			playerTemplate.FileName = playerDB.FileName
 		}
 		playersTemplate = append(playersTemplate, playerTemplate)
@@ -529,24 +526,7 @@ func DBPlayersTeamToTemplateFormat(playersDB []player.Player, isYouthTeam bool) 
 		if len(playerDB.FileName.String) > 0 && playerDB.FileName.Valid {
 			playerTemplate.IsFileValid = true
 		}
-		age := -1
-		if playerDB.DateOfBirth.Valid {
-			today := time.Now().In(playerDB.DateOfBirth.Time.Location())
-			ty, tm, td := today.Date()
-			today = time.Date(ty, tm, td, 0, 0, 0, 0, time.UTC)
-			by, bm, bd := playerDB.DateOfBirth.Time.Date()
-			birthdate := time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC)
-			if !today.Before(birthdate) {
-				age = ty - by
-				anniversary := birthdate.AddDate(age, 0, 0)
-				if anniversary.After(today) {
-					age--
-				}
-			}
-		}
-		// Photos of youth-team or under-18 players are never exposed, matching download.go's
-		// existing "l" source gating.
-		if playerTemplate.IsFileValid && !isYouthTeam && (!playerDB.DateOfBirth.Valid || age >= 18) {
+		if player.PhotoVisible(playerDB, isYouthTeam, time.Now()) {
 			playerTemplate.FileName = playerDB.FileName
 		}
 		playersTemplate = append(playersTemplate, playerTemplate)

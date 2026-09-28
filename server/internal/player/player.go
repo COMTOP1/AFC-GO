@@ -2,7 +2,6 @@ package player
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
@@ -54,30 +53,10 @@ func (s *Store) AddPlayer(ctx context.Context, playerParam Player) (Player, erro
 	return s.addPlayer(ctx, playerParam)
 }
 
+// EditPlayer writes p as given. Callers load the row first and change only
+// the fields they mean to, so empty values are deliberate.
 func (s *Store) EditPlayer(ctx context.Context, playerParam Player) (Player, error) {
-	playerDB, err := s.GetPlayer(ctx, playerParam)
-	if err != nil {
-		return Player{}, fmt.Errorf("failed to get player for editPlayer: %w", err)
-	}
-	if playerDB.Name != playerParam.Name {
-		playerDB.Name = playerParam.Name
-	}
-	if playerParam.FileName.Valid && (!playerDB.FileName.Valid || playerDB.FileName.String != playerParam.FileName.String) {
-		playerDB.FileName = playerParam.FileName
-	}
-	if playerParam.DateOfBirth.Valid && playerDB.DateOfBirth.Time != playerParam.DateOfBirth.Time {
-		playerDB.DateOfBirth = playerParam.DateOfBirth
-	}
-	if playerParam.Position.Valid && (!playerDB.Position.Valid || playerDB.Position.String != playerParam.Position.String) {
-		playerDB.Position = playerParam.Position
-	}
-	if playerDB.IsCaptain != playerParam.IsCaptain {
-		playerDB.IsCaptain = playerParam.IsCaptain
-	}
-	if playerDB.TeamID != playerParam.TeamID {
-		playerDB.TeamID = playerParam.TeamID
-	}
-	return s.editPlayer(ctx, playerDB)
+	return s.editPlayer(ctx, playerParam)
 }
 
 func (s *Store) DeletePlayer(ctx context.Context, playerParam Player) error {

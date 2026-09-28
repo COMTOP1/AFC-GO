@@ -70,6 +70,34 @@ definitions:
       title:
         type: string
     type: object
+  player.Public:
+    properties:
+      age:
+        type: integer
+      dateOfBirth:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      isCaptain:
+        type: boolean
+      name:
+        type: string
+      position:
+        type: string
+      team:
+        $ref: '#/definitions/player.TeamRef'
+    type: object
+  player.TeamRef:
+    properties:
+      id:
+        type: integer
+      isYouth:
+        type: boolean
+      name:
+        type: string
+    type: object
   programme.Public:
     properties:
       date:
@@ -519,6 +547,142 @@ paths:
       summary: Update a news article
       tags:
       - news
+  /players:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/player.Public'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: List players
+      tags:
+      - players
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Team ID
+        in: formData
+        name: teamId
+        required: true
+        type: integer
+      - description: YYYY-MM-DD
+        in: formData
+        name: dateOfBirth
+        required: true
+        type: string
+      - description: Position
+        in: formData
+        name: position
+        type: string
+      - description: Captain
+        in: formData
+        name: isCaptain
+        type: boolean
+      - description: Photo (never shown for youth or under-18 players)
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/player.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a player
+      tags:
+      - players
+  /players/{id}:
+    delete:
+      parameters:
+      - description: Player ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a player
+      tags:
+      - players
+    patch:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Player ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Name
+        in: formData
+        name: name
+        type: string
+      - description: Team ID
+        in: formData
+        name: teamId
+        type: integer
+      - description: YYYY-MM-DD
+        in: formData
+        name: dateOfBirth
+        type: string
+      - description: Position; empty clears
+        in: formData
+        name: position
+        type: string
+      - description: Captain
+        in: formData
+        name: isCaptain
+        type: boolean
+      - description: Replacement photo
+        in: formData
+        name: image
+        type: file
+      - description: Remove the current photo
+        in: formData
+        name: removeImage
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/player.Public'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update a player
+      tags:
+      - players
   /programmes:
     get:
       parameters:

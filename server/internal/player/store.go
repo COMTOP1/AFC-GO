@@ -76,18 +76,14 @@ func (s *Store) addPlayer(ctx context.Context, playerParam Player) (Player, erro
 	defer span.End()
 	builder := utils.PSQL().Insert("players").
 		Columns("name", "file_name", "date_of_birth", "position", "captain", "team_id").
-		Values(playerParam.Name, playerParam.FileName, playerParam.DateOfBirth, playerParam.Position, playerParam.IsCaptain, playerParam.TeamID)
+		Values(playerParam.Name, playerParam.FileName, playerParam.DateOfBirth, playerParam.Position, playerParam.IsCaptain, playerParam.TeamID).
+		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add player: %w", err))
 	}
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		span.RecordError(err)
-		return Player{}, fmt.Errorf("failed to add player: %w", err)
-	}
-	_, err = res.RowsAffected()
+	err = s.db.GetContext(ctx, &playerParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
 		return Player{}, fmt.Errorf("failed to add player: %w", err)
