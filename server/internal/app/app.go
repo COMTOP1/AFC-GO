@@ -109,6 +109,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	programmeSvc := programme.NewService(s.Programme, uploads)
 	teamSvc := team.NewService(s.Team, uploads, s.Player, s.Sponsor, s.User)
 	playerSvc := player.NewService(s.Player, s.Team, uploads)
+	settingSvc := setting.NewService(s.Setting)
 	sessions := auth.NewSessions(conf.Session, s.User)
 	tokens := auth.NewTokens(conf.Redis)
 	counter := visitors.New(s.Setting, 30*time.Second, "afcaldermaston.co.uk")
@@ -137,6 +138,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 		Programme:          s.Programme,
 		ProgrammeService:   programmeSvc,
 		Setting:            s.Setting,
+		SettingService:     settingSvc,
 		Sponsor:            s.Sponsor,
 		SponsorService:     sponsorSvc,
 		Team:               s.Team,
@@ -176,6 +178,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	document.NewHandlers(documentSvc).Register(api, guards)
 	image.NewHandlers(gallerySvc).Register(api, guards)
 	programme.NewHandlers(programmeSvc).Register(api, guards)
+	setting.NewHandlers(settingSvc).Register(api, guards)
 	team.NewHandlers(teamSvc).Register(api, guards)
 	player.NewHandlers(playerSvc).Register(api, guards)
 

@@ -7,10 +7,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/legacy/templates"
-	"github.com/COMTOP1/AFC-GO/server/internal/setting"
 	"github.com/COMTOP1/AFC-GO/server/internal/user"
 )
 
@@ -91,44 +89,8 @@ func (v *Views) _infoEditGet(c echo.Context) error {
 }
 
 func (v *Views) _infoEditPost(c echo.Context) error {
-	spanCtx, span := tracer.Start(c.Request().Context(), "views._infoEditPost")
-	defer span.End()
-	c.SetRequest(c.Request().WithContext(spanCtx))
-	c1 := v.getSessionData(c)
-	_ = c1
-
-	content := c.FormValue("htmlContent")
-
-	p := bluemonday.NewPolicy()
-	p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
-		"blockquote", "pre", "hr")
-	p.AllowAttrs("class").OnElements("h2")
-	p.AllowAttrs("href", "style").OnElements("a")
-	p.AllowURLSchemes("mailto", "http", "https")
-	p.RequireNoFollowOnLinks(false)
-
-	// Justification - via inline style
-	p.AllowAttrs("style").OnElements("div", "p", "h2", "span")
-
-	safe := p.Sanitize(content)
-
-	_, err := v.setting.GetSetting(c.Request().Context(), "infoContent")
-	if err != nil {
-		_, err = v.setting.AddSetting(c.Request().Context(), setting.Setting{
-			ID:          "infoContent",
-			SettingText: safe,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to add setting for info content, error: %w", err)
-		}
-	} else {
-		_, err = v.setting.EditSetting(c.Request().Context(), setting.Setting{
-			ID:          "infoContent",
-			SettingText: safe,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to edit setting for info content, error: %w", err)
-		}
+	if _, err := v.settingSvc.SetInfo(c.Request().Context(), c.FormValue("htmlContent")); err != nil {
+		return fmt.Errorf("failed to save info content, error: %w", err)
 	}
 	return c.Redirect(http.StatusFound, "/info/edit")
 }

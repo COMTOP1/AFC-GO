@@ -123,6 +123,16 @@ definitions:
       season:
         type: string
     type: object
+  setting.DisplayEmail:
+    properties:
+      email:
+        type: string
+    type: object
+  setting.InfoContent:
+    properties:
+      content:
+        type: string
+    type: object
   sponsor.Public:
     properties:
       id:
@@ -420,6 +430,38 @@ paths:
       summary: Health check
       tags:
       - system
+  /info:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/setting.InfoContent'
+      summary: Get the info page
+      tags:
+      - settings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: HTML content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/setting.InfoContent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/setting.InfoContent'
+      summary: Update the info page
+      tags:
+      - settings
   /news:
     get:
       produces:
@@ -850,6 +892,31 @@ paths:
       summary: Rename a season
       tags:
       - programmes
+  /settings/display-email:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Email; empty removes it
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/setting.DisplayEmail'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/setting.DisplayEmail'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Set the public contact email
+      tags:
+      - settings
   /sponsors:
     get:
       produces:

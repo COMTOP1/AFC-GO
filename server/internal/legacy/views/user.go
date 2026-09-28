@@ -17,7 +17,6 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/server/internal/legacy/templates"
 	"github.com/COMTOP1/AFC-GO/server/internal/role"
-	"github.com/COMTOP1/AFC-GO/server/internal/setting"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
 	"github.com/COMTOP1/AFC-GO/server/internal/user"
 	"github.com/COMTOP1/AFC-GO/server/internal/utils"
@@ -71,69 +70,20 @@ func (v *Views) UsersSetDisplayEmailFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.UsersSetDisplayEmailFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
-
-		verifier := emailverifier.NewVerifier()
-
-		var data struct {
-			Error string `json:"error"`
-		}
-
-		tempEmail := c.FormValue("email")
-
-		if len(tempEmail) != 0 {
-			res, err := verifier.Verify(tempEmail)
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to parse email for display email, error: %+v", err))
-				data.Error = fmt.Sprintf("failed to parse email for display email: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-			if !res.Syntax.Valid {
-				slog.Info("failed to parse email for display email: syntax is invalid")
-				data.Error = "failed to parse email for display email: syntax is invalid"
-				return c.JSON(http.StatusOK, data)
-			}
-
-			_, err = v.setting.GetSetting(c.Request().Context(), "displayEmail")
-			if err != nil {
-				_, err = v.setting.AddSetting(c.Request().Context(), setting.Setting{
-					ID:          "displayEmail",
-					SettingText: tempEmail,
-				})
-				if err != nil {
-					slog.Info(fmt.Sprintf("failed to add setting for display email, error: %+v", err))
-					data.Error = fmt.Sprintf("failed to add setting for display email: %+v", err)
-					return c.JSON(http.StatusOK, data)
-				}
-			} else {
-				_, err = v.setting.EditSetting(c.Request().Context(), setting.Setting{
-					ID:          "displayEmail",
-					SettingText: tempEmail,
-				})
-				if err != nil {
-					slog.Info(fmt.Sprintf("failed to edit setting for display email, error: %+v", err))
-					data.Error = fmt.Sprintf("failed to edit setting for display email: %+v", err)
-					return c.JSON(http.StatusOK, data)
-				}
-			}
-		} else {
-			err := v.setting.DeleteSetting(c.Request().Context(), "displayEmail")
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to delete setting for display email, error: %+v", err))
-			}
-		}
-
-		c1.Message = "successfully edited display email"
-		c1.MsgType = "is-success"
-		err := v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for display email, error: %+v", err))
-		}
-
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
+	}
+	c1 := v.getSessionData(c)
+	var data struct {
+		Error string `json:"error"`
+	}
+	if _, err := v.settingSvc.SetDisplayEmail(c.Request().Context(), c.FormValue("email")); err != nil {
+		slog.Info(fmt.Sprintf("failed to set display email, error: %+v", err))
+		data.Error = fmt.Sprintf("failed to set display email: %+v", err)
 		return c.JSON(http.StatusOK, data)
 	}
-	return v.invalidMethodUsed(c)
+	v.flash(c, c1, "successfully edited display email")
+	return c.JSON(http.StatusOK, data)
 }
 
 func (v *Views) UserAddFunc(c echo.Context) error {

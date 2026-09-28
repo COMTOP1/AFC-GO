@@ -340,6 +340,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/info": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Get the info page",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/setting.InfoContent"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Update the info page",
+                "parameters": [
+                    {
+                        "description": "HTML content",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/setting.InfoContent"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/setting.InfoContent"
+                        }
+                    }
+                }
+            }
+        },
         "/news": {
             "get": {
                 "produces": [
@@ -985,6 +1035,45 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/settings/display-email": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Set the public contact email",
+                "parameters": [
+                    {
+                        "description": "Email; empty removes it",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/setting.DisplayEmail"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/setting.DisplayEmail"
                         }
                     },
                     "422": {
@@ -1786,6 +1875,22 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "season": {
+                    "type": "string"
+                }
+            }
+        },
+        "setting.DisplayEmail": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "setting.InfoContent": {
+            "type": "object",
+            "properties": {
+                "content": {
                     "type": "string"
                 }
             }

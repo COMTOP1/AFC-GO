@@ -59,6 +59,7 @@ type (
 		programme      *programme.Store
 		programmeSvc   *programme.Service
 		setting        *setting.Store
+		settingSvc     *setting.Service
 		sponsor        *sponsor.Store
 		sponsorSvc     *sponsor.Service
 		storage        upload.Storage
@@ -101,6 +102,7 @@ type (
 		Programme          *programme.Store
 		ProgrammeService   *programme.Service
 		Setting            *setting.Store
+		SettingService     *setting.Service
 		Sponsor            *sponsor.Store
 		SponsorService     *sponsor.Service
 		Team               *team.Store
@@ -133,6 +135,7 @@ func New(d Deps) *Views {
 		programme:      d.Programme,
 		programmeSvc:   d.ProgrammeService,
 		setting:        d.Setting,
+		settingSvc:     d.SettingService,
 		sponsor:        d.Sponsor,
 		sponsorSvc:     d.SponsorService,
 		storage:        d.Storage,
