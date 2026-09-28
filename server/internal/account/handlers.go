@@ -51,6 +51,9 @@ func (h *Handlers) get(c echo.Context) error {
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/account/image [put]
 func (h *Handlers) setImage(c echo.Context) error {
+	if err := web.RequireForm(c); err != nil {
+		return err
+	}
 	image, err := web.FormFile(c, "image")
 	if err != nil {
 		return err

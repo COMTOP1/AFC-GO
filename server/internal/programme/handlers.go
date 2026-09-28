@@ -74,6 +74,9 @@ func (h *Handlers) list(c echo.Context) error {
 //	@Failure	422			{object}	web.ErrorResponse
 //	@Router		/programmes [post]
 func (h *Handlers) create(c echo.Context) error {
+	if err := web.RequireForm(c); err != nil {
+		return err
+	}
 	date, err := web.FormDate(c, "date")
 	if err != nil {
 		return err

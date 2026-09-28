@@ -104,6 +104,17 @@ func TestPatchIsPartial(t *testing.T) {
 	assert.False(t, h.store.row(1).FileName.Valid)
 }
 
+// TestUpdateRejectsJSONBody pins Review Focus #2: web.FormString returns nil
+// for every field when the body isn't a form, so a JSON PATCH used to look
+// like "no fields sent" and succeed (200) while changing nothing. It must
+// now be rejected outright with 415, leaving the article untouched.
+func TestUpdateRejectsJSONBody(t *testing.T) {
+	h := newHarness(t)
+	rec := h.editor.JSON(t, http.MethodPatch, "/api/v1/news/1", map[string]string{"title": "Hijacked"})
+	assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code, rec.Body.String())
+	assert.Equal(t, "Opener", h.store.row(1).Title, "article must be unchanged")
+}
+
 func TestDelete(t *testing.T) {
 	h := newHarness(t)
 	rec := h.editor.JSON(t, http.MethodDelete, "/api/v1/news/1", nil)

@@ -54,6 +54,9 @@ func (h *Handlers) list(c echo.Context) error {
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/sponsors [post]
 func (h *Handlers) create(c echo.Context) error {
+	if err := web.RequireForm(c); err != nil {
+		return err
+	}
 	image, err := web.FormFile(c, "image")
 	if err != nil {
 		return err

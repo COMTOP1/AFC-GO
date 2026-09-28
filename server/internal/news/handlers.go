@@ -75,6 +75,9 @@ func (h *Handlers) get(c echo.Context) error {
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/news [post]
 func (h *Handlers) create(c echo.Context) error {
+	if err := web.RequireForm(c); err != nil {
+		return err
+	}
 	image, err := web.FormFile(c, "image")
 	if err != nil {
 		return err
@@ -107,6 +110,9 @@ func (h *Handlers) create(c echo.Context) error {
 func (h *Handlers) update(c echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
+		return err
+	}
+	if err = web.RequireForm(c); err != nil {
 		return err
 	}
 	image, err := web.FormFile(c, "image")

@@ -37,6 +37,29 @@ func ParamID(c echo.Context, name string) (int, error) {
 	return id, nil
 }
 
+// RequireForm rejects a request whose Content-Type isn't a form: without it,
+// web.FormString and friends silently return nil for a JSON (or any other)
+// body, so a write with the wrong Content-Type would look like "no fields
+// sent" and succeed doing nothing instead of failing loudly. Handlers that
+// read multipart or urlencoded form fields must call this first.
+func RequireForm(c echo.Context) error {
+	req := c.Request()
+	ct := req.Header.Get(echo.HeaderContentType)
+	switch {
+	case strings.HasPrefix(ct, echo.MIMEMultipartForm):
+		if err := req.ParseMultipartForm(32 << 20); err != nil { // 32 MB, echo's own default
+			return svcerr.InvalidField("body", "invalid multipart form: "+err.Error())
+		}
+	case strings.HasPrefix(ct, echo.MIMEApplicationForm):
+		if err := req.ParseForm(); err != nil {
+			return svcerr.InvalidField("body", "invalid form body: "+err.Error())
+		}
+	default:
+		return echo.NewHTTPError(http.StatusUnsupportedMediaType, "use multipart/form-data or application/x-www-form-urlencoded")
+	}
+	return nil
+}
+
 // FormFile returns the uploaded file for field, or nil when none was sent.
 func FormFile(c echo.Context, field string) (*upload.File, error) {
 	fh, err := c.FormFile(field)

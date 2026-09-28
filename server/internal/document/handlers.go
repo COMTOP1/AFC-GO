@@ -51,6 +51,9 @@ func (h *Handlers) list(c echo.Context) error {
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/documents [post]
 func (h *Handlers) create(c echo.Context) error {
+	if err := web.RequireForm(c); err != nil {
+		return err
+	}
 	file, err := web.FormFile(c, "file")
 	if err != nil {
 		return err
