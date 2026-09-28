@@ -138,6 +138,25 @@ const docTemplate = `{
                 }
             }
         },
+        "/contact": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "site"
+                ],
+                "summary": "Contact page",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/site.Contact"
+                        }
+                    }
+                }
+            }
+        },
         "/documents": {
             "get": {
                 "produces": [
@@ -335,6 +354,25 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/web.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/home": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "site"
+                ],
+                "summary": "Home page",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/site.Home"
                         }
                     }
                 }
@@ -1085,6 +1123,25 @@ const docTemplate = `{
                 }
             }
         },
+        "/site": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "site"
+                ],
+                "summary": "Site layout data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/site.Info"
+                        }
+                    }
+                }
+            }
+        },
         "/sponsors": {
             "get": {
                 "produces": [
@@ -1320,6 +1377,38 @@ const docTemplate = `{
             }
         },
         "/teams/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "teams"
+                ],
+                "summary": "Team page",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Team ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/site.TeamDetail"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "tags": [
                     "teams"
@@ -1797,6 +1886,26 @@ const docTemplate = `{
                 }
             }
         },
+        "player.Member": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "imageUrl": {
+                    "type": "string"
+                },
+                "isCaptain": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                }
+            }
+        },
         "player.Public": {
             "type": "object",
             "properties": {
@@ -1892,6 +2001,123 @@ const docTemplate = `{
             "properties": {
                 "content": {
                     "type": "string"
+                }
+            }
+        },
+        "site.Contact": {
+            "type": "object",
+            "properties": {
+                "displayEmail": {
+                    "type": "string"
+                },
+                "people": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/site.ContactPerson"
+                    }
+                }
+            }
+        },
+        "site.ContactPerson": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "imageUrl": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "site.Home": {
+            "type": "object",
+            "properties": {
+                "affiliations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/affiliation.Public"
+                    }
+                },
+                "latestNews": {
+                    "$ref": "#/definitions/news.Article"
+                },
+                "nextEvent": {
+                    "$ref": "#/definitions/whatson.Event"
+                },
+                "sponsors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sponsor.Public"
+                    }
+                }
+            }
+        },
+        "site.Info": {
+            "type": "object",
+            "properties": {
+                "displayEmail": {
+                    "type": "string"
+                },
+                "teams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/team.Public"
+                    }
+                },
+                "version": {
+                    "type": "string"
+                },
+                "visitorCount": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "site.Manager": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "site.TeamDetail": {
+            "type": "object",
+            "properties": {
+                "managers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/site.Manager"
+                    }
+                },
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/player.Member"
+                    }
+                },
+                "sponsors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sponsor.Public"
+                    }
+                },
+                "team": {
+                    "$ref": "#/definitions/team.Public"
                 }
             }
         },

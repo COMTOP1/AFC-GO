@@ -26,6 +26,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/player"
 	"github.com/COMTOP1/AFC-GO/server/internal/programme"
 	"github.com/COMTOP1/AFC-GO/server/internal/setting"
+	"github.com/COMTOP1/AFC-GO/server/internal/site"
 	"github.com/COMTOP1/AFC-GO/server/internal/sponsor"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
@@ -114,6 +115,12 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	tokens := auth.NewTokens(conf.Redis)
 	counter := visitors.New(s.Setting, 30*time.Second, "afcaldermaston.co.uk")
 
+	siteSvc := site.NewService(site.Deps{
+		News: newsSvc, WhatsOn: whatsOnSvc, Sponsors: sponsorSvc, Affiliations: affiliationSvc,
+		Teams: teamSvc, Players: playerSvc, Settings: settingSvc, Users: s.User, Visitors: counter,
+		Files: uploads, Version: conf.Version,
+	})
+
 	legacyViews := views.New(views.Deps{
 		Conf: &views.Config{
 			DomainName:        conf.DomainName,
@@ -181,6 +188,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	setting.NewHandlers(settingSvc).Register(api, guards)
 	team.NewHandlers(teamSvc).Register(api, guards)
 	player.NewHandlers(playerSvc).Register(api, guards)
+	site.NewHandlers(siteSvc).Register(api, guards)
 
 	return &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens}
 }

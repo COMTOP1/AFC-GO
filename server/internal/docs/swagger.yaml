@@ -70,6 +70,19 @@ definitions:
       title:
         type: string
     type: object
+  player.Member:
+    properties:
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      isCaptain:
+        type: boolean
+      name:
+        type: string
+      position:
+        type: string
+    type: object
   player.Public:
     properties:
       age:
@@ -132,6 +145,82 @@ definitions:
     properties:
       content:
         type: string
+    type: object
+  site.Contact:
+    properties:
+      displayEmail:
+        type: string
+      people:
+        items:
+          $ref: '#/definitions/site.ContactPerson'
+        type: array
+    type: object
+  site.ContactPerson:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  site.Home:
+    properties:
+      affiliations:
+        items:
+          $ref: '#/definitions/affiliation.Public'
+        type: array
+      latestNews:
+        $ref: '#/definitions/news.Article'
+      nextEvent:
+        $ref: '#/definitions/whatson.Event'
+      sponsors:
+        items:
+          $ref: '#/definitions/sponsor.Public'
+        type: array
+    type: object
+  site.Info:
+    properties:
+      displayEmail:
+        type: string
+      teams:
+        items:
+          $ref: '#/definitions/team.Public'
+        type: array
+      version:
+        type: string
+      visitorCount:
+        type: integer
+      year:
+        type: integer
+    type: object
+  site.Manager:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  site.TeamDetail:
+    properties:
+      managers:
+        items:
+          $ref: '#/definitions/site.Manager'
+        type: array
+      players:
+        items:
+          $ref: '#/definitions/player.Member'
+        type: array
+      sponsors:
+        items:
+          $ref: '#/definitions/sponsor.Public'
+        type: array
+      team:
+        $ref: '#/definitions/team.Public'
     type: object
   sponsor.Public:
     properties:
@@ -299,6 +388,18 @@ paths:
       summary: Current user
       tags:
       - auth
+  /contact:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/site.Contact'
+      summary: Contact page
+      tags:
+      - site
   /documents:
     get:
       produces:
@@ -430,6 +531,18 @@ paths:
       summary: Health check
       tags:
       - system
+  /home:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/site.Home'
+      summary: Home page
+      tags:
+      - site
   /info:
     get:
       produces:
@@ -917,6 +1030,18 @@ paths:
       summary: Set the public contact email
       tags:
       - settings
+  /site:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/site.Info'
+      summary: Site layout data
+      tags:
+      - site
   /sponsors:
     get:
       produces:
@@ -1087,6 +1212,27 @@ paths:
           schema:
             $ref: '#/definitions/web.ErrorResponse'
       summary: Delete a team
+      tags:
+      - teams
+    get:
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/site.TeamDetail'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Team page
       tags:
       - teams
     patch:
