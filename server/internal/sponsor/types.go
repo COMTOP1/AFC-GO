@@ -7,7 +7,7 @@ type Public struct {
 	Name     string `json:"name"`
 	Website  string `json:"website,omitempty"`
 	Purpose  string `json:"purpose,omitempty"`
-	Team     string `json:"team"`
+	Team     string `json:"team,omitempty"`
 	ImageURL string `json:"imageUrl,omitempty"`
 }
 
