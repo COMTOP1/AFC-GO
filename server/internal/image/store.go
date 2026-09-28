@@ -54,18 +54,14 @@ func (s *Store) addImage(ctx context.Context, imageParam Image) (Image, error) {
 	defer span.End()
 	builder := utils.PSQL().Insert("images").
 		Columns("file_name", "caption").
-		Values(imageParam.FileName, imageParam.Caption)
+		Values(imageParam.FileName, imageParam.Caption).
+		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add image: %w", err))
 	}
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		span.RecordError(err)
-		return Image{}, fmt.Errorf("failed to add image: %w", err)
-	}
-	_, err = res.RowsAffected()
+	err = s.db.GetContext(ctx, &imageParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
 		return Image{}, fmt.Errorf("failed to add image: %w", err)

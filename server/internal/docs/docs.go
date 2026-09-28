@@ -230,6 +230,97 @@ const docTemplate = `{
                 }
             }
         },
+        "/gallery": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gallery"
+                ],
+                "summary": "List gallery photos",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/image.Public"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gallery"
+                ],
+                "summary": "Upload a gallery photo",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Caption",
+                        "name": "caption",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Photo",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/image.Public"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/gallery/{id}": {
+            "delete": {
+                "tags": [
+                    "gallery"
+                ],
+                "summary": "Delete a gallery photo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Photo ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "produces": [
@@ -846,6 +937,20 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "image.Public": {
+            "type": "object",
+            "properties": {
+                "caption": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "imageUrl": {
                     "type": "string"
                 }
             }
