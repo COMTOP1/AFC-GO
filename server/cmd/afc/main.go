@@ -140,6 +140,9 @@ func main() {
 	mailPort, _ := strconv.Atoi(os.Getenv("MAIL_PORT"))
 
 	domainName := os.Getenv("DOMAIN_NAME")
+	if domainName == "" {
+		slog.Warn("DOMAIN_NAME is empty: the session cookie will be marked Secure, so logging in over plain HTTP will not work; set DOMAIN_NAME (or have it start with \"localhost\" for local development over HTTP)")
+	}
 
 	s3Region := os.Getenv("S3_REGION")
 	if s3Region == "" {
