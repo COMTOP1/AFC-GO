@@ -266,6 +266,43 @@ definitions:
       physio:
         type: string
     type: object
+  user.Admin:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      role:
+        description: display name, e.g. "Club Secretary"
+        type: string
+      roleCode:
+        description: input code, e.g. "club_secretary"
+        type: string
+      teamId:
+        type: integer
+    type: object
+  user.Created:
+    properties:
+      emailSent:
+        type: boolean
+      tempPassword:
+        type: string
+      user:
+        $ref: '#/definitions/user.Admin'
+    type: object
+  user.ResetResult:
+    properties:
+      emailSent:
+        type: boolean
+      resetUrl:
+        type: string
+    type: object
   web.APIError:
     properties:
       code:
@@ -1338,6 +1375,193 @@ paths:
       summary: Update a team
       tags:
       - teams
+  /users:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/user.Admin'
+            type: array
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: List users
+      tags:
+      - users
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: Phone
+        in: formData
+        name: phone
+        type: string
+      - description: Role code, e.g. manager, club_secretary
+        in: formData
+        name: role
+        required: true
+        type: string
+      - description: Team (managers only)
+        in: formData
+        name: teamId
+        type: integer
+      - description: Photo
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/user.Created'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a user
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a user
+      tags:
+      - users
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.Admin'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Get a user
+      tags:
+      - users
+    patch:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Name
+        in: formData
+        name: name
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        type: string
+      - description: Phone; empty clears
+        in: formData
+        name: phone
+        type: string
+      - description: Role code
+        in: formData
+        name: role
+        type: string
+      - description: Team (managers only)
+        in: formData
+        name: teamId
+        type: integer
+      - description: Replacement photo
+        in: formData
+        name: image
+        type: file
+      - description: Remove the current photo
+        in: formData
+        name: removeImage
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.Admin'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update a user
+      tags:
+      - users
+  /users/{id}/reset:
+    post:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.ResetResult'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Reset a user's password
+      tags:
+      - users
   /whatson:
     get:
       parameters:

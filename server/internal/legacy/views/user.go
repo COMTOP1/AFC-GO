@@ -3,23 +3,15 @@ package views
 import (
 	"fmt"
 	"html"
-	"html/template"
 	"log/slog"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
-	emailverifier "github.com/AfterShip/email-verifier"
 	"github.com/labstack/echo/v4"
-	"gopkg.in/guregu/null.v4"
 
-	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/server/internal/legacy/templates"
-	"github.com/COMTOP1/AFC-GO/server/internal/role"
-	"github.com/COMTOP1/AFC-GO/server/internal/team"
 	"github.com/COMTOP1/AFC-GO/server/internal/user"
-	"github.com/COMTOP1/AFC-GO/server/internal/utils"
 )
 
 func (v *Views) UsersFunc(c echo.Context) error {
@@ -90,367 +82,98 @@ func (v *Views) UserAddFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.UserAddFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
-
-		verifier := emailverifier.NewVerifier()
-
-		var data struct {
-			Error string `json:"error"`
-		}
-
-		name := c.FormValue("name")
-		email := c.FormValue("email")
-		phone := c.FormValue("phone")
-
-		if len(name) == 0 {
-			slog.Info("name must not be empty")
-			data.Error = "name must not be empty"
-			return c.JSON(http.StatusOK, data)
-		}
-
-		res, err := verifier.Verify(email)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to parse email for user add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to parse email for user add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-		if !res.Syntax.Valid {
-			slog.Info("failed to parse email for user add, error: syntax is invalid")
-			data.Error = "failed to parse email for user add: syntax is invalid"
-			return c.JSON(http.StatusOK, data)
-		}
-
-		formRole, err := role.GetRole(c.FormValue("role"))
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to get role for user add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to get role for user add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		teamID, err := strconv.Atoi(c.FormValue("userTeam"))
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to get teamID for user add, error: %+v, proceeding with no team", err))
-			teamID = 0
-		}
-		if teamID < 0 {
-			slog.Info("failed to parse negative number, proceeding with no team")
-			teamID = 0
-		}
-
-		if formRole.String() == role.Manager.String() {
-			_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to get team for user add, team id: %d, error: %+v", teamID, err))
-				data.Error = fmt.Sprintf("failed to get team for user add, team id: %d: %+v", teamID, err)
-				return c.JSON(http.StatusOK, data)
-			}
-		} else {
-			teamID = 0
-		}
-
-		password, err := utils.GenerateRandom(utils.GeneratePassword)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to generate password for user add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to generate password for user add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		salt, err := utils.GenerateRandom(utils.GenerateSalt)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to generate salt for user add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to generate salt for user add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		hash, err := utils.HashPassScrypt([]byte(password), []byte(salt), v.conf.Security.ScryptWorkFactor, v.conf.Security.ScryptBlockSize, v.conf.Security.ScryptParallelismFactor, v.conf.Security.KeyLength)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to generate password hash for user add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to generate password hash for user add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		var fileName string
-		hasUpload := true
-
-		file, err := c.FormFile("upload")
-		if err != nil {
-			if !strings.Contains(err.Error(), "no such file") {
-				slog.Info(fmt.Sprintf("failed to get file for user add, error: %+v", err))
-				data.Error = fmt.Sprintf("failed to get file for user add: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-			hasUpload = false
-		}
-		if hasUpload {
-			fileName, err = v.fileUpload(c.Request().Context(), file, "user")
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to upload file for user add, error: %+v", err))
-				data.Error = fmt.Sprintf("failed to upload file for user add: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-		}
-
-		u := user.User{
-			Name:          name,
-			Email:         email,
-			Phone:         null.NewString(phone, len(phone) > 0),
-			TeamID:        teamID,
-			Role:          formRole,
-			FileName:      null.NewString(fileName, hasUpload),
-			ResetPassword: true,
-			Hash:          null.StringFrom(hash),
-			Salt:          null.NewString(salt, len(salt) > 0),
-		}
-
-		_, err = v.user.AddUser(c.Request().Context(), u)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to add user for user add, error: %+v", err))
-			data.Error = fmt.Sprintf("failed to add user for user add: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		mailer := v.mailer.ConnectMailer(c.Request().Context())
-
-		if mailer != nil {
-			var tmpl *template.Template
-			tmpl, err = v.template.GetEmailTemplate(templates.SignupEmailTemplate)
-			if err != nil {
-				c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - no mailer present. Please send the username and password to this email: %s, password: %s", email, password))
-				c1.MsgType = "is-warning"
-				slog.Info(fmt.Sprintf("failed to get email for user add, error: %+v", err))
-				slog.Info("proceeding")
-			} else {
-
-				mailFile := mail.Mail{
-					Subject: "Welcome to AFC Aldermaston!",
-					Tpl:     tmpl,
-					To:      u.Email,
-					From:    "Aldermaston AFC No-Reply <no-reply.afc@bswdi.co.uk>",
-					TplData: struct {
-						Name     string
-						Email    string
-						Password string
-						Domain   string
-					}{
-						Name:     name,
-						Email:    email,
-						Password: password,
-						Domain:   v.conf.DomainName,
-					},
-				}
-
-				err = mailer.SendMail(c.Request().Context(), mailFile)
-				if err != nil {
-					c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s", email, password))
-					c1.MsgType = "is-warning"
-					slog.Info(fmt.Sprintf("failed to send email for user add, error: %+v", err))
-					slog.Info("proceeding")
-				} else {
-					c1.Message = fmt.Sprintf("successfully created user, sent signup email to: \"%s\"", email)
-					c1.MsgType = "is-success"
-				}
-			}
-		} else {
-			c1.Message = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s", email, password))
-			c1.MsgType = "is-warning"
-			slog.Info("no mailer present")
-			slog.Info("proceeding")
-		}
-		slog.Info(fmt.Sprintf("created user: %s, by: %d - %s", u.Email, c1.User.ID, c1.User.Email))
-
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for uploadImage: %+v", err))
-		}
-
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
+	}
+	c1 := v.getSessionData(c)
+	var data struct {
+		Error string `json:"error"`
+	}
+	teamID, err := strconv.Atoi(c.FormValue("userTeam"))
+	if err != nil || teamID < 0 {
+		teamID = 0
+	}
+	image, err := legacyUpload(c, "upload")
+	if err != nil {
+		data.Error = fmt.Sprintf("failed to get file for user add: %+v", err)
 		return c.JSON(http.StatusOK, data)
 	}
-	return v.invalidMethodUsed(c)
+	created, err := v.userSvc.Create(c.Request().Context(), user.CreateInput{
+		Name: c.FormValue("name"), Email: c.FormValue("email"), Phone: c.FormValue("phone"),
+		Role: c.FormValue("role"), TeamID: teamID,
+	}, image)
+	if err != nil {
+		slog.Info(fmt.Sprintf("failed to add user for user add, error: %+v", err))
+		data.Error = fmt.Sprintf("failed to add user for user add: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+	msg := fmt.Sprintf("successfully created user, sent signup email to: \"%s\"", created.User.Email)
+	if !created.EmailSent {
+		msg = html.UnescapeString(fmt.Sprintf("successfully created user - failed to send email. Please send the username and password to this email: %s, password: %s",
+			created.User.Email, created.TempPassword))
+	}
+	v.flash(c, c1, msg)
+	return c.JSON(http.StatusOK, data)
 }
 
 func (v *Views) UserEditFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.UserEditFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
-
-		userID, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			return fmt.Errorf("failed to parse id for user edit, error: %w", err)
-		}
-
-		userDB, err := v.user.GetUser(c.Request().Context(), user.User{ID: userID})
-		if err != nil {
-			return fmt.Errorf("failed to get user for user edit, user id: %d, error: %w", userID, err)
-		}
-
-		verifier := emailverifier.NewVerifier()
-
-		var data struct {
-			Error string `json:"error"`
-		}
-
-		tempName := c.FormValue("name")
-		tempEmail := c.FormValue("email")
-		tempPhone := c.FormValue("phone")
-
-		userDB.Phone = null.NewString(tempPhone, len(tempPhone) > 0)
-
-		if len(tempName) == 0 {
-			slog.Info("name must not be empty")
-			data.Error = "name must not be empty"
-			return c.JSON(http.StatusOK, data)
-		}
-
-		userDB.Name = tempName
-
-		res, err := verifier.Verify(tempEmail)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to parse email for user edit, user id: %d, error: %+v", userID, err))
-			data.Error = fmt.Sprintf("failed to parse email for user edit: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-		if !res.Syntax.Valid {
-			slog.Info("failed to parse email for user edit: syntax is invalid")
-			data.Error = "failed to parse email for user edit: syntax is invalid"
-			return c.JSON(http.StatusOK, data)
-		}
-
-		userDB.Email = tempEmail
-
-		formRole, err := role.GetRole(c.FormValue("role"))
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to get role for user edit, user id: %d, error: %+v", userID, err))
-			data.Error = fmt.Sprintf("failed to get role for user edit: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		userDB.Role = formRole
-
-		teamID, err := strconv.Atoi(c.FormValue("userTeam"))
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to get teamID for user edit, user id: %d, error: %+v, proceeding with no team", userID, err))
-			teamID = 0
-		}
-		if teamID < 0 {
-			slog.Info("failed to parse negative number, proceeding with no team")
-			teamID = 0
-		}
-
-		if formRole.String() == role.Manager.String() {
-			_, err = v.team.GetTeam(c.Request().Context(), team.Team{ID: teamID})
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to get team for user edit, user id: %d, team id: %d, error: %+v", userID, teamID, err))
-				data.Error = fmt.Sprintf("failed to get team for user edit, team id: %d: %+v", teamID, err)
-				return c.JSON(http.StatusOK, data)
-			}
-		} else {
-			teamID = 0
-		}
-
-		userDB.TeamID = teamID
-
-		hasUpload := true
-
-		file, err := c.FormFile("upload")
-		if err != nil {
-			if !strings.Contains(err.Error(), "no such file") {
-				slog.Info(fmt.Sprintf("failed to get file for user edit, user id: %d, error: %+v", userID, err))
-				data.Error = fmt.Sprintf("failed to get file for user edit: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-			hasUpload = false
-		}
-		if hasUpload {
-			var tempFileName string
-			tempFileName, err = v.fileUpload(c.Request().Context(), file, "user")
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to upload file for user edit, user id: %d, error: %+v", userID, err))
-				data.Error = fmt.Sprintf("failed to upload file for user edit: %+v", err)
-				return c.JSON(http.StatusOK, data)
-			}
-			if userDB.FileName.Valid {
-				err = v.storage.Delete(c.Request().Context(), userDB.FileName.String)
-				if err != nil {
-					slog.Info(fmt.Sprintf("failed to delete old image for user edit, user id: %d, error: %+v", userID, err))
-				}
-			}
-			userDB.FileName = null.NewString(tempFileName, len(tempFileName) > 0)
-		}
-
-		tempRemoveUserImage := c.FormValue("removeUserImage")
-		if tempRemoveUserImage == "Y" {
-			if userDB.FileName.Valid {
-				err = v.storage.Delete(c.Request().Context(), userDB.FileName.String)
-				if err != nil {
-					slog.Info(fmt.Sprintf("failed to delete image for user edit, user id: %d, error: %+v", userID, err))
-				}
-			}
-			userDB.FileName = null.NewString("", false)
-		} else if len(tempRemoveUserImage) != 0 {
-			slog.Info(fmt.Sprintf("failed to parse removeUserImage for user edit, user id: %d, error: %s", userID, tempRemoveUserImage))
-			data.Error = "failed to parse removeUserImage for user edit: " + tempRemoveUserImage
-			return c.JSON(http.StatusOK, data)
-		}
-
-		_, err = v.user.EditUser(c.Request().Context(), userDB)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to edit user for user edit, user id: %d, error: %+v", userID, err))
-			data.Error = fmt.Sprintf("failed to edit user for user edit: %+v", err)
-			return c.JSON(http.StatusOK, data)
-		}
-
-		c1.Message = fmt.Sprintf("successfully edited \"%s\"", userDB.Name)
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for user edit, user id: %d, error: %+v", userID, err))
-		}
-
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
+	}
+	c1 := v.getSessionData(c)
+	userID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return fmt.Errorf("failed to parse id for user edit, error: %w", err)
+	}
+	var data struct {
+		Error string `json:"error"`
+	}
+	remove := c.FormValue("removeUserImage")
+	if remove != "" && remove != "Y" {
+		data.Error = "failed to parse removeUserImage for user edit: " + remove
 		return c.JSON(http.StatusOK, data)
 	}
-	return v.invalidMethodUsed(c)
+	teamID, err := strconv.Atoi(c.FormValue("userTeam"))
+	if err != nil || teamID < 0 {
+		teamID = 0
+	}
+	image, err := legacyUpload(c, "upload")
+	if err != nil {
+		data.Error = fmt.Sprintf("failed to get file for user edit: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+	name, email, phone, roleCode := c.FormValue("name"), c.FormValue("email"), c.FormValue("phone"), c.FormValue("role")
+	updated, err := v.userSvc.Update(c.Request().Context(), userID, user.UpdateInput{
+		Name: &name, Email: &email, Phone: &phone, Role: &roleCode, TeamID: &teamID, RemoveImage: remove == "Y",
+	}, image)
+	if err != nil {
+		slog.Info(fmt.Sprintf("failed to edit user for user edit, user id: %d, error: %+v", userID, err))
+		data.Error = fmt.Sprintf("failed to edit user for user edit: %+v", err)
+		return c.JSON(http.StatusOK, data)
+	}
+	v.flash(c, c1, fmt.Sprintf("successfully edited \"%s\"", updated.Name))
+	return c.JSON(http.StatusOK, data)
 }
 
 func (v *Views) UserDeleteFunc(c echo.Context) error {
 	spanCtx, span := tracer.Start(c.Request().Context(), "views.UserDeleteFunc")
 	defer span.End()
 	c.SetRequest(c.Request().WithContext(spanCtx))
-	if c.Request().Method == http.MethodPost {
-		c1 := v.getSessionData(c)
-
-		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			return fmt.Errorf("failed to get id for user delete, error: %w", err)
-		}
-
-		userDB, err := v.user.GetUser(c.Request().Context(), user.User{ID: id})
-		if err != nil {
-			return fmt.Errorf("failed to get user for user delete, user id: %d, error: %w", id, err)
-		}
-
-		if userDB.FileName.Valid {
-			err = v.storage.Delete(c.Request().Context(), userDB.FileName.String)
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to delete user image for user delete, user id: %d, error: %+v", id, err))
-			}
-		}
-
-		err = v.user.DeleteUser(c.Request().Context(), userDB)
-		if err != nil {
-			return fmt.Errorf("failed to delete user for user delete, user id: %d, error: %w", id, err)
-		}
-
-		c1.Message = fmt.Sprintf("successfully deleted \"%s\"", userDB.Name)
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for user delete, user id: %d, error: %+v", id, err))
-		}
-
-		return c.Redirect(http.StatusFound, "/users")
+	if c.Request().Method != http.MethodPost {
+		return v.invalidMethodUsed(c)
 	}
-	return v.invalidMethodUsed(c)
+	c1 := v.getSessionData(c)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return fmt.Errorf("failed to get id for user delete, error: %w", err)
+	}
+	deleted, err := v.userSvc.Delete(c.Request().Context(), id)
+	if err != nil {
+		return fmt.Errorf("failed to delete user for user delete, user id: %d, error: %w", id, err)
+	}
+	v.flash(c, c1, fmt.Sprintf("successfully deleted \"%s\"", deleted.Name))
+	return c.Redirect(http.StatusFound, "/users")
 }

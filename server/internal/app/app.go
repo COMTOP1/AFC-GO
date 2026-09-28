@@ -16,6 +16,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/auth"
 	_ "github.com/COMTOP1/AFC-GO/server/internal/docs" // registers the swagger spec
 	"github.com/COMTOP1/AFC-GO/server/internal/document"
+	"github.com/COMTOP1/AFC-GO/server/internal/emails"
 	"github.com/COMTOP1/AFC-GO/server/internal/files"
 	"github.com/COMTOP1/AFC-GO/server/internal/image"
 	infradb "github.com/COMTOP1/AFC-GO/server/internal/infrastructure/db"
@@ -121,6 +122,15 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	tokens := auth.NewTokens(conf.Redis)
 	counter := visitors.New(s.Setting, 30*time.Second, "afcaldermaston.co.uk")
 
+	sender := emails.NewSMTP(mailer)
+	userSvc := user.NewService(s.User, s.Team, uploads, sender, tokens,
+		user.HashParams{
+			WorkFactor:  conf.Passwords.ScryptWorkFactor,
+			BlockSize:   conf.Passwords.ScryptBlockSize,
+			Parallelism: conf.Passwords.ScryptParallelismFactor,
+			KeyLength:   conf.Passwords.KeyLength,
+		}, conf.DomainName)
+
 	siteSvc := site.NewService(site.Deps{
 		News: newsSvc, WhatsOn: whatsOnSvc, Sponsors: sponsorSvc, Affiliations: affiliationSvc,
 		Teams: teamSvc, Players: playerSvc, Settings: settingSvc, Users: s.User, Visitors: counter,
@@ -158,6 +168,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 		Team:               s.Team,
 		TeamService:        teamSvc,
 		User:               s.User,
+		UserService:        userSvc,
 		WhatsOn:            s.WhatsOn,
 		WhatsOnService:     whatsOnSvc,
 	})
@@ -197,6 +208,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	player.NewHandlers(playerSvc).Register(api, guards)
 	files.NewHandlers(fileSvc).Register(api, guards)
 	site.NewHandlers(siteSvc).Register(api, guards)
+	user.NewHandlers(userSvc).Register(api, guards)
 
 	return &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens}
 }

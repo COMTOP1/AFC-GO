@@ -69,6 +69,7 @@ type (
 		teamSvc        *team.Service
 		template       *templates.Templater
 		user           *user.Store
+		userSvc        *user.Service
 		whatsOn        *whatson.Store
 		whatsOnSvc     *whatson.Service
 
@@ -111,6 +112,7 @@ type (
 		Team               *team.Store
 		TeamService        *team.Service
 		User               *user.Store
+		UserService        *user.Service
 		WhatsOn            *whatson.Store
 		WhatsOnService     *whatson.Service
 	}
@@ -148,6 +150,7 @@ func New(d Deps) *Views {
 		template:       templates.NewTemplate(d.Team, d.Storage),
 		tokens:         d.Tokens,
 		user:           d.User,
+		userSvc:        d.UserService,
 		visitors:       d.Visitors,
 		whatsOn:        d.WhatsOn,
 		whatsOnSvc:     d.WhatsOnService,

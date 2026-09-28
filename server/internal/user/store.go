@@ -196,7 +196,8 @@ func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
 	defer span.End()
 	builder := utils.PSQL().Insert("users").
 		Columns("name", "email", "phone", "team_id", "role", "file_name", "reset_password", "hash", "salt").
-		Values(userParam.Name, userParam.Email, userParam.Phone, userParam.TeamID, userParam.Role.DBString(), userParam.FileName, userParam.ResetPassword, userParam.Hash, userParam.Salt)
+		Values(userParam.Name, userParam.Email, userParam.Phone, userParam.TeamID, userParam.Role.DBString(), userParam.FileName, userParam.ResetPassword, userParam.Hash, userParam.Salt).
+		Suffix("RETURNING id")
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -204,13 +205,7 @@ func (s *Store) addUser(ctx context.Context, userParam User) (User, error) {
 		panic(fmt.Errorf("failed to build sql for add user: %w", err))
 	}
 
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		span.RecordError(err)
-		return User{}, fmt.Errorf("failed to add user: %w", err)
-	}
-
-	_, err = res.RowsAffected()
+	err = s.db.GetContext(ctx, &userParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
 		return User{}, fmt.Errorf("failed to add user: %w", err)

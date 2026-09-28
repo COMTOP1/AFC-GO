@@ -54,8 +54,6 @@ const (
 	GalleryTemplate        Template = "gallery.tmpl"
 	ProgrammesTemplate     Template = "programmes.tmpl"
 	PlayersTemplate        Template = "players.tmpl"
-	SignupEmailTemplate    Template = "signupEmail.tmpl"
-	ResetEmailTemplate     Template = "resetEmail.tmpl"
 )
 
 type TemplateType int
@@ -101,10 +99,6 @@ func (t *Templater) RenderTemplate(ctx context.Context, w io.Writer, data interf
 	}
 
 	return t1.Execute(w, data)
-}
-
-func (t *Templater) GetEmailTemplate(emailTemplate Template) (*template.Template, error) {
-	return template.New(emailTemplate.String()).ParseFS(tmpls, emailTemplate.String())
 }
 
 // getFuncMaps returns all the in built functions that templates can use
@@ -178,8 +172,6 @@ var (
 		{"gallery.tmpl", "_base.tmpl", "_top.tmpl", "_footer.tmpl", "_logoutModal.tmpl", "_loginModal.tmpl"},
 		{"programmes.tmpl", "_base.tmpl", "_top.tmpl", "_footer.tmpl", "_logoutModal.tmpl", "_loginModal.tmpl"},
 		{"players.tmpl", "_base.tmpl", "_top.tmpl", "_footer.tmpl", "_logoutModal.tmpl", "_loginModal.tmpl"},
-		{"signupEmail.tmpl", "_base.tmpl", "_top.tmpl", "_footer.tmpl", "_logoutModal.tmpl", "_loginModal.tmpl"},
-		{"resetEmail.tmpl", "_base.tmpl", "_top.tmpl", "_footer.tmpl", "_logoutModal.tmpl", "_loginModal.tmpl"},
 	}
 
 	_ = AllTemplates
