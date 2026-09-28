@@ -460,6 +460,30 @@ paths:
       summary: Delete a document
       tags:
       - documents
+  /files/{kind}/{id}:
+    get:
+      parameters:
+      - description: affiliation, document, gallery, news, player, programme, sponsor,
+          team, user or whatson
+        in: path
+        name: kind
+        required: true
+        type: string
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "302":
+          description: Found
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Download a file
+      tags:
+      - files
   /gallery:
     get:
       produces:

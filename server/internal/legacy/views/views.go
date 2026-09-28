@@ -11,6 +11,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/affiliation"
 	"github.com/COMTOP1/AFC-GO/server/internal/auth"
 	"github.com/COMTOP1/AFC-GO/server/internal/document"
+	"github.com/COMTOP1/AFC-GO/server/internal/files"
 	"github.com/COMTOP1/AFC-GO/server/internal/image"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/server/internal/legacy/templates"
@@ -49,6 +50,7 @@ type (
 		cookie         *sessions.CookieStore
 		document       *document.Store
 		documentSvc    *document.Service
+		fileSvc        *files.Service
 		gallerySvc     *image.Service
 		image          *image.Store
 		mailer         *mail.MailerInit
@@ -93,6 +95,7 @@ type (
 		AffiliationService *affiliation.Service
 		Document           *document.Store
 		DocumentService    *document.Service
+		FileService        *files.Service
 		GalleryService     *image.Service
 		Image              *image.Store
 		News               *news.Store
@@ -125,6 +128,7 @@ func New(d Deps) *Views {
 		cookie:         d.Sessions,
 		document:       d.Document,
 		documentSvc:    d.DocumentService,
+		fileSvc:        d.FileService,
 		gallerySvc:     d.GalleryService,
 		image:          d.Image,
 		mailer:         d.Mailer,
