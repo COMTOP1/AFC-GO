@@ -236,6 +236,12 @@ func (s *Service) Update(ctx context.Context, id int, in UpdateInput, image *upl
 	}
 	roleCode := ""
 	if in.Role != nil {
+		// A present-but-blank role is a caller mistake, not "leave it
+		// alone" - that's expressed by leaving the field out entirely
+		// (in.Role == nil).
+		if *in.Role == "" {
+			return Admin{}, svcerr.InvalidField("role", "role is required")
+		}
 		roleCode = *in.Role
 	}
 	if err = s.validate(ctx, &u, roleCode); err != nil {

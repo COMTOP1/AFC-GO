@@ -15,6 +15,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/role"
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
+	"github.com/COMTOP1/AFC-GO/server/internal/testdb"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload/uploadtest"
 	"github.com/COMTOP1/AFC-GO/server/internal/user"
@@ -113,6 +114,17 @@ func TestUpdatePreservesPasswordAndClearsPhone(t *testing.T) {
 	assert.Equal(t, role.ClubSecretary, row.Role)
 }
 
+// TestUpdateBlankRoleIsInvalid guards against a caller-supplied but blank
+// role code (distinct from the field being omitted, which means "leave it
+// alone") silently keeping the old role instead of being rejected.
+func TestUpdateBlankRoleIsInvalid(t *testing.T) {
+	h := newHarness(nil)
+	blank := ""
+	_, err := h.svc.Update(ctx, 3, user.UpdateInput{Role: &blank}, nil)
+	assert.Contains(t, fieldsOf(t, err), "role")
+	assert.Equal(t, role.ClubSecretary, h.store.row(3).Role, "the rejected update must not touch the row")
+}
+
 func TestDelete(t *testing.T) {
 	h := newHarness(nil)
 	deleted, err := h.svc.Delete(ctx, 3)
@@ -140,4 +152,31 @@ func TestResetPassword(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, res.EmailSent)
 	assert.True(t, strings.HasPrefix(res.ResetURL, "https://afc.example.test/reset/"))
+}
+
+// TestUpdateEmailConflictDoesNotHijackOtherUser is the DB-backed regression
+// test for a bug where changing a user's email to one another user already
+// had would overwrite that other user (EditUser looked the row to edit up
+// by "email = $new OR id = $id", which can match the wrong row) instead of
+// reporting a conflict. Uses the real store, since the in-memory fakeStore
+// doesn't reproduce the SQL lookup that caused this.
+func TestUpdateEmailConflictDoesNotHijackOtherUser(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+	svc := user.NewService(store, team.NewTeamRepo(db), upload.New(uploadtest.New()), &fakeSender{}, &fakeTokens{tokens: map[string]int{}},
+		user.HashParams{WorkFactor: 2, BlockSize: 1, Parallelism: 1, KeyLength: 32}, "afc.example.test")
+
+	before, err := store.GetUser(ctx, user.User{ID: 1})
+	require.NoError(t, err)
+
+	newName, newEmail := "Hijacked", before.Email
+	_, err = svc.Update(ctx, 3, user.UpdateInput{Name: &newName, Email: &newEmail}, nil)
+	require.Error(t, err)
+	se, ok := svcerr.As(err)
+	require.True(t, ok, "want svcerr, got %v", err)
+	assert.Equal(t, svcerr.KindConflict, se.Kind)
+
+	after, err := store.GetUser(ctx, user.User{ID: 1})
+	require.NoError(t, err)
+	assert.Equal(t, before, after, "user 1 must be completely unchanged (name, role, photo, phone)")
 }

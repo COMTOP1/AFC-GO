@@ -27,6 +27,12 @@ func TestUserRoutes(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, treasurer.Get(t, path).Code, path)
 	}
 
+	// Create and reset issue credentials (a temp password / reset link); a
+	// Treasurer must be forbidden from both, not just from reading users.
+	assert.Equal(t, http.StatusForbidden, treasurer.Multipart(t, http.MethodPost, "/api/v1/users",
+		map[string]string{"name": "New", "email": "new@example.test", "role": "treasurer"}).Code)
+	assert.Equal(t, http.StatusForbidden, treasurer.JSON(t, http.MethodPost, "/api/v1/users/3/reset", nil).Code)
+
 	rec := admin.Get(t, "/api/v1/users")
 	require.Equal(t, http.StatusOK, rec.Code)
 	for _, secret := range []string{"keep-me", "hash", "salt", "password"} {
