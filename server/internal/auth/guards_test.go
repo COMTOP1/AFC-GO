@@ -61,3 +61,20 @@ func TestGuardUsesFreshRole(t *testing.T) {
 	rec := apitest.New(e).As(authtest.Cookie(t, s, demoted)).Get(t, "/api/v1/editor")
 	assert.Equal(t, http.StatusForbidden, rec.Code)
 }
+
+func TestIdentifyNeverRejects(t *testing.T) {
+	s := authtest.Everyone()
+	e := apitest.NewEcho()
+	api := web.NewAPI(e, false)
+	api.GET("/who", func(c echo.Context) error {
+		if web.LoggedIn(c) {
+			return c.String(http.StatusOK, "member")
+		}
+		return c.String(http.StatusOK, "guest")
+	}, s.Guards().Identify)
+
+	assert.Equal(t, "guest", apitest.New(e).Get(t, "/api/v1/who").Body.String())
+	ghost := user.User{ID: 99, Email: "gone@example.test"}
+	assert.Equal(t, "guest", apitest.New(e).As(authtest.Cookie(t, s, ghost)).Get(t, "/api/v1/who").Body.String())
+	assert.Equal(t, "member", apitest.New(e).As(authtest.Cookie(t, s, authtest.Manager)).Get(t, "/api/v1/who").Body.String())
+}

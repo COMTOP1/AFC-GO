@@ -258,6 +258,22 @@ func (s *Store) editUser(ctx context.Context, userParam User) error {
 	return nil
 }
 
+// DetachTeam removes teamID from every user (managers of that team).
+func (s *Store) DetachTeam(ctx context.Context, teamID int) error {
+	ctx, span := tracer.Start(ctx, "user.DetachTeam")
+	defer span.End()
+	sql, args, err := utils.PSQL().Update("users").Set("team_id", 0).Where(sq.Eq{"team_id": teamID}).ToSql()
+	if err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to build sql for detach team: %w", err)
+	}
+	if _, err = s.db.ExecContext(ctx, sql, args...); err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to detach users from team: %w", err)
+	}
+	return nil
+}
+
 func (s *Store) deleteUser(ctx context.Context, userParam User) error {
 	ctx, span := tracer.Start(ctx, "user.deleteUser")
 	defer span.End()

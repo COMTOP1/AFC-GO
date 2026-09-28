@@ -900,6 +900,277 @@ const docTemplate = `{
                 }
             }
         },
+        "/teams": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "teams"
+                ],
+                "summary": "List teams",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/team.Public"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "teams"
+                ],
+                "summary": "Create a team",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Upper age (under 19 makes a youth team)",
+                        "name": "ages",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Description",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "League",
+                        "name": "league",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Division",
+                        "name": "division",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "League table URL",
+                        "name": "leagueTable",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fixtures URL",
+                        "name": "fixtures",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Coach",
+                        "name": "coach",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Physio",
+                        "name": "physio",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Active",
+                        "name": "isActive",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Youth",
+                        "name": "isYouth",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Team photo",
+                        "name": "image",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/team.Public"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/teams/{id}": {
+            "delete": {
+                "tags": [
+                    "teams"
+                ],
+                "summary": "Delete a team",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Team ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "teams"
+                ],
+                "summary": "Update a team",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Team ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Name",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Upper age",
+                        "name": "ages",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Description; empty clears",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "League; empty clears",
+                        "name": "league",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Division; empty clears",
+                        "name": "division",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "League table URL; empty clears",
+                        "name": "leagueTable",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fixtures URL; empty clears",
+                        "name": "fixtures",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Coach; empty clears",
+                        "name": "coach",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Physio; empty clears",
+                        "name": "physio",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Active",
+                        "name": "isActive",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Youth",
+                        "name": "isYouth",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Replacement photo",
+                        "name": "image",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Remove the current photo",
+                        "name": "removeImage",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/team.Public"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/whatson": {
             "get": {
                 "produces": [
@@ -1289,6 +1560,50 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "team.Public": {
+            "type": "object",
+            "properties": {
+                "ages": {
+                    "type": "integer"
+                },
+                "coach": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "division": {
+                    "type": "string"
+                },
+                "fixturesUrl": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "imageUrl": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "isYouth": {
+                    "type": "boolean"
+                },
+                "league": {
+                    "type": "string"
+                },
+                "leagueTableUrl": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "physio": {
                     "type": "string"
                 }
             }

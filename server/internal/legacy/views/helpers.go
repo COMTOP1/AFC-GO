@@ -678,8 +678,6 @@ func (v *Views) flash(c echo.Context, c1 *Context, message string) {
 }
 
 // formYes maps a legacy "Y" checkbox to a bool; anything else is false.
-//
-//nolint:unused // added for later domain tasks to reuse (task 8 brief); news.go still inlines the "Y" check
 func formYes(c echo.Context, field string) bool {
 	return c.FormValue(field) == "Y"
 }

@@ -129,6 +129,22 @@ func (s *Store) editPlayer(ctx context.Context, playerParam Player) (Player, err
 	return playerParam, nil
 }
 
+// DetachTeam moves every player on teamID to no team (team_id 0).
+func (s *Store) DetachTeam(ctx context.Context, teamID int) error {
+	ctx, span := tracer.Start(ctx, "player.DetachTeam")
+	defer span.End()
+	sql, args, err := utils.PSQL().Update("players").Set("team_id", 0).Where(sq.Eq{"team_id": teamID}).ToSql()
+	if err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to build sql for detach team: %w", err)
+	}
+	if _, err = s.db.ExecContext(ctx, sql, args...); err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to detach players from team: %w", err)
+	}
+	return nil
+}
+
 func (s *Store) deletePlayer(ctx context.Context, playerParam Player) error {
 	ctx, span := tracer.Start(ctx, "player.deletePlayer")
 	defer span.End()

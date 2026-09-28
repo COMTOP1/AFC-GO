@@ -100,3 +100,16 @@ func FormDate(c echo.Context, field string) (*time.Time, error) {
 	}
 	return &d, nil
 }
+
+// FormInt parses an optional integer form field.
+func FormInt(c echo.Context, field string) (*int, error) {
+	raw := FormString(c, field)
+	if raw == nil || *raw == "" {
+		return nil, nil
+	}
+	n, err := strconv.Atoi(*raw)
+	if err != nil {
+		return nil, svcerr.InvalidField(field, field+" must be a whole number")
+	}
+	return &n, nil
+}

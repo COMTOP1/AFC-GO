@@ -62,6 +62,7 @@ type (
 		sponsorSvc     *sponsor.Service
 		storage        upload.Storage
 		team           *team.Store
+		teamSvc        *team.Service
 		template       *templates.Templater
 		user           *user.Store
 		whatsOn        *whatson.Store
@@ -101,6 +102,7 @@ type (
 		Sponsor            *sponsor.Store
 		SponsorService     *sponsor.Service
 		Team               *team.Store
+		TeamService        *team.Service
 		User               *user.Store
 		WhatsOn            *whatson.Store
 		WhatsOnService     *whatson.Service
@@ -132,6 +134,7 @@ func New(d Deps) *Views {
 		sponsorSvc:     d.SponsorService,
 		storage:        d.Storage,
 		team:           d.Team,
+		teamSvc:        d.TeamService,
 		template:       templates.NewTemplate(d.Team, d.Storage),
 		tokens:         d.Tokens,
 		user:           d.User,

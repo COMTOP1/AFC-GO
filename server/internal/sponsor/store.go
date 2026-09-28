@@ -3,6 +3,7 @@ package sponsor
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	sq "github.com/Masterminds/squirrel"
 
@@ -139,6 +140,23 @@ func (s *Store) editSponsor(ctx context.Context, sponsorParam Sponsor) (Sponsor,
 		return Sponsor{}, fmt.Errorf("failed to edit sponsor: %w", err)
 	}
 	return sponsorParam, nil
+}
+
+// DetachTeam makes every sponsor of teamID club-wide ("A").
+func (s *Store) DetachTeam(ctx context.Context, teamID int) error {
+	ctx, span := tracer.Start(ctx, "sponsor.DetachTeam")
+	defer span.End()
+	sql, args, err := utils.PSQL().Update("sponsors").Set("team_id", "A").
+		Where(sq.Eq{"team_id": strconv.Itoa(teamID)}).ToSql()
+	if err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to build sql for detach team: %w", err)
+	}
+	if _, err = s.db.ExecContext(ctx, sql, args...); err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to detach sponsors from team: %w", err)
+	}
+	return nil
 }
 
 func (s *Store) deleteSponsor(ctx context.Context, sponsorParam Sponsor) error {

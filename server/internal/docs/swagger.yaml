@@ -110,6 +110,35 @@ definitions:
       website:
         type: string
     type: object
+  team.Public:
+    properties:
+      ages:
+        type: integer
+      coach:
+        type: string
+      description:
+        type: string
+      division:
+        type: string
+      fixturesUrl:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      isActive:
+        type: boolean
+      isYouth:
+        type: boolean
+      league:
+        type: string
+      leagueTableUrl:
+        type: string
+      name:
+        type: string
+      physio:
+        type: string
+    type: object
   web.APIError:
     properties:
       code:
@@ -729,6 +758,185 @@ paths:
       summary: Delete a sponsor
       tags:
       - sponsors
+  /teams:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/team.Public'
+            type: array
+      summary: List teams
+      tags:
+      - teams
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Upper age (under 19 makes a youth team)
+        in: formData
+        name: ages
+        required: true
+        type: integer
+      - description: Description
+        in: formData
+        name: description
+        type: string
+      - description: League
+        in: formData
+        name: league
+        type: string
+      - description: Division
+        in: formData
+        name: division
+        type: string
+      - description: League table URL
+        in: formData
+        name: leagueTable
+        type: string
+      - description: Fixtures URL
+        in: formData
+        name: fixtures
+        type: string
+      - description: Coach
+        in: formData
+        name: coach
+        type: string
+      - description: Physio
+        in: formData
+        name: physio
+        type: string
+      - description: Active
+        in: formData
+        name: isActive
+        type: boolean
+      - description: Youth
+        in: formData
+        name: isYouth
+        type: boolean
+      - description: Team photo
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/team.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a team
+      tags:
+      - teams
+  /teams/{id}:
+    delete:
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a team
+      tags:
+      - teams
+    patch:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Name
+        in: formData
+        name: name
+        type: string
+      - description: Upper age
+        in: formData
+        name: ages
+        type: integer
+      - description: Description; empty clears
+        in: formData
+        name: description
+        type: string
+      - description: League; empty clears
+        in: formData
+        name: league
+        type: string
+      - description: Division; empty clears
+        in: formData
+        name: division
+        type: string
+      - description: League table URL; empty clears
+        in: formData
+        name: leagueTable
+        type: string
+      - description: Fixtures URL; empty clears
+        in: formData
+        name: fixtures
+        type: string
+      - description: Coach; empty clears
+        in: formData
+        name: coach
+        type: string
+      - description: Physio; empty clears
+        in: formData
+        name: physio
+        type: string
+      - description: Active
+        in: formData
+        name: isActive
+        type: boolean
+      - description: Youth
+        in: formData
+        name: isYouth
+        type: boolean
+      - description: Replacement photo
+        in: formData
+        name: image
+        type: file
+      - description: Remove the current photo
+        in: formData
+        name: removeImage
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/team.Public'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update a team
+      tags:
+      - teams
   /whatson:
     get:
       parameters:

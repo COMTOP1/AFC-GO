@@ -75,18 +75,14 @@ func (s *Store) addTeam(ctx context.Context, teamParam Team) (Team, error) {
 	defer span.End()
 	builder := utils.PSQL().Insert("teams").
 		Columns("name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
-		Values(teamParam.Name, teamParam.Description, teamParam.League, teamParam.Division, teamParam.LeagueTable, teamParam.Fixtures, teamParam.Coach, teamParam.Physio, teamParam.FileName, teamParam.IsActive, teamParam.IsYouth, teamParam.Ages)
+		Values(teamParam.Name, teamParam.Description, teamParam.League, teamParam.Division, teamParam.LeagueTable, teamParam.Fixtures, teamParam.Coach, teamParam.Physio, teamParam.FileName, teamParam.IsActive, teamParam.IsYouth, teamParam.Ages).
+		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add team: %w", err))
 	}
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		span.RecordError(err)
-		return Team{}, fmt.Errorf("failed to add team: %w", err)
-	}
-	_, err = res.RowsAffected()
+	err = s.db.GetContext(ctx, &teamParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
 		return Team{}, fmt.Errorf("failed to add team: %w", err)

@@ -53,6 +53,7 @@ func (s *Sessions) Guards() web.Guards {
 		Editor:              s.RequireRole(role.Role.CanEdit),
 		NotManager:          s.RequireRole(role.Role.CanManageGallery),
 		ClubSecretaryHigher: s.RequireRole(role.Role.IsClubSecretaryHigher),
+		Identify:            s.Identify,
 	}
 }
 
@@ -70,5 +71,17 @@ func (s *Sessions) load(c echo.Context) (user.User, error) {
 	}
 	fresh.Authenticated = true
 	c.Set(contextKey, fresh)
+	c.Set(web.LoggedInKey, true)
 	return fresh, nil
+}
+
+// Identify loads the user when a valid session is present, but lets
+// anonymous (or stale-session) requests through.
+func (s *Sessions) Identify(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if _, ok := s.User(c.Request()); ok {
+			_, _ = s.load(c) //nolint:errcheck // a stale session is simply anonymous here
+		}
+		return next(c)
+	}
 }
