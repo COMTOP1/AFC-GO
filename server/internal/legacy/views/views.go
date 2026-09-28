@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/sessions"
 	"go.opentelemetry.io/otel"
 
+	"github.com/COMTOP1/AFC-GO/server/internal/account"
 	"github.com/COMTOP1/AFC-GO/server/internal/affiliation"
 	"github.com/COMTOP1/AFC-GO/server/internal/auth"
 	"github.com/COMTOP1/AFC-GO/server/internal/document"
@@ -44,8 +45,10 @@ type (
 
 	// Views encapsulates our view dependencies
 	Views struct {
+		accountSvc     *account.Service
 		affiliation    *affiliation.Store
 		affiliationSvc *affiliation.Service
+		authSvc        *auth.Service
 		conf           *Config
 		cookie         *sessions.CookieStore
 		document       *document.Store
@@ -92,6 +95,8 @@ type (
 		Visitors *visitors.Counter
 		Tokens   *auth.Tokens
 
+		AccountService     *account.Service
+		AuthService        *auth.Service
 		Affiliation        *affiliation.Store
 		AffiliationService *affiliation.Service
 		Document           *document.Store
@@ -124,8 +129,10 @@ func New(d Deps) *Views {
 	// registered by the auth package.
 	gob.Register(InternalContext{})
 	return &Views{
+		accountSvc:     d.AccountService,
 		affiliation:    d.Affiliation,
 		affiliationSvc: d.AffiliationService,
+		authSvc:        d.AuthService,
 		conf:           d.Conf,
 		cookie:         d.Sessions,
 		document:       d.Document,

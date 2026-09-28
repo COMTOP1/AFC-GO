@@ -30,6 +30,33 @@ definitions:
       teamId:
         type: integer
     type: object
+  auth.LoginInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      remember:
+        type: boolean
+    type: object
+  auth.LoginResponse:
+    properties:
+      resetRequired:
+        type: boolean
+      resetUrl:
+        type: string
+      user:
+        $ref: '#/definitions/auth.CurrentUser'
+    type: object
+  auth.PasswordInput:
+    properties:
+      confirmationPassword:
+        type: string
+      newPassword:
+        type: string
+      oldPassword:
+        type: string
+    type: object
   auth.Permissions:
     properties:
       canEdit:
@@ -38,6 +65,13 @@ definitions:
         type: boolean
       canManageUsers:
         type: boolean
+    type: object
+  auth.ResetInput:
+    properties:
+      confirmationPassword:
+        type: string
+      newPassword:
+        type: string
     type: object
   document.Public:
     properties:
@@ -345,6 +379,57 @@ info:
   title: AFC Aldermaston API
   version: "1"
 paths:
+  /account:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.CurrentUser'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: My account
+      tags:
+      - account
+  /account/image:
+    delete:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.CurrentUser'
+      summary: Remove my photo
+      tags:
+      - account
+    put:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Photo
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.CurrentUser'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Set my photo
+      tags:
+      - account
   /affiliations:
     get:
       produces:
@@ -409,6 +494,39 @@ paths:
       summary: Delete an affiliation
       tags:
       - affiliations
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Log in
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      responses:
+        "204":
+          description: No Content
+      summary: Log out
+      tags:
+      - auth
   /auth/me:
     get:
       produces:
@@ -423,6 +541,74 @@ paths:
           schema:
             $ref: '#/definitions/web.ErrorResponse'
       summary: Current user
+      tags:
+      - auth
+  /auth/password:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Old and new passwords
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.PasswordInput'
+      responses:
+        "204":
+          description: No Content
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Change password
+      tags:
+      - auth
+  /auth/reset/{token}:
+    get:
+      parameters:
+      - description: Reset token
+        in: path
+        name: token
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Check a reset link
+      tags:
+      - auth
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Reset token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: New password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ResetInput'
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Reset password
       tags:
       - auth
   /contact:

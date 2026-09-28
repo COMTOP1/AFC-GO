@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho" //nolint:staticcheck // still functional; github.com/labstack/echo-opentelemetry is its replacement but isn't part of opentelemetry-go-contrib
 
+	"github.com/COMTOP1/AFC-GO/server/internal/account"
 	"github.com/COMTOP1/AFC-GO/server/internal/affiliation"
 	"github.com/COMTOP1/AFC-GO/server/internal/auth"
 	_ "github.com/COMTOP1/AFC-GO/server/internal/docs" // registers the swagger spec
@@ -120,6 +121,8 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	settingSvc := setting.NewService(s.Setting)
 	sessions := auth.NewSessions(conf.Session, s.User)
 	tokens := auth.NewTokens(conf.Redis)
+	authSvc := auth.NewService(s.User, tokens, conf.Passwords)
+	accountSvc := account.NewService(s.User, uploads)
 	counter := visitors.New(s.Setting, 30*time.Second, "afcaldermaston.co.uk")
 
 	sender := emails.NewSMTP(mailer)
@@ -148,6 +151,8 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 		Mailer:             mailer,
 		Visitors:           counter,
 		Tokens:             tokens,
+		AccountService:     accountSvc,
+		AuthService:        authSvc,
 		Affiliation:        s.Affiliation,
 		AffiliationService: affiliationSvc,
 		Document:           s.Document,
@@ -195,7 +200,8 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 
 	api := web.NewAPI(e, conf.Session.Secure)
 	guards := sessions.Guards()
-	auth.NewHandlers(sessions, uploads).Register(api, guards)
+	auth.NewHandlers(sessions, authSvc, uploads).Register(api, guards)
+	account.NewHandlers(accountSvc, uploads).Register(api, guards)
 	news.NewHandlers(newsSvc).Register(api, guards)
 	whatson.NewHandlers(whatsOnSvc).Register(api, guards)
 	sponsor.NewHandlers(sponsorSvc).Register(api, guards)

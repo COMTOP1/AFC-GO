@@ -25,6 +25,33 @@ type Permissions struct {
 	CanManageUsers   bool `json:"canManageUsers"`
 }
 
+// LoginInput is the body of POST /auth/login.
+type LoginInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Remember bool   `json:"remember"`
+}
+
+// LoginResponse is either the logged-in user or a reset instruction.
+type LoginResponse struct {
+	User          *CurrentUser `json:"user,omitempty"`
+	ResetRequired bool         `json:"resetRequired"`
+	ResetURL      string       `json:"resetUrl,omitempty"`
+}
+
+// PasswordInput is the body of POST /auth/password.
+type PasswordInput struct {
+	OldPassword          string `json:"oldPassword"`
+	NewPassword          string `json:"newPassword"`
+	ConfirmationPassword string `json:"confirmationPassword"`
+}
+
+// ResetInput is the body of POST /auth/reset/{token}.
+type ResetInput struct {
+	NewPassword          string `json:"newPassword"`
+	ConfirmationPassword string `json:"confirmationPassword"`
+}
+
 // NewCurrentUser projects u for the API; it never includes password data.
 func NewCurrentUser(u user.User, files *upload.Files) CurrentUser {
 	return CurrentUser{

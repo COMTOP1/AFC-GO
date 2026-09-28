@@ -1,20 +1,16 @@
 package views
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log/slog"
-	"mime/multipart"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
 	// importing time zones in case the system doesn't have them
 	_ "time/tzdata"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"gopkg.in/guregu/null.v4"
 
@@ -266,92 +262,6 @@ func (v *Views) clearMessagesInSession(eC echo.Context) error {
 		return fmt.Errorf("failed to save session for clear message: %w", err)
 	}
 	return nil
-}
-
-// minRequirementsMet tests if the password meets the minimum requirements
-func minRequirementsMet(password string) (errString string) {
-	var match bool
-	match, err := regexp.MatchString("^.*[a-z].*$", password)
-	if err != nil || !match {
-		errString = "password must contain at least 1 lower case letter"
-	}
-	match, err = regexp.MatchString("^.*[A-Z].*$", password)
-	if err != nil || !match {
-		if len(errString) > 0 {
-			errString += " and password must contain at least 1 upper case letter"
-		} else {
-			errString = "password must contain at least 1 upper case letter"
-		}
-	}
-	match, err = regexp.MatchString("^.*\\d.*$", password)
-	if err != nil || !match {
-		if len(errString) > 0 {
-			errString += " and password must contain at least 1 number"
-		} else {
-			errString = "password must contain at least 1 number"
-		}
-	}
-	match, err = regexp.MatchString("^.*[@$!%*?&|^£;:/.,<>()_=+~§±#{}-].*$", password)
-	if err != nil || !match {
-		if len(errString) > 0 {
-			errString += " and password must contain at least 1 special character"
-		} else {
-			errString = "password must contain at least 1 special character"
-		}
-	}
-	if len(password) <= 8 {
-		if len(errString) > 0 {
-			errString += " and password must be at least 8 characters long"
-		} else {
-			errString = "password must be at least 8 characters long"
-		}
-	}
-	return errString
-}
-
-func (v *Views) fileUpload(ctx context.Context, file *multipart.FileHeader, category string) (string, error) {
-	var fileType string
-	contentType := file.Header.Get("content-type")
-	switch contentType {
-	case "application/pdf":
-		fileType = ".pdf"
-	case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-		fileType = ".docx"
-	case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-		fileType = ".pptx"
-	case "text/plain":
-		fileType = ".txt"
-	case "image/apng":
-		fileType = ".apng"
-	case "image/avif":
-		fileType = ".avif"
-	case "image/gif":
-		fileType = ".gif"
-	case "image/jpeg":
-		fileType = ".jpg"
-	case "image/png":
-		fileType = ".png"
-	case "image/svg+xml":
-		fileType = ".svg"
-	case "image/webp":
-		fileType = ".webp"
-	default:
-		return "", fmt.Errorf("invalid file type: %s", contentType)
-	}
-
-	key := category + "/" + uuid.NewString() + fileType
-
-	src, err := file.Open()
-	if err != nil {
-		return "", fmt.Errorf("failed to open file for fileUpload: %w", err)
-	}
-	defer src.Close()
-
-	if err = v.storage.Put(ctx, key, src, file.Size, contentType); err != nil {
-		return "", fmt.Errorf("failed to upload file for fileUpload: %w", err)
-	}
-
-	return key, nil
 }
 
 func DBDocumentsToTemplateFormat(documentsDB []document.Document) []DocumentTemplate {

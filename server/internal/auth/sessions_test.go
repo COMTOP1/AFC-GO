@@ -20,7 +20,7 @@ import (
 func newMeAPI(s *auth.Sessions) *apitest.Client {
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
-	auth.NewHandlers(s, authtest.Files()).Register(api, s.Guards())
+	auth.NewHandlers(s, nil, authtest.Files()).Register(api, s.Guards())
 	return apitest.New(e)
 }
 

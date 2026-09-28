@@ -32,6 +32,7 @@ func bareApp(t *testing.T) *app.App {
 // list whenever a task adds a guarded GET route.
 var guardedGets = []string{
 	"/api/v1/auth/me",
+	"/api/v1/account",
 	"/api/v1/players",
 	"/api/v1/users",
 	"/api/v1/users/1",

@@ -1,13 +1,10 @@
 package views
 
 import (
-	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/legacy/templates"
 )
@@ -46,43 +43,22 @@ func (v *Views) UploadImageFunc(c echo.Context) error {
 			Error string `json:"error"`
 		}{}
 
-		if c1.User.FileName.Valid {
-			err := v.storage.Delete(c.Request().Context(), c1.User.FileName.String)
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to delete image for uploadImage, user id: %d, error: %+v", c1.User.ID, err))
-			}
-		}
-
-		file, err := c.FormFile("upload")
+		image, err := legacyUpload(c, "upload")
 		if err != nil {
-			slog.Info(fmt.Sprintf("failed to get file for uploadImage, user id: %d, error: %+v", c1.User.ID, err))
-			data.Error = fmt.Sprintf("failed to get file for uploadImage: %+v", err)
+			data.Error = err.Error()
 			return c.JSON(http.StatusOK, data)
 		}
-		var fileName string
-		fileName, err = v.fileUpload(c.Request().Context(), file, "user")
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to upload file for uploadImage, user id: %d, error: %+v", c1.User.ID, err))
-			data.Error = fmt.Sprintf("failed to upload file for uploadImage: %+v", err)
+		if image == nil {
+			data.Error = "failed to get file for upload image"
 			return c.JSON(http.StatusOK, data)
 		}
 
-		c1.User.FileName = null.NewString(fileName, len(fileName) > 0)
-
-		err = v.user.EditUserImage(c.Request().Context(), c1.User)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to edit user for uploadImage, user id: %d, error: %+v", c1.User.ID, err))
-			data.Error = fmt.Sprintf("failed to edit user for uploadImage: %+v", err)
+		if _, err = v.accountSvc.SetImage(c.Request().Context(), c1.User, image); err != nil {
+			data.Error = err.Error()
 			return c.JSON(http.StatusOK, data)
 		}
 
-		c1.Message = "successfully uploaded image"
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for uploadImage, user id: %d, error: %+v", c1.User.ID, err))
-		}
-
+		v.flash(c, c1, "successfully uploaded image")
 		return c.JSON(http.StatusOK, data)
 	}
 	return v.invalidMethodUsed(c)
@@ -99,29 +75,12 @@ func (v *Views) RemoveImageFunc(c echo.Context) error {
 			Error string `json:"error"`
 		}{}
 
-		if c1.User.FileName.Valid {
-			err := v.storage.Delete(c.Request().Context(), c1.User.FileName.String)
-			if err != nil {
-				slog.Info(fmt.Sprintf("failed to delete image for removeImage, user id: %d, error: %+v", c1.User.ID, err))
-			}
-		}
-
-		c1.User.FileName = null.NewString("", false)
-
-		err := v.user.EditUserImage(c.Request().Context(), c1.User)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to edit user for removeImage, user id: %d, error: %+v", c1.User.ID, err))
-			data.Error = fmt.Sprintf("failed to edit user for removeImage: %+v", err)
+		if _, err := v.accountSvc.RemoveImage(c.Request().Context(), c1.User); err != nil {
+			data.Error = err.Error()
 			return c.JSON(http.StatusOK, data)
 		}
 
-		c1.Message = "successfully removed image"
-		c1.MsgType = "is-success"
-		err = v.setMessagesInSession(c, c1)
-		if err != nil {
-			slog.Info(fmt.Sprintf("failed to set data for removedImage, user id: %d, error: %+v", c1.User.ID, err))
-		}
-
+		v.flash(c, c1, "successfully removed image")
 		return c.JSON(http.StatusOK, data)
 	}
 	return v.invalidMethodUsed(c)
