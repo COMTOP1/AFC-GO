@@ -101,7 +101,9 @@ func TestSquadHidesMinorPhotos(t *testing.T) {
 }
 
 // TestSquadIgnoresCallerIsYouth pins Review Focus #1: Squad must not trust
-// the caller's team.Team.IsYouth; it re-reads the team itself.
+// the caller's team.Team.IsYouth; it re-reads the team itself. A youth
+// team's squad is hidden entirely (no names, no positions), not merely
+// stripped of photos, matching the legacy team page.
 func TestSquadIgnoresCallerIsYouth(t *testing.T) {
 	store := newFakeStore(player.Player{
 		ID: 5, Name: "Adult on Youth Team", FileName: null.StringFrom("player/adult2.png"), DateOfBirth: yearsAgo(30), TeamID: 2,
@@ -114,12 +116,12 @@ func TestSquadIgnoresCallerIsYouth(t *testing.T) {
 	// says IsYouth: false.
 	members, err := svc.Squad(ctx, team.Team{ID: 2, IsYouth: false})
 	require.NoError(t, err)
-	require.Len(t, members, 1)
-	assert.Empty(t, members[0].ImageURL, "team 2 is youth regardless of what the caller claims")
+	assert.Empty(t, members, "team 2 is youth regardless of what the caller claims: the whole squad is hidden")
 }
 
 // TestSquadHidesPhotosWhenTeamLookupFails pins Review Focus #1: if Squad
-// can't re-read the team, it must fail closed rather than show photos.
+// can't re-read the team, it must fail closed by hiding the whole squad,
+// since an unknown team can't be proven to be non-youth.
 func TestSquadHidesPhotosWhenTeamLookupFails(t *testing.T) {
 	store := newFakeStore(player.Player{
 		ID: 6, Name: "Adult Unknown Team", FileName: null.StringFrom("player/adult3.png"), DateOfBirth: yearsAgo(30), TeamID: 7,
@@ -130,8 +132,7 @@ func TestSquadHidesPhotosWhenTeamLookupFails(t *testing.T) {
 
 	members, err := svc.Squad(ctx, team.Team{ID: 7, IsYouth: false})
 	require.NoError(t, err)
-	require.Len(t, members, 1, "players are still listed")
-	assert.Empty(t, members[0].ImageURL, "team lookup failed: fail closed")
+	assert.Empty(t, members, "team lookup failed: fail closed by hiding the whole squad")
 }
 
 func TestPhotoKey(t *testing.T) {

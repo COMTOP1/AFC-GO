@@ -94,24 +94,26 @@ func (s *Service) List(ctx context.Context) ([]Public, error) {
 
 // Squad lists a team's players for its public page. The caller's t.IsYouth is
 // not trusted; the team is re-read so a stale or wrong value can't expose a
-// youth team's photos. If the team can't be re-read, players are still
-// listed but with no photos (fail closed).
+// youth team's squad. A youth team's squad is hidden entirely (no names, no
+// positions, not just photos), matching the legacy team page. If the team
+// can't be re-read, the squad is hidden too: an unknown team can't be proven
+// to be non-youth, so we fail closed.
 func (s *Service) Squad(ctx context.Context, t team.Team) ([]Member, error) {
 	ctx, span := tracer.Start(ctx, "player.Service.Squad")
 	defer span.End()
+	fresh, teamErr := s.teams.GetTeam(ctx, team.Team{ID: t.ID})
+	if teamErr != nil || fresh.IsYouth {
+		return []Member{}, nil
+	}
 	rows, err := s.store.GetPlayersTeam(ctx, t)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list squad: %w", err)
-	}
-	youth := true
-	if fresh, teamErr := s.teams.GetTeam(ctx, team.Team{ID: t.ID}); teamErr == nil {
-		youth = fresh.IsYouth
 	}
 	now := time.Now()
 	out := make([]Member, 0, len(rows))
 	for _, p := range rows {
 		m := Member{ID: p.ID, Name: p.Name, Position: p.Position.String, IsCaptain: p.IsCaptain}
-		if PhotoVisible(p, youth, now) {
+		if PhotoVisible(p, fresh.IsYouth, now) {
 			m.ImageURL = s.files.URL(p.FileName.String)
 		}
 		out = append(out, m)

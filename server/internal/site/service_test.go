@@ -134,10 +134,14 @@ func TestContactNeverLeaksSecrets(t *testing.T) {
 }
 
 // TestTeamDetailHidesMinorPhotos pins Review Focus #1 for /teams/{id}: the
-// squad is built by player.Service.Squad, which applies PhotoVisible with the
-// team's youth flag. This test proves site passes that flag through.
+// squad is built by player.Service.Squad, which for a youth team now hides
+// the whole squad (not just photos). This test proves site passes the
+// youth flag through and simply relays whatever Squad returns.
 func TestTeamDetailHidesMinorPhotos(t *testing.T) {
-	f := &fakes{squadForTeam: map[int][]player.Member{2: {{ID: 9, Name: "Youth"}}}}
+	// Mirrors the real player.Service.Squad contract: a youth team's squad
+	// comes back empty, since Squad hides names and positions too, not just
+	// photos.
+	f := &fakes{squadForTeam: map[int][]player.Member{2: {}}}
 	var seen []team.Team
 	svc := site.NewService(site.Deps{
 		News: f, WhatsOn: f, Sponsors: f, Affiliations: affiliations{}, Teams: teams{},
@@ -148,7 +152,7 @@ func TestTeamDetailHidesMinorPhotos(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, seen, 1)
 	assert.True(t, seen[0].IsYouth, "youth flag must reach player.Squad")
-	assert.Len(t, detail.Players, 1)
+	assert.Empty(t, detail.Players, "youth team squad is hidden entirely")
 }
 
 type squadSpy struct {
