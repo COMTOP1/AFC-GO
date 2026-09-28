@@ -36,6 +36,6 @@ func (v *Views) DownloadFunc(c echo.Context) error {
 		}
 		return errors.Join(errors.New("download failed"), err)
 	}
-	c.Response().Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	c.Response().Header().Set("Cache-Control", files.CacheControl(kind))
 	return c.Redirect(http.StatusFound, u)
 }

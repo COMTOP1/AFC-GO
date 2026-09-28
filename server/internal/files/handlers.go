@@ -36,10 +36,23 @@ func (h *Handlers) get(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	u, err := h.svc.URL(c.Request().Context(), c.Param("kind"), id)
+	kind := c.Param("kind")
+	u, err := h.svc.URL(c.Request().Context(), kind, id)
 	if err != nil {
 		return err
 	}
-	c.Response().Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	c.Response().Header().Set("Cache-Control", CacheControl(kind))
 	return c.Redirect(http.StatusFound, u)
+}
+
+// CacheControl returns the Cache-Control for a file redirect of the given
+// kind (shared by the API handler and the legacy /download route). Player
+// photos must not be cached publicly: if a player moves to a youth team, or
+// an under-18's photo must stop being shown, a year-long public cache would
+// keep serving the old redirect to browsers and CDNs regardless.
+func CacheControl(kind string) string {
+	if kind == "player" {
+		return "private, no-cache"
+	}
+	return "public, max-age=31536000, immutable"
 }

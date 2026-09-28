@@ -84,11 +84,37 @@ func TestPlayerFileHiddenForMinor(t *testing.T) {
 	rec := c.Get(t, "/api/v1/files/player/1")
 	assert.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, "https://cdn.test/player/adult.png", rec.Header().Get("Location"))
-	assert.Equal(t, "public, max-age=31536000, immutable", rec.Header().Get("Cache-Control"))
 
 	rec = c.Get(t, "/api/v1/files/player/2")
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 	assert.Empty(t, rec.Header().Get("Location"))
+}
+
+// TestPlayerFileCacheIsPrivate pins the fix for stale youth-team caches: a
+// player photo redirect is cached publicly for a year like every other file
+// kind, so if a player moves to a youth team after being cached, browsers
+// and CDNs would keep serving the old (now-forbidden) redirect. Player
+// redirects must not be cached at all.
+func TestPlayerFileCacheIsPrivate(t *testing.T) {
+	e := apitest.NewEcho()
+	files.NewHandlers(newService()).Register(web.NewAPI(e, false), authtest.Everyone().Guards())
+	c := apitest.New(e)
+
+	rec := c.Get(t, "/api/v1/files/player/1")
+	require.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, "private, no-cache", rec.Header().Get("Cache-Control"))
+}
+
+// TestDocumentFileKeepsLongPublicCache pins that non-player kinds are
+// unaffected by the player-only cache change.
+func TestDocumentFileKeepsLongPublicCache(t *testing.T) {
+	e := apitest.NewEcho()
+	files.NewHandlers(newService()).Register(web.NewAPI(e, false), authtest.Everyone().Guards())
+	c := apitest.New(e)
+
+	rec := c.Get(t, "/api/v1/files/document/1")
+	require.Equal(t, http.StatusFound, rec.Code)
+	assert.Equal(t, "public, max-age=31536000, immutable", rec.Header().Get("Cache-Control"))
 }
 
 func TestLegacyKind(t *testing.T) {
