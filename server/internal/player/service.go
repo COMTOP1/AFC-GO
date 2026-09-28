@@ -2,6 +2,8 @@ package player
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -50,7 +52,9 @@ func (s *Service) public(p Player, t *team.Team, now time.Time) Public {
 			out.Age = &age
 		}
 	}
-	youth := false
+	// A player whose team can't be found (e.g. team_id 0 after DetachTeam)
+	// is treated as youth: we can't prove otherwise, so fail closed.
+	youth := true
 	if t != nil {
 		out.Team = &TeamRef{ID: t.ID, Name: t.Name, IsYouth: t.IsYouth}
 		youth = t.IsYouth
@@ -88,7 +92,10 @@ func (s *Service) List(ctx context.Context) ([]Public, error) {
 	return out, nil
 }
 
-// Squad lists a team's players for its public page.
+// Squad lists a team's players for its public page. The caller's t.IsYouth is
+// not trusted; the team is re-read so a stale or wrong value can't expose a
+// youth team's photos. If the team can't be re-read, players are still
+// listed but with no photos (fail closed).
 func (s *Service) Squad(ctx context.Context, t team.Team) ([]Member, error) {
 	ctx, span := tracer.Start(ctx, "player.Service.Squad")
 	defer span.End()
@@ -96,11 +103,15 @@ func (s *Service) Squad(ctx context.Context, t team.Team) ([]Member, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list squad: %w", err)
 	}
+	youth := true
+	if fresh, teamErr := s.teams.GetTeam(ctx, team.Team{ID: t.ID}); teamErr == nil {
+		youth = fresh.IsYouth
+	}
 	now := time.Now()
 	out := make([]Member, 0, len(rows))
 	for _, p := range rows {
 		m := Member{ID: p.ID, Name: p.Name, Position: p.Position.String, IsCaptain: p.IsCaptain}
-		if PhotoVisible(p, t.IsYouth, now) {
+		if PhotoVisible(p, youth, now) {
 			m.ImageURL = s.files.URL(p.FileName.String)
 		}
 		out = append(out, m)
@@ -116,11 +127,16 @@ func (s *Service) PhotoKey(ctx context.Context, id int) (string, error) {
 	notFound := svcerr.NotFound("player photo not found", nil)
 	p, err := s.store.GetPlayer(ctx, Player{ID: id})
 	if err != nil {
-		return "", svcerr.FromStore(err, "player")
+		// Same error as "hidden" so a caller can't tell existing IDs apart
+		// from missing ones.
+		return "", notFound
 	}
 	t, err := s.teams.GetTeam(ctx, team.Team{ID: p.TeamID})
 	if err != nil {
 		// Unknown team: we can't prove it isn't a youth team, so hide.
+		if !errors.Is(err, sql.ErrNoRows) {
+			span.RecordError(err)
+		}
 		return "", notFound
 	}
 	if !PhotoVisible(p, t.IsYouth, time.Now()) {

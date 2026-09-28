@@ -507,7 +507,9 @@ func DBPlayersToTemplateFormat(playersDB []player.Player, teamsDB []team.Team) [
 				playerTemplate.Team = TeamTemplate{IsValid: false}
 			}
 		}
-		if player.PhotoVisible(playerDB, playerTemplate.Team.IsYouth, time.Now()) {
+		// A player whose team couldn't be found is treated as youth: we can't
+		// prove otherwise, so fail closed (Review Focus #1).
+		if player.PhotoVisible(playerDB, !playerTemplate.Team.IsValid || playerTemplate.Team.IsYouth, time.Now()) {
 			playerTemplate.FileName = playerDB.FileName
 		}
 		playersTemplate = append(playersTemplate, playerTemplate)

@@ -68,6 +68,24 @@ func TestListHidesMinorPhotos(t *testing.T) {
 	assert.Equal(t, 30, *byID[1].Age)
 }
 
+// TestListHidesPhotoOnUnknownTeam pins Review Focus #1: a player whose team
+// can't be found (e.g. team_id 0 after DetachTeam) must not leak a photo via
+// List just because "not found" was treated as "not youth".
+func TestListHidesPhotoOnUnknownTeam(t *testing.T) {
+	store := newFakeStore(player.Player{
+		ID: 4, Name: "Orphan", FileName: null.StringFrom("player/orphan.png"), DateOfBirth: yearsAgo(30), TeamID: 7,
+	})
+	objects := uploadtest.New()
+	objects.Objects["player/orphan.png"] = "IMG"
+	svc := player.NewService(store, teams, upload.New(objects))
+
+	list, err := svc.List(ctx)
+	require.NoError(t, err)
+	require.Len(t, list, 1)
+	assert.Empty(t, list[0].ImageURL, "team not found: fail closed")
+	assert.Nil(t, list[0].Team)
+}
+
 func TestSquadHidesMinorPhotos(t *testing.T) {
 	svc, _, _ := newService()
 	members, err := svc.Squad(ctx, team.Team{ID: 1, IsYouth: false})
@@ -82,6 +100,40 @@ func TestSquadHidesMinorPhotos(t *testing.T) {
 	}
 }
 
+// TestSquadIgnoresCallerIsYouth pins Review Focus #1: Squad must not trust
+// the caller's team.Team.IsYouth; it re-reads the team itself.
+func TestSquadIgnoresCallerIsYouth(t *testing.T) {
+	store := newFakeStore(player.Player{
+		ID: 5, Name: "Adult on Youth Team", FileName: null.StringFrom("player/adult2.png"), DateOfBirth: yearsAgo(30), TeamID: 2,
+	})
+	objects := uploadtest.New()
+	objects.Objects["player/adult2.png"] = "IMG"
+	svc := player.NewService(store, teams, upload.New(objects))
+
+	// Team 2 is youth, but the caller (deliberately, or by a stale value)
+	// says IsYouth: false.
+	members, err := svc.Squad(ctx, team.Team{ID: 2, IsYouth: false})
+	require.NoError(t, err)
+	require.Len(t, members, 1)
+	assert.Empty(t, members[0].ImageURL, "team 2 is youth regardless of what the caller claims")
+}
+
+// TestSquadHidesPhotosWhenTeamLookupFails pins Review Focus #1: if Squad
+// can't re-read the team, it must fail closed rather than show photos.
+func TestSquadHidesPhotosWhenTeamLookupFails(t *testing.T) {
+	store := newFakeStore(player.Player{
+		ID: 6, Name: "Adult Unknown Team", FileName: null.StringFrom("player/adult3.png"), DateOfBirth: yearsAgo(30), TeamID: 7,
+	})
+	objects := uploadtest.New()
+	objects.Objects["player/adult3.png"] = "IMG"
+	svc := player.NewService(store, teams, upload.New(objects))
+
+	members, err := svc.Squad(ctx, team.Team{ID: 7, IsYouth: false})
+	require.NoError(t, err)
+	require.Len(t, members, 1, "players are still listed")
+	assert.Empty(t, members[0].ImageURL, "team lookup failed: fail closed")
+}
+
 func TestPhotoKey(t *testing.T) {
 	svc, _, _ := newService()
 	key, err := svc.PhotoKey(ctx, 1)
@@ -92,7 +144,22 @@ func TestPhotoKey(t *testing.T) {
 		se, ok := svcerr.As(err)
 		require.True(t, ok, id)
 		assert.Equal(t, svcerr.KindNotFound, se.Kind, id)
+		assert.Equal(t, "player photo not found", se.Message, "missing and hidden players give the same error, id %d", id)
 	}
+
+	// An adult with a photo on an unknown team must also be NotFound (fail
+	// closed), via the identical error a missing player would give.
+	unknownTeamStore := newFakeStore(player.Player{
+		ID: 4, Name: "Orphan", FileName: null.StringFrom("player/orphan.png"), DateOfBirth: yearsAgo(30), TeamID: 7,
+	})
+	objects := uploadtest.New()
+	objects.Objects["player/orphan.png"] = "IMG"
+	orphanSvc := player.NewService(unknownTeamStore, teams, upload.New(objects))
+	_, err = orphanSvc.PhotoKey(ctx, 4)
+	se, ok := svcerr.As(err)
+	require.True(t, ok)
+	assert.Equal(t, svcerr.KindNotFound, se.Kind)
+	assert.Equal(t, "player photo not found", se.Message)
 }
 
 func TestCreateValidates(t *testing.T) {
