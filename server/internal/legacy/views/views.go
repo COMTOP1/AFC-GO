@@ -56,6 +56,7 @@ type (
 		newsSvc        *news.Service
 		player         *player.Store
 		programme      *programme.Store
+		programmeSvc   *programme.Service
 		setting        *setting.Store
 		sponsor        *sponsor.Store
 		sponsorSvc     *sponsor.Service
@@ -95,6 +96,7 @@ type (
 		NewsService        *news.Service
 		Player             *player.Store
 		Programme          *programme.Store
+		ProgrammeService   *programme.Service
 		Setting            *setting.Store
 		Sponsor            *sponsor.Store
 		SponsorService     *sponsor.Service
@@ -124,6 +126,7 @@ func New(d Deps) *Views {
 		newsSvc:        d.NewsService,
 		player:         d.Player,
 		programme:      d.Programme,
+		programmeSvc:   d.ProgrammeService,
 		setting:        d.Setting,
 		sponsor:        d.Sponsor,
 		sponsorSvc:     d.SponsorService,

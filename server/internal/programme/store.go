@@ -91,18 +91,14 @@ func (s *Store) addProgramme(ctx context.Context, programmeParam Programme) (Pro
 	defer span.End()
 	builder := utils.PSQL().Insert("programmes").
 		Columns("name", "file_name", "date_of_programme", "programme_season_id").
-		Values(programmeParam.Name, programmeParam.FileName, programmeParam.DateOfProgramme, programmeParam.SeasonID)
+		Values(programmeParam.Name, programmeParam.FileName, programmeParam.DateOfProgramme, programmeParam.SeasonID).
+		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add programme: %w", err))
 	}
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		span.RecordError(err)
-		return Programme{}, fmt.Errorf("failed to add programme: %w", err)
-	}
-	_, err = res.RowsAffected()
+	err = s.db.GetContext(ctx, &programmeParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
 		return Programme{}, fmt.Errorf("failed to add programme: %w", err)
@@ -202,18 +198,14 @@ func (s *Store) addSeason(ctx context.Context, seasonParam Season) (Season, erro
 	defer span.End()
 	builder := utils.PSQL().Insert("programme_seasons").
 		Columns("season").
-		Values(seasonParam.Season)
+		Values(seasonParam.Season).
+		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
 		panic(fmt.Errorf("failed to build sql for add season: %w", err))
 	}
-	res, err := s.db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		span.RecordError(err)
-		return Season{}, fmt.Errorf("failed to add season: %w", err)
-	}
-	_, err = res.RowsAffected()
+	err = s.db.GetContext(ctx, &seasonParam.ID, sql, args...)
 	if err != nil {
 		span.RecordError(err)
 		return Season{}, fmt.Errorf("failed to add season: %w", err)

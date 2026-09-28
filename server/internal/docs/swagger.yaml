@@ -70,6 +70,31 @@ definitions:
       title:
         type: string
     type: object
+  programme.Public:
+    properties:
+      date:
+        type: string
+      fileUrl:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      season:
+        $ref: '#/definitions/programme.PublicSeason'
+    type: object
+  programme.PublicSeason:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  programme.SeasonInput:
+    properties:
+      season:
+        type: string
+    type: object
   sponsor.Public:
     properties:
       id:
@@ -465,6 +490,173 @@ paths:
       summary: Update a news article
       tags:
       - news
+  /programmes:
+    get:
+      parameters:
+      - description: Season ID; omit for all
+        in: query
+        name: season
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/programme.Public'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: List programmes
+      tags:
+      - programmes
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: YYYY-MM-DD
+        in: formData
+        name: date
+        required: true
+        type: string
+      - description: Season ID (0 or omitted for none)
+        in: formData
+        name: seasonId
+        type: integer
+      - description: Programme PDF
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/programme.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Upload a programme
+      tags:
+      - programmes
+  /programmes/{id}:
+    delete:
+      parameters:
+      - description: Programme ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a programme
+      tags:
+      - programmes
+  /seasons:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/programme.PublicSeason'
+            type: array
+      summary: List seasons
+      tags:
+      - programmes
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Season name
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/programme.SeasonInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/programme.PublicSeason'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a season
+      tags:
+      - programmes
+  /seasons/{id}:
+    delete:
+      parameters:
+      - description: Season ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a season
+      tags:
+      - programmes
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Season ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New name
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/programme.SeasonInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/programme.PublicSeason'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Rename a season
+      tags:
+      - programmes
   /sponsors:
     get:
       produces:

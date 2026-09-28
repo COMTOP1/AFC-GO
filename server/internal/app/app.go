@@ -106,6 +106,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	affiliationSvc := affiliation.NewService(s.Affiliation, uploads)
 	documentSvc := document.NewService(s.Document, uploads)
 	gallerySvc := image.NewService(s.Image, uploads)
+	programmeSvc := programme.NewService(s.Programme, uploads)
 	sessions := auth.NewSessions(conf.Session, s.User)
 	tokens := auth.NewTokens(conf.Redis)
 	counter := visitors.New(s.Setting, 30*time.Second, "afcaldermaston.co.uk")
@@ -131,6 +132,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 		NewsService:        newsSvc,
 		Player:             s.Player,
 		Programme:          s.Programme,
+		ProgrammeService:   programmeSvc,
 		Setting:            s.Setting,
 		Sponsor:            s.Sponsor,
 		SponsorService:     sponsorSvc,
@@ -169,6 +171,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	affiliation.NewHandlers(affiliationSvc).Register(api, guards)
 	document.NewHandlers(documentSvc).Register(api, guards)
 	image.NewHandlers(gallerySvc).Register(api, guards)
+	programme.NewHandlers(programmeSvc).Register(api, guards)
 
 	return &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens}
 }
