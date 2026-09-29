@@ -1,0 +1,1896 @@
+basePath: /api/v1
+definitions:
+  affiliation.Public:
+    properties:
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      name:
+        type: string
+      website:
+        type: string
+    type: object
+  auth.CurrentUser:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      name:
+        type: string
+      permissions:
+        $ref: '#/definitions/auth.Permissions'
+      phone:
+        type: string
+      role:
+        type: string
+      teamId:
+        type: integer
+    type: object
+  auth.LoginInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      remember:
+        type: boolean
+    type: object
+  auth.LoginResponse:
+    properties:
+      resetRequired:
+        type: boolean
+      resetUrl:
+        type: string
+      user:
+        $ref: '#/definitions/auth.CurrentUser'
+    type: object
+  auth.PasswordInput:
+    properties:
+      confirmationPassword:
+        type: string
+      newPassword:
+        type: string
+      oldPassword:
+        type: string
+    type: object
+  auth.Permissions:
+    properties:
+      canEdit:
+        type: boolean
+      canManageGallery:
+        type: boolean
+      canManageUsers:
+        type: boolean
+    type: object
+  auth.ResetInput:
+    properties:
+      confirmationPassword:
+        type: string
+      newPassword:
+        type: string
+    type: object
+  document.Public:
+    properties:
+      fileUrl:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  image.Public:
+    properties:
+      caption:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+    type: object
+  news.Article:
+    properties:
+      content:
+        type: string
+      date:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      title:
+        type: string
+    type: object
+  player.Member:
+    properties:
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      isCaptain:
+        type: boolean
+      name:
+        type: string
+      position:
+        type: string
+    type: object
+  player.Public:
+    properties:
+      age:
+        type: integer
+      dateOfBirth:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      isCaptain:
+        type: boolean
+      name:
+        type: string
+      position:
+        type: string
+      team:
+        $ref: '#/definitions/player.TeamRef'
+    type: object
+  player.TeamRef:
+    properties:
+      id:
+        type: integer
+      isYouth:
+        type: boolean
+      name:
+        type: string
+    type: object
+  programme.Public:
+    properties:
+      date:
+        type: string
+      fileUrl:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      season:
+        $ref: '#/definitions/programme.PublicSeason'
+    type: object
+  programme.PublicSeason:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  programme.SeasonInput:
+    properties:
+      season:
+        type: string
+    type: object
+  setting.DisplayEmail:
+    properties:
+      email:
+        type: string
+    type: object
+  setting.InfoContent:
+    properties:
+      content:
+        type: string
+    type: object
+  site.Contact:
+    properties:
+      displayEmail:
+        type: string
+      people:
+        items:
+          $ref: '#/definitions/site.ContactPerson'
+        type: array
+    type: object
+  site.ContactPerson:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  site.Home:
+    properties:
+      affiliations:
+        items:
+          $ref: '#/definitions/affiliation.Public'
+        type: array
+      latestNews:
+        $ref: '#/definitions/news.Article'
+      nextEvent:
+        $ref: '#/definitions/whatson.Event'
+      sponsors:
+        items:
+          $ref: '#/definitions/sponsor.Public'
+        type: array
+    type: object
+  site.Info:
+    properties:
+      displayEmail:
+        type: string
+      teams:
+        items:
+          $ref: '#/definitions/team.Public'
+        type: array
+      version:
+        type: string
+      visitorCount:
+        type: integer
+      year:
+        type: integer
+    type: object
+  site.Manager:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  site.TeamDetail:
+    properties:
+      managers:
+        items:
+          $ref: '#/definitions/site.Manager'
+        type: array
+      players:
+        items:
+          $ref: '#/definitions/player.Member'
+        type: array
+      sponsors:
+        items:
+          $ref: '#/definitions/sponsor.Public'
+        type: array
+      team:
+        $ref: '#/definitions/team.Public'
+    type: object
+  sponsor.Public:
+    properties:
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      name:
+        type: string
+      purpose:
+        type: string
+      team:
+        type: string
+      website:
+        type: string
+    type: object
+  team.Public:
+    properties:
+      ages:
+        type: integer
+      coach:
+        type: string
+      description:
+        type: string
+      division:
+        type: string
+      fixturesUrl:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      isActive:
+        type: boolean
+      isYouth:
+        type: boolean
+      league:
+        type: string
+      leagueTableUrl:
+        type: string
+      name:
+        type: string
+      physio:
+        type: string
+    type: object
+  user.Admin:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      role:
+        description: display name, e.g. "Club Secretary"
+        type: string
+      roleCode:
+        description: input code, e.g. "club_secretary"
+        type: string
+      teamId:
+        type: integer
+    type: object
+  user.Created:
+    properties:
+      emailSent:
+        type: boolean
+      tempPassword:
+        type: string
+      user:
+        $ref: '#/definitions/user.Admin'
+    type: object
+  user.ResetResult:
+    properties:
+      emailSent:
+        type: boolean
+      resetUrl:
+        type: string
+    type: object
+  web.APIError:
+    properties:
+      code:
+        type: integer
+      fields:
+        additionalProperties:
+          type: string
+        type: object
+      message:
+        type: string
+    type: object
+  web.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/web.APIError'
+    type: object
+  web.HealthResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  whatson.Event:
+    properties:
+      content:
+        type: string
+      date:
+        type: string
+      dateOfEvent:
+        type: string
+      id:
+        type: integer
+      imageUrl:
+        type: string
+      title:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: JSON API behind the AFC Aldermaston website.
+  title: AFC Aldermaston API
+  version: "1"
+paths:
+  /account:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.CurrentUser'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: My account
+      tags:
+      - account
+  /account/image:
+    delete:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.CurrentUser'
+      summary: Remove my photo
+      tags:
+      - account
+    put:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Photo
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.CurrentUser'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Set my photo
+      tags:
+      - account
+  /affiliations:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/affiliation.Public'
+            type: array
+      summary: List affiliations
+      tags:
+      - affiliations
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Full URL
+        in: formData
+        name: website
+        type: string
+      - description: Logo
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/affiliation.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create an affiliation
+      tags:
+      - affiliations
+  /affiliations/{id}:
+    delete:
+      parameters:
+      - description: Affiliation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete an affiliation
+      tags:
+      - affiliations
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Log in
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      responses:
+        "204":
+          description: No Content
+      summary: Log out
+      tags:
+      - auth
+  /auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.CurrentUser'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Current user
+      tags:
+      - auth
+  /auth/password:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Old and new passwords
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.PasswordInput'
+      responses:
+        "204":
+          description: No Content
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Change password
+      tags:
+      - auth
+  /auth/reset/{token}:
+    get:
+      parameters:
+      - description: Reset token
+        in: path
+        name: token
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Check a reset link
+      tags:
+      - auth
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Reset token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: New password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ResetInput'
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Reset password
+      tags:
+      - auth
+  /contact:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/site.Contact'
+      summary: Contact page
+      tags:
+      - site
+  /documents:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/document.Public'
+            type: array
+      summary: List documents
+      tags:
+      - documents
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Display name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: PDF, DOCX, PPTX, TXT or image
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/document.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Upload a document
+      tags:
+      - documents
+  /documents/{id}:
+    delete:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a document
+      tags:
+      - documents
+  /files/{kind}/{id}:
+    get:
+      parameters:
+      - description: affiliation, document, gallery, news, player, programme, sponsor,
+          team, user or whatson
+        in: path
+        name: kind
+        required: true
+        type: string
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "302":
+          description: Found
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Download a file
+      tags:
+      - files
+  /gallery:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/image.Public'
+            type: array
+      summary: List gallery photos
+      tags:
+      - gallery
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Caption
+        in: formData
+        name: caption
+        type: string
+      - description: Photo
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/image.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Upload a gallery photo
+      tags:
+      - gallery
+  /gallery/{id}:
+    delete:
+      parameters:
+      - description: Photo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a gallery photo
+      tags:
+      - gallery
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.HealthResponse'
+      summary: Health check
+      tags:
+      - system
+  /home:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/site.Home'
+      summary: Home page
+      tags:
+      - site
+  /info:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/setting.InfoContent'
+      summary: Get the info page
+      tags:
+      - settings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: HTML content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/setting.InfoContent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/setting.InfoContent'
+      summary: Update the info page
+      tags:
+      - settings
+  /news:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/news.Article'
+            type: array
+      summary: List news
+      tags:
+      - news
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: HTML content (sanitised)
+        in: formData
+        name: content
+        type: string
+      - description: Image
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/news.Article'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a news article
+      tags:
+      - news
+  /news/{id}:
+    delete:
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a news article
+      tags:
+      - news
+    get:
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/news.Article'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Get a news article
+      tags:
+      - news
+    patch:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Title
+        in: formData
+        name: title
+        type: string
+      - description: HTML content (sanitised); empty clears it
+        in: formData
+        name: content
+        type: string
+      - description: Replacement image
+        in: formData
+        name: image
+        type: file
+      - description: Remove the current image
+        in: formData
+        name: removeImage
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/news.Article'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update a news article
+      tags:
+      - news
+  /players:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/player.Public'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: List players
+      tags:
+      - players
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Team ID
+        in: formData
+        name: teamId
+        required: true
+        type: integer
+      - description: YYYY-MM-DD
+        in: formData
+        name: dateOfBirth
+        required: true
+        type: string
+      - description: Position
+        in: formData
+        name: position
+        type: string
+      - description: Captain
+        in: formData
+        name: isCaptain
+        type: boolean
+      - description: Photo (never shown for youth or under-18 players)
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/player.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a player
+      tags:
+      - players
+  /players/{id}:
+    delete:
+      parameters:
+      - description: Player ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a player
+      tags:
+      - players
+    patch:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Player ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Name
+        in: formData
+        name: name
+        type: string
+      - description: Team ID
+        in: formData
+        name: teamId
+        type: integer
+      - description: YYYY-MM-DD
+        in: formData
+        name: dateOfBirth
+        type: string
+      - description: Position; empty clears
+        in: formData
+        name: position
+        type: string
+      - description: Captain
+        in: formData
+        name: isCaptain
+        type: boolean
+      - description: Replacement photo
+        in: formData
+        name: image
+        type: file
+      - description: Remove the current photo
+        in: formData
+        name: removeImage
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/player.Public'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update a player
+      tags:
+      - players
+  /programmes:
+    get:
+      parameters:
+      - description: Season ID; omit for all
+        in: query
+        name: season
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/programme.Public'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: List programmes
+      tags:
+      - programmes
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: YYYY-MM-DD
+        in: formData
+        name: date
+        required: true
+        type: string
+      - description: Season ID (0 or omitted for none)
+        in: formData
+        name: seasonId
+        type: integer
+      - description: Programme PDF
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/programme.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Upload a programme
+      tags:
+      - programmes
+  /programmes/{id}:
+    delete:
+      parameters:
+      - description: Programme ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a programme
+      tags:
+      - programmes
+  /seasons:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/programme.PublicSeason'
+            type: array
+      summary: List seasons
+      tags:
+      - programmes
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Season name
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/programme.SeasonInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/programme.PublicSeason'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a season
+      tags:
+      - programmes
+  /seasons/{id}:
+    delete:
+      parameters:
+      - description: Season ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a season
+      tags:
+      - programmes
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Season ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New name
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/programme.SeasonInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/programme.PublicSeason'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Rename a season
+      tags:
+      - programmes
+  /settings/display-email:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Email; empty removes it
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/setting.DisplayEmail'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/setting.DisplayEmail'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Set the public contact email
+      tags:
+      - settings
+  /site:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/site.Info'
+      summary: Site layout data
+      tags:
+      - site
+  /sponsors:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/sponsor.Public'
+            type: array
+      summary: List sponsors
+      tags:
+      - sponsors
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Full URL
+        in: formData
+        name: website
+        type: string
+      - description: What they sponsor
+        in: formData
+        name: purpose
+        type: string
+      - description: A, O, Y or a team ID
+        in: formData
+        name: team
+        type: string
+      - description: Logo
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/sponsor.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a sponsor
+      tags:
+      - sponsors
+  /sponsors/{id}:
+    delete:
+      parameters:
+      - description: Sponsor ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a sponsor
+      tags:
+      - sponsors
+  /teams:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/team.Public'
+            type: array
+      summary: List teams
+      tags:
+      - teams
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Upper age (under 19 makes a youth team)
+        in: formData
+        name: ages
+        required: true
+        type: integer
+      - description: Description
+        in: formData
+        name: description
+        type: string
+      - description: League
+        in: formData
+        name: league
+        type: string
+      - description: Division
+        in: formData
+        name: division
+        type: string
+      - description: League table URL
+        in: formData
+        name: leagueTable
+        type: string
+      - description: Fixtures URL
+        in: formData
+        name: fixtures
+        type: string
+      - description: Coach
+        in: formData
+        name: coach
+        type: string
+      - description: Physio
+        in: formData
+        name: physio
+        type: string
+      - description: Active
+        in: formData
+        name: isActive
+        type: boolean
+      - description: Youth
+        in: formData
+        name: isYouth
+        type: boolean
+      - description: Team photo
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/team.Public'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a team
+      tags:
+      - teams
+  /teams/{id}:
+    delete:
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a team
+      tags:
+      - teams
+    get:
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/site.TeamDetail'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Team page
+      tags:
+      - teams
+    patch:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Name
+        in: formData
+        name: name
+        type: string
+      - description: Upper age
+        in: formData
+        name: ages
+        type: integer
+      - description: Description; empty clears
+        in: formData
+        name: description
+        type: string
+      - description: League; empty clears
+        in: formData
+        name: league
+        type: string
+      - description: Division; empty clears
+        in: formData
+        name: division
+        type: string
+      - description: League table URL; empty clears
+        in: formData
+        name: leagueTable
+        type: string
+      - description: Fixtures URL; empty clears
+        in: formData
+        name: fixtures
+        type: string
+      - description: Coach; empty clears
+        in: formData
+        name: coach
+        type: string
+      - description: Physio; empty clears
+        in: formData
+        name: physio
+        type: string
+      - description: Active
+        in: formData
+        name: isActive
+        type: boolean
+      - description: Youth
+        in: formData
+        name: isYouth
+        type: boolean
+      - description: Replacement photo
+        in: formData
+        name: image
+        type: file
+      - description: Remove the current photo
+        in: formData
+        name: removeImage
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/team.Public'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update a team
+      tags:
+      - teams
+  /users:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/user.Admin'
+            type: array
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: List users
+      tags:
+      - users
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: Phone
+        in: formData
+        name: phone
+        type: string
+      - description: Role code, e.g. manager, club_secretary
+        in: formData
+        name: role
+        required: true
+        type: string
+      - description: Team (managers only)
+        in: formData
+        name: teamId
+        type: integer
+      - description: Photo
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/user.Created'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a user
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a user
+      tags:
+      - users
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.Admin'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Get a user
+      tags:
+      - users
+    patch:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Name
+        in: formData
+        name: name
+        type: string
+      - description: Email
+        in: formData
+        name: email
+        type: string
+      - description: Phone; empty clears
+        in: formData
+        name: phone
+        type: string
+      - description: Role code
+        in: formData
+        name: role
+        type: string
+      - description: Team (managers only)
+        in: formData
+        name: teamId
+        type: integer
+      - description: Replacement photo
+        in: formData
+        name: image
+        type: file
+      - description: Remove the current photo
+        in: formData
+        name: removeImage
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.Admin'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update a user
+      tags:
+      - users
+  /users/{id}/reset:
+    post:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.ResetResult'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Reset a user's password
+      tags:
+      - users
+  /whatson:
+    get:
+      parameters:
+      - description: all (default), future or past
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/whatson.Event'
+            type: array
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: List what's on
+      tags:
+      - whatson
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: HTML content (sanitised)
+        in: formData
+        name: content
+        type: string
+      - description: YYYY-MM-DD
+        in: formData
+        name: dateOfEvent
+        required: true
+        type: string
+      - description: Image
+        in: formData
+        name: image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/whatson.Event'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Create a what's-on event
+      tags:
+      - whatson
+  /whatson/{id}:
+    delete:
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Delete a what's-on event
+      tags:
+      - whatson
+    get:
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/whatson.Event'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Get a what's-on event
+      tags:
+      - whatson
+    patch:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Title
+        in: formData
+        name: title
+        type: string
+      - description: HTML content; empty clears it
+        in: formData
+        name: content
+        type: string
+      - description: YYYY-MM-DD
+        in: formData
+        name: dateOfEvent
+        type: string
+      - description: Replacement image
+        in: formData
+        name: image
+        type: file
+      - description: Remove the current image
+        in: formData
+        name: removeImage
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/whatson.Event'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Update a what's-on event
+      tags:
+      - whatson
+swagger: "2.0"

@@ -17,4 +17,4 @@ jobs:
       - name: download go-template-lint
         run: go install sourcegraph.com/sourcegraph/go-template-lint@latest
       - name: run go-template-lint
-        run: go-template-lint -f=templates/template.go -td=templates/ -t=templates/template.go
+        run: go-template-lint -f=server/internal/legacy/templates/template.go -td=server/internal/legacy/templates/ -t=server/internal/legacy/templates/template.go

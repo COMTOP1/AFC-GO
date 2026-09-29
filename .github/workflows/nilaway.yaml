@@ -17,4 +17,4 @@ jobs:
       - name: download nilaway
         run: go install go.uber.org/nilaway/cmd/nilaway@latest
       - name: run nilaway
-        run: nilaway .
+        run: nilaway ./server/cmd/afc
