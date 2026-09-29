@@ -1,3 +1,18 @@
+FROM node:24-alpine AS client
+
+WORKDIR /src/
+RUN corepack enable
+
+COPY package.json yarn.lock .yarnrc.yml ./
+RUN yarn install --immutable
+
+COPY tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts eslint.config.js .prettierrc ./
+COPY scripts ./scripts
+COPY client ./client
+# CI lints; the image build only compiles.
+RUN BUILD_CLIENT_SKIP_LINT=true yarn build:client
+
+
 FROM golang:1.26.7-alpine3.24 AS build
 
 LABEL site="afc"
@@ -19,6 +34,9 @@ RUN go mod download
 
 # Copy source
 COPY . .
+
+# Embed the web client built in the first stage
+COPY --from=client /src/build/client/ ./server/cmd/afc/ui/
 
 # Set build variables
 RUN echo -n "-X 'main.Version=$AFC_VERSION_ARG" > ./ldflags && \
