@@ -166,9 +166,18 @@ func (s *Store) AddUser(ctx context.Context, userParam User) (User, error) {
 }
 
 func (s *Store) EditUser(ctx context.Context, userParam User) (User, error) {
-	userDB, err := s.getUserFull(ctx, userParam)
+	// Look up the existing row by ID only. getUserFull matches
+	// "email = $1 OR id = $2", so passing userParam (which may already
+	// carry the caller's *new* email) risks matching a different user
+	// who currently owns that email, silently overwriting their account
+	// with this edit. An empty email in the lookup could still match a
+	// row with an empty email, so also guard on the returned ID.
+	userDB, err := s.getUserFull(ctx, User{ID: userParam.ID})
 	if err != nil {
 		return userParam, fmt.Errorf("failed to get user for edit user: %w", err)
+	}
+	if userDB.ID != userParam.ID {
+		return userParam, fmt.Errorf("failed to get user for edit user: user id mismatch, expected %d, got %d", userParam.ID, userDB.ID)
 	}
 	if userParam.Email != userDB.Email && len(userParam.Email) > 0 {
 		userDB.Email = userParam.Email
