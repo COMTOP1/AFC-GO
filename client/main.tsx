@@ -3,9 +3,13 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 
+import './styles/app.css';
+
 import { createQueryClient } from './api/queryClient';
 import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
+import { ToastProvider } from './components/ui/toast/ToastProvider';
+import { ThemeProvider } from './theme/ThemeProvider';
 
 const root = document.getElementById('root');
 if (!root) {
@@ -18,9 +22,13 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter basename="/app">
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <App />
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,

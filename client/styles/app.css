@@ -1,0 +1,81 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource/barlow-condensed/latin-600.css';
+@import '@fontsource/barlow-condensed/latin-700.css';
+@import '@fontsource/barlow-condensed/latin-800.css';
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/*
+ * Design tokens. `static` emits every variable even when no utility uses it,
+ * because some are read with var() from inline styles (card gradient, swatches).
+ * The default palette is cleared so only club tokens exist as utilities.
+ */
+@theme static {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-red: #d30e27;
+  --color-red-hover: #b10c20;
+  --color-club-red: #fc0f2b;
+  --color-blue: #233a8f;
+  --color-footer: #233a8f;
+  --color-ink: #1f1f1f;
+  --color-muted: #5b6170;
+  --color-line: #e4e6eb;
+  --color-bg: #ffffff;
+  --color-surface: #f5f6f8;
+  --color-field: #ffffff;
+  --color-success: #1f8a4c;
+  --color-warning: #b45309;
+  --color-on-red: #ffffff;
+
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
+}
+
+/* Native widgets (scrollbars, checkboxes, selects) follow the chosen theme, not the OS. */
+[data-theme='light'] {
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --color-red: #ff4d5e;
+  --color-red-hover: #ff6b79;
+  --color-blue: #8ea2f0;
+  --color-footer: #1b2550;
+  --color-ink: #eceef2;
+  --color-muted: #a2a8b5;
+  --color-line: #2a2e37;
+  --color-bg: #121419;
+  --color-surface: #1a1d24;
+  --color-field: #0e1015;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-on-red: #1a0005;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-blue);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

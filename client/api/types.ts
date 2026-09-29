@@ -52,3 +52,10 @@ export interface CurrentUser {
   imageUrl?: string;
   permissions: Permissions;
 }
+
+/** auth.LoginResponse — POST /auth/login */
+export interface LoginResponse {
+  user?: CurrentUser;
+  resetRequired: boolean;
+  resetUrl?: string;
+}

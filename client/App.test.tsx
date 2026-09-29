@@ -27,8 +27,17 @@ describe('App routes', () => {
 
   it('wraps pages in the layout', () => {
     renderAt('/');
-    expect(screen.getByRole('banner')).toBeInTheDocument();
-    expect(screen.getByRole('main')).toBeInTheDocument();
+    const banner = screen.getByRole('banner');
+    expect(banner).toHaveTextContent('AFC Aldermaston');
+    expect(banner).toHaveTextContent('Facta Non Verba');
+    expect(screen.getByRole('link', { name: 'AFC Aldermaston home' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('img', { name: 'The FA Charter Standard' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute(
+      'href',
+      '#content',
+    );
+    expect(screen.getByRole('main')).toHaveAttribute('id', 'content');
+    expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
     expect(screen.getByRole('contentinfo')).toHaveTextContent('AFC Aldermaston');
   });
 });
