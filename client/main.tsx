@@ -8,6 +8,7 @@ import './styles/app.css';
 import { createQueryClient } from './api/queryClient';
 import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
+import { ToastProvider } from './components/ui/toast/ToastProvider';
 import { ThemeProvider } from './theme/ThemeProvider';
 
 const root = document.getElementById('root');
@@ -23,7 +24,9 @@ createRoot(root).render(
       <BrowserRouter basename="/app">
         <ThemeProvider>
           <AuthProvider>
-            <App />
+            <ToastProvider>
+              <App />
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>

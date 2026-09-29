@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 
 import { AuthProvider } from '../auth/AuthProvider';
+import { ToastProvider } from '../components/ui/toast/ToastProvider';
 import { ThemeProvider } from '../theme/ThemeProvider';
 
 /** Renders ui inside the same providers as main.tsx, with retries off. */
@@ -15,7 +16,9 @@ export function renderWithProviders(ui: ReactElement, { route = '/' }: { route?:
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[route]}>
         <ThemeProvider>
-          <AuthProvider>{ui}</AuthProvider>
+          <AuthProvider>
+            <ToastProvider>{ui}</ToastProvider>
+          </AuthProvider>
         </ThemeProvider>
       </MemoryRouter>
     </QueryClientProvider>,
