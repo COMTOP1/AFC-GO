@@ -174,7 +174,7 @@ func main() {
 	if raw := os.Getenv("AFC_UI_PROXY_URL"); raw != "" {
 		uiProxy, err = url.Parse(raw)
 		if err != nil || uiProxy.Scheme == "" || uiProxy.Host == "" {
-			fatal(fmt.Sprintf("invalid AFC_UI_PROXY_URL %q: want e.g. http://localhost:5173", raw))
+			fatal("invalid AFC_UI_PROXY_URL: want an absolute URL such as http://localhost:5173")
 		}
 	}
 
