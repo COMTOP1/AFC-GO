@@ -66,9 +66,18 @@ function SeasonGroup({ name, items }: { name: string; items: Programme[] }) {
 export default function ProgrammesPage() {
   usePageTitle('Programmes');
   const [params, setParams] = useSearchParams();
-  const seasonId = parseId(params.get('season') ?? undefined) ?? 0;
-  const programmes = useProgrammes(seasonId);
+  const requested = parseId(params.get('season') ?? undefined) ?? 0;
   const seasons = useSeasons();
+  // A shared link can name a season that has since been deleted: once the list is
+  // known, treat an unknown id as "All seasons" rather than showing a 404.
+  const seasonId =
+    requested !== 0 && seasons.isSuccess && !seasons.data.some((s) => s.id === requested)
+      ? 0
+      : requested;
+  // Wait for the season list before asking for one season, so a stale id never hits the API.
+  const programmes = useProgrammes(seasonId, {
+    enabled: seasonId === 0 || !seasons.isPending,
+  });
   const q = useSearchQuery();
 
   return (

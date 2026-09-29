@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
@@ -113,5 +113,17 @@ describe('TeamPage', () => {
     const fetchMock = renderTeam('/team/abc');
     expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([u]) => String(u).startsWith('/api/v1/teams'))).toBe(false);
+  });
+
+  it('falls back to the crest when a player photo is broken', async () => {
+    renderTeam(`/team/${team.id}`);
+    const squad = await screen.findByRole('region', { name: 'Squad' });
+    const photo = squad.querySelector('img[src="/p/10"]') as HTMLImageElement;
+    fireEvent.error(photo);
+    expect(squad.querySelector('img[src="/p/10"]')).toBeNull();
+    expect(squad.querySelectorAll('img')[1]).toHaveAttribute(
+      'src',
+      expect.stringContaining('crest'),
+    );
   });
 });

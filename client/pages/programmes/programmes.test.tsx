@@ -74,4 +74,22 @@ describe('ProgrammesPage', () => {
     renderProgrammes('/programmes?q=zzz');
     expect(await screen.findByText("No programmes match 'zzz'")).toBeInTheDocument();
   });
+
+  it('treats an unknown ?season= as all seasons instead of erroring', async () => {
+    const fetchMock = renderProgrammes('/programmes?season=99', {
+      '/api/v1/programmes?season=99': {
+        status: 404,
+        body: { error: { code: 404, message: 'season not found' } },
+      },
+    });
+    expect(await screen.findByText('vs Marlow')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByLabelText('Season')).toHaveValue('0');
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('season=99'))).toBe(false);
+  });
+
+  it('shows the empty state when there are no programmes', async () => {
+    renderProgrammes('/programmes', { '/api/v1/programmes': { body: [] } });
+    expect(await screen.findByText('No programmes yet')).toBeInTheDocument();
+  });
 });

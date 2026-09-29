@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router';
 
 import { useTeam, type SquadMember, type TeamDetail } from '../../api/teams';
 import crest from '../../assets/crest.png';
+import { ImageWithFallback } from '../../components/page/ImageWithFallback';
 import { LogoRow } from '../../components/page/LogoRow';
 import { QueryState } from '../../components/page/QueryState';
 import { usePageTitle } from '../../components/page/usePageTitle';
@@ -17,8 +18,9 @@ import NotFoundPage from '../NotFoundPage';
 function Player({ player }: { player: SquadMember }) {
   return (
     <li className="text-center">
-      <img
-        src={player.imageUrl || crest}
+      <ImageWithFallback
+        src={player.imageUrl}
+        fallbackSrc={crest}
         alt=""
         loading="lazy"
         className="mx-auto mb-2 size-20 rounded-full border border-line bg-white object-cover"

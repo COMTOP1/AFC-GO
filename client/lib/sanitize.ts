@@ -7,7 +7,9 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   }
   try {
     const url = new URL(node.getAttribute('href') ?? '', window.location.href);
-    if (url.origin !== window.location.origin) {
+    // Only web links: mailto:/tel: have a "null" origin but should stay in this tab.
+    const isWeb = url.protocol === 'http:' || url.protocol === 'https:';
+    if (isWeb && url.origin !== window.location.origin) {
       node.setAttribute('target', '_blank');
       node.setAttribute('rel', 'noopener noreferrer');
     }

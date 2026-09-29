@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { event, home, newsArticle, publicRoutes } from '../../test/fixtures';
@@ -60,5 +60,14 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
     expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't load this: boom");
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+  });
+
+  it('falls back to the name tile when a logo image is broken', async () => {
+    mockFetch(publicRoutes());
+    renderWithProviders(<HomePage />);
+    const sponsors = await screen.findByRole('region', { name: 'Our sponsors' });
+    fireEvent.error(within(sponsors).getByRole('img', { name: 'Acme Ltd' }));
+    expect(within(sponsors).queryByRole('img')).toBeNull();
+    expect(within(sponsors).getByRole('link', { name: 'Acme Ltd' })).toHaveTextContent('Acme Ltd');
   });
 });

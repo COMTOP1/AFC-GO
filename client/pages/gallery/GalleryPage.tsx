@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { useGallery } from '../../api/gallery';
 import { EditorLink } from '../../components/page/EditorLink';
+import { ImageWithFallback } from '../../components/page/ImageWithFallback';
 import { QueryState } from '../../components/page/QueryState';
 import { usePageTitle } from '../../components/page/usePageTitle';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -29,11 +30,18 @@ export default function GalleryPage() {
                     onClick={() => setOpenIndex(i)}
                     className="block aspect-square w-full overflow-hidden rounded-lg border border-line"
                   >
-                    <img
+                    <ImageWithFallback
                       src={img.imageUrl}
                       alt=""
                       loading="lazy"
                       className="size-full object-cover transition-transform hover:scale-105"
+                      fallback={
+                        <div
+                          aria-hidden="true"
+                          data-fallback=""
+                          className="size-full bg-linear-135 from-blue to-red"
+                        />
+                      }
                     />
                   </button>
                 </li>

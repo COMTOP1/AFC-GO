@@ -1,5 +1,7 @@
 import { useId } from 'react';
 
+import { ImageWithFallback } from './ImageWithFallback';
+
 export interface LogoItem {
   id: number;
   name: string;
@@ -8,10 +10,14 @@ export interface LogoItem {
 }
 
 function Logo({ item }: { item: LogoItem }) {
-  const inner = item.imageUrl ? (
-    <img src={item.imageUrl} alt={item.name} loading="lazy" className="max-h-14 w-auto" />
-  ) : (
-    <span className="text-center text-sm font-semibold">{item.name}</span>
+  const inner = (
+    <ImageWithFallback
+      src={item.imageUrl}
+      alt={item.name}
+      loading="lazy"
+      className="max-h-14 w-auto"
+      fallback={<span className="text-center text-sm font-semibold">{item.name}</span>}
+    />
   );
   const box =
     'flex h-20 w-36 items-center justify-center rounded-lg border border-line bg-white p-2 text-black';

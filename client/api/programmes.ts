@@ -19,13 +19,14 @@ export interface Programme {
 }
 
 /** seasonId 0 means every season (the API's default when the param is absent). */
-export function useProgrammes(seasonId: number) {
+export function useProgrammes(seasonId: number, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.programmes(seasonId),
     queryFn: ({ signal }) =>
       apiFetch<Programme[]>(seasonId ? `/programmes?season=${seasonId}` : '/programmes', {
         signal,
       }),
+    enabled,
   });
 }
 

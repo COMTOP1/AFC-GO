@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { publicRoutes } from '../../test/fixtures';
@@ -32,5 +32,16 @@ describe('SponsorsPage', () => {
     mockFetch(publicRoutes({ '/api/v1/sponsors': { body: [] } }));
     renderWithProviders(<SponsorsPage />);
     expect(await screen.findByText('No sponsors yet')).toBeInTheDocument();
+  });
+
+  it('falls back to the name tile when a sponsor logo is broken', async () => {
+    mockFetch(publicRoutes());
+    renderWithProviders(<SponsorsPage />);
+    const acme = (await screen.findByRole('heading', { name: 'Acme Ltd' })).closest(
+      'li',
+    ) as HTMLElement;
+    fireEvent.error(acme.querySelector('img') as HTMLImageElement);
+    expect(acme.querySelector('img')).toBeNull();
+    expect(within(acme).getAllByText('Acme Ltd')).toHaveLength(2);
   });
 });

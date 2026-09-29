@@ -103,4 +103,15 @@ describe('GalleryPage', () => {
     await new Promise((r) => setTimeout(r, 0));
     expect(screen.queryByRole('link', { name: /classic site/ })).toBeNull();
   });
+
+  it('shows a placeholder for a broken thumbnail and in the viewer', async () => {
+    const thumb = await renderGallery();
+    fireEvent.error(thumb.querySelector('img') as HTMLImageElement);
+    expect(thumb.querySelector('img')).toBeNull();
+    expect(thumb.querySelector('[data-fallback]')).not.toBeNull();
+    fireEvent.click(thumb);
+    const dialog = screen.getByRole('dialog');
+    fireEvent.error(within(dialog).getByRole('img', { name: 'Cup final' }));
+    expect(within(dialog).getByText("This photo couldn't be loaded.")).toBeInTheDocument();
+  });
 });

@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { contact, publicRoutes } from '../../test/fixtures';
@@ -45,5 +45,15 @@ describe('ContactPage', () => {
     const map = screen.getByTitle('Map to Aldermaston Recreational Society');
     expect(map.tagName).toBe('IFRAME');
     expect(map).toHaveAttribute('loading', 'lazy');
+  });
+
+  it('falls back to the crest when a contact photo is broken', async () => {
+    mockFetch(publicRoutes());
+    renderWithProviders(<ContactPage />);
+    const cara = (await screen.findByRole('heading', { name: 'Cara Chair' })).closest(
+      'li',
+    ) as HTMLElement;
+    fireEvent.error(cara.querySelector('img') as HTMLImageElement);
+    expect(cara.querySelector('img')).toHaveAttribute('src', expect.stringContaining('crest'));
   });
 });

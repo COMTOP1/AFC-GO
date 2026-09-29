@@ -40,6 +40,11 @@ describe('cleanHtml', () => {
     expect(out).toContain('rel="noopener noreferrer"');
   });
 
+  it('leaves email and phone links in the same tab', () => {
+    const out = cleanHtml('<a href="mailto:sec@example.test">mail</a><a href="tel:0123">call</a>');
+    expect(out).not.toContain('target=');
+  });
+
   it('leaves same-site links alone', () => {
     const out = cleanHtml('<a href="/news/1">news</a>');
     expect(out).not.toContain('target=');

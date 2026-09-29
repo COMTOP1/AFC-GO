@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import type { GalleryImage } from '../../api/gallery';
+import { ImageWithFallback } from '../../components/page/ImageWithFallback';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 
@@ -72,10 +73,15 @@ export function Lightbox({ images, index, onIndexChange, onClose }: LightboxProp
           }}
         >
           <figure>
-            <img
+            <ImageWithFallback
               src={image.imageUrl}
               alt={image.caption ?? ''}
               className="mx-auto max-h-[70vh] w-auto rounded-md object-contain"
+              fallback={
+                <div className="flex h-64 items-center justify-center rounded-md bg-surface text-muted">
+                  This photo couldn&apos;t be loaded.
+                </div>
+              }
             />
             {image.caption && (
               <figcaption className="mt-2 text-center text-sm">{image.caption}</figcaption>

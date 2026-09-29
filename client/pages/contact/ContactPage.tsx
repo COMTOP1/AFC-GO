@@ -1,5 +1,6 @@
 import { useContact } from '../../api/pages';
 import crest from '../../assets/crest.png';
+import { ImageWithFallback } from '../../components/page/ImageWithFallback';
 import { QueryState } from '../../components/page/QueryState';
 import { usePageTitle } from '../../components/page/usePageTitle';
 import { Alert } from '../../components/ui/Alert';
@@ -23,8 +24,9 @@ export default function ContactPage() {
               const email = displayEmail || p.email;
               return (
                 <li key={p.id} className="rounded-lg border border-line p-4 text-center">
-                  <img
-                    src={p.imageUrl || crest}
+                  <ImageWithFallback
+                    src={p.imageUrl}
+                    fallbackSrc={crest}
                     alt=""
                     loading="lazy"
                     className="mx-auto mb-3 size-28 rounded-full border border-line bg-white object-cover"
