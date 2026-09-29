@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
@@ -66,6 +66,34 @@ describe('NewsArticlePage', () => {
     expect(screen.getByText(/28 Sep 2026/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '← All news' })).toHaveAttribute('href', '/news');
     expect(document.title).toBe(`${newsArticle.title} · AFC Aldermaston`);
+  });
+
+  it('shows the article image in full, at its own shape', async () => {
+    renderArticle(`/news/${newsArticle.id}`);
+    await screen.findByRole('heading', { level: 1, name: newsArticle.title });
+    const img = document.querySelector('article img') as HTMLImageElement;
+    expect(img).toHaveAttribute('src', newsArticle.imageUrl);
+    // No forced aspect ratio or cover-cropping: the whole picture is visible.
+    expect(img.style.aspectRatio).toBe('');
+    expect(img).not.toHaveClass('object-cover');
+    expect(img).toHaveClass('object-contain');
+  });
+
+  it('keeps the gradient banner when the article has no image or it is broken', async () => {
+    renderArticle(`/news/${newsArticle.id}`, {
+      [`/api/v1/news/${newsArticle.id}`]: { body: { ...newsArticle, imageUrl: undefined } },
+    });
+    await screen.findByRole('heading', { level: 1, name: newsArticle.title });
+    expect(document.querySelector('article img')).toBeNull();
+    expect(document.querySelector('article [data-fallback]')).not.toBeNull();
+  });
+
+  it('swaps a broken article image for the gradient banner', async () => {
+    renderArticle(`/news/${newsArticle.id}`);
+    await screen.findByRole('heading', { level: 1, name: newsArticle.title });
+    fireEvent.error(document.querySelector('article img') as HTMLImageElement);
+    expect(document.querySelector('article img')).toBeNull();
+    expect(document.querySelector('article [data-fallback]')).not.toBeNull();
   });
 
   it('shows not found for a missing article', async () => {

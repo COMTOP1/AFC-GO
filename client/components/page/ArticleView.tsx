@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
 import { ButtonLink } from '../ui/ButtonLink';
-import { CardMedia } from '../ui/Card';
 import { PageHeader } from '../ui/PageHeader';
 import { EditorLink } from './EditorLink';
+import { ImageWithFallback } from './ImageWithFallback';
 import { RichText } from './RichText';
 import { usePageTitle } from './usePageTitle';
 
@@ -36,8 +36,22 @@ export function ArticleView({
   usePageTitle(title);
   return (
     <article className="mx-auto max-w-3xl">
-      <div className="mb-6 overflow-hidden rounded-lg border border-line">
-        <CardMedia src={imageUrl} alt="" aspect="21 / 9" />
+      {/* Shown in full at its own shape (list cards crop; the article page doesn't).
+          Very tall images are capped and scaled down rather than cut off. */}
+      <div className="mb-6 overflow-hidden rounded-lg border border-line bg-surface">
+        <ImageWithFallback
+          src={imageUrl}
+          alt=""
+          className="mx-auto block h-auto max-h-[70vh] w-auto max-w-full object-contain"
+          fallback={
+            <div
+              aria-hidden="true"
+              data-fallback=""
+              className="w-full bg-linear-135 from-blue to-red"
+              style={{ aspectRatio: '21 / 9' }}
+            />
+          }
+        />
       </div>
       <nav aria-label="Breadcrumb" className="mb-2 text-sm text-muted">
         <Link to={sectionHref} className="font-semibold text-red">

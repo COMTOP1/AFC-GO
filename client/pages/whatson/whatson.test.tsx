@@ -105,6 +105,17 @@ describe('EventPage', () => {
     expect(screen.getByRole('link', { name: '← All events' })).toHaveAttribute('href', '/whatson');
   });
 
+  it('shows the event image in full, at its own shape', async () => {
+    renderEvent(`/whatson/${event.id}`, {
+      [`/api/v1/whatson/${event.id}`]: { body: { ...event, imageUrl: '/api/v1/files/whatson/3' } },
+    });
+    await screen.findByRole('heading', { level: 1, name: event.title });
+    const img = document.querySelector('article img') as HTMLImageElement;
+    expect(img).toHaveAttribute('src', '/api/v1/files/whatson/3');
+    expect(img.style.aspectRatio).toBe('');
+    expect(img).toHaveClass('object-contain');
+  });
+
   it('shows not found for a missing or malformed event', async () => {
     renderEvent('/whatson/404', {
       '/api/v1/whatson/404': { status: 404, body: { error: { code: 404, message: 'not found' } } },
