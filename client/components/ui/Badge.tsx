@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 export type BadgeTone = 'red' | 'blue' | 'neutral';
 
 const tones: Record<BadgeTone, string> = {
-  red: 'bg-red/12 text-red',
+  red: 'bg-red/12 text-red-hover',
   blue: 'bg-blue/14 text-blue',
   neutral: 'border border-line bg-surface text-muted',
 };

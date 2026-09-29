@@ -78,4 +78,25 @@ describe('Menu', () => {
     expect(onSelect).toHaveBeenCalledOnce();
     expect(screen.queryByRole('menu')).toBeNull();
   });
+
+  it('keeps a visible focus outline on items', () => {
+    const { trigger } = renderMenu();
+    fireEvent.click(trigger);
+    for (const item of screen.getAllByRole('menuitem')) {
+      expect(item).not.toHaveClass('focus-visible:outline-none');
+      expect(item).toHaveClass('focus-visible:-outline-offset-3');
+    }
+  });
+
+  it('moves focus back to the trigger before running onSelect', () => {
+    let focusedDuringSelect: Element | null = null;
+    const { trigger } = renderMenu(
+      vi.fn(() => {
+        focusedDuringSelect = document.activeElement;
+      }),
+    );
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }));
+    expect(focusedDuringSelect).toBe(trigger);
+  });
 });

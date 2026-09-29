@@ -200,4 +200,16 @@ describe('AccountControl signed in', () => {
     );
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
   });
+
+  it('returns focus to the account button when sign-out is cancelled', async () => {
+    mockFetch({ '/api/v1/auth/me': { body: user('Jo Smith', 'Manager') } });
+    renderWithProviders(<AccountControl />);
+    const trigger = await screen.findByRole('button', { name: /Jo Smith/ });
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }));
+    const confirm = screen.getByRole('dialog', { name: 'Sign out?' });
+    fireEvent.click(within(confirm).getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog', { name: 'Sign out?' })).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
 });

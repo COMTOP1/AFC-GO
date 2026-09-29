@@ -25,7 +25,7 @@ export interface MenuProps {
 }
 
 const itemClass =
-  'block w-full px-3 py-2 text-left text-sm text-ink hover:bg-surface focus-visible:bg-surface focus-visible:outline-none';
+  'block w-full px-3 py-2 text-left text-sm text-ink hover:bg-surface focus-visible:bg-surface focus-visible:-outline-offset-3';
 
 export function Menu({ label, items, align = 'end', triggerClassName, triggerLabel }: MenuProps) {
   const { open, setOpen, close } = useDisclosure();
@@ -90,6 +90,9 @@ export function Menu({ label, items, align = 'end', triggerClassName, triggerLab
           {items.map((item) => {
             const onClick = () => {
               close();
+              // Focus the trigger first, so a dialog opened by onSelect returns focus here
+              // rather than to <body> (the chosen item is about to unmount).
+              triggerRef.current?.focus();
               item.onSelect?.();
             };
             if (item.to !== undefined) {

@@ -62,6 +62,11 @@ describe('Badge and Alert', () => {
     expect(screen.getByText('U12s')).toBeInTheDocument();
   });
 
+  it('uses the darker red for red badge text so it passes AA on the tint', () => {
+    render(<Badge tone="red">Youth</Badge>);
+    expect(screen.getByText('Youth')).toHaveClass('text-red-hover');
+  });
+
   it('uses role=alert for errors and role=status otherwise', () => {
     render(
       <>

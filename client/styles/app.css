@@ -34,6 +34,11 @@
   --font-sans: 'Inter Variable', system-ui, sans-serif;
 }
 
+/* Native widgets (scrollbars, checkboxes, selects) follow the chosen theme, not the OS. */
+[data-theme='light'] {
+  color-scheme: light;
+}
+
 [data-theme='dark'] {
   color-scheme: dark;
   --color-red: #ff4d5e;
