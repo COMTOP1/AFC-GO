@@ -1,8 +1,10 @@
+import { usePageTitle } from '../components/page/usePageTitle';
 import { ButtonLink } from '../components/ui/ButtonLink';
 import { EmptyState } from '../components/ui/EmptyState';
 import { PageHeader } from '../components/ui/PageHeader';
 
 export default function NotFoundPage() {
+  usePageTitle('Page not found');
   return (
     <>
       <PageHeader title="Page not found" />
