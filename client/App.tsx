@@ -2,7 +2,7 @@ import { Route, Routes } from 'react-router';
 
 import Layout from './components/layout/Layout';
 import DesignPage from './pages/DesignPage';
-import HomePage from './pages/HomePage';
+import HomePage from './pages/home/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
