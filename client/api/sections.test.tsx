@@ -59,6 +59,8 @@ describe('section hooks', () => {
     const { queryClient } = renderWithProviders(<Probe />);
     expect(await screen.findByText(`${teams.length} teams`)).toBeInTheDocument();
     await waitFor(() => expect(queryClient.getQueryData(queryKeys.teams(true))).toEqual(teams));
+    // Waits for the sign-in check, so the anonymous list is never fetched.
+    expect(queryClient.getQueryData(queryKeys.teams(false))).toBeUndefined();
   });
 
   it('detail hooks do not fetch without an id', async () => {

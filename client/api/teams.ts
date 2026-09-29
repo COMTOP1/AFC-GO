@@ -30,10 +30,13 @@ export interface TeamDetail {
 }
 
 export function useTeams() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   return useQuery({
     queryKey: queryKeys.teams(user !== null),
     queryFn: ({ signal }) => apiFetch<TeamSummary[]>('/teams', { signal }),
+    // Wait for the sign-in check: fetching first as anonymous and then again as
+    // signed-in would fetch twice and flash the list back to its loading state.
+    enabled: !isLoading,
   });
 }
 
