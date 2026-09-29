@@ -30,7 +30,7 @@ describe('Footer', () => {
     const credit = screen.getByRole('link', { name: 'BSWDI' });
     expect(credit).toHaveAttribute('href', 'https://bswdi.co.uk');
     expect(credit).toHaveAttribute('target', '_blank');
-    expect(credit).toHaveAttribute('rel', 'noopener');
+    expect(credit).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.getByRole('link', { name: 'AFC Aldermaston on Facebook' })).toHaveAttribute(
       'href',
       'https://www.facebook.com/AFC-Aldermaston-114651238068/',
