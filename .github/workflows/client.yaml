@@ -1,0 +1,21 @@
+name: client
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  client:
+    name: lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn lint:client
+      - run: yarn typecheck
+      - run: yarn test:client
+      - run: BUILD_CLIENT_SKIP_LINT=true yarn build:client
