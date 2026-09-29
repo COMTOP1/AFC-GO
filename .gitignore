@@ -19,3 +19,6 @@ test/
 .env
 
 FileStore
+# Built web client (copied in by `yarn build:server`); keep the embed target
+server/cmd/afc/ui/*
+!server/cmd/afc/ui/.keep

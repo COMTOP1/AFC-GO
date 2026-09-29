@@ -9,7 +9,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"log/slog"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -164,11 +166,25 @@ func main() {
 	redisDB, _ := strconv.Atoi(os.Getenv("REDIS_DB"))
 	redisTLS, _ := strconv.ParseBool(os.Getenv("REDIS_TLS"))
 
+	uiRoot, err := fs.Sub(uiFiles, "ui")
+	if err != nil {
+		fatal(fmt.Sprintf("failed to open embedded web client: %+v", err))
+	}
+	var uiProxy *url.URL
+	if raw := os.Getenv("AFC_UI_PROXY_URL"); raw != "" {
+		uiProxy, err = url.Parse(raw)
+		if err != nil || uiProxy.Scheme == "" || uiProxy.Host == "" {
+			fatal(fmt.Sprintf("invalid AFC_UI_PROXY_URL %q: want e.g. http://localhost:5173", raw))
+		}
+	}
+
 	a := app.New(app.Config{
 		Address:      address,
 		DomainName:   domainName,
 		DatabaseURL:  dbConnectionString,
 		DatabaseHost: dbHost,
+		UI:           uiRoot,
+		UIProxy:      uiProxy,
 		Version:      Version,
 		Session: auth.Config{
 			CookieName:        sessionCookieName,

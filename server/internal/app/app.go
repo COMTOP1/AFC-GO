@@ -4,6 +4,8 @@ package app
 
 import (
 	"context"
+	"io/fs"
+	"net/url"
 	"strings"
 	"time"
 
@@ -51,6 +53,10 @@ type Config struct {
 	Mail         mail.Config
 	Passwords    auth.PasswordConfig
 	Redis        auth.RedisConfig
+	// UI is the built React client (index.html + assets/); nil means not built.
+	UI fs.FS
+	// UIProxy, when set, proxies /app to the Vite dev server instead of UI.
+	UIProxy *url.URL
 }
 
 // Stores are the database repositories.
@@ -196,6 +202,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	e.HTTPErrorHandler = web.ErrorHandler(legacyViews.CustomHTTPErrorHandler)
 
 	legacy.Mount(e, legacyViews)
+	web.MountSPA(e, conf.UI, conf.UIProxy)
 
 	api := web.NewAPI(e, conf.Session.Secure)
 	guards := sessions.Guards()
