@@ -36,6 +36,12 @@ func MountSPA(e *echo.Echo, files fs.FS, proxy *url.URL) {
 		rp := &httputil.ReverseProxy{Rewrite: func(r *httputil.ProxyRequest) {
 			r.SetURL(proxy)
 			r.SetXForwarded()
+			// RemoveTrailingSlash has already turned /app/ into /app, but Vite
+			// (base '/app/') only serves the root, and its HMR websocket, at /app/.
+			if r.Out.URL.Path == SPAPrefix {
+				r.Out.URL.Path = SPAPrefix + "/"
+				r.Out.URL.RawPath = ""
+			}
 		}}
 		h = echo.WrapHandler(rp)
 	} else {

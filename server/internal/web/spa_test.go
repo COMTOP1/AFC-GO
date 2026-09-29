@@ -153,7 +153,9 @@ func TestSPAProxy(t *testing.T) {
 	assert.Equal(t, http.MethodPost, gotMethod, "proxy mode forwards every method")
 	assert.Equal(t, "payload", gotBody)
 
-	rec = get(e, http.MethodGet, "/app")
-	assert.Equal(t, "/app", gotPath)
+	// RemoveTrailingSlash turns /app/ into /app, but Vite (base '/app/') only
+	// serves /app/ and its HMR websocket lives at /app/?token=…
+	rec = get(e, http.MethodGet, "/app/?token=abc")
+	assert.Equal(t, "/app/", gotPath)
 	assert.Equal(t, "from vite", rec.Body.String())
 }
