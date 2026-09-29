@@ -21,6 +21,11 @@ describe('formatDate', () => {
     expect(formatDate('2026-12-19T00:00:00Z', 'dateTime')).toBe('Sat 19 Dec 2026, 12am');
   });
 
+  it('does not pad single-digit days', () => {
+    expect(formatDate('2026-09-05T13:00:00Z')).toBe('5 Sep 2026');
+    expect(formatDate('2026-10-02T18:00:00Z', 'dateTime')).toBe('Fri 2 Oct 2026, 7pm');
+  });
+
   it('returns an empty string for an invalid date', () => {
     expect(formatDate('not a date')).toBe('');
   });

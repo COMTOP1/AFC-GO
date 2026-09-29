@@ -25,7 +25,7 @@ export function formatDate(iso: string, style: 'date' | 'dateTime' = 'date'): st
   for (const part of partsFormat.formatToParts(d)) {
     p[part.type] = part.value;
   }
-  const date = `${p.day} ${MONTHS[Number(p.month) - 1]} ${p.year}`;
+  const date = `${Number(p.day)} ${MONTHS[Number(p.month) - 1]} ${p.year}`;
   if (style === 'date') {
     return date;
   }
