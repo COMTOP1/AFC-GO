@@ -1,15 +1,16 @@
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import App from './App';
+import { mockFetch } from './test/mockFetch';
+import { renderWithProviders } from './test/render';
 
 function renderAt(path: string) {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <App />
-    </MemoryRouter>,
-  );
+  mockFetch({
+    '/api/v1/site': { body: { year: 2026, visitorCount: 1, version: 'test', teams: [] } },
+    '/api/v1/auth/me': { status: 401, body: { error: { code: 401, message: 'login required' } } },
+  });
+  return renderWithProviders(<App />, { route: path });
 }
 
 describe('App routes', () => {
