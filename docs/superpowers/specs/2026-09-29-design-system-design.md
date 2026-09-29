@@ -138,7 +138,7 @@ Radii are Tailwind's defaults: `rounded-md` for buttons and inputs, `rounded-lg`
 - The right end of the nav holds `ThemeToggle` and then `AccountControl`.
 - Below the `md` breakpoint:
   - the strip shows the current page's label on the left, and the theme toggle and a "Menu" button on the right;
-  - "Menu" (`aria-expanded`, `aria-controls`) opens a full-width panel under the bar listing every item plus the account entries;
+  - "Menu" (`aria-expanded`, `aria-controls`) opens a full-width panel under the bar listing every item. The theme toggle and account control stay in the bar on phones, so each renders once;
   - the panel closes on Esc, on an outside click, and on route change.
 
 ### ThemeToggle
@@ -157,7 +157,7 @@ A small icon button that cycles System → Light → Dark. Its `aria-label` name
   - Sign out.
 
   These are legacy links for now. Managers get this menu too. The legacy site hides it from them, which leaves them no way to reach Account or log out.
-- **Sign out** opens a `ConfirmDialog` ("Sign out?"). Confirming sends `POST /api/v1/auth/logout`, runs `queryClient.clear()` and then `refresh()`.
+- **Sign out** opens a `ConfirmDialog` ("Sign out?"). Confirming sends `POST /api/v1/auth/logout`, sets the `me` query to `null` and invalidates every query, so anything cached while signed in refetches as anonymous. (`queryClient.clear()` is not used: it strands mounted observers on removed queries, so the user's name would stay on screen.) A 401 from logout (the session had already expired) counts as signed out.
 
 ### SignInDialog
 
@@ -218,7 +218,7 @@ Each component is one file with typed props, forwards `className` (merged with `
 Vitest, Testing Library and jsdom, as in sub-project 2. `client/test/setup.ts` gains:
 - a `HTMLDialogElement.prototype.showModal` and `close` polyfill (jsdom lacks them) that toggles the `open` attribute and dispatches `close`;
 - a controllable `matchMedia` mock;
-- `vitest-axe` matchers.
+- an `axeViolations(node)` helper that runs `axe-core` with `color-contrast` disabled and returns the violations as strings. `vitest-axe` is not used: it was last released in 2022 and its types target old Vitest.
 
 Tests to add:
 - **Theme:**
