@@ -1,5 +1,7 @@
+import { Suspense } from 'react';
 import { Outlet } from 'react-router';
 
+import { PageSkeleton } from '../page/QueryState';
 import { Container } from '../ui/Container';
 import { Footer } from './Footer';
 import { Masthead } from './Masthead';
@@ -16,7 +18,9 @@ export default function Layout() {
       </header>
       <main id="content" tabIndex={-1} className="flex-1 py-8 outline-none">
         <Container>
-          <Outlet />
+          <Suspense fallback={<PageSkeleton />}>
+            <Outlet />
+          </Suspense>
         </Container>
       </main>
       <Footer />

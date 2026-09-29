@@ -52,11 +52,14 @@ describe('NavBar', () => {
     expect(home).toHaveAttribute('aria-current', 'page');
   });
 
-  it('uses a plain legacy link for pages not yet ported', () => {
+  it('keeps every nav item inside the app', () => {
     renderNav('/');
-    const news = screen.getByRole('link', { name: 'News' });
-    expect(news).toHaveAttribute('href', '/news');
-    expect(news).not.toHaveAttribute('aria-current');
+    fireEvent.click(screen.getByRole('link', { name: 'News' }));
+    expect(screen.getByRole('link', { name: 'News' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
+    for (const item of navItems) {
+      expect(item.to).toBeDefined();
+    }
   });
 
   it('shows the theme toggle and the account control', async () => {

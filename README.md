@@ -16,3 +16,7 @@ The React client lives in `client/` and is served under `/app` until it replaces
 ### Design system
 
 The client's look lives in `client/styles/app.css`. That file holds the Tailwind v4 theme: colours and fonts as CSS variables, with a `[data-theme='dark']` override. Shared components are in `client/components/ui/`, one file each, and the layout shell is in `client/components/layout/`. Run `yarn dev` and open `/app/design` to see every component in every state, in light and dark. The FA logo in the header is `client/assets/fa-logo.jpeg`; replace that file to update it.
+
+### Public pages
+
+Every public page is now in the React client: `/app`, `/app/teams`, `/app/news`, `/app/whatson`, `/app/gallery`, `/app/documents`, `/app/programmes`, `/app/sponsors`, `/app/info` and `/app/contact`, with detail pages for teams, articles and events. Editing still happens on the classic pages; signed-in editors see a "Manage this on the classic site" link on each page.
