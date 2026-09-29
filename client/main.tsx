@@ -8,6 +8,7 @@ import './styles/app.css';
 import { createQueryClient } from './api/queryClient';
 import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
+import { ThemeProvider } from './theme/ThemeProvider';
 
 const root = document.getElementById('root');
 if (!root) {
@@ -20,9 +21,11 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter basename="/app">
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,
