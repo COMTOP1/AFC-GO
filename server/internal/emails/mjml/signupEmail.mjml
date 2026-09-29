@@ -1,5 +1,5 @@
 <!-- see https://documentation.mjml.io for documentation -->
-<mjml>
+<mjml lang="en-gb">
     <mj-body background-color="#ffffff" width="850px">
         <mj-section background-color="#ffffff" padding-bottom="0px" padding-top="0px">
             <mj-column vertical-align="top" width="100%">

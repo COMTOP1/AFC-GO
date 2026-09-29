@@ -16,7 +16,7 @@ func TestSignupRendersCredentials(t *testing.T) {
 	assert.Equal(t, "new@example.test", m.To)
 	var body bytes.Buffer
 	require.NoError(t, m.Tpl.Execute(&body, m.TplData))
-	for _, want := range []string{"New Person", "new@example.test", "Tmp-Pa55!", "https://afc.example.test"} {
+	for _, want := range []string{"New Person", "new@example.test", "Tmp-Pa55!", "https://afc.example.test", `lang="en-gb"`} {
 		assert.Contains(t, body.String(), want)
 	}
 }
@@ -27,4 +27,6 @@ func TestResetRendersLink(t *testing.T) {
 	var body bytes.Buffer
 	require.NoError(t, m.Tpl.Execute(&body, m.TplData))
 	assert.Contains(t, body.String(), "https://afc.example.test/reset/abc")
+	assert.Contains(t, body.String(), `lang="en-gb"`)
+	assert.Contains(t, body.String(), "valid for one week as of the sent time")
 }
