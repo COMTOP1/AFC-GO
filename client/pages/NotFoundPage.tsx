@@ -1,12 +1,16 @@
-import { Link } from 'react-router';
+import { ButtonLink } from '../components/ui/ButtonLink';
+import { EmptyState } from '../components/ui/EmptyState';
+import { PageHeader } from '../components/ui/PageHeader';
 
 export default function NotFoundPage() {
   return (
-    <section>
-      <h1>Page not found</h1>
-      <p>
-        <Link to="/">Go to the start</Link>
-      </p>
-    </section>
+    <>
+      <PageHeader title="Page not found" />
+      <EmptyState
+        title="Nothing here"
+        message="The page you were looking for doesn't exist or has moved."
+        action={<ButtonLink to="/">Go to the start</ButtonLink>}
+      />
+    </>
   );
 }
