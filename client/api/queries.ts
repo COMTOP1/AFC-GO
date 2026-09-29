@@ -6,6 +6,21 @@ import type { CurrentUser, SiteInfo } from './types';
 export const queryKeys = {
   site: ['site'] as const,
   me: ['auth', 'me'] as const,
+  home: ['home'] as const,
+  // The server includes inactive teams for signed-in users.
+  teams: (signedIn: boolean) => ['teams', { signedIn }] as const,
+  team: (id: number) => ['team', id] as const,
+  news: ['news'] as const,
+  newsArticle: (id: number) => ['news', id] as const,
+  whatson: (period: string) => ['whatson', period] as const,
+  whatsonEvent: (id: number) => ['whatson', 'event', id] as const,
+  gallery: ['gallery'] as const,
+  documents: ['documents'] as const,
+  programmes: (seasonId: number) => ['programmes', seasonId] as const,
+  seasons: ['seasons'] as const,
+  sponsors: ['sponsors'] as const,
+  info: ['info'] as const,
+  contact: ['contact'] as const,
 };
 
 export function useSite() {
