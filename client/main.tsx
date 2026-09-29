@@ -3,6 +3,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 
+import './styles/app.css';
+
 import { createQueryClient } from './api/queryClient';
 import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
