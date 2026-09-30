@@ -1,16 +1,22 @@
 import { clsx } from 'clsx';
+import { useState } from 'react';
 import { Link } from 'react-router';
 
 import type { HomeData } from '../../api/home';
-import { useHome } from '../../api/home';
+import { deleteAffiliation, useHome } from '../../api/home';
 import type { NewsArticle } from '../../api/news';
+import { queryKeys } from '../../api/queries';
 import type { WhatsOnEvent } from '../../api/whatson';
+import { DeleteButton } from '../../components/edit/DeleteButton';
+import { useCanEdit } from '../../components/edit/useCanEdit';
 import { LogoRow } from '../../components/page/LogoRow';
 import { QueryState } from '../../components/page/QueryState';
 import { usePageTitle } from '../../components/page/usePageTitle';
+import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardMedia } from '../../components/ui/Card';
 import { formatDate } from '../../lib/format';
 import { plainText } from '../../lib/sanitize';
+import { AddAffiliationDialog } from './AddAffiliationDialog';
 
 const kicker = 'text-xs font-bold tracking-widest uppercase';
 
@@ -62,6 +68,8 @@ function NextEvent({ event }: { event: WhatsOnEvent }) {
 
 function HomeContent({ data }: { data: HomeData }) {
   const { latestNews, nextEvent, sponsors, affiliations } = data;
+  const { canEdit } = useCanEdit();
+  const [adding, setAdding] = useState(false);
   return (
     <div className="space-y-10">
       {(latestNews || nextEvent) && (
@@ -73,7 +81,34 @@ function HomeContent({ data }: { data: HomeData }) {
         </div>
       )}
       <LogoRow title="Our sponsors" items={sponsors} />
-      <LogoRow title="Affiliations" items={affiliations} />
+      <LogoRow
+        title="Affiliations"
+        items={affiliations}
+        showWhenEmpty={canEdit}
+        emptyText="No affiliations yet"
+        headerAction={
+          canEdit && (
+            <Button size="sm" onClick={() => setAdding(true)}>
+              Add affiliation
+            </Button>
+          )
+        }
+        itemAction={
+          canEdit
+            ? (item) => (
+                <DeleteButton
+                  ariaLabel={`Delete ${item.name}`}
+                  confirmTitle={`Delete ${item.name}?`}
+                  confirmMessage="This can't be undone."
+                  onDelete={() => deleteAffiliation(item.id)}
+                  invalidate={[queryKeys.home]}
+                  successMessage="Affiliation deleted"
+                />
+              )
+            : undefined
+        }
+      />
+      <AddAffiliationDialog open={adding} onClose={() => setAdding(false)} />
     </div>
   );
 }

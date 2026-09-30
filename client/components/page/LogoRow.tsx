@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 
 import { ImageWithFallback } from './ImageWithFallback';
 
@@ -31,27 +31,51 @@ function Logo({ item }: { item: LogoItem }) {
   return <div className={box}>{inner}</div>;
 }
 
-/** A titled row of sponsor/affiliation logos; renders nothing when empty. */
-export function LogoRow({ title, items }: { title: string; items: LogoItem[] }) {
+/** A titled row of sponsor/affiliation logos; renders nothing when empty unless asked to. */
+export interface LogoRowProps {
+  title: string;
+  items: LogoItem[];
+  /** Extra control under each logo (e.g. an editor's delete button). */
+  itemAction?: (item: LogoItem) => ReactNode;
+  /** Render the row even with no items (editors, so they can add one). */
+  showWhenEmpty?: boolean;
+  emptyText?: string;
+  /** A control beside the row's heading (e.g. "Add affiliation"). */
+  headerAction?: ReactNode;
+}
+
+export function LogoRow({
+  title,
+  items,
+  itemAction,
+  showWhenEmpty,
+  emptyText,
+  headerAction,
+}: LogoRowProps) {
   const headingId = useId();
-  if (items.length === 0) {
+  if (items.length === 0 && !showWhenEmpty) {
     return null;
   }
   return (
     <section aria-labelledby={headingId}>
-      <h2
-        id={headingId}
-        className="mb-3 font-display text-2xl font-extrabold tracking-wide uppercase"
-      >
-        {title}
-      </h2>
-      <ul className="flex flex-wrap gap-3">
-        {items.map((item) => (
-          <li key={item.id}>
-            <Logo item={item} />
-          </li>
-        ))}
-      </ul>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 id={headingId} className="font-display text-2xl font-extrabold tracking-wide uppercase">
+          {title}
+        </h2>
+        {headerAction}
+      </div>
+      {items.length === 0 ? (
+        <p className="text-sm text-muted">{emptyText}</p>
+      ) : (
+        <ul className="flex flex-wrap gap-3">
+          {items.map((item) => (
+            <li key={item.id} className="flex flex-col items-center gap-1">
+              <Logo item={item} />
+              {itemAction?.(item)}
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

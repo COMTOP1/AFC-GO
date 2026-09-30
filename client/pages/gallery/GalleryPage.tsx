@@ -1,22 +1,28 @@
 import { useState } from 'react';
 
-import { useGallery } from '../../api/gallery';
-import { EditorLink } from '../../components/page/EditorLink';
+import { deletePhoto, useGallery } from '../../api/gallery';
+import { queryKeys } from '../../api/queries';
+import { DeleteButton } from '../../components/edit/DeleteButton';
+import { useCanEdit } from '../../components/edit/useCanEdit';
 import { ImageWithFallback } from '../../components/page/ImageWithFallback';
 import { QueryState } from '../../components/page/QueryState';
 import { usePageTitle } from '../../components/page/usePageTitle';
+import { Button } from '../../components/ui/Button';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { AddPhotoDialog } from './AddPhotoDialog';
 import { Lightbox } from './Lightbox';
 
 export default function GalleryPage() {
   usePageTitle('Gallery');
   const gallery = useGallery();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { canManageGallery } = useCanEdit();
+  const [adding, setAdding] = useState(false);
   return (
     <>
       <PageHeader
         title="Gallery"
-        actions={<EditorLink legacyHref="/gallery" permission="canManageGallery" />}
+        actions={canManageGallery && <Button onClick={() => setAdding(true)}>Add photo</Button>}
       />
       <QueryState query={gallery} isEmpty={(l) => l.length === 0} emptyTitle="No photos yet">
         {(images) => (
@@ -44,6 +50,18 @@ export default function GalleryPage() {
                       }
                     />
                   </button>
+                  {canManageGallery && (
+                    <div className="mt-1 flex justify-end">
+                      <DeleteButton
+                        ariaLabel={`Delete photo ${img.caption || i + 1}`}
+                        confirmTitle="Delete this photo?"
+                        confirmMessage="This can't be undone."
+                        onDelete={() => deletePhoto(img.id)}
+                        invalidate={[queryKeys.gallery]}
+                        successMessage="Photo deleted"
+                      />
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
@@ -56,6 +74,7 @@ export default function GalleryPage() {
           </>
         )}
       </QueryState>
+      <AddPhotoDialog open={adding} onClose={() => setAdding(false)} />
     </>
   );
 }
