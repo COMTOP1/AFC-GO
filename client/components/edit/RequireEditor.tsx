@@ -7,7 +7,7 @@ import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
 
 export interface RequireEditorProps {
-  permission?: 'canEdit' | 'canManageGallery';
+  permission?: 'canEdit' | 'canManageGallery' | 'canManageUsers';
   children: ReactNode;
 }
 
