@@ -52,10 +52,10 @@ export function AccountControl() {
   }
 
   const items: MenuItem[] = [
-    { label: 'Players', href: '/players' },
+    { label: 'Players', to: '/players' },
     { label: 'Account', to: '/account' },
     ...(user.permissions.canEdit ? [{ label: 'Edit info', to: '/info/edit' }] : []),
-    ...(user.permissions.canManageUsers ? [{ label: 'Users', href: '/users' }] : []),
+    ...(user.permissions.canManageUsers ? [{ label: 'Users', to: '/users' }] : []),
     { label: 'Sign out', onSelect: () => setConfirmSignOut(true) },
   ];
 

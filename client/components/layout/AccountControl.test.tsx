@@ -209,6 +209,26 @@ describe('AccountControl signed in', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/info/edit');
   });
 
+  it('opens Players and Users in the app', async () => {
+    mockFetch({
+      '/api/v1/auth/me': {
+        body: user('Sam Sec', 'Club Secretary', { canEdit: true, canManageUsers: true }),
+      },
+    });
+    renderWithProviders(
+      <>
+        <AccountControl />
+        <Location />
+      </>,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: /Sam Sec/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Players' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/players');
+    fireEvent.click(screen.getByRole('button', { name: /Sam Sec/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Users' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/users');
+  });
+
   it('adds Users for user admins', async () => {
     const items = await openMenuFor(
       user('Sam Sec', 'Club Secretary', { canEdit: true, canManageUsers: true }),
