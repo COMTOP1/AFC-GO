@@ -191,6 +191,10 @@ describe('temporary password', () => {
     fireEvent.click(within(secret).getByRole('button', { name: 'Copy' }));
     expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument();
     expect(writeText).toHaveBeenCalledWith('Tmp-123!');
+    // Only Done closes it: the value is shown once.
+    fireEvent(secret, new Event('cancel', { cancelable: true }));
+    fireEvent.click(secret);
+    expect(screen.getByRole('dialog', { name: 'Pass this on to New' })).toBeInTheDocument();
     fireEvent.click(within(secret).getByRole('button', { name: 'Done' }));
     expect(screen.queryByRole('dialog', { name: 'Pass this on to New' })).toBeNull();
     Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });

@@ -99,6 +99,14 @@ describe('Public contact email', () => {
     expect(JSON.parse(String(put?.[1]?.body))).toEqual({ email: '' });
   });
 
+  it("doesn't offer Edit when the current email couldn't be loaded", async () => {
+    renderUsers({
+      '/api/v1/contact': { status: 500, body: { error: { code: 500, message: 'boom' } } },
+    });
+    expect(await screen.findByText("Couldn't load the current email.")).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit public contact email' })).toBeDisabled();
+  });
+
   it('shows a server error under the field', async () => {
     renderUsers({
       '/api/v1/settings/display-email': {

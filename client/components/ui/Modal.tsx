@@ -8,13 +8,23 @@ export interface ModalProps {
   children: ReactNode;
   actions?: ReactNode;
   className?: string;
+  /** False: only the dialog's own buttons close it (no Esc, no backdrop click). */
+  dismissible?: boolean;
 }
 
 /**
  * A native <dialog> shown with showModal(), so the browser traps focus and
  * handles Esc. The parent owns `open`; Esc and backdrop clicks ask it to close.
  */
-export function Modal({ open, onClose, title, children, actions, className }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  actions,
+  className,
+  dismissible = true,
+}: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   // True while this component wants the dialog open; stops our own close() from
@@ -51,7 +61,9 @@ export function Modal({ open, onClose, title, children, actions, className }: Mo
           return;
         }
         e.preventDefault();
-        onClose();
+        if (dismissible) {
+          onClose();
+        }
       }}
       onClose={(e) => {
         if (e.target !== e.currentTarget) {
@@ -63,7 +75,7 @@ export function Modal({ open, onClose, title, children, actions, className }: Mo
         }
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
+        if (dismissible && e.target === e.currentTarget) {
           onClose();
         }
       }}

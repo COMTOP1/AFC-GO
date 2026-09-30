@@ -61,13 +61,20 @@ export function DisplayEmailCard() {
       <CardBody className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-display text-xl font-extrabold uppercase">Public contact email</h2>
-          <p>{contact.isPending ? 'Loading…' : email || 'Not set'}</p>
+          <p>
+            {contact.isPending
+              ? 'Loading…'
+              : contact.isError
+                ? "Couldn't load the current email."
+                : email || 'Not set'}
+          </p>
           <p className="text-sm text-muted">Shown on the Contact page.</p>
         </div>
         <Button
           variant="secondary"
           aria-label="Edit public contact email"
-          disabled={contact.isPending}
+          // Editing from an unknown value could wipe the real email on save.
+          disabled={!contact.isSuccess}
           onClick={() => setEditing(true)}
         >
           Edit

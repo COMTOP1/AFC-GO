@@ -56,7 +56,8 @@ function SecretBody({ secret, onClose }: { secret: Secret; onClose: () => void }
 
 export function SecretDialog({ secret, onClose }: { secret: Secret | null; onClose: () => void }) {
   return (
-    <Modal open={secret !== null} onClose={onClose} title={secret?.title ?? ''}>
+    // Shown only once, so a stray Esc or backdrop click mustn't lose it.
+    <Modal open={secret !== null} onClose={onClose} title={secret?.title ?? ''} dismissible={false}>
       {secret && <SecretBody secret={secret} onClose={onClose} />}
     </Modal>
   );
