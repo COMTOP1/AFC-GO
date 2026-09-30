@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { apiFetch } from './client';
 import { queryKeys } from './queries';
+import { formData } from '../lib/editForm';
 
 /** programme.PublicSeason — GET /seasons */
 export interface Season {
@@ -35,4 +36,37 @@ export function useSeasons() {
     queryKey: queryKeys.seasons,
     queryFn: ({ signal }) => apiFetch<Season[]>('/seasons', { signal }),
   });
+}
+
+export function createProgramme(input: {
+  name: string;
+  /** YYYY-MM-DD */
+  date: string;
+  seasonId: number | null;
+  file: File;
+}): Promise<Programme> {
+  return apiFetch<Programme>('/programmes', {
+    form: formData({
+      name: input.name,
+      date: input.date,
+      seasonId: input.seasonId,
+      file: input.file,
+    }),
+  });
+}
+
+export function deleteProgramme(id: number): Promise<void> {
+  return apiFetch<void>(`/programmes/${id}`, { method: 'DELETE' });
+}
+
+export function createSeason(name: string): Promise<Season> {
+  return apiFetch<Season>('/seasons', { json: { name } });
+}
+
+export function renameSeason(id: number, name: string): Promise<Season> {
+  return apiFetch<Season>(`/seasons/${id}`, { method: 'PATCH', json: { name } });
+}
+
+export function deleteSeason(id: number): Promise<void> {
+  return apiFetch<void>(`/seasons/${id}`, { method: 'DELETE' });
 }

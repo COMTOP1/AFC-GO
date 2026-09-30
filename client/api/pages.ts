@@ -36,3 +36,7 @@ export function useContact() {
     queryFn: ({ signal }) => apiFetch<ContactData>('/contact', { signal }),
   });
 }
+
+export function setInfo(content: string): Promise<void> {
+  return apiFetch<void>('/info', { method: 'PUT', json: { content } });
+}
