@@ -3,7 +3,16 @@ import { describe, expect, it } from 'vitest';
 
 import App from './App';
 import { axeViolations } from './test/axe';
-import { anonymous, editor, event, newsArticle, publicRoutes, team } from './test/fixtures';
+import {
+  anonymous,
+  editor,
+  event,
+  expiredResetToken,
+  newsArticle,
+  publicRoutes,
+  resetToken,
+  team,
+} from './test/fixtures';
 import type { MockResponse } from './test/mockFetch';
 import { mockFetch } from './test/mockFetch';
 import { renderWithProviders } from './test/render';
@@ -23,6 +32,9 @@ const routes = [
   '/info',
   '/contact',
   '/design',
+  '/account',
+  `/reset/${resetToken}`,
+  `/reset/${expiredResetToken}`,
   '/nope',
 ];
 
@@ -36,7 +48,7 @@ describe.each(['light', 'dark'] as const)('accessibility (%s theme)', (theme) =>
     localStorage.setItem('afc-theme', theme);
     mockFetch(publicRoutes({ '/api/v1/auth/me': me }));
     const { container } = renderWithProviders(<App />, { route });
-    await screen.findByRole('button', { name: me === anonymous ? 'Sign in' : /Ed Editor/ });
+    await screen.findAllByRole('button', { name: me === anonymous ? 'Sign in' : /Ed Editor/ });
     await screen.findByRole('heading', { level: 1 }, { timeout: 3000 });
     // Let the page's own query settle so we audit content, not the skeleton.
     await screen.findByRole('contentinfo');

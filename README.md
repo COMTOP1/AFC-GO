@@ -20,3 +20,7 @@ The client's look lives in `client/styles/app.css`. That file holds the Tailwind
 ### Public pages
 
 Every public page is now in the React client: `/app`, `/app/teams`, `/app/news`, `/app/whatson`, `/app/gallery`, `/app/documents`, `/app/programmes`, `/app/sponsors`, `/app/info` and `/app/contact`, with detail pages for teams, articles and events. Editing still happens on the classic pages; signed-in editors see a "Manage this on the classic site" link on each page.
+
+### Account pages
+
+`/app/account` shows the signed-in user's details and lets them change their photo and password. `/app/reset/<token>` is the password reset page. Sign-in sends reset-flagged accounts there; the admin reset email still links to the classic `/reset/<token>` page until the cutover, when that path becomes the SPA's.
