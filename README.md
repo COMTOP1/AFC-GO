@@ -19,7 +19,7 @@ The client's look lives in `client/styles/app.css`. That file holds the Tailwind
 
 ### Public pages
 
-Every public page is now in the React client: `/app`, `/app/teams`, `/app/news`, `/app/whatson`, `/app/gallery`, `/app/documents`, `/app/programmes`, `/app/sponsors`, `/app/info` and `/app/contact`, with detail pages for teams, articles and events. Editors add, edit and delete content in place: News, What's On, Info and Teams have their own edit pages (with a rich-text editor for articles, events and the club information); documents, programmes and seasons, sponsors, affiliations and gallery photos use dialogs. The Players and Users admin pages are still on the classic site.
+Every public page is now in the React client: `/app`, `/app/teams`, `/app/news`, `/app/whatson`, `/app/gallery`, `/app/documents`, `/app/programmes`, `/app/sponsors`, `/app/info` and `/app/contact`, with detail pages for teams, articles and events. Editors add, edit and delete content in place: News, What's On, Info and Teams have their own edit pages (with a rich-text editor for articles, events and the club information); documents, programmes and seasons, sponsors, affiliations and gallery photos use dialogs. Signed-in members can browse players at `/app/players` (editors add, edit and delete them), and user admins manage accounts, password resets and the public contact email at `/app/users`. Every page now has an in-app version; the classic templates remain only until the cutover.
 
 ### Account pages
 

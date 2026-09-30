@@ -2,7 +2,15 @@ import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import App from './App';
-import { editor, event, newsArticle, publicRoutes, resetToken, team } from './test/fixtures';
+import {
+  editor,
+  event,
+  newsArticle,
+  publicRoutes,
+  resetToken,
+  team,
+  userAdmin,
+} from './test/fixtures';
 import { mockFetch } from './test/mockFetch';
 import { renderWithProviders } from './test/render';
 
@@ -50,11 +58,20 @@ describe('App routes', () => {
     ['/info/edit', 'Edit information'],
     ['/teams/new', 'New team'],
     [`/team/${team.id}/edit`, 'Edit team'],
+    ['/players', 'Players'],
   ])('routes %s to its edit page for editors', async (path, heading) => {
     mockFetch(publicRoutes({ '/api/v1/auth/me': editor }));
     renderWithProviders(<App />, { route: path });
     expect(
       await screen.findByRole('heading', { level: 1, name: heading }, lazy),
+    ).toBeInTheDocument();
+  });
+
+  it('routes /users to the Users page for user admins', async () => {
+    mockFetch(publicRoutes({ '/api/v1/auth/me': userAdmin }));
+    renderWithProviders(<App />, { route: '/users' });
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Users' }, lazy),
     ).toBeInTheDocument();
   });
 
