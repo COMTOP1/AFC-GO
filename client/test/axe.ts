@@ -6,7 +6,11 @@ import axe from 'axe-core';
  * because jsdom does not compute styles; the palette was checked by hand.
  */
 export async function axeViolations(node: Element): Promise<string[]> {
-  const results = await axe.run(node, { rules: { 'color-contrast': { enabled: false } } });
+  const results = await axe.run(node, {
+    // The Contact map is a cross-origin frame axe can't audit in jsdom.
+    iframes: false,
+    rules: { 'color-contrast': { enabled: false } },
+  });
   return results.violations.map(
     (v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,
   );

@@ -2,20 +2,24 @@ import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import App from '../App';
+import { publicRoutes } from '../test/fixtures';
 import { mockFetch } from '../test/mockFetch';
 import { renderWithProviders } from '../test/render';
 
 beforeEach(() => {
-  mockFetch({
-    '/api/v1/site': { body: { year: 2026, visitorCount: 1, version: 'test', teams: [] } },
-    '/api/v1/auth/me': { status: 401, body: { error: { code: 401, message: 'login required' } } },
-  });
+  mockFetch(publicRoutes());
 });
 
+/** /design is lazy-loaded, so wait for its heading before interacting. */
+async function renderDesign() {
+  const result = renderWithProviders(<App />, { route: '/design' });
+  await screen.findByRole('heading', { level: 1, name: 'Design system' }, { timeout: 3000 });
+  return result;
+}
+
 describe('DesignPage', () => {
-  it('is served at /design inside the layout', () => {
-    renderWithProviders(<App />, { route: '/design' });
-    expect(screen.getByRole('heading', { level: 1, name: 'Design system' })).toBeInTheDocument();
+  it('is served at /design inside the layout', async () => {
+    await renderDesign();
     for (const section of [
       'Palette',
       'Buttons',
@@ -29,8 +33,8 @@ describe('DesignPage', () => {
     }
   });
 
-  it('opens the sample modal and confirm dialog', () => {
-    renderWithProviders(<App />, { route: '/design' });
+  it('opens the sample modal and confirm dialog', async () => {
+    await renderDesign();
     fireEvent.click(screen.getByRole('button', { name: 'Open modal' }));
     const modal = screen.getByRole('dialog', { name: 'Sample modal' });
     fireEvent.click(within(modal).getByRole('button', { name: 'Close' }));
@@ -40,14 +44,14 @@ describe('DesignPage', () => {
     expect(screen.getByRole('dialog', { name: 'Delete team?' })).toBeInTheDocument();
   });
 
-  it('shows each toast tone', () => {
-    renderWithProviders(<App />, { route: '/design' });
+  it('shows each toast tone', async () => {
+    await renderDesign();
     fireEvent.click(screen.getByRole('button', { name: 'Success toast' }));
     expect(screen.getByRole('button', { name: 'Player saved' })).toBeInTheDocument();
   });
 
-  it('shows the gradient for cards without an image', () => {
-    const { container } = renderWithProviders(<App />, { route: '/design' });
+  it('shows the gradient for cards without an image', async () => {
+    const { container } = await renderDesign();
     // Only the "No image" card: jsdom never fires the broken image's error event.
     expect(container.querySelectorAll('[data-fallback]').length).toBeGreaterThanOrEqual(1);
   });

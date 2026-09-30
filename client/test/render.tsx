@@ -7,20 +7,32 @@ import { AuthProvider } from '../auth/AuthProvider';
 import { ToastProvider } from '../components/ui/toast/ToastProvider';
 import { ThemeProvider } from '../theme/ThemeProvider';
 
+export interface RenderOptions {
+  route?: string;
+  queryClient?: QueryClient;
+}
+
 /** Renders ui inside the same providers as main.tsx, with retries off. */
-export function renderWithProviders(ui: ReactElement, { route = '/' }: { route?: string } = {}) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
-  });
-  return render(
+export function renderWithProviders(
+  ui: ReactElement,
+  {
+    route = '/',
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+    }),
+  }: RenderOptions = {},
+) {
+  const wrap = (node: ReactElement) => (
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[route]}>
         <ThemeProvider>
           <AuthProvider>
-            <ToastProvider>{ui}</ToastProvider>
+            <ToastProvider>{node}</ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </MemoryRouter>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
+  const result = render(wrap(ui));
+  return { ...result, queryClient, rerender: (next: ReactElement) => result.rerender(wrap(next)) };
 }
