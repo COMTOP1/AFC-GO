@@ -8,7 +8,6 @@ import { isNotFound } from '../../lib/notFound';
 import { mockFetch } from '../../test/mockFetch';
 import { renderWithProviders } from '../../test/render';
 import { CardGrid } from './CardGrid';
-import { EditorLink } from './EditorLink';
 import { QueryState } from './QueryState';
 import { SearchInput } from './SearchInput';
 import { TabsNav } from './TabsNav';
@@ -179,48 +178,6 @@ describe('SearchInput and useSearchQuery', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/documents?q=policy');
     fireEvent.change(box, { target: { value: '' } });
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/documents$/);
-  });
-});
-
-describe('EditorLink', () => {
-  function user(perms: { canEdit: boolean; canManageGallery: boolean }) {
-    return {
-      body: {
-        id: 1,
-        name: 'Someone',
-        email: 's@example.test',
-        role: 'Manager',
-        permissions: { ...perms, canManageUsers: false },
-      },
-    };
-  }
-
-  it('is hidden when signed out', async () => {
-    mockFetch({ '/api/v1/auth/me': anonymous });
-    renderWithProviders(<EditorLink legacyHref="/news" />);
-    await new Promise((r) => setTimeout(r, 0));
-    expect(screen.queryByRole('link')).toBeNull();
-  });
-
-  it('is hidden for a user who cannot edit', async () => {
-    mockFetch({ '/api/v1/auth/me': user({ canEdit: false, canManageGallery: false }) });
-    renderWithProviders(<EditorLink legacyHref="/news" />);
-    await new Promise((r) => setTimeout(r, 0));
-    expect(screen.queryByRole('link')).toBeNull();
-  });
-
-  it('links editors to the classic page', async () => {
-    mockFetch({ '/api/v1/auth/me': user({ canEdit: true, canManageGallery: true }) });
-    renderWithProviders(<EditorLink legacyHref="/news" />);
-    expect(
-      await screen.findByRole('link', { name: 'Manage this on the classic site ↗' }),
-    ).toHaveAttribute('href', '/news');
-  });
-
-  it('follows canManageGallery for the gallery', async () => {
-    mockFetch({ '/api/v1/auth/me': user({ canEdit: false, canManageGallery: true }) });
-    renderWithProviders(<EditorLink legacyHref="/gallery" permission="canManageGallery" />);
-    expect(await screen.findByRole('link')).toHaveAttribute('href', '/gallery');
   });
 });
 

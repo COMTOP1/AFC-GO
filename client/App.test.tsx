@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import App from './App';
-import { event, newsArticle, publicRoutes, resetToken, team } from './test/fixtures';
+import { editor, event, newsArticle, publicRoutes, resetToken, team } from './test/fixtures';
 import { mockFetch } from './test/mockFetch';
 import { renderWithProviders } from './test/render';
 
@@ -37,6 +37,22 @@ describe('App routes', () => {
     [`/reset/${resetToken}`, 'Reset your password'],
   ])('routes %s to its page', async (path, heading) => {
     renderAt(path);
+    expect(
+      await screen.findByRole('heading', { level: 1, name: heading }, lazy),
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    ['/news/new', 'New article'],
+    [`/news/${newsArticle.id}/edit`, 'Edit article'],
+    ['/whatson/new', 'New event'],
+    [`/whatson/${event.id}/edit`, 'Edit event'],
+    ['/info/edit', 'Edit information'],
+    ['/teams/new', 'New team'],
+    [`/team/${team.id}/edit`, 'Edit team'],
+  ])('routes %s to its edit page for editors', async (path, heading) => {
+    mockFetch(publicRoutes({ '/api/v1/auth/me': editor }));
+    renderWithProviders(<App />, { route: path });
     expect(
       await screen.findByRole('heading', { level: 1, name: heading }, lazy),
     ).toBeInTheDocument();

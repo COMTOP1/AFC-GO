@@ -83,6 +83,8 @@ const toolClass = (active: boolean) =>
 
 function attributes(label: string, error: string | undefined, errorId: string) {
   return {
+    role: 'textbox',
+    'aria-multiline': 'true',
     'aria-label': label,
     ...(error ? { 'aria-describedby': errorId, 'aria-invalid': 'true' } : {}),
     class:
