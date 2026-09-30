@@ -169,6 +169,33 @@ describe('AccountPage photo', () => {
     );
   });
 
+  it('refuses a file that is not an accepted image, without previewing it', async () => {
+    renderAccount({ body: baseUser });
+    await screen.findByRole('region', { name: 'Photo' });
+    const page = new File(['<script>alert(1)</script>'], 'page.html', { type: 'text/html' });
+    fireEvent.change(screen.getByLabelText('Choose a new photo'), { target: { files: [page] } });
+    expect(screen.getByLabelText('Choose a new photo')).toHaveAccessibleDescription(
+      'Choose an image file (JPEG, PNG, GIF, WebP, AVIF, APNG or SVG).',
+    );
+    expect(
+      within(photoCard()).queryByRole('img', { name: 'Preview of your new photo' }),
+    ).toBeNull();
+    expect(within(photoCard()).queryByRole('button', { name: 'Save photo' })).toBeNull();
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('only ever previews a browser blob: URL', async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'javascript:alert(1)') });
+    renderAccount({ body: baseUser });
+    await screen.findByRole('region', { name: 'Photo' });
+    choose();
+    expect(
+      within(photoCard()).queryByRole('img', { name: 'Preview of your new photo' }),
+    ).toBeNull();
+    expect(photoCard().querySelector('img[src^="javascript:"]')).toBeNull();
+    expect(revokeObjectURL).toHaveBeenCalledWith('javascript:alert(1)');
+  });
+
   it('hides Remove when there is no photo', async () => {
     renderAccount({ body: baseUser });
     await screen.findByRole('region', { name: 'Photo' });

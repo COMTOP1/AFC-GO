@@ -17,7 +17,30 @@ import { useToast } from '../../components/ui/toast/useToast';
 import { isSessionExpired } from '../../lib/session';
 import { ApiError } from '../../api/client';
 
-const IMAGE_TYPES = 'image/jpeg,image/png,image/gif,image/webp,image/avif,image/apng,image/svg+xml';
+// The server's accepted image types (server/internal/upload).
+const IMAGE_TYPE_LIST = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/avif',
+  'image/apng',
+  'image/svg+xml',
+];
+const IMAGE_TYPES = IMAGE_TYPE_LIST.join(',');
+
+/**
+ * A local preview URL for a chosen image. Only a browser-issued blob: URL is
+ * ever used as an <img> source; anything else is released and not shown.
+ */
+function previewUrl(file: File): string | null {
+  const url = URL.createObjectURL(file);
+  if (url.startsWith('blob:')) {
+    return url;
+  }
+  URL.revokeObjectURL(url);
+  return null;
+}
 
 const photoClass = 'size-32 rounded-full border border-line bg-white object-cover';
 
@@ -43,8 +66,12 @@ export function PhotoCard({ user }: { user: CurrentUser }) {
 
   function choose(next: File | null) {
     setError(undefined);
+    if (next && !IMAGE_TYPE_LIST.includes(next.type)) {
+      next = null;
+      setError('Choose an image file (JPEG, PNG, GIF, WebP, AVIF, APNG or SVG).');
+    }
     setFile(next);
-    setPreview(next ? URL.createObjectURL(next) : null);
+    setPreview(next ? previewUrl(next) : null);
     if (!next && inputRef.current) {
       inputRef.current.value = '';
     }
