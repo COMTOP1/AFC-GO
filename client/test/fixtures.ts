@@ -3,10 +3,12 @@ import type { GalleryImage } from '../api/gallery';
 import type { Affiliation, HomeData } from '../api/home';
 import type { NewsArticle } from '../api/news';
 import type { ContactData, InfoContent } from '../api/pages';
+import type { Player } from '../api/players';
 import type { Programme, Season } from '../api/programmes';
 import type { Sponsor } from '../api/sponsors';
 import type { TeamDetail } from '../api/teams';
 import type { SiteInfo, TeamSummary } from '../api/types';
+import type { AdminUser } from '../api/users';
 import type { WhatsOnEvent } from '../api/whatson';
 import type { MockResponse, MockRoute } from './mockFetch';
 
@@ -181,18 +183,7 @@ export const site: SiteInfo = { year: 2026, visitorCount: 42, version: 'test', t
 export const resetToken = '5f0b6c1e-1a2b-4c3d-8e9f-000000000001';
 export const expiredResetToken = '5f0b6c1e-1a2b-4c3d-8e9f-00000000dead';
 
-interface PlayerFixture {
-  id: number;
-  name: string;
-  position?: string;
-  isCaptain: boolean;
-  dateOfBirth?: string;
-  age?: number;
-  team?: { id: number; name: string; isYouth: boolean };
-  imageUrl?: string;
-}
-
-export const players: PlayerFixture[] = [
+export const players: Player[] = [
   {
     id: 30,
     name: 'Sam Striker',
@@ -213,19 +204,8 @@ export const players: PlayerFixture[] = [
   },
 ];
 
-interface AdminUserFixture {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string;
-  role: string;
-  roleCode: string;
-  teamId?: number;
-  imageUrl?: string;
-}
-
 // id 1 is also the signed-in fixture users' id, so it's "you".
-export const adminUsers: AdminUserFixture[] = [
+export const adminUsers: AdminUser[] = [
   {
     id: 1,
     name: 'Una Admin',
