@@ -17,6 +17,7 @@ const GalleryPage = lazy(() => import('./pages/gallery/GalleryPage'));
 const DocumentsPage = lazy(() => import('./pages/documents/DocumentsPage'));
 const ProgrammesPage = lazy(() => import('./pages/programmes/ProgrammesPage'));
 const PlayersPage = lazy(() => import('./pages/players/PlayersPage'));
+const UsersPage = lazy(() => import('./pages/users/UsersPage'));
 const SponsorsPage = lazy(() => import('./pages/sponsors/SponsorsPage'));
 const InfoPage = lazy(() => import('./pages/info/InfoPage'));
 const InfoEditPage = lazy(() => import('./pages/info/InfoEditPage'));
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="programmes" element={<ProgrammesPage />} />
         <Route path="sponsors" element={<SponsorsPage />} />
         <Route path="players" element={<PlayersPage />} />
+        <Route path="users" element={<UsersPage />} />
         <Route path="info" element={<InfoPage />} />
         <Route path="info/edit" element={<InfoEditPage />} />
         <Route path="contact" element={<ContactPage />} />
