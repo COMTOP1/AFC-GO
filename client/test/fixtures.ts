@@ -29,6 +29,7 @@ function signedIn(name: string, role: string, canEdit: boolean, canManageGallery
 
 export const editor: MockResponse = signedIn('Ed Editor', 'Treasurer', true, true);
 export const manager: MockResponse = signedIn('Mo Manager', 'Manager', false, false);
+export const photographer: MockResponse = signedIn('Pat Photographer', 'Photographer', false, true);
 
 export const newsArticle: NewsArticle = {
   id: 1,
