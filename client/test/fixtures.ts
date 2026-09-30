@@ -170,6 +170,9 @@ export const home: HomeData = {
 
 export const site: SiteInfo = { year: 2026, visitorCount: 42, version: 'test', teams };
 
+export const resetToken = '5f0b6c1e-1a2b-4c3d-8e9f-000000000001';
+export const expiredResetToken = '5f0b6c1e-1a2b-4c3d-8e9f-00000000dead';
+
 /** Every public endpoint with fixture data; override entries per test. */
 export function publicRoutes(overrides: Record<string, MockRoute> = {}): Record<string, MockRoute> {
   return {
@@ -192,6 +195,11 @@ export function publicRoutes(overrides: Record<string, MockRoute> = {}): Record<
     '/api/v1/sponsors': { body: sponsors },
     '/api/v1/info': { body: info },
     '/api/v1/contact': { body: contact },
+    [`/api/v1/auth/reset/${resetToken}`]: { status: 204 },
+    [`/api/v1/auth/reset/${expiredResetToken}`]: {
+      status: 404,
+      body: { error: { code: 404, message: 'reset link is invalid or has expired' } },
+    },
     ...overrides,
   };
 }
