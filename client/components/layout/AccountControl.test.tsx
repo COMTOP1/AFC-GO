@@ -196,6 +196,19 @@ describe('AccountControl signed in', () => {
     );
   });
 
+  it('opens Edit info in the app', async () => {
+    mockFetch({ '/api/v1/auth/me': { body: user('Ed Editor', 'Treasurer', { canEdit: true }) } });
+    renderWithProviders(
+      <>
+        <AccountControl />
+        <Location />
+      </>,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: /Ed Editor/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Edit info' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/info/edit');
+  });
+
   it('adds Users for user admins', async () => {
     const items = await openMenuFor(
       user('Sam Sec', 'Club Secretary', { canEdit: true, canManageUsers: true }),

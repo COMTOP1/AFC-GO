@@ -17,6 +17,7 @@ const DocumentsPage = lazy(() => import('./pages/documents/DocumentsPage'));
 const ProgrammesPage = lazy(() => import('./pages/programmes/ProgrammesPage'));
 const SponsorsPage = lazy(() => import('./pages/sponsors/SponsorsPage'));
 const InfoPage = lazy(() => import('./pages/info/InfoPage'));
+const InfoEditPage = lazy(() => import('./pages/info/InfoEditPage'));
 const ContactPage = lazy(() => import('./pages/contact/ContactPage'));
 const AccountPage = lazy(() => import('./pages/account/AccountPage'));
 const ResetPage = lazy(() => import('./pages/reset/ResetPage'));
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="programmes" element={<ProgrammesPage />} />
         <Route path="sponsors" element={<SponsorsPage />} />
         <Route path="info" element={<InfoPage />} />
+        <Route path="info/edit" element={<InfoEditPage />} />
         <Route path="contact" element={<ContactPage />} />
         <Route path="account" element={<AccountPage />} />
         <Route path="reset/:token" element={<ResetPage />} />
