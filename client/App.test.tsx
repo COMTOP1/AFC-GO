@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import App from './App';
-import { event, newsArticle, publicRoutes, team } from './test/fixtures';
+import { event, newsArticle, publicRoutes, resetToken, team } from './test/fixtures';
 import { mockFetch } from './test/mockFetch';
 import { renderWithProviders } from './test/render';
 
@@ -33,6 +33,8 @@ describe('App routes', () => {
     ['/info', 'Information'],
     ['/contact', 'Contact'],
     ['/design', 'Design system'],
+    ['/account', 'Your account'],
+    [`/reset/${resetToken}`, 'Reset your password'],
   ])('routes %s to its page', async (path, heading) => {
     renderAt(path);
     expect(
