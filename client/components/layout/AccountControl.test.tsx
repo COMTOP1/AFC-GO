@@ -255,4 +255,23 @@ describe('AccountControl signed in', () => {
     expect(screen.queryByRole('dialog', { name: 'Sign out?' })).toBeNull();
     expect(document.activeElement).toBe(trigger);
   });
+
+  describe('Sign-in dialog on a shared computer', () => {
+    it('starts empty each time it opens', async () => {
+      mockFetch({
+        '/api/v1/auth/me': anonymous,
+        '/api/v1/auth/login': { status: 401, body: { error: { code: 401, message: 'nope' } } },
+      });
+      renderWithProviders(<AccountControl />);
+      await screen.findByRole('button', { name: 'Sign in' });
+      const dialog = openSignIn();
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Sign in' }));
+      await within(dialog).findByRole('alert');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+      const again = screen.getByRole('dialog', { name: 'Sign in' });
+      expect(within(again).getByLabelText('Email')).toHaveValue('');
+      expect(within(again).queryByRole('alert')).toBeNull();
+    });
+  });
 });

@@ -14,6 +14,8 @@ import { FileInput } from '../../components/ui/controls';
 import { Field } from '../../components/ui/Field';
 import { fieldError } from '../../components/ui/fieldError';
 import { useToast } from '../../components/ui/toast/useToast';
+import { isSessionExpired } from '../../lib/session';
+import { ApiError } from '../../api/client';
 
 const IMAGE_TYPES = 'image/jpeg,image/png,image/gif,image/webp,image/avif,image/apng,image/svg+xml';
 
@@ -60,6 +62,15 @@ export function PhotoCard({ user }: { user: CurrentUser }) {
       choose(null);
       toast.show({ tone: 'success', message: 'Photo updated' });
     } catch (err) {
+      if (isSessionExpired(err)) {
+        // The page flips to its sign-in prompt once "me" is re-read.
+        await refresh();
+        return;
+      }
+      if (err instanceof ApiError && err.status === 413) {
+        setError('That photo is too large (15 MB maximum).');
+        return;
+      }
       setError(
         fieldError(err, 'file') ??
           fieldError(err, 'image') ??
@@ -76,6 +87,10 @@ export function PhotoCard({ user }: { user: CurrentUser }) {
       await refresh();
       toast.show({ tone: 'success', message: 'Photo removed' });
     } catch (err) {
+      if (isSessionExpired(err)) {
+        await refresh();
+        return;
+      }
       toast.show({
         tone: 'error',
         message: `Couldn't remove your photo: ${err instanceof Error ? err.message : 'unknown error'}`,

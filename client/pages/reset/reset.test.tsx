@@ -1,5 +1,5 @@
-import { fireEvent, screen, within } from '@testing-library/react';
-import { Route, Routes } from 'react-router';
+import { act, fireEvent, screen, within } from '@testing-library/react';
+import { Link, Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { editor, expiredResetToken, publicRoutes, resetToken } from '../../test/fixtures';
@@ -128,5 +128,70 @@ describe('ResetPage', () => {
   it('works for a signed-in user too', async () => {
     renderReset(resetToken, { '/api/v1/auth/me': editor });
     expect(await screen.findByLabelText('New password')).toBeInTheDocument();
+  });
+
+  it('keeps the success message when the (now used) link is re-checked', async () => {
+    let calls = 0;
+    const fetchMock = mockFetch(
+      publicRoutes({
+        [`/api/v1/auth/reset/${resetToken}`]: () =>
+          calls++ < 2
+            ? { status: 204 }
+            : { status: 404, body: { error: { code: 404, message: 'expired' } } },
+      }),
+    );
+    const { queryClient } = renderWithProviders(
+      <Routes>
+        <Route path="/reset/:token" element={<ResetPage />} />
+      </Routes>,
+      { route: `/reset/${resetToken}` },
+    );
+    await screen.findByLabelText('New password');
+    fill('Abcdefgh1!', 'Abcdefgh1!');
+    await screen.findByText('Your password has been changed. You can now sign in with it.');
+    const before = fetchMock.mock.calls.length;
+    await act(async () => {
+      await queryClient.invalidateQueries();
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    // Whether or not the used link is re-checked, the success message must stay.
+    expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(before);
+    expect(
+      screen.getByText('Your password has been changed. You can now sign in with it.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(invalidTitle)).toBeNull();
+  });
+
+  it('starts fresh when sent to a different reset link', async () => {
+    const oldToken = 'aaaaaaaa-1111-4111-8111-000000000001';
+    let calls = 0;
+    mockFetch(
+      publicRoutes({
+        [`/api/v1/auth/reset/${oldToken}`]: () =>
+          calls++ === 0
+            ? { status: 204 }
+            : { status: 404, body: { error: { code: 404, message: 'expired' } } },
+      }),
+    );
+    renderWithProviders(
+      <Routes>
+        <Route
+          path="/reset/:token"
+          element={
+            <>
+              <ResetPage />
+              <Link to={`/reset/${resetToken}`}>new link</Link>
+            </>
+          }
+        />
+      </Routes>,
+      { route: `/reset/${oldToken}` },
+    );
+    await screen.findByLabelText('New password');
+    fill('Abcdefgh1!', 'Abcdefgh1!');
+    expect(await screen.findByText(invalidTitle)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: 'new link' }));
+    expect(await screen.findByLabelText('New password')).toBeInTheDocument();
+    expect(screen.queryByText(invalidTitle)).toBeNull();
   });
 });

@@ -28,11 +28,15 @@ function InvalidLink() {
   );
 }
 
+/** Keyed by token: moving to a different reset link starts from a clean slate. */
 export default function ResetPage() {
   usePageTitle('Reset password');
   const raw = useParams().token ?? '';
+  return <ResetForm key={raw} raw={raw} />;
+}
+
+function ResetForm({ raw }: { raw: string }) {
   const token = RESET_TOKEN.test(raw) ? raw : null;
-  const check = useResetTokenCheck(token);
   const signIn = useSignIn();
   const [values, setValues] = useState({ newPassword: '', confirmationPassword: '' });
   const [errors, setErrors] = useState<Errors>({});
@@ -40,6 +44,8 @@ export default function ResetPage() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [expired, setExpired] = useState(false);
+  // Once used, the link is gone on the server; stop re-checking it.
+  const check = useResetTokenCheck(done ? null : token);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -79,15 +85,6 @@ export default function ResetPage() {
 
   const header = <PageHeader title="Reset your password" />;
 
-  if (token === null || expired || isNotFound(check.error)) {
-    return (
-      <>
-        {header}
-        <InvalidLink />
-      </>
-    );
-  }
-
   if (done) {
     return (
       <>
@@ -96,6 +93,15 @@ export default function ResetPage() {
           <span>Your password has been changed. You can now sign in with it.</span>
           <Button onClick={signIn.open}>Sign in</Button>
         </Alert>
+      </>
+    );
+  }
+
+  if (token === null || expired || isNotFound(check.error)) {
+    return (
+      <>
+        {header}
+        <InvalidLink />
       </>
     );
   }

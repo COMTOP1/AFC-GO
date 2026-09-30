@@ -24,6 +24,19 @@ export function SignInDialog({ open, onClose }: { open: boolean; onClose: () => 
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Start empty every time it opens: the dialog now lives for the whole visit,
+  // and on a shared computer the last member's email or error must not linger.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setEmail('');
+      setPassword('');
+      setRemember(false);
+      setError(null);
+    }
+  }
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);

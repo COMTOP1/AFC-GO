@@ -268,4 +268,62 @@ describe('AccountPage change password', () => {
     answer({ status: 204 });
     await waitFor(() => expect(button).not.toHaveAttribute('aria-busy'));
   });
+
+  describe('AccountPage when the session has expired', () => {
+    const expired = { status: 401, body: { error: { code: 401, message: 'login required' } } };
+
+    it('switches to the sign-in prompt when changing the password gets a 401', async () => {
+      let me: MockResponse = { body: baseUser };
+      renderAccount(() => me, {
+        '/api/v1/auth/password': () => {
+          me = anonymous;
+          return expired;
+        },
+      });
+      fireEvent.change(await screen.findByLabelText('Current password'), {
+        target: { value: 'a' },
+      });
+      fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'Abcdefgh1!' } });
+      fireEvent.change(screen.getByLabelText('Confirm new password'), {
+        target: { value: 'Abcdefgh1!' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Change password' }));
+      expect(await screen.findByText('Sign in to see your account')).toBeInTheDocument();
+      expect(screen.queryByText('login required')).toBeNull();
+    });
+
+    it('switches to the sign-in prompt when a photo upload gets a 401', async () => {
+      let me: MockResponse = { body: baseUser };
+      renderAccount(() => me, {
+        '/api/v1/account/image': () => {
+          me = anonymous;
+          return expired;
+        },
+      });
+      await screen.findByRole('region', { name: 'Photo' });
+      choose();
+      fireEvent.click(within(photoCard()).getByRole('button', { name: 'Save photo' }));
+      expect(await screen.findByText('Sign in to see your account')).toBeInTheDocument();
+    });
+
+    it('explains a photo that is too large', async () => {
+      renderAccount(
+        { body: baseUser },
+        {
+          '/api/v1/account/image': {
+            status: 413,
+            body: { error: { code: 413, message: 'Request Entity Too Large' } },
+          },
+        },
+      );
+      await screen.findByRole('region', { name: 'Photo' });
+      choose();
+      fireEvent.click(within(photoCard()).getByRole('button', { name: 'Save photo' }));
+      await waitFor(() =>
+        expect(screen.getByLabelText('Choose a new photo')).toHaveAccessibleDescription(
+          'That photo is too large (15 MB maximum).',
+        ),
+      );
+    });
+  });
 });

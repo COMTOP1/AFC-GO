@@ -10,6 +10,8 @@ import { Input } from '../../components/ui/controls';
 import { Field } from '../../components/ui/Field';
 import { fieldError } from '../../components/ui/fieldError';
 import { useToast } from '../../components/ui/toast/useToast';
+import { useAuth } from '../../auth/useAuth';
+import { isSessionExpired } from '../../lib/session';
 
 type Key = 'oldPassword' | 'newPassword' | 'confirmationPassword';
 const blank: Record<Key, string> = { oldPassword: '', newPassword: '', confirmationPassword: '' };
@@ -22,6 +24,7 @@ const emptyMessages: Record<Key, string> = {
 export function PasswordCard() {
   const headingId = useId();
   const toast = useToast();
+  const { refresh } = useAuth();
   const [values, setValues] = useState(blank);
   const [errors, setErrors] = useState<Partial<Record<Key, string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -49,6 +52,11 @@ export function PasswordCard() {
       setValues(blank);
       toast.show({ tone: 'success', message: 'Password changed' });
     } catch (err) {
+      if (isSessionExpired(err)) {
+        // The page flips to its sign-in prompt once "me" is re-read.
+        await refresh();
+        return;
+      }
       if (err instanceof ApiError && Object.keys(err.fields).length > 0) {
         setErrors({
           oldPassword: fieldError(err, 'oldPassword'),
