@@ -50,7 +50,7 @@ function NextEvent({ event }: { event: WhatsOnEvent }) {
             {event.title}
           </Link>
         </h2>
-        <p className="text-sm font-semibold">{formatDate(event.dateOfEvent, 'dateTime')}</p>
+        <p className="text-sm font-semibold">{formatDate(event.dateOfEvent, 'dayDate')}</p>
         <p className="text-sm text-muted">{plainText(event.content, 120)}</p>
         <Link to="/whatson" className="mt-auto font-semibold text-red">
           All events →

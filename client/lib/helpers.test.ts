@@ -5,6 +5,10 @@ import { parseId } from './ids';
 import { matchesQuery } from './text';
 
 describe('formatDate', () => {
+  it('formats a date with its weekday and no time', () => {
+    expect(formatDate('2026-10-16T00:00:00Z', 'dayDate')).toBe('Fri 16 Oct 2026');
+    expect(formatDate('2026-12-05T00:00:00Z', 'dayDate')).toBe('Sat 5 Dec 2026');
+  });
   it('formats a date in UK style', () => {
     expect(formatDate('2026-09-28T10:00:00Z')).toBe('28 Sep 2026');
   });

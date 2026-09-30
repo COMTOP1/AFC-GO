@@ -45,7 +45,7 @@ export default function WhatsOnPage() {
                 to={`/whatson/${e.id}`}
                 imageUrl={e.imageUrl}
                 title={e.title}
-                meta={formatDate(e.dateOfEvent, 'dateTime')}
+                meta={formatDate(e.dateOfEvent, 'dayDate')}
               />
             )}
           />

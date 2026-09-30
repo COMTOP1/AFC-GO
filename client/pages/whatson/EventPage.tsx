@@ -22,7 +22,7 @@ export default function EventPage() {
           sectionHref="/whatson"
           crumb={formatDate(e.dateOfEvent)}
           title={e.title}
-          subtitle={formatDate(e.dateOfEvent, 'dateTime')}
+          subtitle={formatDate(e.dateOfEvent, 'dayDate')}
           imageUrl={e.imageUrl}
           html={e.content}
           backLabel="← All events"

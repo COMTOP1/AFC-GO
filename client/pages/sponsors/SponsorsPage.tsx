@@ -1,3 +1,4 @@
+import { useSite } from '../../api/queries';
 import { useSponsors } from '../../api/sponsors';
 import { CardGrid } from '../../components/page/CardGrid';
 import { ImageWithFallback } from '../../components/page/ImageWithFallback';
@@ -6,10 +7,12 @@ import { QueryState } from '../../components/page/QueryState';
 import { usePageTitle } from '../../components/page/usePageTitle';
 import { Card, CardBody } from '../../components/ui/Card';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { sponsorTeamLabel } from '../../lib/sponsorTeam';
 
 export default function SponsorsPage() {
   usePageTitle('Sponsors');
   const sponsors = useSponsors();
+  const site = useSite();
   return (
     <>
       <PageHeader title="Sponsors" actions={<EditorLink legacyHref="/sponsors" />} />
@@ -34,7 +37,10 @@ export default function SponsorsPage() {
                 <CardBody className="space-y-1">
                   <h2 className="font-display text-xl font-extrabold uppercase">{s.name}</h2>
                   {s.purpose && <p className="text-sm">{s.purpose}</p>}
-                  {s.team && <p className="text-sm text-muted">Sponsor of {s.team}</p>}
+                  {(() => {
+                    const label = sponsorTeamLabel(s.team, site.data?.teams ?? []);
+                    return label && <p className="text-sm text-muted">Sponsor of {label}</p>;
+                  })()}
                   {s.website && (
                     <a
                       href={s.website}

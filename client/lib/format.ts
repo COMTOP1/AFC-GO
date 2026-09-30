@@ -13,10 +13,11 @@ const partsFormat = new Intl.DateTimeFormat('en-GB', {
 
 /**
  * UK-style dates in the club's time zone: 'date' → "28 Sep 2026",
+ * 'dayDate' → "Fri 16 Oct 2026",
  * 'dateTime' → "Fri 16 Oct 2026, 7pm" (minutes only when not :00).
  * Month names are fixed so ICU's "Sept" never appears.
  */
-export function formatDate(iso: string, style: 'date' | 'dateTime' = 'date'): string {
+export function formatDate(iso: string, style: 'date' | 'dateTime' | 'dayDate' = 'date'): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) {
     return '';
@@ -28,6 +29,9 @@ export function formatDate(iso: string, style: 'date' | 'dateTime' = 'date'): st
   const date = `${Number(p.day)} ${MONTHS[Number(p.month) - 1]} ${p.year}`;
   if (style === 'date') {
     return date;
+  }
+  if (style === 'dayDate') {
+    return `${p.weekday} ${date}`;
   }
   const minutes = p.minute === '00' ? '' : `:${p.minute}`;
   return `${p.weekday} ${date}, ${p.hour}${minutes}${(p.dayPeriod ?? '').toLowerCase()}`;
