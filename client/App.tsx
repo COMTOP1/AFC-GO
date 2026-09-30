@@ -6,15 +6,19 @@ import HomePage from './pages/home/HomePage';
 
 const TeamsPage = lazy(() => import('./pages/teams/TeamsPage'));
 const TeamPage = lazy(() => import('./pages/teams/TeamPage'));
+const TeamFormPage = lazy(() => import('./pages/teams/TeamFormPage'));
 const NewsListPage = lazy(() => import('./pages/news/NewsListPage'));
 const NewsArticlePage = lazy(() => import('./pages/news/NewsArticlePage'));
+const NewsFormPage = lazy(() => import('./pages/news/NewsFormPage'));
 const WhatsOnPage = lazy(() => import('./pages/whatson/WhatsOnPage'));
 const EventPage = lazy(() => import('./pages/whatson/EventPage'));
+const EventFormPage = lazy(() => import('./pages/whatson/EventFormPage'));
 const GalleryPage = lazy(() => import('./pages/gallery/GalleryPage'));
 const DocumentsPage = lazy(() => import('./pages/documents/DocumentsPage'));
 const ProgrammesPage = lazy(() => import('./pages/programmes/ProgrammesPage'));
 const SponsorsPage = lazy(() => import('./pages/sponsors/SponsorsPage'));
 const InfoPage = lazy(() => import('./pages/info/InfoPage'));
+const InfoEditPage = lazy(() => import('./pages/info/InfoEditPage'));
 const ContactPage = lazy(() => import('./pages/contact/ContactPage'));
 const AccountPage = lazy(() => import('./pages/account/AccountPage'));
 const ResetPage = lazy(() => import('./pages/reset/ResetPage'));
@@ -27,16 +31,23 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="teams" element={<TeamsPage />} />
+        <Route path="teams/new" element={<TeamFormPage />} />
         <Route path="team/:id" element={<TeamPage />} />
+        <Route path="team/:id/edit" element={<TeamFormPage />} />
         <Route path="news" element={<NewsListPage />} />
+        <Route path="news/new" element={<NewsFormPage />} />
+        <Route path="news/:id/edit" element={<NewsFormPage />} />
         <Route path="news/:id" element={<NewsArticlePage />} />
         <Route path="whatson" element={<WhatsOnPage />} />
+        <Route path="whatson/new" element={<EventFormPage />} />
+        <Route path="whatson/:id/edit" element={<EventFormPage />} />
         <Route path="whatson/:id" element={<EventPage />} />
         <Route path="gallery" element={<GalleryPage />} />
         <Route path="documents" element={<DocumentsPage />} />
         <Route path="programmes" element={<ProgrammesPage />} />
         <Route path="sponsors" element={<SponsorsPage />} />
         <Route path="info" element={<InfoPage />} />
+        <Route path="info/edit" element={<InfoEditPage />} />
         <Route path="contact" element={<ContactPage />} />
         <Route path="account" element={<AccountPage />} />
         <Route path="reset/:token" element={<ResetPage />} />

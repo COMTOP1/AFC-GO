@@ -85,6 +85,37 @@ describe('Modal', () => {
   });
 });
 
+describe('nested Modals', () => {
+  function Nested({ onOuterClose }: { onOuterClose: () => void }) {
+    const [inner, setInner] = useState(true);
+    return (
+      <Modal open onClose={onOuterClose} title="Outer">
+        <Modal open={inner} onClose={() => setInner(false)} title="Inner">
+          <button onClick={() => setInner(false)}>Done</button>
+        </Modal>
+      </Modal>
+    );
+  }
+
+  it('closing the inner dialog leaves the outer one open', () => {
+    const onOuterClose = vi.fn();
+    render(<Nested onOuterClose={onOuterClose} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(onOuterClose).not.toHaveBeenCalled();
+  });
+
+  it('Esc on the inner dialog closes only the inner one', () => {
+    const onOuterClose = vi.fn();
+    render(<Nested onOuterClose={onOuterClose} />);
+    fireEvent(
+      screen.getByRole('dialog', { name: 'Inner' }),
+      new Event('cancel', { cancelable: true }),
+    );
+    expect(screen.queryByRole('dialog', { name: 'Inner' })).toBeNull();
+    expect(onOuterClose).not.toHaveBeenCalled();
+  });
+});
+
 describe('ConfirmDialog', () => {
   it('confirms and cancels', async () => {
     const onConfirm = vi.fn();

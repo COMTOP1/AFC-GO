@@ -1,11 +1,12 @@
 import { useWhatsOnList, type WhatsOnPeriod } from '../../api/whatson';
+import { useCanEdit } from '../../components/edit/useCanEdit';
 import { CardGrid } from '../../components/page/CardGrid';
-import { EditorLink } from '../../components/page/EditorLink';
 import { LinkCard } from '../../components/page/LinkCard';
 import { QueryState } from '../../components/page/QueryState';
 import { TabsNav } from '../../components/page/TabsNav';
 import { usePageTitle } from '../../components/page/usePageTitle';
 import { useTabParam } from '../../components/page/useTabParam';
+import { ButtonLink } from '../../components/ui/ButtonLink';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { formatDate } from '../../lib/format';
 
@@ -29,9 +30,13 @@ export default function WhatsOnPage() {
     'future',
   ) as WhatsOnPeriod;
   const events = useWhatsOnList(period);
+  const { canEdit } = useCanEdit();
   return (
     <>
-      <PageHeader title="What's On" actions={<EditorLink legacyHref="/whatson" />} />
+      <PageHeader
+        title="What's On"
+        actions={canEdit && <ButtonLink to="/whatson/new">Add event</ButtonLink>}
+      />
       <TabsNav param="period" tabs={tabs} defaultValue="future" label="Event period" />
       <QueryState query={events}>
         {(list) => (
@@ -45,7 +50,7 @@ export default function WhatsOnPage() {
                 to={`/whatson/${e.id}`}
                 imageUrl={e.imageUrl}
                 title={e.title}
-                meta={formatDate(e.dateOfEvent, 'dateTime')}
+                meta={formatDate(e.dateOfEvent, 'dayDate')}
               />
             )}
           />

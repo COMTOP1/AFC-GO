@@ -20,7 +20,7 @@ describe('HomePage', () => {
       'href',
       `/whatson/${event.id}`,
     );
-    expect(screen.getByText('Fri 16 Oct 2026, 7pm')).toBeInTheDocument();
+    expect(screen.getByText('Fri 16 Oct 2026')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'All events →' })).toHaveAttribute('href', '/whatson');
 
     const sponsors = screen.getByRole('region', { name: 'Our sponsors' });

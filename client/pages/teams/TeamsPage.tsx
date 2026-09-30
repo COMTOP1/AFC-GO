@@ -1,11 +1,12 @@
 import { useTeams } from '../../api/teams';
 import type { TeamSummary } from '../../api/types';
+import { useCanEdit } from '../../components/edit/useCanEdit';
 import { CardGrid } from '../../components/page/CardGrid';
-import { EditorLink } from '../../components/page/EditorLink';
 import { LinkCard } from '../../components/page/LinkCard';
 import { QueryState } from '../../components/page/QueryState';
 import { usePageTitle } from '../../components/page/usePageTitle';
 import { Badge } from '../../components/ui/Badge';
+import { ButtonLink } from '../../components/ui/ButtonLink';
 import { PageHeader } from '../../components/ui/PageHeader';
 
 function leagueLine(team: TeamSummary): string | undefined {
@@ -16,9 +17,13 @@ function leagueLine(team: TeamSummary): string | undefined {
 export default function TeamsPage() {
   usePageTitle('Teams');
   const teams = useTeams();
+  const { canEdit } = useCanEdit();
   return (
     <>
-      <PageHeader title="Teams" actions={<EditorLink legacyHref="/teams" />} />
+      <PageHeader
+        title="Teams"
+        actions={canEdit && <ButtonLink to="/teams/new">Add team</ButtonLink>}
+      />
       <QueryState query={teams}>
         {(list) => (
           <CardGrid

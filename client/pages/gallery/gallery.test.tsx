@@ -91,17 +91,15 @@ describe('GalleryPage', () => {
     expect(await screen.findByText('No photos yet')).toBeInTheDocument();
   });
 
-  it('shows the editor link on canManageGallery only', async () => {
+  it('shows Add photo to people who can manage the gallery', async () => {
     await renderGallery({ '/api/v1/auth/me': editor });
-    expect(
-      await screen.findByRole('link', { name: 'Manage this on the classic site ↗' }),
-    ).toHaveAttribute('href', '/gallery');
+    expect(await screen.findByRole('button', { name: 'Add photo' })).toBeInTheDocument();
   });
 
-  it('hides the editor link from managers', async () => {
+  it('hides Add photo from managers', async () => {
     await renderGallery({ '/api/v1/auth/me': manager });
     await new Promise((r) => setTimeout(r, 0));
-    expect(screen.queryByRole('link', { name: /classic site/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Add photo' })).toBeNull();
   });
 
   it('shows a placeholder for a broken thumbnail and in the viewer', async () => {

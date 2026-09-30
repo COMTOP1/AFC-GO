@@ -14,33 +14,9 @@ import { FileInput } from '../../components/ui/controls';
 import { Field } from '../../components/ui/Field';
 import { fieldError } from '../../components/ui/fieldError';
 import { useToast } from '../../components/ui/toast/useToast';
+import { IMAGE_TYPE_LIST, IMAGE_TYPE_MESSAGE, IMAGE_TYPES, previewUrl } from '../../lib/images';
 import { isSessionExpired } from '../../lib/session';
 import { ApiError } from '../../api/client';
-
-// The server's accepted image types (server/internal/upload).
-const IMAGE_TYPE_LIST = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/avif',
-  'image/apng',
-  'image/svg+xml',
-];
-const IMAGE_TYPES = IMAGE_TYPE_LIST.join(',');
-
-/**
- * A local preview URL for a chosen image. Only a browser-issued blob: URL is
- * ever used as an <img> source; anything else is released and not shown.
- */
-function previewUrl(file: File): string | null {
-  const url = URL.createObjectURL(file);
-  if (url.startsWith('blob:')) {
-    return url;
-  }
-  URL.revokeObjectURL(url);
-  return null;
-}
 
 const photoClass = 'size-32 rounded-full border border-line bg-white object-cover';
 
@@ -68,7 +44,7 @@ export function PhotoCard({ user }: { user: CurrentUser }) {
     setError(undefined);
     if (next && !IMAGE_TYPE_LIST.includes(next.type)) {
       next = null;
-      setError('Choose an image file (JPEG, PNG, GIF, WebP, AVIF, APNG or SVG).');
+      setError(IMAGE_TYPE_MESSAGE);
     }
     setFile(next);
     setPreview(next ? previewUrl(next) : null);

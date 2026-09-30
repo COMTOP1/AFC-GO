@@ -5,6 +5,7 @@ import type { NewsArticle } from './news';
 import { queryKeys } from './queries';
 import type { Sponsor } from './sponsors';
 import type { WhatsOnEvent } from './whatson';
+import { formData } from '../lib/editForm';
 
 /** affiliation.Public */
 export interface Affiliation {
@@ -27,4 +28,16 @@ export function useHome() {
     queryKey: queryKeys.home,
     queryFn: ({ signal }) => apiFetch<HomeData>('/home', { signal }),
   });
+}
+
+export function createAffiliation(input: {
+  name: string;
+  website: string;
+  image: File;
+}): Promise<Affiliation> {
+  return apiFetch<Affiliation>('/affiliations', { form: formData(input) });
+}
+
+export function deleteAffiliation(id: number): Promise<void> {
+  return apiFetch<void>(`/affiliations/${id}`, { method: 'DELETE' });
 }

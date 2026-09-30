@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import { apiFetch } from './client';
 import { queryKeys } from './queries';
+import { formData } from '../lib/editForm';
+import type { ImageValue } from '../lib/images';
 
 /** whatson.Event — GET /whatson, /whatson/:id */
 export interface WhatsOnEvent {
@@ -28,4 +30,37 @@ export function useWhatsOnEvent(id: number | null) {
     queryFn: ({ signal }) => apiFetch<WhatsOnEvent>(`/whatson/${id}`, { signal }),
     enabled: id !== null,
   });
+}
+
+export interface EventInput {
+  title: string;
+  content: string;
+  /** YYYY-MM-DD */
+  dateOfEvent: string;
+  image: ImageValue;
+}
+
+function eventForm(input: EventInput, isUpdate: boolean): FormData {
+  return formData({
+    title: input.title,
+    content: input.content,
+    dateOfEvent: input.dateOfEvent,
+    image: input.image.file,
+    removeImage: isUpdate && input.image.remove ? true : undefined,
+  });
+}
+
+export function createEvent(input: EventInput): Promise<WhatsOnEvent> {
+  return apiFetch<WhatsOnEvent>('/whatson', { form: eventForm(input, false) });
+}
+
+export function updateEvent(id: number, input: EventInput): Promise<WhatsOnEvent> {
+  return apiFetch<WhatsOnEvent>(`/whatson/${id}`, {
+    method: 'PATCH',
+    form: eventForm(input, true),
+  });
+}
+
+export function deleteEvent(id: number): Promise<void> {
+  return apiFetch<void>(`/whatson/${id}`, { method: 'DELETE' });
 }

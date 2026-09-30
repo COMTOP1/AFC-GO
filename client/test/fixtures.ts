@@ -29,6 +29,7 @@ function signedIn(name: string, role: string, canEdit: boolean, canManageGallery
 
 export const editor: MockResponse = signedIn('Ed Editor', 'Treasurer', true, true);
 export const manager: MockResponse = signedIn('Mo Manager', 'Manager', false, false);
+export const photographer: MockResponse = signedIn('Pat Photographer', 'Photographer', false, true);
 
 export const newsArticle: NewsArticle = {
   id: 1,
@@ -50,7 +51,7 @@ export const event: WhatsOnEvent = {
   title: 'Presentation evening',
   content: '<p>Clubhouse, all welcome.</p>',
   date: '2026-09-01T10:00:00Z',
-  dateOfEvent: '2026-10-16T18:00:00Z',
+  dateOfEvent: '2026-10-16T00:00:00Z',
 };
 export const events: WhatsOnEvent[] = [event];
 
@@ -59,7 +60,7 @@ export const sponsor: Sponsor = {
   name: 'Acme Ltd',
   website: 'https://acme.example',
   purpose: 'Kit sponsor',
-  team: 'First Team',
+  team: '7',
   imageUrl: '/api/v1/files/sponsor/4',
 };
 export const sponsorPlain: Sponsor = { id: 5, name: 'Corner Shop' };

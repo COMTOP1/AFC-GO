@@ -30,11 +30,9 @@ describe('InfoPage', () => {
     );
   });
 
-  it('links editors to the classic info editor', async () => {
+  it('links editors to the in-app editor', async () => {
     mockFetch(publicRoutes({ '/api/v1/auth/me': editor }));
     renderWithProviders(<InfoPage />);
-    expect(
-      await screen.findByRole('link', { name: 'Manage this on the classic site ↗' }),
-    ).toHaveAttribute('href', '/info/edit');
+    expect(await screen.findByRole('link', { name: 'Edit' })).toHaveAttribute('href', '/info/edit');
   });
 });

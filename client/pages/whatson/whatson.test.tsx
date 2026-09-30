@@ -41,7 +41,7 @@ describe('WhatsOnPage', () => {
       'href',
       `/whatson/${event.id}`,
     );
-    expect(screen.getByText('Fri 16 Oct 2026, 7pm')).toBeInTheDocument();
+    expect(screen.getByText('Fri 16 Oct 2026')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Upcoming' })).toHaveAttribute('aria-current', 'page');
     expect(fetchMock.mock.calls.some(([u]) => String(u) === '/api/v1/whatson?period=future')).toBe(
       true,
@@ -100,7 +100,7 @@ describe('EventPage', () => {
   it('renders the event with its date and time', async () => {
     renderEvent(`/whatson/${event.id}`);
     expect(await screen.findByRole('heading', { level: 1, name: event.title })).toBeInTheDocument();
-    expect(screen.getAllByText('Fri 16 Oct 2026, 7pm').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Fri 16 Oct 2026').length).toBeGreaterThan(0);
     expect(screen.getByText('Clubhouse, all welcome.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '← All events' })).toHaveAttribute('href', '/whatson');
   });

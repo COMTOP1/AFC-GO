@@ -45,13 +45,14 @@ describe('NewsListPage', () => {
     expect(screen.getAllByRole('link', { name: /Story/ })).toHaveLength(12);
   });
 
-  it('shows the empty state and the editor link', async () => {
+  it('shows the empty state and the Add article link', async () => {
     mockFetch(publicRoutes({ '/api/v1/news': { body: [] }, '/api/v1/auth/me': editor }));
     renderWithProviders(<NewsListPage />);
     expect(await screen.findByText('No news yet')).toBeInTheDocument();
-    expect(
-      await screen.findByRole('link', { name: 'Manage this on the classic site ↗' }),
-    ).toHaveAttribute('href', '/news');
+    expect(await screen.findByRole('link', { name: 'Add article' })).toHaveAttribute(
+      'href',
+      '/news/new',
+    );
   });
 });
 
