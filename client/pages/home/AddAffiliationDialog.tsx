@@ -12,7 +12,7 @@ import { Modal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/toast/useToast';
 import { emptyImage, type ImageValue } from '../../lib/images';
 
-export function AddAffiliationDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function AddAffiliationDialogForm({ onClose }: { onClose: () => void }) {
   const toast = useToast();
   const [name, setName] = useState('');
   const [website, setWebsite] = useState('');
@@ -43,7 +43,7 @@ export function AddAffiliationDialog({ open, onClose }: { open: boolean; onClose
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Add affiliation">
+    <>
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         {save.formError && <Alert tone="error">{save.formError}</Alert>}
         <Field label="Name" error={missing.name ?? save.fieldErrors.name}>
@@ -67,6 +67,15 @@ export function AddAffiliationDialog({ open, onClose }: { open: boolean; onClose
           </Button>
         </div>
       </form>
+    </>
+  );
+}
+
+/** Mounted only while open (Modal renders children only then), so every open starts empty. */
+export function AddAffiliationDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Add affiliation">
+      <AddAffiliationDialogForm onClose={onClose} />
     </Modal>
   );
 }

@@ -12,7 +12,7 @@ import { useToast } from '../../components/ui/toast/useToast';
 
 type Missing = { name?: string; date?: string; file?: string };
 
-export function AddProgrammeDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function AddProgrammeDialogForm({ onClose }: { onClose: () => void }) {
   const toast = useToast();
   const seasons = useSeasons();
   const [name, setName] = useState('');
@@ -53,7 +53,7 @@ export function AddProgrammeDialog({ open, onClose }: { open: boolean; onClose: 
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Add programme">
+    <>
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         {save.formError && <Alert tone="error">{save.formError}</Alert>}
         <Field label="Name" error={missing.name ?? save.fieldErrors.name}>
@@ -87,6 +87,15 @@ export function AddProgrammeDialog({ open, onClose }: { open: boolean; onClose: 
           </Button>
         </div>
       </form>
+    </>
+  );
+}
+
+/** Mounted only while open (Modal renders children only then), so every open starts empty. */
+export function AddProgrammeDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Add programme">
+      <AddProgrammeDialogForm onClose={onClose} />
     </Modal>
   );
 }

@@ -75,7 +75,7 @@ function SeasonRow({ season }: { season: Season }) {
   );
 }
 
-export function SeasonsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function SeasonsDialogForm({ onClose }: { onClose: () => void }) {
   const toast = useToast();
   const seasons = useSeasons();
   const queryClient = useQueryClient();
@@ -91,7 +91,7 @@ export function SeasonsDialog({ open, onClose }: { open: boolean; onClose: () =>
   });
 
   return (
-    <Modal open={open} onClose={onClose} title="Seasons">
+    <>
       <div className="flex flex-col gap-4">
         {seasons.isError && (
           <Alert tone="error">
@@ -144,6 +144,15 @@ export function SeasonsDialog({ open, onClose }: { open: boolean; onClose: () =>
           </Button>
         </div>
       </div>
+    </>
+  );
+}
+
+/** Mounted only while open (Modal renders children only then), so every open starts empty. */
+export function SeasonsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Seasons">
+      <SeasonsDialogForm onClose={onClose} />
     </Modal>
   );
 }

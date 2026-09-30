@@ -1,8 +1,8 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import { typeInEditor } from '../../test/editor';
+import { editorFor, typeInEditor } from '../../test/editor';
 import { anonymous, editor, manager, newsArticle, publicRoutes } from '../../test/fixtures';
 import { Location } from '../../test/Location';
 import type { MockResponse, MockRoute } from '../../test/mockFetch';
@@ -104,6 +104,26 @@ describe('NewsFormPage', () => {
     const fd = patch?.[1]?.body as FormData;
     expect(fd.get('removeImage')).toBe('true');
     expect(fd.get('content')).toBe(newsArticle.content);
+  });
+
+  it('adding a link does not save the article', async () => {
+    const fetchMock = renderNews(`/news/${newsArticle.id}/edit`, {
+      [`/api/v1/news/${newsArticle.id}`]: () => ({ body: newsArticle }),
+    });
+    const editorInstance = await editorFor('Content');
+    await act(async () => {
+      editorInstance.commands.selectAll();
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Link' }));
+    const dialog = screen.getByRole('dialog', { name: 'Add a link' });
+    fireEvent.change(within(dialog).getByLabelText('Link address'), {
+      target: { value: 'thefa.com' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add link' }));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'PATCH')).toBe(false);
+    expect(screen.getByTestId('location')).toHaveTextContent(`/news/${newsArticle.id}/edit`);
+    expect(editorInstance.getHTML()).toContain('href="https://thefa.com"');
   });
 
   it('shows server field errors', async () => {

@@ -13,7 +13,7 @@ import { useToast } from '../../components/ui/toast/useToast';
 import { emptyImage, type ImageValue } from '../../lib/images';
 import { SPONSOR_TEAM_CHOICES } from '../../lib/sponsorTeam';
 
-export function AddSponsorDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function AddSponsorDialogForm({ onClose }: { onClose: () => void }) {
   const toast = useToast();
   const site = useSite();
   const [name, setName] = useState('');
@@ -49,7 +49,7 @@ export function AddSponsorDialog({ open, onClose }: { open: boolean; onClose: ()
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Add sponsor">
+    <>
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         {save.formError && <Alert tone="error">{save.formError}</Alert>}
         <Field label="Name" error={missing.name ?? save.fieldErrors.name}>
@@ -94,6 +94,15 @@ export function AddSponsorDialog({ open, onClose }: { open: boolean; onClose: ()
           </Button>
         </div>
       </form>
+    </>
+  );
+}
+
+/** Mounted only while open (Modal renders children only then), so every open starts empty. */
+export function AddSponsorDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Add sponsor">
+      <AddSponsorDialogForm onClose={onClose} />
     </Modal>
   );
 }

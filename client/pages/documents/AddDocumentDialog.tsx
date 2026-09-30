@@ -11,7 +11,7 @@ import { Field } from '../../components/ui/Field';
 import { Modal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/toast/useToast';
 
-export function AddDocumentDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function AddDocumentDialogForm({ onClose }: { onClose: () => void }) {
   const toast = useToast();
   const [name, setName] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -40,7 +40,7 @@ export function AddDocumentDialog({ open, onClose }: { open: boolean; onClose: (
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Add document">
+    <>
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         {save.formError && <Alert tone="error">{save.formError}</Alert>}
         <Field label="Name" error={missing.name ?? save.fieldErrors.name}>
@@ -61,6 +61,15 @@ export function AddDocumentDialog({ open, onClose }: { open: boolean; onClose: (
           </Button>
         </div>
       </form>
+    </>
+  );
+}
+
+/** Mounted only while open (Modal renders children only then), so every open starts empty. */
+export function AddDocumentDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Add document">
+      <AddDocumentDialogForm onClose={onClose} />
     </Modal>
   );
 }

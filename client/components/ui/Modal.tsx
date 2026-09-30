@@ -44,11 +44,19 @@ export function Modal({ open, onClose, title, children, actions, className }: Mo
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      // React passes a nested dialog's cancel/close up the component tree; only
+      // react to this dialog's own.
       onCancel={(e) => {
+        if (e.target !== e.currentTarget) {
+          return;
+        }
         e.preventDefault();
         onClose();
       }}
-      onClose={() => {
+      onClose={(e) => {
+        if (e.target !== e.currentTarget) {
+          return;
+        }
         if (wantOpen.current) {
           wantOpen.current = false;
           onClose();

@@ -54,6 +54,23 @@ describe('Gallery editing', () => {
     expect(within(dialog).getByLabelText('Photo')).toHaveAccessibleDescription('Choose a photo');
   });
 
+  it('starts empty again after Cancel, without the previously chosen photo', async () => {
+    const fetchMock = renderGallery(editor);
+    fireEvent.click(await screen.findByRole('button', { name: 'Add photo' }));
+    let dialog = screen.getByRole('dialog', { name: 'Add photo' });
+    fireEvent.change(within(dialog).getByLabelText('Photo'), {
+      target: { files: [new File(['x'], 'p.png', { type: 'image/png' })] },
+    });
+    fireEvent.change(within(dialog).getByLabelText('Caption'), { target: { value: 'Old' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add photo' }));
+    dialog = screen.getByRole('dialog', { name: 'Add photo' });
+    expect(within(dialog).getByLabelText('Caption')).toHaveValue('');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Add photo' }));
+    expect(within(dialog).getByLabelText('Photo')).toHaveAccessibleDescription('Choose a photo');
+    expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'POST')).toBe(false);
+  });
+
   it('deletes a photo after confirming, from a control beside the thumbnail', async () => {
     const fetchMock = renderGallery(editor, {
       [`/api/v1/gallery/${galleryImages[0].id}`]: { status: 204 },

@@ -132,6 +132,8 @@ export default function RichTextEditorImpl({ label, value, onChange, error }: Ri
 
   function applyLink(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // The dialog sits inside the page's form in the React tree; don't submit that too.
+    e.stopPropagation();
     const href = normalizeLink(linkValue);
     if (!href) {
       setLinkError('Enter a web address (https://…) or an email link (mailto:…).');
