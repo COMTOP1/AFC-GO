@@ -175,6 +175,21 @@ describe('ImageField', () => {
     expect(screen.getByText('file:a.png remove:false')).toBeInTheDocument();
   });
 
+  it('shows the current image and the preview in full, uncropped', async () => {
+    mockFetch(publicRoutes());
+    const { container } = renderWithProviders(<Harness current="/img/1" />);
+    const current = container.querySelector('img') as HTMLImageElement;
+    expect(current).toHaveAttribute('src', '/img/1');
+    expect(current.style.aspectRatio).toBe('');
+    expect(current).not.toHaveClass('object-cover');
+    expect(current).toHaveClass('object-contain');
+    pick(new File(['x'], 'a.png', { type: 'image/png' }));
+    const preview = screen.getByRole('img', { name: 'Preview of the new image' });
+    expect(preview.style.aspectRatio).toBe('');
+    expect(preview).not.toHaveClass('object-cover');
+    expect(preview).toHaveClass('object-contain');
+  });
+
   it('refuses a non-image without previewing it', async () => {
     mockFetch(publicRoutes());
     renderWithProviders(<Harness />);

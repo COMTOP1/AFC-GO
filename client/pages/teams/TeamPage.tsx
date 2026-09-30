@@ -5,13 +5,13 @@ import { deleteTeam, useTeam, type SquadMember, type TeamDetail } from '../../ap
 import crest from '../../assets/crest.png';
 import { DeleteButton } from '../../components/edit/DeleteButton';
 import { useCanEdit } from '../../components/edit/useCanEdit';
+import { FullImage } from '../../components/page/FullImage';
 import { ImageWithFallback } from '../../components/page/ImageWithFallback';
 import { LogoRow } from '../../components/page/LogoRow';
 import { QueryState } from '../../components/page/QueryState';
 import { usePageTitle } from '../../components/page/usePageTitle';
 import { Badge } from '../../components/ui/Badge';
 import { ButtonLink } from '../../components/ui/ButtonLink';
-import { CardMedia } from '../../components/ui/Card';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { parseId } from '../../lib/ids';
 import { isNotFound } from '../../lib/notFound';
@@ -94,9 +94,7 @@ function TeamContent({ detail }: { detail: TeamDetail }) {
         }
       />
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="overflow-hidden rounded-lg border border-line">
-          <CardMedia src={team.imageUrl} alt={`${team.name} team photo`} />
-        </div>
+        <FullImage src={team.imageUrl} alt={`${team.name} team photo`} className="self-start" />
         <div className="space-y-4">
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             {facts

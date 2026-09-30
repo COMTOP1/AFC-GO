@@ -7,7 +7,7 @@ import {
   previewUrl,
   type ImageValue,
 } from '../../lib/images';
-import { ImageWithFallback } from '../page/ImageWithFallback';
+import { FullImage } from '../page/FullImage';
 import { Checkbox } from '../ui/Checkbox';
 import { FileInput } from '../ui/controls';
 import { Field } from '../ui/Field';
@@ -23,8 +23,6 @@ export interface ImageFieldProps {
   onChange: (value: ImageValue) => void;
   error?: string;
 }
-
-const box = 'h-40 w-full max-w-sm rounded-lg border border-line';
 
 export function ImageField({
   label,
@@ -64,18 +62,7 @@ export function ImageField({
   const shown = preview ?? (value.remove ? undefined : currentUrl);
   return (
     <div className="space-y-2">
-      <ImageWithFallback
-        src={shown}
-        alt={preview ? 'Preview of the new image' : ''}
-        className={`${box} object-cover`}
-        fallback={
-          <div
-            aria-hidden="true"
-            data-fallback=""
-            className={`${box} bg-linear-135 from-blue to-red`}
-          />
-        }
-      />
+      <FullImage src={shown} alt={preview ? 'Preview of the new image' : ''} className="max-w-xl" />
       <Field label={label} error={typeError ?? error}>
         <FileInput
           ref={inputRef}

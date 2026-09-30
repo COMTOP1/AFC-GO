@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 
 import { ButtonLink } from '../ui/ButtonLink';
 import { PageHeader } from '../ui/PageHeader';
-import { ImageWithFallback } from './ImageWithFallback';
+import { FullImage } from './FullImage';
 import { RichText } from './RichText';
 import { usePageTitle } from './usePageTitle';
 
@@ -36,23 +36,8 @@ export function ArticleView({
   usePageTitle(title);
   return (
     <article className="mx-auto max-w-3xl">
-      {/* Shown in full at its own shape (list cards crop; the article page doesn't).
-          Very tall images are capped and scaled down rather than cut off. */}
-      <div className="mb-6 overflow-hidden rounded-lg border border-line bg-surface">
-        <ImageWithFallback
-          src={imageUrl}
-          alt=""
-          className="mx-auto block h-auto max-h-[70vh] w-auto max-w-full object-contain"
-          fallback={
-            <div
-              aria-hidden="true"
-              data-fallback=""
-              className="w-full bg-linear-135 from-blue to-red"
-              style={{ aspectRatio: '21 / 9' }}
-            />
-          }
-        />
-      </div>
+      {/* Shown in full at its own shape (list cards crop; the article page doesn't). */}
+      <FullImage src={imageUrl} alt="" className="mb-6" />
       <nav aria-label="Breadcrumb" className="mb-2 text-sm text-muted">
         <Link to={sectionHref} className="font-semibold text-red">
           {section}

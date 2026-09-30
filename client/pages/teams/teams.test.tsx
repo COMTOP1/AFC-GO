@@ -59,6 +59,19 @@ describe('TeamsPage', () => {
 });
 
 describe('TeamPage', () => {
+  it('shows the team photo in full, at its own shape', async () => {
+    renderTeam(`/team/${team.id}`, {
+      [`/api/v1/teams/${team.id}`]: {
+        body: { ...teamDetail, team: { ...teamDetail.team, imageUrl: '/api/v1/files/team/7' } },
+      },
+    });
+    const img = await screen.findByRole('img', { name: 'First Team team photo' });
+    expect(img).toHaveAttribute('src', '/api/v1/files/team/7');
+    expect(img.style.aspectRatio).toBe('');
+    expect(img).not.toHaveClass('object-cover');
+    expect(img).toHaveClass('object-contain');
+  });
+
   it('shows details, links, managers, squad and sponsors', async () => {
     renderTeam(`/team/${team.id}`);
     expect(
