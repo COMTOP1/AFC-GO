@@ -21,6 +21,8 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { Table, TBody, Td, Th, THead, Tr } from '../../components/ui/Table';
 import { MANAGER_ROLE, ROLES } from '../../lib/roles';
 import { matchesQuery } from '../../lib/text';
+import { DisplayEmailCard } from './DisplayEmailCard';
+import { ResetPasswordButton } from './ResetPasswordButton';
 import { SecretDialog, type Secret } from './SecretDialog';
 import { UserDialog } from './UserDialog';
 
@@ -30,7 +32,7 @@ interface UsersTableProps {
   onSecret: (secret: Secret) => void;
 }
 
-function UsersTable({ currentUserId, onEdit }: UsersTableProps) {
+function UsersTable({ currentUserId, onEdit, onSecret }: UsersTableProps) {
   const users = useUsers();
   const teams = useTeams();
   const [params, setParams] = useSearchParams();
@@ -127,6 +129,7 @@ function UsersTable({ currentUserId, onEdit }: UsersTableProps) {
                           >
                             Edit
                           </Button>
+                          <ResetPasswordButton user={u} onSecret={onSecret} />
                           {!isSelf && (
                             <DeleteButton
                               ariaLabel={`Delete ${u.name}`}
@@ -165,6 +168,7 @@ export default function UsersPage() {
         actions={canManageUsers && <Button onClick={() => setDialog({})}>Add user</Button>}
       />
       <RequireEditor permission="canManageUsers">
+        <DisplayEmailCard />
         <UsersTable
           currentUserId={user?.id}
           onEdit={(u) => setDialog({ user: u })}
