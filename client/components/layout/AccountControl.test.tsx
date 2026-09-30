@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
+import { useLocation } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CurrentUser } from '../../api/types';
@@ -8,6 +9,11 @@ import { renderWithProviders } from '../../test/render';
 import { AccountControl } from './AccountControl';
 
 vi.mock('../../lib/navigation', () => ({ goTo: vi.fn() }));
+
+function Location() {
+  const l = useLocation();
+  return <output data-testid="location">{l.pathname}</output>;
+}
 
 const anonymous: MockResponse = {
   status: 401,
@@ -75,16 +81,39 @@ describe('AccountControl signed out', () => {
     });
   });
 
-  it('sends reset-flagged accounts to the reset page', async () => {
+  it('sends reset-flagged accounts to the in-app reset page', async () => {
     mockFetch({
       '/api/v1/auth/me': anonymous,
-      '/api/v1/auth/login': { body: { resetRequired: true, resetUrl: '/reset/abc123' } },
+      '/api/v1/auth/login': { body: { resetRequired: true, resetUrl: '/reset/abc-123' } },
+    });
+    renderWithProviders(
+      <>
+        <AccountControl />
+        <Location />
+      </>,
+    );
+    await screen.findByRole('button', { name: 'Sign in' });
+    const dialog = openSignIn();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Sign in' }));
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('location')).toHaveTextContent('/reset/abc-123'),
+    );
+    expect(goTo).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog', { name: 'Sign in' })).toBeNull();
+  });
+
+  it('still does a full-page load for an unrecognised reset URL', async () => {
+    mockFetch({
+      '/api/v1/auth/me': anonymous,
+      '/api/v1/auth/login': {
+        body: { resetRequired: true, resetUrl: 'https://elsewhere.example/reset' },
+      },
     });
     renderWithProviders(<AccountControl />);
     await screen.findByRole('button', { name: 'Sign in' });
     const dialog = openSignIn();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Sign in' }));
-    await vi.waitFor(() => expect(goTo).toHaveBeenCalledWith('/reset/abc123'));
+    await vi.waitFor(() => expect(goTo).toHaveBeenCalledWith('https://elsewhere.example/reset'));
   });
 
   it('explains a wrong password, keeps the email and clears the password', async () => {
@@ -135,6 +164,20 @@ describe('AccountControl signed in', () => {
     fireEvent.click(await screen.findByRole('button', { name: new RegExp(body.name) }));
     return screen.getAllByRole('menuitem').map((el) => el.textContent);
   }
+
+  it('links Account to the in-app page', async () => {
+    mockFetch({ '/api/v1/auth/me': { body: user('Mo Manager', 'Manager') } });
+    renderWithProviders(
+      <>
+        <AccountControl />
+        <Location />
+      </>,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: /Mo Manager/ }));
+    expect(screen.getByRole('menuitem', { name: 'Players' })).toHaveAttribute('href', '/players');
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Account' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/account');
+  });
 
   it('gives a Manager Players, Account and Sign out', async () => {
     expect(await openMenuFor(user('Mo Manager', 'Manager'))).toEqual([

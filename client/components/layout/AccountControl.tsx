@@ -10,12 +10,11 @@ import { buttonClasses } from '../ui/buttonStyles';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Menu, type MenuItem } from '../ui/Menu';
 import { useToast } from '../ui/toast/useToast';
-import { useDisclosure } from '../ui/useDisclosure';
-import { SignInDialog } from './SignInDialog';
+import { useSignIn } from './useSignIn';
 
 export function AccountControl() {
   const { user, isLoading } = useAuth();
-  const signIn = useDisclosure();
+  const signIn = useSignIn();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -26,12 +25,9 @@ export function AccountControl() {
 
   if (!user) {
     return (
-      <>
-        <Button variant="secondary" size="sm" onClick={() => signIn.setOpen(true)}>
-          Sign in
-        </Button>
-        <SignInDialog open={signIn.open} onClose={signIn.close} />
-      </>
+      <Button variant="secondary" size="sm" onClick={signIn.open}>
+        Sign in
+      </Button>
     );
   }
 
@@ -57,7 +53,7 @@ export function AccountControl() {
 
   const items: MenuItem[] = [
     { label: 'Players', href: '/players' },
-    { label: 'Account', href: '/account' },
+    { label: 'Account', to: '/account' },
     ...(user.permissions.canEdit ? [{ label: 'Edit info', href: '/info/edit' }] : []),
     ...(user.permissions.canManageUsers ? [{ label: 'Users', href: '/users' }] : []),
     { label: 'Sign out', onSelect: () => setConfirmSignOut(true) },

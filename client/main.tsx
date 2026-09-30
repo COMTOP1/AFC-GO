@@ -8,6 +8,7 @@ import './styles/app.css';
 import { createQueryClient } from './api/queryClient';
 import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
+import { SignInProvider } from './components/layout/SignInProvider';
 import { ToastProvider } from './components/ui/toast/ToastProvider';
 import { ThemeProvider } from './theme/ThemeProvider';
 
@@ -25,7 +26,9 @@ createRoot(root).render(
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>
-              <App />
+              <SignInProvider>
+                <App />
+              </SignInProvider>
             </ToastProvider>
           </AuthProvider>
         </ThemeProvider>

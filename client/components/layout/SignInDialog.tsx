@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router';
 
 import { login } from '../../api/auth';
 import { ApiError } from '../../api/client';
 import { useAuth } from '../../auth/useAuth';
 import { goTo } from '../../lib/navigation';
+import { appResetPath } from '../../lib/resetLink';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
 import { Checkbox } from '../ui/Checkbox';
@@ -15,6 +17,7 @@ import { useToast } from '../ui/toast/useToast';
 export function SignInDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { refresh } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
@@ -28,7 +31,14 @@ export function SignInDialog({ open, onClose }: { open: boolean; onClose: () => 
     try {
       const res = await login({ email, password, remember });
       if (res.resetRequired && res.resetUrl) {
-        goTo(res.resetUrl);
+        setPassword('');
+        onClose();
+        const path = appResetPath(res.resetUrl);
+        if (path) {
+          navigate(path);
+        } else {
+          goTo(res.resetUrl);
+        }
         return;
       }
       setPassword('');

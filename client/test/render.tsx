@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 
 import { AuthProvider } from '../auth/AuthProvider';
+import { SignInProvider } from '../components/layout/SignInProvider';
 import { ToastProvider } from '../components/ui/toast/ToastProvider';
 import { ThemeProvider } from '../theme/ThemeProvider';
 
@@ -27,7 +28,9 @@ export function renderWithProviders(
       <MemoryRouter initialEntries={[route]}>
         <ThemeProvider>
           <AuthProvider>
-            <ToastProvider>{node}</ToastProvider>
+            <ToastProvider>
+              <SignInProvider>{node}</SignInProvider>
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </MemoryRouter>
