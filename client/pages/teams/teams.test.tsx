@@ -45,9 +45,10 @@ describe('TeamsPage', () => {
     expect(
       within(await screen.findByRole('link', { name: /Vets/ })).getByText('Inactive'),
     ).toBeInTheDocument();
-    expect(
-      await screen.findByRole('link', { name: 'Manage this on the classic site ↗' }),
-    ).toHaveAttribute('href', '/teams');
+    expect(await screen.findByRole('link', { name: 'Add team' })).toHaveAttribute(
+      'href',
+      '/teams/new',
+    );
   });
 
   it('shows the empty state', async () => {

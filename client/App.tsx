@@ -6,6 +6,7 @@ import HomePage from './pages/home/HomePage';
 
 const TeamsPage = lazy(() => import('./pages/teams/TeamsPage'));
 const TeamPage = lazy(() => import('./pages/teams/TeamPage'));
+const TeamFormPage = lazy(() => import('./pages/teams/TeamFormPage'));
 const NewsListPage = lazy(() => import('./pages/news/NewsListPage'));
 const NewsArticlePage = lazy(() => import('./pages/news/NewsArticlePage'));
 const NewsFormPage = lazy(() => import('./pages/news/NewsFormPage'));
@@ -30,7 +31,9 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="teams" element={<TeamsPage />} />
+        <Route path="teams/new" element={<TeamFormPage />} />
         <Route path="team/:id" element={<TeamPage />} />
+        <Route path="team/:id/edit" element={<TeamFormPage />} />
         <Route path="news" element={<NewsListPage />} />
         <Route path="news/new" element={<NewsFormPage />} />
         <Route path="news/:id/edit" element={<NewsFormPage />} />

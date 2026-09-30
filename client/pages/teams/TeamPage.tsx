@@ -1,8 +1,10 @@
 import { useId } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 
-import { useTeam, type SquadMember, type TeamDetail } from '../../api/teams';
+import { deleteTeam, useTeam, type SquadMember, type TeamDetail } from '../../api/teams';
 import crest from '../../assets/crest.png';
+import { DeleteButton } from '../../components/edit/DeleteButton';
+import { useCanEdit } from '../../components/edit/useCanEdit';
 import { ImageWithFallback } from '../../components/page/ImageWithFallback';
 import { LogoRow } from '../../components/page/LogoRow';
 import { QueryState } from '../../components/page/QueryState';
@@ -53,6 +55,8 @@ function Squad({ players }: { players: SquadMember[] }) {
 
 function TeamContent({ detail }: { detail: TeamDetail }) {
   const { team, managers, sponsors, players } = detail;
+  const { canEdit } = useCanEdit();
+  const navigate = useNavigate();
   usePageTitle(team.name);
   const facts: [string, string | undefined][] = [
     ['League', team.league],
@@ -68,7 +72,27 @@ function TeamContent({ detail }: { detail: TeamDetail }) {
         </Link>{' '}
         / {team.name}
       </nav>
-      <PageHeader title={team.name} subtitle={team.description} />
+      <PageHeader
+        title={team.name}
+        subtitle={team.description}
+        actions={
+          canEdit && (
+            <>
+              <ButtonLink to={`/team/${team.id}/edit`} variant="secondary" size="sm">
+                Edit
+              </ButtonLink>
+              <DeleteButton
+                confirmTitle="Delete this team?"
+                confirmMessage="Its players, sponsors and managers will be unlinked from it. This can't be undone."
+                onDelete={() => deleteTeam(team.id)}
+                invalidate={[['teams'], ['team'], ['site']]}
+                successMessage="Team deleted"
+                after={() => navigate('/teams')}
+              />
+            </>
+          )
+        }
+      />
       <div className="grid gap-6 md:grid-cols-2">
         <div className="overflow-hidden rounded-lg border border-line">
           <CardMedia src={team.imageUrl} alt={`${team.name} team photo`} />
