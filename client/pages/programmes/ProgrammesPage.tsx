@@ -1,12 +1,14 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
-import { useProgrammes, useSeasons, type Programme } from '../../api/programmes';
-import { EditorLink } from '../../components/page/EditorLink';
+import { deleteProgramme, useProgrammes, useSeasons, type Programme } from '../../api/programmes';
+import { DeleteButton } from '../../components/edit/DeleteButton';
+import { useCanEdit } from '../../components/edit/useCanEdit';
 import { QueryState } from '../../components/page/QueryState';
 import { SearchInput } from '../../components/page/SearchInput';
 import { usePageTitle } from '../../components/page/usePageTitle';
 import { useSearchQuery } from '../../components/page/useSearchQuery';
+import { Button } from '../../components/ui/Button';
 import { ButtonLink } from '../../components/ui/ButtonLink';
 import { Select } from '../../components/ui/controls';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -15,6 +17,8 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { formatDate } from '../../lib/format';
 import { parseId } from '../../lib/ids';
 import { matchesQuery } from '../../lib/text';
+import { AddProgrammeDialog } from './AddProgrammeDialog';
+import { SeasonsDialog } from './SeasonsDialog';
 
 const NO_SEASON = 'No season';
 
@@ -29,7 +33,15 @@ function groupBySeason(list: Programme[]): [string, Programme[]][] {
   return [...entries.filter(([k]) => k !== NO_SEASON), ...entries.filter(([k]) => k === NO_SEASON)];
 }
 
-function SeasonGroup({ name, items }: { name: string; items: Programme[] }) {
+function SeasonGroup({
+  name,
+  items,
+  canEdit,
+}: {
+  name: string;
+  items: Programme[];
+  canEdit: boolean;
+}) {
   const headingId = useId();
   return (
     <section aria-labelledby={headingId}>
@@ -46,16 +58,28 @@ function SeasonGroup({ name, items }: { name: string; items: Programme[] }) {
               <span className="font-medium">{p.name}</span>{' '}
               <span className="text-sm text-muted">{formatDate(p.date)}</span>
             </span>
-            <ButtonLink
-              href={p.fileUrl}
-              variant="secondary"
-              size="sm"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`View ${p.name}`}
-            >
-              View
-            </ButtonLink>
+            <span className="flex gap-2">
+              <ButtonLink
+                href={p.fileUrl}
+                variant="secondary"
+                size="sm"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`View ${p.name}`}
+              >
+                View
+              </ButtonLink>
+              {canEdit && (
+                <DeleteButton
+                  ariaLabel={`Delete ${p.name}`}
+                  confirmTitle={`Delete ${p.name}?`}
+                  confirmMessage="This can't be undone."
+                  onDelete={() => deleteProgramme(p.id)}
+                  invalidate={[['programmes']]}
+                  successMessage="Programme deleted"
+                />
+              )}
+            </span>
           </li>
         ))}
       </ul>
@@ -79,10 +103,25 @@ export default function ProgrammesPage() {
     enabled: seasonId === 0 || !seasons.isPending,
   });
   const q = useSearchQuery();
+  const { canEdit } = useCanEdit();
+  const [adding, setAdding] = useState(false);
+  const [managing, setManaging] = useState(false);
 
   return (
     <>
-      <PageHeader title="Programmes" actions={<EditorLink legacyHref="/programmes" />} />
+      <PageHeader
+        title="Programmes"
+        actions={
+          canEdit && (
+            <>
+              <Button onClick={() => setAdding(true)}>Add programme</Button>
+              <Button variant="secondary" onClick={() => setManaging(true)}>
+                Manage seasons
+              </Button>
+            </>
+          )
+        }
+      />
       <div className="mb-6 flex flex-wrap items-end gap-4">
         <Field label="Season" className="w-56">
           <Select
@@ -116,12 +155,14 @@ export default function ProgrammesPage() {
           return (
             <div className="space-y-8">
               {groupBySeason(shown).map(([name, items]) => (
-                <SeasonGroup key={name} name={name} items={items} />
+                <SeasonGroup key={name} name={name} items={items} canEdit={canEdit} />
               ))}
             </div>
           );
         }}
       </QueryState>
+      <AddProgrammeDialog open={adding} onClose={() => setAdding(false)} />
+      <SeasonsDialog open={managing} onClose={() => setManaging(false)} />
     </>
   );
 }

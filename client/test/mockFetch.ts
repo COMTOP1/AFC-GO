@@ -6,23 +6,24 @@ export interface MockResponse {
   contentType?: string;
 }
 
-export type MockRoute = MockResponse | (() => MockResponse | Promise<MockResponse>);
+export type MockRoute =
+  MockResponse | ((init?: RequestInit) => MockResponse | Promise<MockResponse>);
 
 /**
  * Replaces global fetch with a stub keyed by path (e.g. '/api/v1/site').
- * A route may be a function, evaluated per request (it can throw or return a
- * promise). Unknown paths fail the test loudly with a 599.
+ * A route may be a function, evaluated per request with the request's init (it
+ * can throw or return a promise). Unknown paths fail the test loudly with a 599.
  */
 export function mockFetch(routes: Record<string, MockRoute>) {
   const fn = vi.fn(async (...args: [RequestInfo | URL, RequestInit?]) => {
-    const [input] = args;
+    const [input, init] = args;
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
     const path = url.replace(/^https?:\/\/[^/]+/, '');
     const entry = routes[path];
     if (!entry) {
       return new Response(`no mock for ${path}`, { status: 599 });
     }
-    const route = typeof entry === 'function' ? await entry() : entry;
+    const route = typeof entry === 'function' ? await entry(init) : entry;
     const status = route.status ?? 200;
     if (status === 204) {
       return new Response(null, { status });
