@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 
 import { ButtonLink } from '../ui/ButtonLink';
 import { PageHeader } from '../ui/PageHeader';
-import { EditorLink } from './EditorLink';
 import { ImageWithFallback } from './ImageWithFallback';
 import { RichText } from './RichText';
 import { usePageTitle } from './usePageTitle';
@@ -18,7 +17,8 @@ export interface ArticleViewProps {
   html: string;
   subtitle?: ReactNode;
   backLabel: string;
-  editorHref: string;
+  /** Editor controls (Edit/Delete) for the page header. */
+  actions?: ReactNode;
 }
 
 /** A news article or event: image, breadcrumb, title, cleaned body, back link. */
@@ -31,7 +31,7 @@ export function ArticleView({
   html,
   subtitle,
   backLabel,
-  editorHref,
+  actions,
 }: ArticleViewProps) {
   usePageTitle(title);
   return (
@@ -59,11 +59,7 @@ export function ArticleView({
         </Link>{' '}
         / {crumb}
       </nav>
-      <PageHeader
-        title={title}
-        subtitle={subtitle}
-        actions={<EditorLink legacyHref={editorHref} />}
-      />
+      <PageHeader title={title} subtitle={subtitle} actions={actions} />
       <RichText html={html} />
       <div className="mt-8">
         <ButtonLink to={sectionHref} variant="secondary">

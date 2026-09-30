@@ -26,7 +26,6 @@ export default function EventPage() {
           imageUrl={e.imageUrl}
           html={e.content}
           backLabel="← All events"
-          editorHref={`/whatson/${e.id}`}
         />
       )}
     </QueryState>

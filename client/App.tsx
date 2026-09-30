@@ -8,6 +8,7 @@ const TeamsPage = lazy(() => import('./pages/teams/TeamsPage'));
 const TeamPage = lazy(() => import('./pages/teams/TeamPage'));
 const NewsListPage = lazy(() => import('./pages/news/NewsListPage'));
 const NewsArticlePage = lazy(() => import('./pages/news/NewsArticlePage'));
+const NewsFormPage = lazy(() => import('./pages/news/NewsFormPage'));
 const WhatsOnPage = lazy(() => import('./pages/whatson/WhatsOnPage'));
 const EventPage = lazy(() => import('./pages/whatson/EventPage'));
 const GalleryPage = lazy(() => import('./pages/gallery/GalleryPage'));
@@ -29,6 +30,8 @@ export default function App() {
         <Route path="teams" element={<TeamsPage />} />
         <Route path="team/:id" element={<TeamPage />} />
         <Route path="news" element={<NewsListPage />} />
+        <Route path="news/new" element={<NewsFormPage />} />
+        <Route path="news/:id/edit" element={<NewsFormPage />} />
         <Route path="news/:id" element={<NewsArticlePage />} />
         <Route path="whatson" element={<WhatsOnPage />} />
         <Route path="whatson/:id" element={<EventPage />} />
