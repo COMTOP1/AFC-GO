@@ -7,6 +7,11 @@ import { installMatchMedia } from './matchMedia';
 
 installDialogPolyfill();
 
+// jsdom can't run pdf.js (no canvas, no worker); tests use a stand-in renderer.
+vi.mock('../pages/programmes/pdfRenderer', () => ({
+  renderPdf: vi.fn(async () => undefined),
+}));
+
 // ProseMirror measures ranges when scrolling the selection into view; jsdom has no layout.
 Range.prototype.getClientRects = () =>
   ({
