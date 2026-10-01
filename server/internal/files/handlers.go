@@ -1,10 +1,13 @@
 package files
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
 
@@ -45,8 +48,34 @@ func (h *Handlers) get(c echo.Context) error {
 	return c.Redirect(http.StatusFound, u)
 }
 
+// RegisterDownload keeps /download?s=<code>&id=<n> working for old links,
+// including ones inside saved articles; it redirects like GET /api/v1/files.
+func (h *Handlers) RegisterDownload(e *echo.Echo) {
+	e.GET("/download", h.download)
+}
+
+func (h *Handlers) download(c echo.Context) error {
+	id, err := strconv.Atoi(c.QueryParam("id"))
+	if err != nil || id < 1 {
+		return c.String(http.StatusBadRequest, "id must be a positive integer")
+	}
+	kind, ok := LegacyKind(c.QueryParam("s"))
+	if !ok {
+		return c.String(http.StatusBadRequest, "unknown download source")
+	}
+	u, err := h.svc.URL(c.Request().Context(), kind, id)
+	if err != nil {
+		if se, isSvc := svcerr.As(err); isSvc && se.Kind == svcerr.KindNotFound {
+			return c.String(http.StatusNotFound, se.Message)
+		}
+		return fmt.Errorf("download failed: %w", err)
+	}
+	c.Response().Header().Set("Cache-Control", CacheControl(kind))
+	return c.Redirect(http.StatusFound, u)
+}
+
 // CacheControl returns the Cache-Control for a file redirect of the given
-// kind (shared by the API handler and the legacy /download route). Player
+// kind (shared by the API handler and /download). Player
 // photos must not be cached publicly: if a player moves to a youth team, or
 // an under-18's photo must stop being shown, a year-long public cache would
 // keep serving the old redirect to browsers and CDNs regardless.

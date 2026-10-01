@@ -17,7 +17,6 @@ import (
 
 func newAPI() (*echo.Echo, *echo.Group) { //nolint:unparam // returned group is part of the test fixture's shape, not every test needs it
 	e := apitest.NewEcho()
-	e.RouteNotFound("/*", func(c echo.Context) error { return c.HTML(http.StatusNotFound, "<h1>legacy 404</h1>") })
 	api := web.NewAPI(e, false)
 	api.GET("/thing", func(c echo.Context) error { return c.NoContent(http.StatusOK) })
 	api.POST("/thing", func(c echo.Context) error { return c.NoContent(http.StatusCreated) })

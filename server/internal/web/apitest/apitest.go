@@ -26,9 +26,7 @@ import (
 func NewEcho() *echo.Echo {
 	e := echo.New()
 	e.Pre(middleware.RemoveTrailingSlash())
-	e.HTTPErrorHandler = web.ErrorHandler(func(_ error, c echo.Context) {
-		_ = c.HTML(http.StatusInternalServerError, "legacy error")
-	})
+	e.HTTPErrorHandler = web.ErrorHandler()
 	return e
 }
 

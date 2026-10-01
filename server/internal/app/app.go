@@ -199,7 +199,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 		},
 	}))
 	e.Use(counter.Middleware)
-	e.HTTPErrorHandler = web.ErrorHandler(legacyViews.CustomHTTPErrorHandler)
+	e.HTTPErrorHandler = web.ErrorHandler()
 
 	legacy.Mount(e, legacyViews)
 	web.MountSPA(e, conf.UI, conf.UIProxy)
