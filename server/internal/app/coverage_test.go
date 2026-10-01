@@ -7,7 +7,7 @@ import (
 )
 
 // TestEveryLegacyActionHasAnAPIRoute is the spec's cleanup checklist: every
-// action the template site offers has an /api/v1 equivalent (the two
+// action the classic template site offered has an /api/v1 equivalent (the two
 // form-redirect helpers, programmeselect and whatsonselect, are replaced by
 // query parameters and intentionally have none).
 func TestEveryLegacyActionHasAnAPIRoute(t *testing.T) {
