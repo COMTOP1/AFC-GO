@@ -17,6 +17,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { formatDate } from '../../lib/format';
 import { parseId } from '../../lib/ids';
 import { matchesQuery } from '../../lib/text';
+import { ProgrammePreview } from './ProgrammePreview';
 import { AddProgrammeDialog } from './AddProgrammeDialog';
 import { SeasonsDialog } from './SeasonsDialog';
 
@@ -31,6 +32,45 @@ function groupBySeason(list: Programme[]): [string, Programme[]][] {
   }
   const entries = [...groups.entries()];
   return [...entries.filter(([k]) => k !== NO_SEASON), ...entries.filter(([k]) => k === NO_SEASON)];
+}
+
+function latestOf(list: Programme[]): Programme {
+  return list.reduce((latest, p) => (p.date > latest.date ? p : latest));
+}
+
+/** The newest programme (in the chosen season) with its pages previewed, as on the classic site. */
+function LatestProgramme({ programme: p }: { programme: Programme }) {
+  const headingId = useId();
+  const details = [p.season && `Season ${p.season.name}`, formatDate(p.date)]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <section aria-labelledby={headingId} className="mb-8 rounded-lg border border-line p-4">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2
+            id={headingId}
+            className="font-display text-2xl font-extrabold tracking-wide uppercase"
+          >
+            Latest programme
+          </h2>
+          <p className="font-semibold">{p.name}</p>
+          <p className="text-sm text-muted">{details}</p>
+        </div>
+        <ButtonLink
+          href={p.fileUrl}
+          variant="secondary"
+          size="sm"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`View ${p.name} PDF`}
+        >
+          View PDF
+        </ButtonLink>
+      </div>
+      <ProgrammePreview key={p.fileUrl} url={p.fileUrl} name={p.name} />
+    </section>
+  );
 }
 
 function SeasonGroup({
@@ -149,15 +189,19 @@ export default function ProgrammesPage() {
       <QueryState query={programmes} isEmpty={(l) => l.length === 0} emptyTitle="No programmes yet">
         {(list) => {
           const shown = list.filter((p) => matchesQuery(p.name, q));
-          if (shown.length === 0) {
-            return <EmptyState title={`No programmes match '${q}'`} />;
-          }
           return (
-            <div className="space-y-8">
-              {groupBySeason(shown).map(([name, items]) => (
-                <SeasonGroup key={name} name={name} items={items} canEdit={canEdit} />
-              ))}
-            </div>
+            <>
+              <LatestProgramme programme={latestOf(list)} />
+              {shown.length === 0 ? (
+                <EmptyState title={`No programmes match '${q}'`} />
+              ) : (
+                <div className="space-y-8">
+                  {groupBySeason(shown).map(([name, items]) => (
+                    <SeasonGroup key={name} name={name} items={items} canEdit={canEdit} />
+                  ))}
+                </div>
+              )}
+            </>
           );
         }}
       </QueryState>

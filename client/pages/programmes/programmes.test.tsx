@@ -38,7 +38,12 @@ describe('ProgrammesPage', () => {
   it('groups programmes by season with "No season" last', async () => {
     renderProgrammes();
     const headings = await screen.findAllByRole('heading', { level: 2 });
-    expect(headings.map((h) => h.textContent)).toEqual(['2026-27', '2025-26', 'No season']);
+    expect(headings.map((h) => h.textContent)).toEqual([
+      'Latest programme',
+      '2026-27',
+      '2025-26',
+      'No season',
+    ]);
     const group = screen.getByRole('region', { name: '2026-27' });
     expect(within(group).getByText('vs Downton')).toBeInTheDocument();
     expect(within(group).getByText('5 Sep 2026')).toBeInTheDocument();
@@ -55,7 +60,8 @@ describe('ProgrammesPage', () => {
     await screen.findByRole('option', { name: '2026-27' });
     fireEvent.change(select, { target: { value: '2' } });
     expect(await screen.findByTestId('location')).toHaveTextContent('/programmes?season=2');
-    expect(await screen.findByText('vs Downton')).toBeInTheDocument();
+    const group = await screen.findByRole('region', { name: '2026-27' });
+    expect(within(group).getByText('vs Downton')).toBeInTheDocument();
     expect(screen.queryByText('vs Marlow')).toBeNull();
     expect(fetchMock.mock.calls.some(([u]) => String(u) === '/api/v1/programmes?season=2')).toBe(
       true,
@@ -67,7 +73,8 @@ describe('ProgrammesPage', () => {
   it('searches by name', async () => {
     renderProgrammes('/programmes?q=marlow');
     expect(await screen.findByText('vs Marlow')).toBeInTheDocument();
-    expect(screen.queryByText('vs Downton')).toBeNull();
+    // The latest-programme card ignores search; the list below doesn't.
+    expect(screen.queryByRole('region', { name: '2026-27' })).toBeNull();
   });
 
   it('says when nothing matches, and when there are none', async () => {
@@ -88,8 +95,31 @@ describe('ProgrammesPage', () => {
     expect(fetchMock.mock.calls.some(([u]) => String(u).includes('season=99'))).toBe(false);
   });
 
+  it('previews the latest programme', async () => {
+    renderProgrammes();
+    const latest = await screen.findByRole('region', { name: 'Latest programme' });
+    expect(within(latest).getByText('vs Downton')).toBeInTheDocument();
+    expect(within(latest).getByText('Season 2026-27 · 5 Sep 2026')).toBeInTheDocument();
+    expect(within(latest).getByRole('link', { name: 'View vs Downton PDF' })).toHaveAttribute(
+      'href',
+      '/api/v1/files/programme/16',
+    );
+    expect(
+      within(latest).getByRole('group', { name: 'Preview of vs Downton' }),
+    ).toBeInTheDocument();
+  });
+
+  it('previews the latest programme in the chosen season', async () => {
+    renderProgrammes('/programmes?season=1', {
+      '/api/v1/programmes?season=1': { body: [programmes[1]] },
+    });
+    const latest = await screen.findByRole('region', { name: 'Latest programme' });
+    expect(within(latest).getByText('vs Marlow')).toBeInTheDocument();
+  });
+
   it('shows the empty state when there are no programmes', async () => {
     renderProgrammes('/programmes', { '/api/v1/programmes': { body: [] } });
     expect(await screen.findByText('No programmes yet')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Latest programme' })).toBeNull();
   });
 });

@@ -85,6 +85,22 @@ describe('Modal', () => {
   });
 });
 
+describe('non-dismissible Modal', () => {
+  it('ignores Esc and backdrop clicks', () => {
+    const onClose = vi.fn();
+    render(
+      <Modal open onClose={onClose} title="One-time secret" dismissible={false}>
+        <p>Secret</p>
+      </Modal>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'One-time secret' });
+    fireEvent(dialog, new Event('cancel', { cancelable: true }));
+    fireEvent.click(dialog);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByText('Secret')).toBeInTheDocument();
+  });
+});
+
 describe('nested Modals', () => {
   function Nested({ onOuterClose }: { onOuterClose: () => void }) {
     const [inner, setInner] = useState(true);

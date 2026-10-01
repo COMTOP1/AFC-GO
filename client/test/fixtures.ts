@@ -3,10 +3,12 @@ import type { GalleryImage } from '../api/gallery';
 import type { Affiliation, HomeData } from '../api/home';
 import type { NewsArticle } from '../api/news';
 import type { ContactData, InfoContent } from '../api/pages';
+import type { Player } from '../api/players';
 import type { Programme, Season } from '../api/programmes';
 import type { Sponsor } from '../api/sponsors';
 import type { TeamDetail } from '../api/teams';
 import type { SiteInfo, TeamSummary } from '../api/types';
+import type { AdminUser } from '../api/users';
 import type { WhatsOnEvent } from '../api/whatson';
 import type { MockResponse, MockRoute } from './mockFetch';
 
@@ -15,14 +17,20 @@ export const anonymous: MockResponse = {
   body: { error: { code: 401, message: 'login required' } },
 };
 
-function signedIn(name: string, role: string, canEdit: boolean, canManageGallery: boolean) {
+function signedIn(
+  name: string,
+  role: string,
+  canEdit: boolean,
+  canManageGallery: boolean,
+  canManageUsers = false,
+) {
   return {
     body: {
       id: 1,
       name,
       email: 'someone@example.test',
       role,
-      permissions: { canEdit, canManageGallery, canManageUsers: false },
+      permissions: { canEdit, canManageGallery, canManageUsers },
     },
   };
 }
@@ -30,6 +38,7 @@ function signedIn(name: string, role: string, canEdit: boolean, canManageGallery
 export const editor: MockResponse = signedIn('Ed Editor', 'Treasurer', true, true);
 export const manager: MockResponse = signedIn('Mo Manager', 'Manager', false, false);
 export const photographer: MockResponse = signedIn('Pat Photographer', 'Photographer', false, true);
+export const userAdmin: MockResponse = signedIn('Una Admin', 'Club Secretary', false, true, true);
 
 export const newsArticle: NewsArticle = {
   id: 1,
@@ -174,6 +183,47 @@ export const site: SiteInfo = { year: 2026, visitorCount: 42, version: 'test', t
 export const resetToken = '5f0b6c1e-1a2b-4c3d-8e9f-000000000001';
 export const expiredResetToken = '5f0b6c1e-1a2b-4c3d-8e9f-00000000dead';
 
+export const players: Player[] = [
+  {
+    id: 30,
+    name: 'Sam Striker',
+    position: 'Forward',
+    isCaptain: true,
+    dateOfBirth: '1998-04-02T00:00:00Z',
+    age: 28,
+    team: { id: team.id, name: team.name, isYouth: false },
+    imageUrl: '/api/v1/files/player/30',
+  },
+  {
+    id: 31,
+    name: 'Yan Youth',
+    isCaptain: false,
+    dateOfBirth: '2014-09-05T00:00:00Z',
+    age: 12,
+    team: { id: youthTeam.id, name: youthTeam.name, isYouth: true },
+  },
+];
+
+// id 1 is also the signed-in fixture users' id, so it's "you".
+export const adminUsers: AdminUser[] = [
+  {
+    id: 1,
+    name: 'Una Admin',
+    email: 'una@example.test',
+    role: 'Club Secretary',
+    roleCode: 'club_secretary',
+  },
+  {
+    id: 2,
+    name: 'Mo Manager',
+    email: 'mo@example.test',
+    phone: '07700 900000',
+    role: 'Manager',
+    roleCode: 'manager',
+    teamId: team.id,
+  },
+];
+
 /** Every public endpoint with fixture data; override entries per test. */
 export function publicRoutes(overrides: Record<string, MockRoute> = {}): Record<string, MockRoute> {
   return {
@@ -196,6 +246,8 @@ export function publicRoutes(overrides: Record<string, MockRoute> = {}): Record<
     '/api/v1/sponsors': { body: sponsors },
     '/api/v1/info': { body: info },
     '/api/v1/contact': { body: contact },
+    '/api/v1/players': { body: players },
+    '/api/v1/users': { body: adminUsers },
     [`/api/v1/auth/reset/${resetToken}`]: { status: 204 },
     [`/api/v1/auth/reset/${expiredResetToken}`]: {
       status: 404,

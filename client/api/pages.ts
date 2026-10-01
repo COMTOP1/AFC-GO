@@ -40,3 +40,8 @@ export function useContact() {
 export function setInfo(content: string): Promise<void> {
   return apiFetch<void>('/info', { method: 'PUT', json: { content } });
 }
+
+/** Sets (or, with an empty string, removes) the public contact email. */
+export function setDisplayEmail(email: string): Promise<{ email: string }> {
+  return apiFetch<{ email: string }>('/settings/display-email', { method: 'PUT', json: { email } });
+}

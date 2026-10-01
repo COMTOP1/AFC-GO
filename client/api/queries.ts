@@ -21,6 +21,8 @@ export const queryKeys = {
   sponsors: ['sponsors'] as const,
   info: ['info'] as const,
   contact: ['contact'] as const,
+  players: ['players'] as const,
+  users: ['users'] as const,
 };
 
 export function useSite() {

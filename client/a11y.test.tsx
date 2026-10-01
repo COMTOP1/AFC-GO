@@ -12,6 +12,7 @@ import {
   publicRoutes,
   resetToken,
   team,
+  userAdmin,
 } from './test/fixtures';
 import type { MockResponse } from './test/mockFetch';
 import { mockFetch } from './test/mockFetch';
@@ -43,6 +44,8 @@ const routes = [
   '/info/edit',
   '/teams/new',
   `/team/${team.id}/edit`,
+  '/players',
+  '/users',
 ];
 
 const cases: [string, string, MockResponse][] = routes.flatMap((route) => [
@@ -82,5 +85,26 @@ it('has no axe violations with the Add document dialog open', async () => {
   const { container } = renderWithProviders(<App />, { route: '/documents' });
   fireEvent.click(await screen.findByRole('button', { name: 'Add document' }, { timeout: 3000 }));
   await screen.findByRole('dialog', { name: 'Add document' });
+  expect(await axeViolations(container)).toEqual([]);
+});
+
+it.each(['light', 'dark'] as const)(
+  'has no axe violations on Users for a user admin (%s)',
+  async (theme) => {
+    localStorage.setItem('afc-theme', theme);
+    mockFetch(publicRoutes({ '/api/v1/auth/me': userAdmin }));
+    const { container } = renderWithProviders(<App />, { route: '/users' });
+    await screen.findByText('Una Admin', undefined, { timeout: 3000 });
+    expect(await axeViolations(container)).toEqual([]);
+  },
+);
+
+it('has no axe violations with the Edit user dialog open', async () => {
+  mockFetch(publicRoutes({ '/api/v1/auth/me': userAdmin }));
+  const { container } = renderWithProviders(<App />, { route: '/users' });
+  fireEvent.click(
+    await screen.findByRole('button', { name: 'Edit Mo Manager' }, { timeout: 3000 }),
+  );
+  await screen.findByRole('dialog', { name: 'Edit Mo Manager' });
   expect(await axeViolations(container)).toEqual([]);
 });
