@@ -1,9 +1,9 @@
 package user
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha512"
+	"crypto/subtle"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -89,7 +89,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 		sha := sha512.New()
 		sha.Write([]byte(userParam.Password.String))
 		sum := sha.Sum(nil)
-		if bytes.Equal(sum, []byte(user.Password.String)) {
+		if subtle.ConstantTimeCompare(sum, []byte(user.Password.String)) == 1 {
 			if user.ResetPassword {
 				return user, true, errors.New("password reset required")
 			}
@@ -115,7 +115,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 			return user, false, nil
 		}
 		return userParam, false, errors.New("invalid credentials")
-	} else if bytes.Equal(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen), hashDecode) {
+	} else if subtle.ConstantTimeCompare(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen), hashDecode) == 1 {
 		var hash string
 		hash, err = utils.HashPassScrypt([]byte(userParam.Password.String), saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
 		if err != nil {
@@ -139,7 +139,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 	if err != nil {
 		return userParam, false, fmt.Errorf("failed to generate password hash verify: %w", err)
 	}
-	match := scryptHash == user.Hash.String
+	match := subtle.ConstantTimeCompare([]byte(scryptHash), []byte(user.Hash.String)) == 1
 	if !match && user.Salt.Valid {
 		// Accounts created by the signup flow hash with the salt's hex text
 		// as raw bytes rather than the decoded salt; accept that form too.
@@ -148,7 +148,7 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 		if err != nil {
 			return userParam, false, fmt.Errorf("failed to generate password hash verify: %w", err)
 		}
-		match = rawHash == user.Hash.String
+		match = subtle.ConstantTimeCompare([]byte(rawHash), []byte(user.Hash.String)) == 1
 	}
 	if !match {
 		return userParam, false, errors.New("invalid credentials")
