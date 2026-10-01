@@ -30,36 +30,51 @@ type ErrorResponse struct {
 	Error APIError `json:"error"`
 }
 
-// ErrorHandler renders errors on /api/* as the JSON envelope and hands every
-// other path to the legacy (HTML) handler.
-func ErrorHandler(legacy echo.HTTPErrorHandler) echo.HTTPErrorHandler {
+// ErrorHandler renders errors on /api/* as the JSON envelope, and every other
+// path as a small HTML page (the web client handles its own pages; this covers
+// redirects, /download and anything else the server answers directly).
+func ErrorHandler() echo.HTTPErrorHandler {
 	return func(err error, c echo.Context) {
-		path := c.Request().URL.Path
-		if path != "/api" && !strings.HasPrefix(path, APIPrefix) {
-			legacy(err, c)
-			return
-		}
 		if c.Response().Committed {
 			return
 		}
 		ctx := c.Request().Context()
 		trace.SpanFromContext(ctx).RecordError(err)
 
+		path := c.Request().URL.Path
 		apiErr := toAPIError(err)
 		if apiErr.Code >= http.StatusInternalServerError {
-			slog.ErrorContext(ctx, fmt.Sprintf("api error on %s %s: %+v", c.Request().Method, path, err))
+			slog.ErrorContext(ctx, fmt.Sprintf("error on %s %s: %+v", c.Request().Method, path, err))
 		}
 
 		var writeErr error
-		if c.Request().Method == http.MethodHead {
+		switch {
+		case c.Request().Method == http.MethodHead:
 			writeErr = c.NoContent(apiErr.Code)
-		} else {
+		case path == "/api" || strings.HasPrefix(path, APIPrefix):
 			writeErr = c.JSON(apiErr.Code, ErrorResponse{Error: apiErr})
+		default:
+			writeErr = c.HTML(apiErr.Code, errorPage(apiErr.Code))
 		}
 		if writeErr != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("failed to write api error: %+v", writeErr))
+			slog.ErrorContext(ctx, fmt.Sprintf("failed to write error response: %+v", writeErr))
 		}
 	}
+}
+
+// errorPage is a minimal, dependency-free page for non-API errors. It never
+// includes the error's text.
+func errorPage(code int) string {
+	title := "Something went wrong"
+	if code == http.StatusNotFound {
+		title = "Page not found"
+	}
+	return fmt.Sprintf(`<!doctype html><html lang="en-GB"><head><meta charset="utf-8">`+
+		`<meta name="viewport" content="width=device-width, initial-scale=1">`+
+		`<title>%[1]s · AFC Aldermaston</title></head>`+
+		`<body style="font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem">`+
+		`<h1>%[1]s</h1><p>Error %[2]d.</p><p><a href="/">Go to the home page</a></p></body></html>`,
+		title, code)
 }
 
 func toAPIError(err error) APIError {

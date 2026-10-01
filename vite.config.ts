@@ -10,8 +10,7 @@ const root = fileURLToPath(new URL('.', import.meta.url));
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   root: resolve(root, 'client'),
-  // Served by the Go server under /app until the SPA replaces the legacy site.
-  base: '/app/',
+  base: '/',
   build: {
     outDir: resolve(root, 'build/client'),
     emptyOutDir: true,

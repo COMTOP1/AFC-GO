@@ -1,6 +1,5 @@
-// Package auth owns login state: the encrypted session cookie shared with the
-// legacy views, the route guards, password reset tokens and the login and
-// password endpoints.
+// Package auth owns login state: the encrypted session cookie, the route
+// guards, password reset tokens and the login and password endpoints.
 package auth
 
 import (
@@ -18,8 +17,8 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/user"
 )
 
-// userKey is the session value holding the logged-in user.User. The legacy
-// views read and write the same key, so its name must not change.
+// userKey is the session value holding the logged-in user.User. Cookies issued
+// before the cutover use the same key, so its name must not change.
 const userKey = "user"
 
 func init() {
@@ -110,7 +109,7 @@ func keyWarning(what string, key []byte, size int) string {
 	return ""
 }
 
-// CookieStore exposes the underlying store for the legacy views.
+// CookieStore exposes the underlying store (tests decode the cookie with it).
 func (s *Sessions) CookieStore() *sessions.CookieStore { return s.store }
 
 // Name is the session cookie name.

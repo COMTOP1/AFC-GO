@@ -1,4 +1,4 @@
-// Runs the Go server with /app proxied to the Vite dev server (yarn dev:client).
+// Runs the Go server with the web client proxied to the Vite dev server (yarn dev:client).
 import { spawn } from 'node:child_process';
 
 const env = {

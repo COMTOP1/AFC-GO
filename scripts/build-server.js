@@ -16,7 +16,7 @@ function resetUI() {
 
 if (!existsSync(join(client, 'index.html'))) {
   console.warn(
-    'build/client not found: building the server without the web client (/app will answer 503).',
+    'build/client not found: building the server without the web client (pages will answer 503).',
   );
 }
 

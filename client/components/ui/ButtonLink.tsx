@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { buttonClasses, type ButtonSize, type ButtonVariant } from './buttonStyles';
 
 export interface ButtonLinkProps extends Omit<ComponentProps<'a'>, 'href'> {
-  /** An SPA route (relative to /app). */
+  /** An app route. */
   to?: string;
   /** A full-page URL, e.g. a legacy page. */
   href?: string;

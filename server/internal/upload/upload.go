@@ -89,8 +89,8 @@ func (f *Files) Save(ctx context.Context, file *File, category string) (string, 
 	return key, nil
 }
 
-// Remove deletes an object. Failures are logged, not returned: as in the
-// legacy views, a failed S3 delete never blocks the database change.
+// Remove deletes an object. Failures are logged, not returned: as on the
+// classic site, a failed S3 delete never blocks the database change.
 func (f *Files) Remove(ctx context.Context, key string) {
 	if key == "" {
 		return

@@ -19,7 +19,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
 
-const indexHTML = `<!doctype html><html><body><div id="root"></div><script type="module" src="/app/assets/index-abc123.js"></script></body></html>`
+const indexHTML = `<!doctype html><html><body><div id="root"></div><script type="module" src="/assets/index-abc123.js"></script></body></html>`
 
 func builtFS() fstest.MapFS {
 	return fstest.MapFS{
@@ -27,6 +27,7 @@ func builtFS() fstest.MapFS {
 		"assets/index-abc123.js": {Data: []byte("console.log('app')")},
 		"assets/style-9f8e.css":  {Data: []byte("body{}")},
 		"favicon.svg":            {Data: []byte("<svg/>")},
+		"robots.txt":             {Data: []byte("User-agent: *")},
 		".keep":                  {Data: nil},
 	}
 }
@@ -34,7 +35,6 @@ func builtFS() fstest.MapFS {
 func spaEcho(files fs.FS, proxy *url.URL) *echo.Echo {
 	e := echo.New()
 	e.Pre(middleware.RemoveTrailingSlash())
-	e.RouteNotFound("/*", func(c echo.Context) error { return c.HTML(http.StatusNotFound, "legacy 404") })
 	web.MountSPA(e, files, proxy)
 	return e
 }
@@ -46,44 +46,57 @@ func get(e *echo.Echo, method, path string) *httptest.ResponseRecorder {
 	return rec
 }
 
-func TestSPAIndexFallback(t *testing.T) {
+func TestSPAKnownRoutesGetTheAppWith200(t *testing.T) {
 	e := spaEcho(builtFS(), nil)
-	for _, path := range []string{"/app", "/app/", "/app/news", "/app/news/5", "/app/teams/2/players"} {
+	for _, path := range []string{"/", "/news", "/news/5", "/news/5/edit", "/team/3", "/teams/new", "/reset/abc-123", "/whatson?period=past", "/users"} {
 		rec := get(e, http.MethodGet, path)
 		assert.Equal(t, http.StatusOK, rec.Code, path)
 		assert.Equal(t, indexHTML, rec.Body.String(), path)
 		assert.Contains(t, rec.Header().Get(echo.HeaderContentType), "text/html", path)
+		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"), path)
 	}
 }
 
-func TestSPAAssets(t *testing.T) {
+func TestSPAUnknownRoutesGetTheAppWith404(t *testing.T) {
+	e := spaEcho(builtFS(), nil)
+	for _, path := range []string{"/nonsense", "/news/5/oops", "/team//edit", "/teams/new/x", "/applications"} {
+		rec := get(e, http.MethodGet, path)
+		assert.Equal(t, http.StatusNotFound, rec.Code, path)
+		assert.Equal(t, indexHTML, rec.Body.String(), "the app renders its own not-found page: %s", path)
+		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"), path)
+	}
+}
+
+func TestSPAAssetsAndRootFiles(t *testing.T) {
 	e := spaEcho(builtFS(), nil)
 
-	rec := get(e, http.MethodGet, "/app/assets/index-abc123.js")
+	rec := get(e, http.MethodGet, "/assets/index-abc123.js")
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, "console.log('app')", rec.Body.String())
 	assert.Contains(t, rec.Header().Get(echo.HeaderContentType), "javascript")
+	assert.Equal(t, "public, max-age=31536000, immutable", rec.Header().Get("Cache-Control"))
 
-	rec = get(e, http.MethodGet, "/app/assets/style-9f8e.css")
-	assert.Contains(t, rec.Header().Get(echo.HeaderContentType), "text/css")
+	assert.Contains(t, get(e, http.MethodGet, "/assets/style-9f8e.css").Header().Get(echo.HeaderContentType), "text/css")
 
-	for _, missing := range []string{"/app/assets/index-old999.js", "/app/assets", "/app/favicon.png"} {
+	rec = get(e, http.MethodGet, "/robots.txt")
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "User-agent: *", rec.Body.String())
+	assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
+
+	for _, missing := range []string{"/assets/index-old999.js", "/assets", "/favicon.png"} {
 		rec = get(e, http.MethodGet, missing)
 		assert.Equal(t, http.StatusNotFound, rec.Code, missing)
 		assert.NotContains(t, rec.Body.String(), `<div id="root">`, "must never fall back to index: %s", missing)
 	}
-
-	rec = get(e, http.MethodGet, "/app/favicon.svg")
-	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Equal(t, "<svg/>", rec.Body.String())
 }
 
-func TestSPACacheHeaders(t *testing.T) {
+func TestSPALeavesTheAPIAlone(t *testing.T) {
 	e := spaEcho(builtFS(), nil)
-	assert.Equal(t, "no-cache", get(e, http.MethodGet, "/app/news/5").Header().Get("Cache-Control"))
-	assert.Equal(t, "public, max-age=31536000, immutable",
-		get(e, http.MethodGet, "/app/assets/index-abc123.js").Header().Get("Cache-Control"))
-	assert.Equal(t, "no-cache", get(e, http.MethodGet, "/app/favicon.svg").Header().Get("Cache-Control"))
+	for _, path := range []string{"/api", "/api/v1/nope"} {
+		rec := get(e, http.MethodGet, path)
+		assert.Equal(t, http.StatusNotFound, rec.Code, path)
+		assert.NotContains(t, rec.Body.String(), `<div id="root">`, path)
+	}
 }
 
 func TestSPANotBuilt(t *testing.T) {
@@ -93,7 +106,7 @@ func TestSPANotBuilt(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			e := spaEcho(files, nil)
-			for _, path := range []string{"/app", "/app/news/5", "/app/assets/index-abc123.js"} {
+			for _, path := range []string{"/", "/news/5", "/assets/index-abc123.js"} {
 				rec := get(e, http.MethodGet, path)
 				assert.Equal(t, http.StatusServiceUnavailable, rec.Code, path)
 				assert.Contains(t, rec.Body.String(), "The web client has not been built", path)
@@ -105,15 +118,15 @@ func TestSPANotBuilt(t *testing.T) {
 
 func TestSPAMethods(t *testing.T) {
 	e := spaEcho(builtFS(), nil)
-	assert.Equal(t, http.StatusMethodNotAllowed, get(e, http.MethodPost, "/app/news").Code)
-	assert.Equal(t, http.StatusMethodNotAllowed, get(e, http.MethodDelete, "/app").Code)
-	head := get(e, http.MethodHead, "/app/news")
-	assert.Equal(t, http.StatusOK, head.Code)
+	assert.Equal(t, http.StatusMethodNotAllowed, get(e, http.MethodPost, "/news").Code)
+	assert.Equal(t, http.StatusMethodNotAllowed, get(e, http.MethodDelete, "/").Code)
+	assert.Equal(t, http.StatusOK, get(e, http.MethodHead, "/news").Code)
+	assert.Equal(t, http.StatusNotFound, get(e, http.MethodHead, "/nonsense").Code)
 }
 
 func TestSPARejectsTraversal(t *testing.T) {
 	e := spaEcho(builtFS(), nil)
-	for _, path := range []string{"/app/../go.mod", "/app/assets/../../go.mod", "/app/%2e%2e/go.mod", "/app/assets/%2e%2e/index.html"} {
+	for _, path := range []string{"/../go.mod", "/assets/../../go.mod", "/%2e%2e/go.mod", "/assets/%2e%2e/index.html"} {
 		rec := get(e, http.MethodGet, path)
 		assert.NotContains(t, rec.Body.String(), "module github.com", path)
 		assert.NotEqual(t, "console.log('app')", rec.Body.String(), path)
@@ -122,10 +135,18 @@ func TestSPARejectsTraversal(t *testing.T) {
 
 func TestSPADoesNotShadowOtherRoutes(t *testing.T) {
 	e := spaEcho(builtFS(), nil)
-	e.GET("/news", func(c echo.Context) error { return c.String(http.StatusOK, "legacy news") })
-	assert.Equal(t, "legacy news", get(e, http.MethodGet, "/news").Body.String())
-	assert.Equal(t, "legacy 404", get(e, http.MethodGet, "/application").Body.String())
-	assert.Equal(t, "legacy 404", get(e, http.MethodGet, "/apps/x").Body.String())
+	e.GET("/download", func(c echo.Context) error { return c.String(http.StatusOK, "download") })
+	assert.Equal(t, "download", get(e, http.MethodGet, "/download").Body.String())
+}
+
+func TestIsAppRoute(t *testing.T) {
+	for path, want := range map[string]bool{
+		"/": true, "/news": true, "/news/5": true, "/news/new": true, "/news/5/edit": true,
+		"/reset/abc": true, "/design": true,
+		"/news/5/oops": false, "/team//edit": false, "/nope": false, "": false, "/teams/5": false,
+	} {
+		assert.Equal(t, want, web.IsAppRoute(path), path)
+	}
 }
 
 func TestSPAProxy(t *testing.T) {
@@ -141,21 +162,25 @@ func TestSPAProxy(t *testing.T) {
 	require.NoError(t, err)
 
 	e := spaEcho(builtFS(), target)
-	rec := get(e, http.MethodGet, "/app/src/main.tsx")
+	rec := get(e, http.MethodGet, "/main.tsx")
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, "from vite", rec.Body.String())
-	assert.Equal(t, "/app/src/main.tsx", gotPath)
+	assert.Equal(t, "/main.tsx", gotPath)
 	assert.Equal(t, target.Host, gotHost, "Host must match Vite so its host check passes")
 
-	req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/app/@vite/ping", strings.NewReader("payload"))
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/@vite/ping", strings.NewReader("payload"))
 	rec = httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 	assert.Equal(t, http.MethodPost, gotMethod, "proxy mode forwards every method")
 	assert.Equal(t, "payload", gotBody)
 
-	// RemoveTrailingSlash turns /app/ into /app, but Vite (base '/app/') only
-	// serves /app/ and its HMR websocket lives at /app/?token=…
-	rec = get(e, http.MethodGet, "/app/?token=abc")
-	assert.Equal(t, "/app/", gotPath)
+	// Vite's HMR websocket lives at /?token=…
+	rec = get(e, http.MethodGet, "/?token=abc")
+	assert.Equal(t, "/", gotPath)
 	assert.Equal(t, "from vite", rec.Body.String())
+
+	gotPath = ""
+	rec = get(e, http.MethodGet, "/api/v1/nope")
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Empty(t, gotPath, "API paths are never proxied to Vite")
 }

@@ -16,8 +16,8 @@ import (
 
 // TestAnonymousTeamDetailHidesYouthSquad pins Review Focus #1, CRITICAL child
 // safety: GET /api/v1/teams/{id} must not list a youth team's players (names
-// or positions) to an anonymous caller, matching the legacy team page's
-// `{{if and (not .Team.IsYouth) ...}}` gate. Seed data: team 1 "First Team"
+// or positions) to an anonymous caller, matching the classic team page's
+// rule. Seed data: team 1 "First Team"
 // is a senior team, team 2 "Under 12s" is youth.
 func TestAnonymousTeamDetailHidesYouthSquad(t *testing.T) {
 	db, _ := testdb.Open(t)

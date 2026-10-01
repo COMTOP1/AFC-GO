@@ -10,7 +10,7 @@ import (
 const swaggerIndex = "/api/v1/swagger/index.html"
 
 // NewAPI mounts /api and returns the /api/v1 group, protected by CSRF.
-// Unknown /api paths are JSON 404s rather than the legacy HTML page.
+// Unknown /api paths are JSON 404s rather than the web client's not-found page.
 func NewAPI(e *echo.Echo, secureCookies bool) *echo.Group {
 	api := e.Group("/api")
 	api.GET("", swaggerRedirect)

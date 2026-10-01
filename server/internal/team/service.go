@@ -33,7 +33,7 @@ type Detacher interface {
 	DetachTeam(ctx context.Context, teamID int) error
 }
 
-// Service is the team business logic shared by the API and legacy views.
+// Service is the team business logic.
 type Service struct {
 	store     store
 	files     *upload.Files

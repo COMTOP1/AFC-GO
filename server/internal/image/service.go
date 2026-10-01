@@ -20,7 +20,7 @@ type store interface {
 	DeleteImage(ctx context.Context, imageParam Image) error
 }
 
-// Service is the gallery business logic shared by the API and legacy views.
+// Service is the gallery business logic.
 type Service struct {
 	store store
 	files *upload.Files

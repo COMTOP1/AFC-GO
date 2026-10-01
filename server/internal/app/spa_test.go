@@ -25,25 +25,35 @@ func serve(a *app.App, path string) *httptest.ResponseRecorder {
 
 func TestAppSPANotBuiltByDefault(t *testing.T) {
 	a := bareApp(t)
-	rec := serve(a, "/app")
+	rec := serve(a, "/")
 	assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
 	assert.Contains(t, rec.Body.String(), "The web client has not been built")
 }
 
-func TestAppServesSPAFallback(t *testing.T) {
+func TestAppServesTheClientAtTheRoot(t *testing.T) {
 	conf := testConfig()
 	conf.UI = fstest.MapFS{"index.html": {Data: []byte(`<div id="root"></div>`)}}
 	a := app.Build(conf, app.Stores{}, uploadtest.New(), mail.NewMailer(mail.Config{}))
 	t.Cleanup(a.Stop)
 
-	for _, path := range []string{"/app", "/app/news/5"} {
+	for _, path := range []string{"/", "/news", "/news/5", "/players", "/reset/abc"} {
 		rec := serve(a, path)
 		assert.Equal(t, http.StatusOK, rec.Code, path)
 		assert.Contains(t, rec.Body.String(), `<div id="root">`, path)
 	}
-	// The API and legacy 404 handling are untouched.
+	rec := serve(a, "/nonsense")
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Contains(t, rec.Body.String(), `<div id="root">`)
+
+	// Old URLs redirect; the API keeps its JSON 404; /download is the server's.
+	assert.Equal(t, "/news/5", serve(a, "/app/news/5").Header().Get("Location"))
+	assert.Equal(t, "/programmes?season=2", serve(a, "/programmes/2").Header().Get("Location"))
 	assert.Equal(t, http.StatusOK, serve(a, "/api/v1/health").Code)
-	assert.Equal(t, http.StatusNotFound, serve(a, "/api/v1/nope").Code)
+	api404 := serve(a, "/api/v1/nope")
+	assert.Equal(t, http.StatusNotFound, api404.Code)
+	assert.Contains(t, api404.Header().Get("Content-Type"), "application/json")
+	assert.Equal(t, http.StatusBadRequest, serve(a, "/download?s=zz&id=1").Code)
+	assert.Equal(t, http.StatusNotFound, serve(a, "/public/stylesheet.css").Code, "classic static files are gone")
 }
 
 func TestAppServesBuiltClient(t *testing.T) {
@@ -56,11 +66,13 @@ func TestAppServesBuiltClient(t *testing.T) {
 	a := app.Build(conf, app.Stores{}, uploadtest.New(), mail.NewMailer(mail.Config{}))
 	t.Cleanup(a.Stop)
 
-	rec := serve(a, "/app/news/5")
+	rec := serve(a, "/news/5")
 	require.Equal(t, http.StatusOK, rec.Code)
-	m := regexp.MustCompile(`/app/assets/[^"]+\.js`).FindString(rec.Body.String())
-	require.NotEmpty(t, m, "index.html should reference a hashed script under /app/assets")
+	m := regexp.MustCompile(`/assets/[^"]+\.js`).FindString(rec.Body.String())
+	require.NotEmpty(t, m, "index.html should reference a hashed script under /assets")
 	asset := serve(a, m)
 	assert.Equal(t, http.StatusOK, asset.Code)
 	assert.Equal(t, "public, max-age=31536000, immutable", asset.Header().Get("Cache-Control"))
+	assert.Equal(t, http.StatusOK, serve(a, "/favicon.ico").Code)
+	assert.Equal(t, http.StatusOK, serve(a, "/AFC.png").Code)
 }

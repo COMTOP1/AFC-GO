@@ -66,8 +66,8 @@ func Signup(to, name, password, domain string) (mail.Mail, error) {
 	}, nil
 }
 
-// Reset is the password reset email.
-func Reset(to, resetURL string) (mail.Mail, error) {
+// Reset is the password reset email; domain serves the logo.
+func Reset(to, resetURL, domain string) (mail.Mail, error) {
 	tpl, err := parse("resetEmail.tmpl")
 	if err != nil {
 		return mail.Mail{}, err
@@ -78,7 +78,7 @@ func Reset(to, resetURL string) (mail.Mail, error) {
 		To:      to,
 		From:    "AFC Security <no-reply.afc@bswdi.co.uk>",
 		TplData: struct {
-			Email, URL string
-		}{Email: to, URL: resetURL},
+			Email, URL, Domain string
+		}{Email: to, URL: resetURL, Domain: domain},
 	}, nil
 }

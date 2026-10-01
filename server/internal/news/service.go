@@ -25,7 +25,7 @@ type store interface {
 	DeleteNews(ctx context.Context, newsParam News) error
 }
 
-// Service is the news business logic shared by the API and legacy views.
+// Service is the news business logic.
 type Service struct {
 	store store
 	files *upload.Files

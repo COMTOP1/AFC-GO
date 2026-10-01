@@ -3,7 +3,7 @@
     <mj-body background-color="#ffffff" width="850px">
         <mj-section background-color="#ffffff" padding-bottom="0px" padding-top="0px">
             <mj-column vertical-align="top" width="100%">
-                <mj-image src="https://github.com/COMTOP1/AFC-GO/blob/main/public/AFC.png?raw=true" alt="" align="center" border="none" width="400px" padding="15px 0 15px 0"></mj-image>
+                <mj-image src="https://{{.Domain}}/AFC.png" alt="" align="center" border="none" width="400px" padding="15px 0 15px 0"></mj-image>
             </mj-column>
         </mj-section>
         <mj-section padding-bottom="0px" padding-top="0">

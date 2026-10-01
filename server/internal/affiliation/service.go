@@ -22,7 +22,7 @@ type store interface {
 	DeleteAffiliation(ctx context.Context, affiliationParam Affiliation) error
 }
 
-// Service is the affiliation business logic shared by the API and legacy views.
+// Service is the affiliation business logic.
 type Service struct {
 	store store
 	files *upload.Files

@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 type State = 'loading' | 'ready' | 'error';
 
 /**
- * Every page of a programme PDF drawn in a scrolling box, like the classic
- * site. pdf.js is only downloaded when a preview is shown. Give it a key of
+ * Every page of a programme PDF drawn in a scrolling box, like the old site's
+ * programme page. pdf.js is only downloaded when a preview is shown. Give it a key of
  * the url so a different programme starts fresh.
  */
 export function ProgrammePreview({ url, name }: { url: string; name: string }) {

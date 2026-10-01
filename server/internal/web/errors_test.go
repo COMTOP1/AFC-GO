@@ -1,8 +1,10 @@
 package web_test
 
 import (
+	"context"
 	"errors"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/labstack/echo/v4"
@@ -45,11 +47,26 @@ func TestErrorMapping(t *testing.T) {
 	}
 }
 
-func TestNonAPIErrorsGoToLegacyHandler(t *testing.T) {
+func TestNonAPIErrorsGetAnHTMLPage(t *testing.T) {
 	e := apitest.NewEcho()
 	web.NewAPI(e, false)
-	e.GET("/news", func(echo.Context) error { return errors.New("boom") })
+	e.Match([]string{http.MethodGet, http.MethodHead}, "/boom", func(echo.Context) error { return errors.New("boom") })
+	e.GET("/gone", func(echo.Context) error { return echo.ErrNotFound })
 
-	rec := apitest.New(e).Get(t, "/news")
-	assert.Equal(t, "legacy error", rec.Body.String())
+	rec := apitest.New(e).Get(t, "/boom")
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	assert.Contains(t, rec.Header().Get(echo.HeaderContentType), "text/html")
+	assert.Contains(t, rec.Body.String(), "Something went wrong")
+	assert.Contains(t, rec.Body.String(), `href="/"`)
+	assert.NotContains(t, rec.Body.String(), "boom", "internal error text is never shown")
+
+	rec = apitest.New(e).Get(t, "/gone")
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Contains(t, rec.Body.String(), "Page not found")
+
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodHead, "/boom", nil)
+	head := httptest.NewRecorder()
+	e.ServeHTTP(head, req)
+	assert.Equal(t, http.StatusInternalServerError, head.Code)
+	assert.Empty(t, head.Body.String())
 }

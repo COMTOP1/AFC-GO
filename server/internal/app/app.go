@@ -1,5 +1,5 @@
-// Package app wires the stores, services, legacy views and API handlers into
-// one Echo server.
+// Package app wires the stores, services and API handlers into one Echo
+// server, and serves the web client.
 package app
 
 import (
@@ -25,8 +25,6 @@ import (
 	infradb "github.com/COMTOP1/AFC-GO/server/internal/infrastructure/db"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/storage"
-	"github.com/COMTOP1/AFC-GO/server/internal/legacy"
-	"github.com/COMTOP1/AFC-GO/server/internal/legacy/views"
 	"github.com/COMTOP1/AFC-GO/server/internal/news"
 	"github.com/COMTOP1/AFC-GO/server/internal/player"
 	"github.com/COMTOP1/AFC-GO/server/internal/programme"
@@ -55,7 +53,7 @@ type Config struct {
 	Redis        auth.RedisConfig
 	// UI is the built React client (index.html + assets/); nil means not built.
 	UI fs.FS
-	// UIProxy, when set, proxies /app to the Vite dev server instead of UI.
+	// UIProxy, when set, proxies every non-API page to the Vite dev server instead of UI.
 	UIProxy *url.URL
 }
 
@@ -146,43 +144,6 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 		Files: uploads, Version: conf.Version,
 	})
 
-	legacyViews := views.New(views.Deps{
-		Conf: &views.Config{
-			DomainName:        conf.DomainName,
-			SessionCookieName: sessions.Name(),
-			Security:          conf.Passwords,
-		},
-		Sessions:           sessions.CookieStore(),
-		Storage:            objects,
-		Visitors:           counter,
-		Tokens:             tokens,
-		AccountService:     accountSvc,
-		AuthService:        authSvc,
-		Affiliation:        s.Affiliation,
-		AffiliationService: affiliationSvc,
-		Document:           s.Document,
-		DocumentService:    documentSvc,
-		FileService:        fileSvc,
-		GalleryService:     gallerySvc,
-		Image:              s.Image,
-		News:               s.News,
-		NewsService:        newsSvc,
-		Player:             s.Player,
-		PlayerService:      playerSvc,
-		Programme:          s.Programme,
-		ProgrammeService:   programmeSvc,
-		Setting:            s.Setting,
-		SettingService:     settingSvc,
-		Sponsor:            s.Sponsor,
-		SponsorService:     sponsorSvc,
-		Team:               s.Team,
-		TeamService:        teamSvc,
-		User:               s.User,
-		UserService:        userSvc,
-		WhatsOn:            s.WhatsOn,
-		WhatsOnService:     whatsOnSvc,
-	})
-
 	e := echo.New()
 	e.HideBanner = true
 	e.Pre(middleware.RemoveTrailingSlash())
@@ -199,9 +160,10 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 		},
 	}))
 	e.Use(counter.Middleware)
-	e.HTTPErrorHandler = web.ErrorHandler(legacyViews.CustomHTTPErrorHandler)
+	e.HTTPErrorHandler = web.ErrorHandler()
 
-	legacy.Mount(e, legacyViews)
+	web.MountRedirects(e)
+	files.NewHandlers(fileSvc).RegisterDownload(e)
 	web.MountSPA(e, conf.UI, conf.UIProxy)
 
 	api := web.NewAPI(e, conf.Session.Secure)
