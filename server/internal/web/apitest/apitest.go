@@ -21,8 +21,8 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
 
-// NewEcho returns an Echo set up like production for API routes. Non-API
-// errors write "legacy error" so tests can tell the two paths apart.
+// NewEcho returns an Echo set up like production: API errors are JSON and
+// other errors get the HTML error page.
 func NewEcho() *echo.Echo {
 	e := echo.New()
 	e.Pre(middleware.RemoveTrailingSlash())

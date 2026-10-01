@@ -30,7 +30,7 @@ type TeamGetter interface {
 	GetTeam(ctx context.Context, teamParam team.Team) (team.Team, error)
 }
 
-// Service is the sponsor business logic shared by the API and legacy views.
+// Service is the sponsor business logic.
 type Service struct {
 	store store
 	teams TeamGetter

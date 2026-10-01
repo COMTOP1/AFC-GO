@@ -26,10 +26,13 @@ func MountRedirects(e *echo.Echo) {
 }
 
 // fromApp strips the old /app prefix. Leading slashes and backslashes are
-// collapsed so the target can never be a protocol-relative URL (//host).
+// collapsed, and the rest is re-escaped (so a decoded tab, newline or "?"
+// can't reach the Location header), so the target can never become a
+// protocol-relative URL (//host) once a browser reads it.
 func fromApp(c echo.Context) error {
 	rest := strings.TrimPrefix(c.Request().URL.Path, "/app")
 	rest = "/" + strings.TrimLeft(rest, `/\`)
+	rest = (&url.URL{Path: rest}).EscapedPath()
 	return redirect(c, http.StatusMovedPermanently, rest, nil)
 }
 

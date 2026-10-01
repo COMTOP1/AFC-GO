@@ -32,7 +32,7 @@ type TeamGetter interface {
 	GetTeams(ctx context.Context) ([]team.Team, error)
 }
 
-// Service is the player business logic shared by the API and legacy views.
+// Service is the player business logic.
 type Service struct {
 	store store
 	teams TeamGetter

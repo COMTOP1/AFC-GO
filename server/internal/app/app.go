@@ -53,7 +53,7 @@ type Config struct {
 	Redis        auth.RedisConfig
 	// UI is the built React client (index.html + assets/); nil means not built.
 	UI fs.FS
-	// UIProxy, when set, proxies /app to the Vite dev server instead of UI.
+	// UIProxy, when set, proxies every non-API page to the Vite dev server instead of UI.
 	UIProxy *url.URL
 }
 

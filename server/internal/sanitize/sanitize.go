@@ -3,7 +3,8 @@ package sanitize
 
 import "github.com/microcosm-cc/bluemonday"
 
-// policy is the legacy editor policy (views/news.go, whatson.go, info.go).
+// policy matches the classic site's editor policy, so stored content renders
+// the same.
 // A bluemonday policy is safe for concurrent use once built.
 var policy = func() *bluemonday.Policy {
 	p := bluemonday.NewPolicy()

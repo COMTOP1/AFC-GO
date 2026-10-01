@@ -1,5 +1,5 @@
 // Package svcerr defines the typed errors services return, so the JSON API
-// and the legacy template views can map them to responses consistently.
+// can map them to responses consistently.
 package svcerr
 
 import (

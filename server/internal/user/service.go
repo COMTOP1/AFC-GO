@@ -52,7 +52,7 @@ type HashParams struct {
 	KeyLength   int
 }
 
-// Service is user administration, shared by the API and legacy views.
+// Service is user administration.
 type Service struct {
 	store  store
 	teams  TeamGetter

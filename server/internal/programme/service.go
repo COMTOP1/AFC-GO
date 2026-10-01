@@ -25,7 +25,7 @@ type store interface {
 	DeleteSeason(ctx context.Context, seasonParam Season) error
 }
 
-// Service is the programme and season logic shared by the API and legacy views.
+// Service is the programme and season logic.
 type Service struct {
 	store store
 	files *upload.Files

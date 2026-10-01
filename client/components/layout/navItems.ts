@@ -2,7 +2,7 @@ export interface NavItem {
   label: string;
   /** The legacy page; used until the page is ported. */
   legacyHref: string;
-  /** The SPA route (relative to /app); every public page is ported (4a). */
+  /** The app route. */
   to?: string;
 }
 

@@ -18,7 +18,7 @@ type store interface {
 	DeleteDocument(ctx context.Context, documentParam Document) error
 }
 
-// Service is the document business logic shared by the API and legacy views.
+// Service is the document business logic.
 type Service struct {
 	store store
 	files *upload.Files
