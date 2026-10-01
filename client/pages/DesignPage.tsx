@@ -100,7 +100,7 @@ export default function DesignPage() {
       <Section title="Cards">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
-            <CardMedia src="/app/favicon.png" alt="Club crest" />
+            <CardMedia src="/favicon.png" alt="Club crest" />
             <CardBody>
               <Badge tone="red">News</Badge>
               <p className="mt-2 font-display text-xl font-extrabold uppercase">With an image</p>
@@ -115,7 +115,7 @@ export default function DesignPage() {
             </CardBody>
           </Card>
           <Card>
-            <CardMedia src="/app/does-not-exist.png" alt="" />
+            <CardMedia src="/does-not-exist.png" alt="" />
             <CardBody>
               <Badge tone="blue">What&apos;s on</Badge>
               <p className="mt-2 font-display text-xl font-extrabold uppercase">Broken image</p>

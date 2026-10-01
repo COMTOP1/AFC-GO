@@ -38,7 +38,7 @@ function latestOf(list: Programme[]): Programme {
   return list.reduce((latest, p) => (p.date > latest.date ? p : latest));
 }
 
-/** The newest programme (in the chosen season) with its pages previewed, as on the classic site. */
+/** The newest programme (in the chosen season) with its pages previewed, like the old site's programme page. */
 function LatestProgramme({ programme: p }: { programme: Programme }) {
   const headingId = useId();
   const details = [p.season && `Season ${p.season.name}`, formatDate(p.date)]
