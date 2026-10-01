@@ -303,7 +303,7 @@ func (s *Service) ResetPassword(ctx context.Context, id int) (ResetResult, error
 	}
 	link := fmt.Sprintf("https://%s/reset/%s", s.domain, token)
 
-	msg, err := emails.Reset(u.Email, link)
+	msg, err := emails.Reset(u.Email, link, s.domain)
 	if err == nil {
 		err = s.mailer.Send(ctx, msg)
 	}
