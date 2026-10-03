@@ -10,7 +10,29 @@ import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
 import { SignInProvider } from './components/layout/SignInProvider';
 import { ToastProvider } from './components/ui/toast/ToastProvider';
+import { reportEvent } from './lib/telemetry';
 import { ThemeProvider } from './theme/ThemeProvider';
+
+// Errors outside the React tree (async code, event handlers) never reach
+// RouteErrorBoundary, so they're reported here instead.
+window.addEventListener('error', (e) => {
+  reportEvent({
+    type: 'error',
+    name: 'window.onerror',
+    startTime: Date.now(),
+    message: e.error instanceof Error ? e.error.message : e.message,
+    stack: e.error instanceof Error ? e.error.stack : undefined,
+  });
+});
+window.addEventListener('unhandledrejection', (e) => {
+  reportEvent({
+    type: 'error',
+    name: 'unhandledrejection',
+    startTime: Date.now(),
+    message: e.reason instanceof Error ? e.reason.message : String(e.reason),
+    stack: e.reason instanceof Error ? e.reason.stack : undefined,
+  });
+});
 
 const root = document.getElementById('root');
 if (!root) {
