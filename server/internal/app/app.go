@@ -17,6 +17,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/account"
 	"github.com/COMTOP1/AFC-GO/server/internal/affiliation"
 	"github.com/COMTOP1/AFC-GO/server/internal/auth"
+	"github.com/COMTOP1/AFC-GO/server/internal/clienttelemetry"
 	_ "github.com/COMTOP1/AFC-GO/server/internal/docs" // registers the swagger spec
 	"github.com/COMTOP1/AFC-GO/server/internal/document"
 	"github.com/COMTOP1/AFC-GO/server/internal/emails"
@@ -167,6 +168,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	web.MountSPA(e, conf.UI, conf.UIProxy)
 
 	api := web.NewAPI(e, conf.Session.Secure)
+	clienttelemetry.NewHandlers().Register(api)
 	guards := sessions.Guards()
 	auth.NewHandlers(sessions, authSvc, uploads).Register(api, guards)
 	account.NewHandlers(accountSvc, uploads).Register(api, guards)
