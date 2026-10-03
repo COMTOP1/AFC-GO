@@ -8,6 +8,24 @@ export interface ImageWithFallbackProps extends Omit<ComponentProps<'img'>, 'src
   fallback?: ReactNode;
 }
 
+function safeImageSrc(value?: string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  if (value.startsWith('/')) {
+    return value;
+  }
+  try {
+    const parsed = new URL(value, window.location.origin);
+    if (parsed.protocol === 'blob:' || parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return value;
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
 /** An <img> that never shows the browser's broken-image state. */
 export function ImageWithFallback({
   src,
@@ -17,8 +35,11 @@ export function ImageWithFallback({
   ...props
 }: ImageWithFallbackProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  if (!src || failedSrc === src) {
-    return fallbackSrc ? <img src={fallbackSrc} alt={alt} {...props} /> : <>{fallback}</>;
+  const safeSrc = safeImageSrc(src);
+  const safeFallbackSrc = safeImageSrc(fallbackSrc);
+
+  if (!safeSrc || failedSrc === safeSrc) {
+    return safeFallbackSrc ? <img src={safeFallbackSrc} alt={alt} {...props} /> : <>{fallback}</>;
   }
-  return <img src={src} alt={alt} onError={() => setFailedSrc(src)} {...props} />;
+  return <img src={safeSrc} alt={alt} onError={() => setFailedSrc(safeSrc)} {...props} />;
 }
