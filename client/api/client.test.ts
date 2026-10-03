@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { mockFetch } from '../test/mockFetch';
 import { ApiError, apiFetch } from './client';
@@ -92,6 +92,60 @@ describe('apiFetch', () => {
     );
     const err = await apiFetch('/site').catch((e: unknown) => e);
     expect(err).toBeInstanceOf(DOMException);
+  });
+});
+
+describe('apiFetch telemetry', () => {
+  function stubSendBeacon() {
+    const fn = vi.fn<Navigator['sendBeacon']>(() => true);
+    Object.defineProperty(navigator, 'sendBeacon', { value: fn, configurable: true });
+    return fn;
+  }
+
+  afterEach(() => {
+    Reflect.deleteProperty(navigator, 'sendBeacon');
+  });
+
+  it('sets a traceparent header on every request', async () => {
+    const fetchMock = mockFetch({ '/api/v1/site': { body: { year: 2026 } } });
+    await apiFetch('/site');
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect((init.headers as Record<string, string>).traceparent).toMatch(
+      /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/,
+    );
+  });
+
+  it('reports a successful call via sendBeacon', async () => {
+    const beacon = stubSendBeacon();
+    mockFetch({ '/api/v1/site': { body: { year: 2026 } } });
+    await apiFetch('/site');
+
+    expect(beacon).toHaveBeenCalledTimes(1);
+    const [url, blob] = beacon.mock.calls[0] as [string, Blob];
+    expect(url).toBe('/api/v1/telemetry');
+    const body = JSON.parse(await blob.text());
+    expect(body).toMatchObject({ type: 'api', name: 'GET /site' });
+    expect(body.attributes).toMatchObject({ 'http.status_code': '200' });
+    expect(body.traceparent).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/);
+    expect(typeof body.startTime).toBe('number');
+    expect(typeof body.endTime).toBe('number');
+  });
+
+  it('reports a failed call with the error message', async () => {
+    const beacon = stubSendBeacon();
+    mockFetch({
+      '/api/v1/news': {
+        status: 422,
+        body: { error: { code: 422, message: 'validation failed', fields: {} } },
+      },
+    });
+    await apiFetch('/news', { json: {} }).catch(() => {});
+
+    expect(beacon).toHaveBeenCalledTimes(1);
+    const [, blob] = beacon.mock.calls[0] as [string, Blob];
+    const body = JSON.parse(await blob.text());
+    expect(body).toMatchObject({ type: 'api', name: 'POST /news', message: 'validation failed' });
+    expect(body.attributes).toMatchObject({ 'http.status_code': '422' });
   });
 });
 

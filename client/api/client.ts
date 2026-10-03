@@ -1,3 +1,4 @@
+import { newTraceparent, reportEvent } from '../lib/telemetry';
 import type { ErrorEnvelope } from './types';
 
 export const API_BASE = '/api/v1';
@@ -39,7 +40,12 @@ function isEnvelope(data: unknown): data is ErrorEnvelope {
  * Sec-Fetch-Site: same-origin, which the server accepts.
  */
 export async function apiFetch<T>(path: string, req: ApiRequest = {}): Promise<T> {
-  const headers: Record<string, string> = { Accept: 'application/json' };
+  const method = req.method ?? (req.json === undefined && !req.form ? 'GET' : 'POST');
+  const name = `${method} ${path}`;
+  const traceparent = newTraceparent();
+  const startTime = Date.now();
+
+  const headers: Record<string, string> = { Accept: 'application/json', traceparent };
   let body: BodyInit | undefined;
   if (req.json !== undefined) {
     headers['Content-Type'] = 'application/json';
@@ -48,10 +54,22 @@ export async function apiFetch<T>(path: string, req: ApiRequest = {}): Promise<T
     body = req.form; // the browser sets the multipart boundary
   }
 
+  const done = (status: number, message?: string) => {
+    reportEvent({
+      type: 'api',
+      name,
+      startTime,
+      endTime: Date.now(),
+      traceparent,
+      attributes: { 'http.method': method, 'http.path': path, 'http.status_code': String(status) },
+      message,
+    });
+  };
+
   let res: Response;
   try {
     res = await fetch(API_BASE + path, {
-      method: req.method ?? (body === undefined ? 'GET' : 'POST'),
+      method,
       headers,
       body,
       credentials: 'same-origin',
@@ -61,10 +79,12 @@ export async function apiFetch<T>(path: string, req: ApiRequest = {}): Promise<T
     if (err instanceof DOMException && err.name === 'AbortError') {
       throw err;
     }
+    done(0, 'could not reach the server');
     throw new ApiError(0, 'Could not reach the server. Check your connection and try again.');
   }
 
   if (res.status === 204) {
+    done(res.status);
     return undefined as T;
   }
 
@@ -78,12 +98,17 @@ export async function apiFetch<T>(path: string, req: ApiRequest = {}): Promise<T
 
   if (!res.ok) {
     if (isEnvelope(data)) {
+      done(res.status, data.error.message);
       throw new ApiError(res.status, data.error.message, data.error.fields ?? {});
     }
-    throw new ApiError(res.status, res.statusText || `Request failed with status ${res.status}`);
+    const message = res.statusText || `Request failed with status ${res.status}`;
+    done(res.status, message);
+    throw new ApiError(res.status, message);
   }
   if (data === undefined) {
+    done(res.status, 'unexpected empty response');
     throw new ApiError(res.status, 'The server sent an unexpected response.');
   }
+  done(res.status);
   return data as T;
 }
