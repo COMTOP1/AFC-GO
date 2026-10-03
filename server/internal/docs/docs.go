@@ -1826,6 +1826,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/telemetry": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Report a client telemetry event",
+                "parameters": [
+                    {
+                        "description": "Event",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clienttelemetry.Event"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "produces": [
@@ -2442,6 +2469,43 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "newPassword": {
+                    "type": "string"
+                }
+            }
+        },
+        "clienttelemetry.Event": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "description": "Attributes are short, string-valued tags (status code, path, etc).",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "endTime": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name identifies what happened, e.g. \"GET /site\" or \"unhandled\".",
+                    "type": "string"
+                },
+                "stack": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "description": "StartTime and EndTime are Unix milliseconds. EndTime is zero for\ninstantaneous events (errors), in which case the span is zero-length.",
+                    "type": "integer"
+                },
+                "traceparent": {
+                    "description": "Traceparent is the W3C traceparent header the client sent with the\nmatching API request, if any, so this event joins the same trace.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type is \"api\" or \"error\".",
                     "type": "string"
                 }
             }

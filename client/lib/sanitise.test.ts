@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { cleanHtml, plainText } from './sanitize';
+import { cleanHtml, plainText } from './sanitise';
 
 describe('cleanHtml', () => {
   it('removes scripts, handlers, javascript: links and iframes', () => {

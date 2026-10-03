@@ -1,3 +1,4 @@
+import TextAlign from '@tiptap/extension-text-align';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { clsx } from 'clsx';
@@ -74,6 +75,24 @@ const tools: Tool[] = [
     run: (e) => e.chain().focus().toggleBlockquote().run(),
   },
   { label: 'Horizontal rule', text: '―', run: (e) => e.chain().focus().setHorizontalRule().run() },
+  {
+    label: 'Align left',
+    text: 'L',
+    isActive: (e) => e.isActive({ textAlign: 'left' }),
+    run: (e) => e.chain().focus().setTextAlign('left').run(),
+  },
+  {
+    label: 'Align centre',
+    text: 'C',
+    isActive: (e) => e.isActive({ textAlign: 'center' }),
+    run: (e) => e.chain().focus().setTextAlign('center').run(),
+  },
+  {
+    label: 'Align right',
+    text: 'R',
+    isActive: (e) => e.isActive({ textAlign: 'right' }),
+    run: (e) => e.chain().focus().setTextAlign('right').run(),
+  },
   { label: 'Undo', text: '↶', run: (e) => e.chain().focus().undo().run() },
   { label: 'Redo', text: '↷', run: (e) => e.chain().focus().redo().run() },
 ];
@@ -105,6 +124,10 @@ export default function RichTextEditorImpl({ label, value, onChange, error }: Ri
         code: false,
         codeBlock: false,
         link: { openOnClick: false, autolink: true, protocols: ['http', 'https', 'mailto'] },
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+        alignments: ['left', 'center', 'right'],
       }),
     ],
     content: value,

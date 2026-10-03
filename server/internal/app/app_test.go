@@ -15,6 +15,7 @@ import (
 var publicWrites = map[string]bool{
 	"POST /api/v1/auth/login":        true,
 	"POST /api/v1/auth/reset/:token": true,
+	"POST /api/v1/telemetry":         true, // signed-out errors (e.g. a failed login) must still be reportable
 }
 
 var pathParam = regexp.MustCompile(`:[A-Za-z]+`)

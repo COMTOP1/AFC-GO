@@ -74,6 +74,29 @@ describe('RichTextEditor', () => {
     );
   });
 
+  it('aligns paragraphs left, centre and right', async () => {
+    renderEditor('<p style="text-align: right">Hello</p>');
+    const editor = await editorFor('Content');
+    const toolbar = screen.getByRole('toolbar', { name: 'Content formatting' });
+    await act(async () => {
+      editor.commands.selectAll();
+    });
+    const left = within(toolbar).getByRole('button', { name: 'Align left' });
+    const centre = within(toolbar).getByRole('button', { name: 'Align centre' });
+    expect(within(toolbar).getByRole('button', { name: 'Align right' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    fireEvent.click(centre);
+    expect(centre).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('html')).toHaveTextContent(
+      '<p style="text-align: center;">Hello</p>',
+    );
+    fireEvent.click(left);
+    expect(left).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('html')).toHaveTextContent('<p style="text-align: left;">Hello</p>');
+  });
+
   it('adds a link through the link dialog, fixing a bare domain and refusing javascript:', async () => {
     renderEditor('<p>Table</p>');
     const editor = await editorFor('Content');

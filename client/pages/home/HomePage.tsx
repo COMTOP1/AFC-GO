@@ -15,7 +15,7 @@ import { usePageTitle } from '../../components/page/usePageTitle';
 import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardMedia } from '../../components/ui/Card';
 import { formatDate } from '../../lib/format';
-import { plainText } from '../../lib/sanitize';
+import { plainText } from '../../lib/sanitise';
 import { AddAffiliationDialog } from './AddAffiliationDialog';
 
 const kicker = 'text-xs font-bold tracking-widest uppercase';

@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
+import { reportEvent } from '../../lib/telemetry';
 import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
 
@@ -21,6 +22,13 @@ export class RouteErrorBoundary extends Component<{ children: ReactNode }, State
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('Page failed to render', error, info.componentStack);
+    reportEvent({
+      type: 'error',
+      name: 'render',
+      startTime: Date.now(),
+      message: error.message,
+      stack: info.componentStack ?? error.stack,
+    });
   }
 
   render() {

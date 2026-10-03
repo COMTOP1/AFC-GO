@@ -1,7 +1,7 @@
 import { clsx } from 'clsx';
 import { useMemo } from 'react';
 
-import { cleanHtml } from '../../lib/sanitize';
+import { cleanHtml } from '../../lib/sanitise';
 
 export function RichText({ html, className }: { html: string; className?: string }) {
   const clean = useMemo(() => cleanHtml(html), [html]);

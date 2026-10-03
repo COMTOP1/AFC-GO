@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/log/global"
+	"go.opentelemetry.io/otel/propagation"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -52,6 +53,12 @@ func Setup(ctx context.Context, cfg Config) (shutdown func(context.Context) erro
 		}
 		return errs
 	}
+
+	// Lets otelecho (and the client-telemetry ingest endpoint) extract a
+	// traceparent header from an incoming request and continue that trace,
+	// instead of always starting a fresh one. Independent of whether
+	// exporting is enabled below.
+	otel.SetTextMapPropagator(propagation.TraceContext{})
 
 	handlers := []slog.Handler{slog.NewTextHandler(os.Stdout, nil)}
 
