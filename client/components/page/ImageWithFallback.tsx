@@ -17,7 +17,11 @@ function safeImageSrc(value?: string): string | undefined {
   }
   try {
     const parsed = new URL(value, window.location.origin);
-    if (parsed.protocol === 'blob:' || parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+    if (
+      parsed.protocol === 'blob:' ||
+      parsed.protocol === 'http:' ||
+      parsed.protocol === 'https:'
+    ) {
       return value;
     }
   } catch {
