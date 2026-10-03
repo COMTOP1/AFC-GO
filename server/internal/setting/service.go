@@ -9,7 +9,7 @@ import (
 
 	emailverifier "github.com/AfterShip/email-verifier"
 
-	"github.com/COMTOP1/AFC-GO/server/internal/sanitize"
+	"github.com/COMTOP1/AFC-GO/server/internal/sanitise"
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 )
 
@@ -71,7 +71,7 @@ func (s *Service) Info(ctx context.Context) (string, error) {
 func (s *Service) SetInfo(ctx context.Context, html string) (string, error) {
 	ctx, span := tracer.Start(ctx, "setting.Service.SetInfo")
 	defer span.End()
-	safe := sanitize.HTML(html)
+	safe := sanitise.HTML(html)
 	if err := s.put(ctx, infoContentID, safe); err != nil {
 		return "", err
 	}

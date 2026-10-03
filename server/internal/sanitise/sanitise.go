@@ -1,5 +1,5 @@
-// Package sanitize cleans rich-text HTML submitted from the editors.
-package sanitize
+// Package sanitise cleans rich-text HTML submitted from the editors.
+package sanitise
 
 import "github.com/microcosm-cc/bluemonday"
 
@@ -10,12 +10,14 @@ var policy = func() *bluemonday.Policy {
 	p := bluemonday.NewPolicy()
 	p.AllowElements("a", "ul", "ol", "li", "h2", "b", "i", "u", "strike", "div", "br", "p",
 		"blockquote", "pre", "hr")
+	// What the app's Tiptap editor emits for bold, italic, strikethrough and H3.
+	p.AllowElements("strong", "em", "s", "h3")
 	p.AllowAttrs("class").OnElements("h2")
 	p.AllowAttrs("href", "style").OnElements("a")
 	p.AllowURLSchemes("mailto", "http", "https")
 	p.RequireNoFollowOnLinks(false)
 	// Justification - via inline style
-	p.AllowAttrs("style").OnElements("div", "p", "h2", "span")
+	p.AllowAttrs("style").OnElements("div", "p", "h2", "h3", "span")
 	return p
 }()
 

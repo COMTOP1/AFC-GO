@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/guregu/null.v4"
 
-	"github.com/COMTOP1/AFC-GO/server/internal/sanitize"
+	"github.com/COMTOP1/AFC-GO/server/internal/sanitise"
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
 )
@@ -99,7 +99,7 @@ func (s *Service) Create(ctx context.Context, in CreateInput, image *upload.File
 	if title == "" {
 		return Article{}, svcerr.InvalidField("title", "title is required")
 	}
-	content := sanitize.HTML(in.Content)
+	content := sanitise.HTML(in.Content)
 
 	var key string
 	if image != nil {
@@ -137,7 +137,7 @@ func (s *Service) Update(ctx context.Context, id int, in UpdateInput, image *upl
 		n.Title = title
 	}
 	if in.Content != nil {
-		content := sanitize.HTML(*in.Content)
+		content := sanitise.HTML(*in.Content)
 		n.Content = null.NewString(content, content != "")
 	}
 

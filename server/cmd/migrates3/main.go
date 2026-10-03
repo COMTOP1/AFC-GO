@@ -74,7 +74,7 @@ func run(ctx context.Context) int {
 	entries, err := os.ReadDir(sourceDir)
 	if err != nil {
 		span.RecordError(err)
-		slog.Error("failed to read source directory " + sanitizeLogValue(sourceDir) + ": " + err.Error()) //nolint:gosec // sanitizeLogValue strips the newlines a log-injection attack relies on
+		slog.Error("failed to read source directory " + sanitiseLogValue(sourceDir) + ": " + err.Error()) //nolint:gosec // sanitiseLogValue strips the newlines a log-injection attack relies on
 		return 1
 	}
 
@@ -86,29 +86,29 @@ func run(ctx context.Context) int {
 		}
 
 		key := entry.Name()
-		safeKey := sanitizeLogValue(key)
+		safeKey := sanitiseLogValue(key)
 
 		exists, existsErr := store.Exists(ctx, key)
 		if existsErr != nil {
 			span.RecordError(existsErr)
-			slog.Error(fmt.Sprintf("failed to check existence of %q: %+v", safeKey, existsErr)) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
+			slog.Error(fmt.Sprintf("failed to check existence of %q: %+v", safeKey, existsErr)) //nolint:gosec // safeKey is sanitiseLogValue(key), newlines already stripped
 			failed++
 			continue
 		}
 		if exists {
-			slog.Info(fmt.Sprintf("skipping %q: already exists in bucket", safeKey)) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
+			slog.Info(fmt.Sprintf("skipping %q: already exists in bucket", safeKey)) //nolint:gosec // safeKey is sanitiseLogValue(key), newlines already stripped
 			skipped++
 			continue
 		}
 
 		if uploadErr := uploadFile(ctx, store, sourceDir, key); uploadErr != nil {
 			span.RecordError(uploadErr)
-			slog.Error(fmt.Sprintf("failed to upload %q: %+v", safeKey, uploadErr)) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
+			slog.Error(fmt.Sprintf("failed to upload %q: %+v", safeKey, uploadErr)) //nolint:gosec // safeKey is sanitiseLogValue(key), newlines already stripped
 			failed++
 			continue
 		}
 
-		slog.Info(fmt.Sprintf("uploaded %q", safeKey)) //nolint:gosec // safeKey is sanitizeLogValue(key), newlines already stripped
+		slog.Info(fmt.Sprintf("uploaded %q", safeKey)) //nolint:gosec // safeKey is sanitiseLogValue(key), newlines already stripped
 		uploaded++
 	}
 
@@ -155,14 +155,14 @@ func uploadFile(ctx context.Context, store *storage.Store, sourceDir, key string
 // crafted or unexpected entry regardless.
 func safeJoin(dir, name string) (string, error) {
 	if name == "" || name == "." || name == ".." || strings.ContainsAny(name, `/\`) {
-		return "", fmt.Errorf("invalid file name %q", sanitizeLogValue(name))
+		return "", fmt.Errorf("invalid file name %q", sanitiseLogValue(name))
 	}
 	return filepath.Join(dir, name), nil
 }
 
-// sanitizeLogValue strips characters that would let a filesystem or environment value forge
+// sanitiseLogValue strips characters that would let a filesystem or environment value forge
 // extra log lines (log injection) when written to the log.
-func sanitizeLogValue(s string) string {
+func sanitiseLogValue(s string) string {
 	return strings.Map(func(r rune) rune {
 		if r == '\n' || r == '\r' {
 			return -1
