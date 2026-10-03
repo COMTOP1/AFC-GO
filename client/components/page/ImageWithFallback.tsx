@@ -18,7 +18,7 @@ function safeImageSrc(value?: string): string | undefined {
       if (value.startsWith('//')) {
         return undefined;
       }
-      return new URL(value, window.location.origin).href;
+      return value;
     }
 
     const parsed = new URL(value, window.location.origin);
@@ -27,7 +27,7 @@ function safeImageSrc(value?: string): string | undefined {
       parsed.protocol === 'http:' ||
       parsed.protocol === 'https:'
     ) {
-      return parsed.href;
+      return value;
     }
   } catch {
     return undefined;
