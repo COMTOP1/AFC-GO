@@ -12,17 +12,22 @@ function safeImageSrc(value?: string): string | undefined {
   if (!value) {
     return undefined;
   }
-  if (value.startsWith('/')) {
-    return value;
-  }
   try {
+    if (value.startsWith('/')) {
+      // Disallow protocol-relative forms like //example.com/path.
+      if (value.startsWith('//')) {
+        return undefined;
+      }
+      return new URL(value, window.location.origin).href;
+    }
+
     const parsed = new URL(value, window.location.origin);
     if (
       parsed.protocol === 'blob:' ||
       parsed.protocol === 'http:' ||
       parsed.protocol === 'https:'
     ) {
-      return value;
+      return parsed.href;
     }
   } catch {
     return undefined;
