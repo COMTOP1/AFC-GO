@@ -8,7 +8,7 @@ const src = join(dir, 'mjml');
 
 let failed = false;
 for (const file of readdirSync(src).filter((f) => f.endsWith('.mjml'))) {
-  const { html, errors } = mjml2html(readFileSync(join(src, file), 'utf8'), {
+  const { html, errors } = await mjml2html(readFileSync(join(src, file), 'utf8'), {
     validationLevel: 'soft',
   });
   for (const e of errors) {
