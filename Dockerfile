@@ -13,7 +13,7 @@ COPY client ./client
 RUN BUILD_CLIENT_SKIP_LINT=true yarn build:client
 
 
-FROM golang:1.26.7-alpine3.24 AS build
+FROM golang:1.27.2-alpine3.24 AS build
 
 LABEL site="afc"
 LABEL stage="builder"
