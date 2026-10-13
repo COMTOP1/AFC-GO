@@ -3,7 +3,7 @@ Conversion of AFC from Java to go
 
 ## Development
 
-Requirements: Go 1.26, Node 24 with corepack (`corepack enable`), and a `.env` (see `example.env`).
+Requirements: Go 1.27, Node 24 with corepack (`corepack enable`), and a `.env` (see `example.env`).
 
 - `yarn install` installs the client toolchain.
 - `yarn dev` runs Vite and the Go server together. Browse the Go server's address: the server proxies every page to Vite (via `AFC_UI_PROXY_URL`) for hot reload, and answers `/api` and `/download` itself.
