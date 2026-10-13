@@ -25,6 +25,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/image"
 	infradb "github.com/COMTOP1/AFC-GO/server/internal/infrastructure/db"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mail"
+	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mtls"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/storage"
 	"github.com/COMTOP1/AFC-GO/server/internal/news"
 	"github.com/COMTOP1/AFC-GO/server/internal/player"
@@ -56,6 +57,8 @@ type Config struct {
 	UI fs.FS
 	// UIProxy, when set, proxies every non-API page to the Vite dev server instead of UI.
 	UIProxy *url.URL
+	// MTLS, when set, serves over TLS and only accepts requests from allowed client certificates.
+	MTLS *mtls.Server
 }
 
 // Stores are the database repositories.
@@ -96,6 +99,7 @@ type App struct {
 	address  string
 	visitors *visitors.Counter
 	tokens   *auth.Tokens
+	mtls     *mtls.Server
 }
 
 // New connects to Postgres and S3 and builds the server.
@@ -148,6 +152,9 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	e := echo.New()
 	e.HideBanner = true
 	e.Pre(middleware.RemoveTrailingSlash())
+	if conf.MTLS != nil {
+		e.Pre(conf.MTLS.Middleware("/api/health", "/api/v1/health"))
+	}
 	e.Use(middleware.Recover())
 	e.Use(otelecho.Middleware("afc-go", otelecho.WithSkipper(func(c echo.Context) bool {
 		return c.Path() == "/api/health" || c.Path() == "/api/v1/health"
@@ -186,13 +193,20 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	site.NewHandlers(siteSvc).Register(api, guards)
 	user.NewHandlers(userSvc).Register(api, guards)
 
-	return &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens}
+	return &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens, mtls: conf.MTLS}
 }
 
 // Start begins background work and serves until the server stops.
 func (a *App) Start() error {
 	a.visitors.Start(context.Background())
-	return a.Echo.Start(a.address)
+	if a.mtls == nil {
+		return a.Echo.Start(a.address)
+	}
+	stop := a.mtls.ReloadOnSIGHUP()
+	defer stop()
+	a.Echo.Server.Addr = a.address
+	a.Echo.Server.TLSConfig = a.mtls.TLSConfig()
+	return a.Echo.StartServer(a.Echo.Server)
 }
 
 // Stop ends background work.

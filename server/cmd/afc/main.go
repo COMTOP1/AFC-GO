@@ -22,6 +22,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/app"
 	"github.com/COMTOP1/AFC-GO/server/internal/auth"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mail"
+	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mtls"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/storage"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/telemetry"
 )
@@ -178,6 +179,27 @@ func main() {
 		}
 	}
 
+	// mTLS is optional - when MTLS_CERT_FILE isn't set the server speaks plain
+	// HTTP, as it does in local development.
+	mtlsConf := mtls.Config{
+		CertFile:     os.Getenv("MTLS_CERT_FILE"),
+		KeyFile:      os.Getenv("MTLS_KEY_FILE"),
+		ClientCAFile: os.Getenv("MTLS_CLIENT_CA_FILE"),
+	}
+	for _, name := range strings.Split(os.Getenv("MTLS_ALLOWED_CLIENTS"), ",") {
+		if trimmed := strings.TrimSpace(name); trimmed != "" {
+			mtlsConf.AllowedClients = append(mtlsConf.AllowedClients, trimmed)
+		}
+	}
+	var mtlsServer *mtls.Server
+	if mtlsConf.Enabled() {
+		mtlsServer, err = mtls.New(mtlsConf)
+		if err != nil {
+			fatal(fmt.Sprintf("failed to set up mTLS: %+v", err))
+		}
+		slog.Info("serving over mTLS")
+	}
+
 	a := app.New(app.Config{
 		Address:      address,
 		DomainName:   domainName,
@@ -185,6 +207,7 @@ func main() {
 		DatabaseHost: dbHost,
 		UI:           uiRoot,
 		UIProxy:      uiProxy,
+		MTLS:         mtlsServer,
 		Version:      Version,
 		Session: auth.Config{
 			CookieName:        sessionCookieName,
