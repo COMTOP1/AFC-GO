@@ -10,6 +10,7 @@ import (
 
 	"gopkg.in/guregu/null.v4"
 
+	"github.com/COMTOP1/AFC-GO/server/internal/role"
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
@@ -43,9 +44,9 @@ func NewService(store store, teams TeamGetter, files *upload.Files) *Service {
 	return &Service{store: store, teams: teams, files: files}
 }
 
-func (s *Service) public(p Player, t *team.Team, now time.Time) Public {
+func (s *Service) public(p Player, t *team.Team, now time.Time, showDateOfBirth bool) Public {
 	out := Public{ID: p.ID, Name: p.Name, Position: p.Position.String, IsCaptain: p.IsCaptain}
-	if p.DateOfBirth.Valid {
+	if showDateOfBirth && p.DateOfBirth.Valid {
 		dob := p.DateOfBirth.Time
 		out.DateOfBirth = &dob
 		if age, ok := Age(dob, now); ok {
@@ -65,7 +66,9 @@ func (s *Service) public(p Player, t *team.Team, now time.Time) Public {
 	return out
 }
 
-func (s *Service) List(ctx context.Context) ([]Public, error) {
+// List returns every player for the players page. Dates of birth are left
+// out where DateOfBirthVisible says viewer may not see them.
+func (s *Service) List(ctx context.Context, viewer role.Role, viewerTeamID int) ([]Public, error) {
 	ctx, span := tracer.Start(ctx, "player.Service.List")
 	defer span.End()
 	rows, err := s.store.GetPlayers(ctx)
@@ -87,7 +90,7 @@ func (s *Service) List(ctx context.Context) ([]Public, error) {
 		if found, ok := byID[p.TeamID]; ok {
 			t = &found
 		}
-		out = append(out, s.public(p, t, now))
+		out = append(out, s.public(p, t, now, DateOfBirthVisible(viewer, viewerTeamID, p.TeamID)))
 	}
 	return out, nil
 }
@@ -206,7 +209,8 @@ func (s *Service) Create(ctx context.Context, in CreateInput, image *upload.File
 		return Public{}, fmt.Errorf("failed to add player: %w", err)
 	}
 	t, _ := s.teamFor(ctx, added.TeamID) //nolint:errcheck // validated above
-	return s.public(added, t, time.Now()), nil
+	// Only editors reach this, and they may see dates of birth.
+	return s.public(added, t, time.Now(), true), nil
 }
 
 func (s *Service) Update(ctx context.Context, id int, in UpdateInput, image *upload.File) (Public, error) {
@@ -254,7 +258,8 @@ func (s *Service) Update(ctx context.Context, id int, in UpdateInput, image *upl
 		s.files.Remove(ctx, oldKey)
 	}
 	t, _ := s.teamFor(ctx, p.TeamID) //nolint:errcheck // validated above
-	return s.public(p, t, time.Now()), nil
+	// Only editors reach this, and they may see dates of birth.
+	return s.public(p, t, time.Now(), true), nil
 }
 
 // Delete removes the player and their photo, returning what was deleted.
@@ -266,7 +271,8 @@ func (s *Service) Delete(ctx context.Context, id int) (Public, error) {
 		return Public{}, err
 	}
 	t, _ := s.teamFor(ctx, p.TeamID) //nolint:errcheck // a missing team only affects display
-	deleted := s.public(p, t, time.Now())
+	// Only editors reach this, and they may see dates of birth.
+	deleted := s.public(p, t, time.Now(), true)
 	if err = s.store.DeletePlayer(ctx, p); err != nil {
 		return Public{}, fmt.Errorf("failed to delete player: %w", err)
 	}

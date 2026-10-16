@@ -25,7 +25,8 @@ func (h *Handlers) Register(g *echo.Group, guards web.Guards) {
 	g.DELETE("/players/:id", h.remove, guards.Editor)
 }
 
-// list returns every player (logged-in users only).
+// list returns every player (logged-in users only). Dates of birth and ages
+// are only included for editors, and for a Manager's own team.
 //
 //	@Summary	List players
 //	@Tags		players
@@ -34,7 +35,8 @@ func (h *Handlers) Register(g *echo.Group, guards web.Guards) {
 //	@Failure	401	{object}	web.ErrorResponse
 //	@Router		/players [get]
 func (h *Handlers) list(c echo.Context) error {
-	out, err := h.svc.List(c.Request().Context())
+	viewer, _ := web.CurrentActor(c)
+	out, err := h.svc.List(c.Request().Context(), viewer.Role, viewer.TeamID)
 	if err != nil {
 		return err
 	}

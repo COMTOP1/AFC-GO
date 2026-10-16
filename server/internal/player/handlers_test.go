@@ -25,7 +25,16 @@ func TestPlayerRoutes(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, anon.Get(t, "/api/v1/players").Code, "players list is login-only")
 	rec := manager.Get(t, "/api/v1/players")
 	require.Equal(t, http.StatusOK, rec.Code)
-	assert.Len(t, apitest.Decode[[]player.Public](t, rec), 3)
+	list := apitest.Decode[[]player.Public](t, rec)
+	assert.Len(t, list, 3)
+	for _, p := range list {
+		assert.Equal(t, p.Team != nil && p.Team.ID == authtest.Manager.TeamID, p.DateOfBirth != nil,
+			"the manager sees dates of birth for their own team only (player %d)", p.ID)
+	}
+	photographer := anon.As(authtest.Cookie(t, sessions, authtest.Photographer))
+	for _, p := range apitest.Decode[[]player.Public](t, photographer.Get(t, "/api/v1/players")) {
+		assert.Nil(t, p.DateOfBirth)
+	}
 
 	create := map[string]string{"name": "Signing", "teamId": "1", "dateOfBirth": "1999-04-01", "isCaptain": "false"}
 	assert.Equal(t, http.StatusForbidden, manager.Multipart(t, http.MethodPost, "/api/v1/players", create).Code)

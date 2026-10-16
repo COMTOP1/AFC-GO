@@ -10,6 +10,7 @@ import (
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/player"
+	"github.com/COMTOP1/AFC-GO/server/internal/role"
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
@@ -53,7 +54,7 @@ func fieldsOf(t *testing.T, err error) map[string]string {
 // TestListHidesMinorPhotos pins Review Focus #1 for /players.
 func TestListHidesMinorPhotos(t *testing.T) {
 	svc, _, _ := newService()
-	list, err := svc.List(ctx)
+	list, err := svc.List(ctx, role.Webmaster, 0)
 	require.NoError(t, err)
 	byID := map[int]player.Public{}
 	for _, p := range list {
@@ -68,6 +69,24 @@ func TestListHidesMinorPhotos(t *testing.T) {
 	assert.Equal(t, 30, *byID[1].Age)
 }
 
+func TestListHidesDatesOfBirthFromViewersWithNoNeed(t *testing.T) {
+	svc, _, _ := newService()
+	visible := func(viewer role.Role, teamID int) map[int]bool {
+		list, err := svc.List(ctx, viewer, teamID)
+		require.NoError(t, err)
+		out := map[int]bool{}
+		for _, p := range list {
+			assert.Equal(t, p.DateOfBirth != nil, p.Age != nil, "age and date of birth go together")
+			out[p.ID] = p.DateOfBirth != nil
+		}
+		return out
+	}
+	assert.Equal(t, map[int]bool{1: true, 2: true, 3: true}, visible(role.Treasurer, 0), "editors enter dates of birth")
+	assert.Equal(t, map[int]bool{1: true, 2: false, 3: true}, visible(role.Manager, 1), "a manager sees only their own team")
+	assert.Equal(t, map[int]bool{1: false, 2: false, 3: false}, visible(role.Photographer, 0))
+	assert.Equal(t, map[int]bool{1: false, 2: false, 3: false}, visible(role.Manager, 0), "a manager with no team sees none")
+}
+
 // TestListHidesPhotoOnUnknownTeam pins Review Focus #1: a player whose team
 // can't be found (e.g. team_id 0 after DetachTeam) must not leak a photo via
 // List just because "not found" was treated as "not youth".
@@ -79,7 +98,7 @@ func TestListHidesPhotoOnUnknownTeam(t *testing.T) {
 	objects.Objects["player/orphan.png"] = "IMG"
 	svc := player.NewService(store, teams, upload.New(objects))
 
-	list, err := svc.List(ctx)
+	list, err := svc.List(ctx, role.Webmaster, 0)
 	require.NoError(t, err)
 	require.Len(t, list, 1)
 	assert.Empty(t, list[0].ImageURL, "team not found: fail closed")
