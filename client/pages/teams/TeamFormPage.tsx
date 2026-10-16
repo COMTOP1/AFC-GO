@@ -125,11 +125,20 @@ function TeamForm({ team }: { team?: TeamSummary }) {
           checked={isActive}
           onChange={(e) => setIsActive(e.target.checked)}
         />
-        <Checkbox
-          label="Youth team"
-          checked={isYouth}
-          onChange={(e) => setIsYouth(e.target.checked)}
-        />
+        <div>
+          <Checkbox
+            label="Youth team"
+            checked={isYouth}
+            aria-invalid={err('isYouth') ? true : undefined}
+            aria-describedby={err('isYouth') ? 'youth-error' : undefined}
+            onChange={(e) => setIsYouth(e.target.checked)}
+          />
+          {err('isYouth') && (
+            <p id="youth-error" className="mt-1 text-sm text-red">
+              {err('isYouth')}
+            </p>
+          )}
+        </div>
         <div className="flex gap-2 md:col-span-2">
           <Button type="submit" loading={save.busy}>
             Save team

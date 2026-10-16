@@ -146,6 +146,21 @@ func (s *Store) DetachTeam(ctx context.Context, teamID int) error {
 	return nil
 }
 
+// HasUnder18s reports whether any player on the team is under 18 today
+// (satisfies team.SquadAges). Players with no date of birth don't count.
+func (s *Store) HasUnder18s(ctx context.Context, teamID int) (bool, error) {
+	ctx, span := tracer.Start(ctx, "player.HasUnder18s")
+	defer span.End()
+	var found bool
+	err := s.db.GetContext(ctx, &found, `SELECT EXISTS (SELECT 1 FROM players
+		WHERE team_id = $1 AND date_of_birth > CURRENT_DATE - INTERVAL '18 years')`, teamID)
+	if err != nil {
+		span.RecordError(err)
+		return false, fmt.Errorf("failed to check squad ages: %w", err)
+	}
+	return found, nil
+}
+
 func (s *Store) deletePlayer(ctx context.Context, playerParam Player) error {
 	ctx, span := tracer.Start(ctx, "player.deletePlayer")
 	defer span.End()

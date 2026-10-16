@@ -124,7 +124,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	documentSvc := document.NewService(s.Document, uploads)
 	gallerySvc := image.NewService(s.Image, uploads)
 	programmeSvc := programme.NewService(s.Programme, uploads)
-	teamSvc := team.NewService(s.Team, uploads, s.Player, s.Sponsor, s.User)
+	teamSvc := team.NewService(s.Team, uploads, s.Player, s.Sponsor, s.User).WithSquadAges(s.Player)
 	playerSvc := player.NewService(s.Player, s.Team, uploads)
 	fileSvc := files.NewService(uploads, files.Resolvers(files.Sources{
 		Affiliation: s.Affiliation, Document: s.Document, Image: s.Image, News: s.News,

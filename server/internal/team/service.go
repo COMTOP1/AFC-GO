@@ -33,15 +33,29 @@ type Detacher interface {
 	DetachTeam(ctx context.Context, teamID int) error
 }
 
+// SquadAges checks a team's players (satisfied by *player.Store; team can't
+// import player, which imports team).
+type SquadAges interface {
+	HasUnder18s(ctx context.Context, teamID int) (bool, error)
+}
+
 // Service is the team business logic.
 type Service struct {
 	store     store
 	files     *upload.Files
 	detachers []Detacher
+	squads    SquadAges
 }
 
 func NewService(store store, files *upload.Files, detachers ...Detacher) *Service {
 	return &Service{store: store, files: files, detachers: detachers}
+}
+
+// WithSquadAges makes Update refuse to turn a youth team into a senior team
+// while it has players under 18: senior teams are adults only.
+func (s *Service) WithSquadAges(squads SquadAges) *Service {
+	s.squads = squads
+	return s
 }
 
 func optional(s string) null.String {
@@ -180,6 +194,7 @@ func (s *Service) Update(ctx context.Context, id int, in UpdateInput, image *upl
 	if err != nil {
 		return Public{}, err
 	}
+	wasYouth := t.IsYouth
 	if in.Name != nil {
 		t.Name = strings.TrimSpace(*in.Name)
 	}
@@ -204,6 +219,15 @@ func (s *Service) Update(ctx context.Context, id int, in UpdateInput, image *upl
 	}
 	if err = validate(t); err != nil {
 		return Public{}, err
+	}
+	if wasYouth && !t.IsYouth && s.squads != nil {
+		minors, checkErr := s.squads.HasUnder18s(ctx, t.ID)
+		if checkErr != nil {
+			return Public{}, checkErr
+		}
+		if minors {
+			return Public{}, svcerr.InvalidField("isYouth", "this team has players under 18; move them to a youth team first")
+		}
 	}
 
 	oldKey, newKey := t.FileName.String, ""

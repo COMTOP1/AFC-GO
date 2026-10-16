@@ -171,13 +171,21 @@ func (s *Service) validate(ctx context.Context, p Player) error {
 	if strings.TrimSpace(p.Name) == "" {
 		f.Add("name", "name is required")
 	}
-	if _, err := s.teamFor(ctx, p.TeamID); err != nil {
+	t, teamErr := s.teamFor(ctx, p.TeamID)
+	if teamErr != nil {
 		f.Add("teamId", "team does not exist")
 	}
-	if !p.DateOfBirth.Valid || p.DateOfBirth.Time.IsZero() {
+	switch {
+	case !p.DateOfBirth.Valid || p.DateOfBirth.Time.IsZero():
 		f.Add("dateOfBirth", "date of birth is required")
-	} else if !p.DateOfBirth.Time.Before(time.Now()) {
+	case !p.DateOfBirth.Time.Before(time.Now()):
 		f.Add("dateOfBirth", "date of birth must be in the past")
+	case teamErr == nil && !t.IsYouth:
+		// Senior teams are adults only, so their public squads and photos
+		// never include a child.
+		if age, ok := Age(p.DateOfBirth.Time, time.Now()); ok && age < adultAge {
+			f.Add("teamId", "players under 18 can only be on a youth team")
+		}
 	}
 	return f.Err()
 }

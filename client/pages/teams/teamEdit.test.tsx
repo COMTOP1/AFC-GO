@@ -89,6 +89,35 @@ describe('Team editing', () => {
     expect(fd.has('image')).toBe(false);
   });
 
+  it("explains when a youth team with children can't become senior", async () => {
+    renderTeams(`/team/${team.id}/edit`, {
+      [`/api/v1/teams/${team.id}`]: (init) =>
+        init?.method === 'PATCH'
+          ? {
+              status: 422,
+              body: {
+                error: {
+                  code: 422,
+                  message: 'validation failed',
+                  fields: {
+                    isYouth: 'this team has players under 18; move them to a youth team first',
+                  },
+                },
+              },
+            }
+          : { body: teamDetail },
+    });
+    await screen.findByLabelText('Name');
+    fireEvent.click(screen.getByRole('button', { name: 'Save team' }));
+    expect(
+      await screen.findByText('this team has players under 18; move them to a youth team first'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Youth team' })).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+  });
+
   it('warns that deleting unlinks players, sponsors and managers', async () => {
     const fetchMock = renderTeams(`/team/${team.id}`, {
       [`/api/v1/teams/${team.id}`]: () => ({ body: teamDetail }),

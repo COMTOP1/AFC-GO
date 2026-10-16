@@ -191,6 +191,21 @@ func TestCreateValidates(t *testing.T) {
 	assert.Contains(t, fieldsOf(t, errOf(svc.Create(ctx, player.CreateInput{Name: "x", TeamID: 1, DateOfBirth: time.Now().AddDate(0, 0, 1)}, nil))), "dateOfBirth")
 }
 
+func TestSeniorTeamsAreAdultsOnly(t *testing.T) {
+	svc, _, _ := newService()
+	child := time.Now().AddDate(-16, 0, 0)
+	assert.Contains(t, fieldsOf(t, errOf(svc.Create(ctx, player.CreateInput{Name: "Kid", TeamID: 1, DateOfBirth: child}, nil))), "teamId",
+		"a child can't join a senior team")
+	_, err := svc.Create(ctx, player.CreateInput{Name: "Kid", TeamID: 2, DateOfBirth: child}, nil)
+	require.NoError(t, err, "but can join a youth team")
+	_, err = svc.Create(ctx, player.CreateInput{Name: "Adult", TeamID: 1, DateOfBirth: time.Now().AddDate(-18, 0, -1)}, nil)
+	require.NoError(t, err, "18 and over is fine")
+
+	senior := 1
+	_, err = svc.Update(ctx, 2, player.UpdateInput{TeamID: &senior}, nil)
+	assert.Contains(t, fieldsOf(t, err), "teamId", "nor can a youth player be moved up")
+}
+
 func errOf(_ player.Public, err error) error { return err }
 
 func TestUpdateCanUncaptainAndRemoveImage(t *testing.T) {

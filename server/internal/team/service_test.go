@@ -90,6 +90,24 @@ func TestUpdateAgesForcesYouth(t *testing.T) {
 	assert.True(t, store.row(1).IsYouth)
 }
 
+type fakeSquads map[int]bool
+
+func (f fakeSquads) HasUnder18s(_ context.Context, teamID int) (bool, error) { return f[teamID], nil }
+
+func TestYouthTeamWithChildrenCantBecomeSenior(t *testing.T) {
+	store := newFakeStore(team.Team{ID: 2, Name: "Under 16s", IsActive: true, IsYouth: true, Ages: 99}, team.Team{ID: 4, Name: "Under 18s", IsActive: true, IsYouth: true, Ages: 99})
+	svc := team.NewService(store, upload.New(uploadtest.New())).WithSquadAges(fakeSquads{2: true})
+	no := false
+
+	_, err := svc.Update(ctx, 2, team.UpdateInput{IsYouth: &no}, nil)
+	assert.Contains(t, fields(t, err), "isYouth")
+	assert.True(t, store.row(2).IsYouth, "unchanged")
+
+	_, err = svc.Update(ctx, 4, team.UpdateInput{IsYouth: &no}, nil)
+	require.NoError(t, err, "a youth team of adults can become senior")
+	assert.False(t, store.row(4).IsYouth)
+}
+
 func TestUpdateRemoveImage(t *testing.T) {
 	svc, store, objects := newService()
 	_, err := svc.Update(ctx, 1, team.UpdateInput{RemoveImage: true}, nil)
