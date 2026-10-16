@@ -22,10 +22,11 @@ import (
 
 // Personas used across handler tests.
 var (
-	Webmaster    = user.User{ID: 1, Name: "Web Master", Email: "webmaster@example.test", Role: role.Webmaster}
-	Manager      = user.User{ID: 2, Name: "Team Manager", Email: "manager@example.test", Role: role.Manager, TeamID: 1}
-	Photographer = user.User{ID: 3, Name: "Photo Grapher", Email: "photo@example.test", Role: role.Photographer}
-	Treasurer    = user.User{ID: 4, Name: "Trea Surer", Email: "treasurer@example.test", Role: role.Treasurer}
+	Webmaster       = user.User{ID: 1, Name: "Web Master", Email: "webmaster@example.test", Role: role.Webmaster}
+	Manager         = user.User{ID: 2, Name: "Team Manager", Email: "manager@example.test", Role: role.Manager, TeamID: 1}
+	Photographer    = user.User{ID: 3, Name: "Photo Grapher", Email: "photo@example.test", Role: role.Photographer}
+	Treasurer       = user.User{ID: 4, Name: "Trea Surer", Email: "treasurer@example.test", Role: role.Treasurer}
+	ProgrammeEditor = user.User{ID: 5, Name: "Pro Gramme", Email: "programmes@example.test", Role: role.ProgrammeEditor}
 )
 
 // Users is an in-memory auth.UserGetter.
@@ -60,9 +61,9 @@ func New(users ...user.User) *auth.Sessions {
 	}, NewUsers(users...))
 }
 
-// Everyone returns sessions that know all four personas.
+// Everyone returns sessions that know every persona.
 func Everyone() *auth.Sessions {
-	return New(Webmaster, Manager, Photographer, Treasurer)
+	return New(Webmaster, Manager, Photographer, Treasurer, ProgrammeEditor)
 }
 
 // Cookie logs u in and returns the resulting session cookie.

@@ -22,6 +22,7 @@ type CurrentUser struct {
 type Permissions struct {
 	CanEdit          bool `json:"canEdit"`
 	CanManageGallery bool `json:"canManageGallery"`
+	CanManagePlayers bool `json:"canManagePlayers"`
 	CanManageUsers   bool `json:"canManageUsers"`
 }
 
@@ -65,6 +66,7 @@ func NewCurrentUser(u user.User, files *upload.Files) CurrentUser {
 		Permissions: Permissions{
 			CanEdit:          u.Role.CanEdit(),
 			CanManageGallery: u.Role.CanManageGallery(),
+			CanManagePlayers: u.Role.CanManagePlayers(),
 			CanManageUsers:   u.Role.IsClubSecretaryHigher(),
 		},
 	}

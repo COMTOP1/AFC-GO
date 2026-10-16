@@ -15,7 +15,12 @@ const me = {
   email: 'jo@example.test',
   role: 'Manager',
   imageUrl: '/files/user/1',
-  permissions: { canEdit: false, canManageGallery: false, canManageUsers: false },
+  permissions: {
+    canEdit: false,
+    canManageGallery: false,
+    canManagePlayers: false,
+    canManageUsers: false,
+  },
 };
 
 describe('account API', () => {

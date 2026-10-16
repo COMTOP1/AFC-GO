@@ -209,7 +209,7 @@ func (s *Service) Create(ctx context.Context, in CreateInput, image *upload.File
 		return Public{}, fmt.Errorf("failed to add player: %w", err)
 	}
 	t, _ := s.teamFor(ctx, added.TeamID) //nolint:errcheck // validated above
-	// Only editors reach this, and they may see dates of birth.
+	// Only those who manage players reach this, and they see dates of birth.
 	return s.public(added, t, time.Now(), true), nil
 }
 
@@ -258,7 +258,7 @@ func (s *Service) Update(ctx context.Context, id int, in UpdateInput, image *upl
 		s.files.Remove(ctx, oldKey)
 	}
 	t, _ := s.teamFor(ctx, p.TeamID) //nolint:errcheck // validated above
-	// Only editors reach this, and they may see dates of birth.
+	// Only those who manage players reach this, and they see dates of birth.
 	return s.public(p, t, time.Now(), true), nil
 }
 
@@ -271,7 +271,7 @@ func (s *Service) Delete(ctx context.Context, id int) (Public, error) {
 		return Public{}, err
 	}
 	t, _ := s.teamFor(ctx, p.TeamID) //nolint:errcheck // a missing team only affects display
-	// Only editors reach this, and they may see dates of birth.
+	// Only those who manage players reach this, and they see dates of birth.
 	deleted := s.public(p, t, time.Now(), true)
 	if err = s.store.DeletePlayer(ctx, p); err != nil {
 		return Public{}, fmt.Errorf("failed to delete player: %w", err)

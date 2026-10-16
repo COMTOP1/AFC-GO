@@ -79,6 +79,13 @@ func (r Role) CanEdit() bool {
 	return r != Manager && r != Photographer
 }
 
+// CanManagePlayers reports whether the role may add, edit and remove players
+// and see their dates of birth: editors other than Programme Editors, who
+// get a cut-down players list instead.
+func (r Role) CanManagePlayers() bool {
+	return r.CanEdit() && r != ProgrammeEditor
+}
+
 // CanManageGallery reports whether the role may add or remove gallery
 // images, matching RequireNotManager.
 func (r Role) CanManageGallery() bool {

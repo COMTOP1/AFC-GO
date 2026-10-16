@@ -61,11 +61,12 @@ func TestPhotoVisible(t *testing.T) {
 }
 
 func TestDateOfBirthVisible(t *testing.T) {
-	for _, r := range []role.Role{role.ProgrammeEditor, role.LeagueSecretary, role.Treasurer,
+	for _, r := range []role.Role{role.LeagueSecretary, role.Treasurer,
 		role.SafeguardingOfficer, role.ClubSecretary, role.Chairperson, role.Webmaster} {
 		assert.True(t, player.DateOfBirthVisible(r, 0, 5), r)
 	}
 	assert.False(t, player.DateOfBirthVisible(role.Photographer, 0, 5))
+	assert.False(t, player.DateOfBirthVisible(role.ProgrammeEditor, 0, 5), "programme editors get the cut-down list")
 	assert.True(t, player.DateOfBirthVisible(role.Manager, 5, 5))
 	assert.False(t, player.DateOfBirthVisible(role.Manager, 4, 5))
 	assert.False(t, player.DateOfBirthVisible(role.Manager, 0, 0), "an unassigned manager doesn't match a detached player")

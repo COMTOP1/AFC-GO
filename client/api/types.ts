@@ -38,6 +38,8 @@ export interface SiteInfo {
 export interface Permissions {
   canEdit: boolean;
   canManageGallery: boolean;
+  /** Add, edit and remove players, and see their dates of birth. */
+  canManagePlayers: boolean;
   canManageUsers: boolean;
 }
 

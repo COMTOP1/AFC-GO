@@ -43,15 +43,16 @@ func PhotoVisible(p Player, teamIsYouth bool, now time.Time) bool {
 }
 
 // DateOfBirthVisible is the rule for who sees a player's date of birth (and
-// age) in the players list: anyone who can edit players, since they enter
+// age) in the players list: anyone who manages players, since they enter
 // it, and a Manager for players on their own team. Everyone else, such as a
-// Photographer or another team's Manager, has no need for it.
-// An unknown or empty role sees nothing: CanEdit alone would let it through.
+// Programme Editor, a Photographer or another team's Manager, has no need
+// for it. An unknown or empty role sees nothing: CanEdit, which
+// CanManagePlayers builds on, would let it through.
 func DateOfBirthVisible(viewer role.Role, viewerTeamID, playerTeamID int) bool {
 	if viewer.DBString() == "" {
 		return false
 	}
-	if viewer.CanEdit() {
+	if viewer.CanManagePlayers() {
 		return true
 	}
 	return viewer == role.Manager && viewerTeamID != 0 && viewerTeamID == playerTeamID

@@ -2,7 +2,15 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import { anonymous, editor, manager, players, publicRoutes, youthTeam } from '../../test/fixtures';
+import {
+  anonymous,
+  editor,
+  manager,
+  players,
+  programmeEditor,
+  publicRoutes,
+  youthTeam,
+} from '../../test/fixtures';
 import { Location } from '../../test/Location';
 import type { MockRoute } from '../../test/mockFetch';
 import { mockFetch } from '../../test/mockFetch';
@@ -37,6 +45,16 @@ describe('PlayersPage', () => {
     expect(within(row).getByText('Captain')).toBeInTheDocument();
     expect(within(row).getByText('First Team')).toBeInTheDocument();
     expect(within(row).getByText('2 Apr 1998 (age 28)')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add player' })).toBeNull();
+    expect(screen.queryByRole('button', { name: `Edit ${sam.name}` })).toBeNull();
+  });
+
+  it('gives a Programme Editor the cut-down list with no controls', async () => {
+    const cutDown = players.map((p) => ({ ...p, dateOfBirth: undefined, age: undefined }));
+    renderPlayers({ '/api/v1/auth/me': programmeEditor, '/api/v1/players': { body: cutDown } });
+    const row = (await screen.findByText(sam.name)).closest('tr') as HTMLElement;
+    expect(within(row).getByText('First Team')).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Date of birth' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Add player' })).toBeNull();
     expect(screen.queryByRole('button', { name: `Edit ${sam.name}` })).toBeNull();
   });

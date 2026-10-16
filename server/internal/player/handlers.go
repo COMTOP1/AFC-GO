@@ -20,13 +20,14 @@ func NewHandlers(svc *Service) *Handlers {
 // Register mounts the player routes on the /api/v1 group.
 func (h *Handlers) Register(g *echo.Group, guards web.Guards) {
 	g.GET("/players", h.list, guards.Login)
-	g.POST("/players", h.create, guards.Editor)
-	g.PATCH("/players/:id", h.update, guards.Editor)
-	g.DELETE("/players/:id", h.remove, guards.Editor)
+	g.POST("/players", h.create, guards.Players)
+	g.PATCH("/players/:id", h.update, guards.Players)
+	g.DELETE("/players/:id", h.remove, guards.Players)
 }
 
 // list returns every player (logged-in users only). Dates of birth and ages
-// are only included for editors, and for a Manager's own team.
+// are only included for those who manage players, and for a Manager's own
+// team.
 //
 //	@Summary	List players
 //	@Tags		players

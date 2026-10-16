@@ -52,6 +52,7 @@ func (s *Sessions) Guards() web.Guards {
 		Login:               s.RequireLogin,
 		Editor:              s.RequireRole(role.Role.CanEdit),
 		NotManager:          s.RequireRole(role.Role.CanManageGallery),
+		Players:             s.RequireRole(role.Role.CanManagePlayers),
 		ClubSecretaryHigher: s.RequireRole(role.Role.IsClubSecretaryHigher),
 		Identify:            s.Identify,
 	}

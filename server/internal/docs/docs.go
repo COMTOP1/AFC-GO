@@ -2463,6 +2463,9 @@ const docTemplate = `{
                 "canManageGallery": {
                     "type": "boolean"
                 },
+                "canManagePlayers": {
+                    "type": "boolean"
+                },
                 "canManageUsers": {
                     "type": "boolean"
                 }

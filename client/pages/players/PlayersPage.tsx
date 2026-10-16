@@ -35,7 +35,7 @@ function born(p: Player): string {
   return `${formatDate(p.dateOfBirth)}${age}`;
 }
 
-function PlayersTable({ canEdit, onEdit }: { canEdit: boolean; onEdit: (p: Player) => void }) {
+function PlayersTable({ canManage, onEdit }: { canManage: boolean; onEdit: (p: Player) => void }) {
   const players = usePlayers();
   const teams = useTeams();
   const [params, setParams] = useSearchParams();
@@ -78,6 +78,9 @@ function PlayersTable({ canEdit, onEdit }: { canEdit: boolean; onEdit: (p: Playe
           if (shown.length === 0) {
             return <EmptyState title="No players match your filters" />;
           }
+          // The server leaves dates of birth out for viewers who don't need
+          // them (e.g. Programme Editors); drop the column when none came.
+          const showBorn = list.some((p) => p.dateOfBirth);
           return (
             <Table>
               <THead>
@@ -88,8 +91,8 @@ function PlayersTable({ canEdit, onEdit }: { canEdit: boolean; onEdit: (p: Playe
                   <Th>Name</Th>
                   <Th>Position</Th>
                   <Th>Team</Th>
-                  <Th>Date of birth</Th>
-                  {canEdit && (
+                  {showBorn && <Th>Date of birth</Th>}
+                  {canManage && (
                     <Th>
                       <span className="sr-only">Actions</span>
                     </Th>
@@ -112,8 +115,8 @@ function PlayersTable({ canEdit, onEdit }: { canEdit: boolean; onEdit: (p: Playe
                     </Td>
                     <Td>{p.position}</Td>
                     <Td>{p.team?.name ?? 'No team'}</Td>
-                    <Td className="whitespace-nowrap">{born(p)}</Td>
-                    {canEdit && (
+                    {showBorn && <Td className="whitespace-nowrap">{born(p)}</Td>}
+                    {canManage && (
                       <Td>
                         <div className="flex justify-end gap-2">
                           <Button
@@ -148,17 +151,17 @@ function PlayersTable({ canEdit, onEdit }: { canEdit: boolean; onEdit: (p: Playe
 
 export default function PlayersPage() {
   usePageTitle('Players');
-  const { canEdit } = useCanEdit();
+  const { canManagePlayers } = useCanEdit();
   // null = closed; {} = adding; { player } = editing.
   const [dialog, setDialog] = useState<{ player?: Player } | null>(null);
   return (
     <>
       <PageHeader
         title="Players"
-        actions={canEdit && <Button onClick={() => setDialog({})}>Add player</Button>}
+        actions={canManagePlayers && <Button onClick={() => setDialog({})}>Add player</Button>}
       />
       <RequireSignIn title="Sign in to see the players">
-        <PlayersTable canEdit={canEdit} onEdit={(player) => setDialog({ player })} />
+        <PlayersTable canManage={canManagePlayers} onEdit={(player) => setDialog({ player })} />
       </RequireSignIn>
       <PlayerDialog
         open={dialog !== null}

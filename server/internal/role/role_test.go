@@ -13,6 +13,7 @@ func TestPredicates(t *testing.T) {
 		role.Treasurer, role.SafeguardingOfficer, role.ClubSecretary, role.Chairperson, role.Webmaster}
 	for _, r := range all {
 		assert.Equal(t, r != role.Manager && r != role.Photographer, r.CanEdit(), "CanEdit %s", r)
+		assert.Equal(t, r.CanEdit() && r != role.ProgrammeEditor, r.CanManagePlayers(), "CanManagePlayers %s", r)
 		assert.Equal(t, r != role.Manager, r.CanManageGallery(), "CanManageGallery %s", r)
 		want := r == role.SafeguardingOfficer || r == role.ClubSecretary || r == role.Chairperson || r == role.Webmaster
 		assert.Equal(t, want, r.IsClubSecretaryHigher(), "IsClubSecretaryHigher %s", r)

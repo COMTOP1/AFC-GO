@@ -13,6 +13,7 @@ type Guards struct {
 	Login               echo.MiddlewareFunc // any logged-in user
 	Editor              echo.MiddlewareFunc // logged in, not Manager or Photographer
 	NotManager          echo.MiddlewareFunc // logged in, not Manager (gallery)
+	Players             echo.MiddlewareFunc // logged in, an editor but not Programme Editor
 	ClubSecretaryHigher echo.MiddlewareFunc // Safeguarding Officer, Club Secretary, Chairperson, Webmaster
 	Identify            echo.MiddlewareFunc // loads the user if logged in; never rejects
 }

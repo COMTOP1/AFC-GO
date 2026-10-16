@@ -63,6 +63,8 @@ definitions:
         type: boolean
       canManageGallery:
         type: boolean
+      canManagePlayers:
+        type: boolean
       canManageUsers:
         type: boolean
     type: object

@@ -26,7 +26,13 @@ function user(name: string, role: string, perms: Partial<CurrentUser['permission
     name,
     email: 'someone@example.test',
     role,
-    permissions: { canEdit: false, canManageGallery: false, canManageUsers: false, ...perms },
+    permissions: {
+      canEdit: false,
+      canManageGallery: false,
+      canManagePlayers: false,
+      canManageUsers: false,
+      ...perms,
+    },
   };
 }
 
