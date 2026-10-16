@@ -70,18 +70,18 @@ function UserForm({ user, isSelf, onClose, onSecret }: Omit<UserDialogProps, 'op
         return;
       }
       const { created } = result;
-      if (!created.emailSent && created.tempPassword) {
+      if (!created.emailSent && created.setupUrl) {
         onSecret({
           title: `Pass this on to ${created.user.name}`,
-          message: `We couldn't email ${created.user.name}. Give them this temporary password; they'll choose a new one when they first sign in. It won't be shown again.`,
-          label: 'Temporary password',
-          value: created.tempPassword,
+          message: `We couldn't email ${created.user.name}. Send them this link to set their password; it lasts 7 days. It won't be shown again.`,
+          label: 'Set-password link',
+          value: created.setupUrl,
         });
         return;
       }
       toast.show({
         tone: 'success',
-        message: "User added. They've been emailed a temporary password.",
+        message: "User added. They've been emailed a link to set their password.",
       });
     },
   });

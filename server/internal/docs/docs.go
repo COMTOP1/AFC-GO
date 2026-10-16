@@ -2897,7 +2897,7 @@ const docTemplate = `{
                 "emailSent": {
                     "type": "boolean"
                 },
-                "tempPassword": {
+                "setupUrl": {
                     "type": "string"
                 },
                 "user": {

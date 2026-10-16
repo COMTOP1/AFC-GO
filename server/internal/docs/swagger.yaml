@@ -356,7 +356,7 @@ definitions:
     properties:
       emailSent:
         type: boolean
-      tempPassword:
+      setupUrl:
         type: string
       user:
         $ref: '#/definitions/user.Admin'

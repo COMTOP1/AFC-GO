@@ -85,7 +85,7 @@ describe('UserDialog', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add user' }));
     expect(
       await screen.findByRole('button', {
-        name: "User added. They've been emailed a temporary password.",
+        name: "User added. They've been emailed a link to set their password.",
       }),
     ).toBeInTheDocument();
     const fd = sent(fetchMock, 'POST');
@@ -153,7 +153,7 @@ describe('UserDialog', () => {
   });
 });
 
-describe('temporary password', () => {
+describe('set-password link', () => {
   function addWithoutEmail() {
     const fetchMock = renderUsers({
       '/api/v1/users': (init) =>
@@ -163,7 +163,7 @@ describe('temporary password', () => {
               body: {
                 user: { ...mo, id: 9, name: 'New' },
                 emailSent: false,
-                tempPassword: 'Tmp-123!',
+                setupUrl: 'https://afc.example.test/reset/abc',
               },
             }
           : { body: adminUsers },
@@ -181,16 +181,18 @@ describe('temporary password', () => {
     return screen.findByRole('dialog', { name: 'Pass this on to New' });
   }
 
-  it('shows the temporary password and copies it', async () => {
+  it('shows the set-password link and copies it', async () => {
     addWithoutEmail();
     const writeText = vi.fn(async () => undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     const secret = await submitNewUser();
-    expect(within(secret).getByLabelText('Temporary password')).toHaveValue('Tmp-123!');
+    expect(within(secret).getByLabelText('Set-password link')).toHaveValue(
+      'https://afc.example.test/reset/abc',
+    );
     expect(secret).toHaveTextContent("It won't be shown again.");
     fireEvent.click(within(secret).getByRole('button', { name: 'Copy' }));
     expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument();
-    expect(writeText).toHaveBeenCalledWith('Tmp-123!');
+    expect(writeText).toHaveBeenCalledWith('https://afc.example.test/reset/abc');
     // Only Done closes it: the value is shown once.
     fireEvent(secret, new Event('cancel', { cancelable: true }));
     fireEvent.click(secret);
@@ -204,7 +206,7 @@ describe('temporary password', () => {
     addWithoutEmail();
     Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
     const secret = await submitNewUser();
-    const field = within(secret).getByLabelText('Temporary password') as HTMLInputElement;
+    const field = within(secret).getByLabelText('Set-password link') as HTMLInputElement;
     const select = vi.spyOn(field, 'select');
     fireEvent.click(within(secret).getByRole('button', { name: 'Copy' }));
     expect(

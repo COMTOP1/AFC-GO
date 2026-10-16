@@ -10,15 +10,17 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/emails"
 )
 
-func TestSignupRendersCredentials(t *testing.T) {
-	m, err := emails.Signup("new@example.test", "New Person", "Tmp-Pa55!", "afc.example.test")
+func TestSignupRendersSetupLink(t *testing.T) {
+	m, err := emails.Signup("new@example.test", "New Person", "https://afc.example.test/reset/abc", "afc.example.test")
 	require.NoError(t, err)
 	assert.Equal(t, "new@example.test", m.To)
 	var body bytes.Buffer
 	require.NoError(t, m.Tpl.Execute(&body, m.TplData))
-	for _, want := range []string{"New Person", "new@example.test", "Tmp-Pa55!", "https://afc.example.test", "https://afc.example.test/AFC.png", `lang="en-gb"`} {
+	for _, want := range []string{"New Person", "new@example.test", "https://afc.example.test/reset/abc", "https://afc.example.test/AFC.png",
+		"https://afc.example.test/privacy", "valid for one week as of the sent time", `lang="en-gb"`} {
 		assert.Contains(t, body.String(), want)
 	}
+	assert.NotContains(t, body.String(), "Password:")
 	assert.NotContains(t, body.String(), "github.com/COMTOP1")
 }
 

@@ -36,11 +36,11 @@ export interface UserInput {
   image: ImageValue;
 }
 
-/** user.Created — tempPassword is set only when the welcome email couldn't be sent. */
+/** user.Created — setupUrl (the set-password link) is set only when the welcome email couldn't be sent. */
 export interface CreatedUser {
   user: AdminUser;
   emailSent: boolean;
-  tempPassword?: string;
+  setupUrl?: string;
 }
 
 /** user.ResetResult — resetUrl is set only when the reset email couldn't be sent. */

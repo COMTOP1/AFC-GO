@@ -21,7 +21,7 @@ type Errors = Partial<Record<PasswordField, string>>;
 function InvalidLink() {
   return (
     <EmptyState
-      title="This reset link is invalid or has expired"
+      title="This link is invalid or has expired"
       message="Ask a club administrator for a new one, or sign in again if you were sent here after signing in."
       action={<ButtonLink to="/">Home</ButtonLink>}
     />
@@ -30,7 +30,7 @@ function InvalidLink() {
 
 /** Keyed by token: moving to a different reset link starts from a clean slate. */
 export default function ResetPage() {
-  usePageTitle('Reset password');
+  usePageTitle('Set password');
   const raw = useParams().token ?? '';
   return <ResetForm key={raw} raw={raw} />;
 }
@@ -83,7 +83,7 @@ function ResetForm({ raw }: { raw: string }) {
     }
   }
 
-  const header = <PageHeader title="Reset your password" />;
+  const header = <PageHeader title="Set your password" />;
 
   if (done) {
     return (
