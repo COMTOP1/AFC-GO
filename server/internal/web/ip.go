@@ -8,8 +8,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// ParseCIDRs parses a comma-separated list of CIDR ranges, e.g. the
-// TRUSTED_PROXIES setting "10.20.0.0/16".
+// ParseCIDRs parses a comma-separated list of IP addresses and CIDR ranges,
+// e.g. the TRUSTED_PROXIES setting "10.20.1.10,10.20.1.11" or
+// "10.20.0.0/16". A bare address means just that one host.
 func ParseCIDRs(raw string) ([]*net.IPNet, error) {
 	var out []*net.IPNet
 	for _, part := range strings.Split(raw, ",") {
@@ -17,9 +18,17 @@ func ParseCIDRs(raw string) ([]*net.IPNet, error) {
 		if part == "" {
 			continue
 		}
+		if ip := net.ParseIP(part); ip != nil {
+			bits := 128
+			if ip.To4() != nil {
+				ip, bits = ip.To4(), 32
+			}
+			out = append(out, &net.IPNet{IP: ip, Mask: net.CIDRMask(bits, bits)})
+			continue
+		}
 		_, ipNet, err := net.ParseCIDR(part)
 		if err != nil {
-			return nil, fmt.Errorf("invalid CIDR %q: %w", part, err)
+			return nil, fmt.Errorf("invalid IP address or CIDR range %q: %w", part, err)
 		}
 		out = append(out, ipNet)
 	}

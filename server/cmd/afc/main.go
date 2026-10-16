@@ -192,9 +192,10 @@ func main() {
 			mtlsConf.AllowedClients = append(mtlsConf.AllowedClients, trimmed)
 		}
 	}
-	// TRUSTED_PROXIES lists the reverse proxies (CIDR ranges) allowed to
-	// set X-Forwarded-For, e.g. "10.20.0.0/16". Leave it empty when nothing
-	// sits in front of the server.
+	// TRUSTED_PROXIES lists the reverse proxies allowed to set
+	// X-Forwarded-For: addresses and/or CIDR ranges, e.g.
+	// "10.20.1.10,10.20.1.11". Leave it empty when nothing sits in front of
+	// the server.
 	trustedProxies, err := web.ParseCIDRs(os.Getenv("TRUSTED_PROXIES"))
 	if err != nil {
 		fatal(fmt.Sprintf("invalid option for TRUSTED_PROXIES: %+v", err))

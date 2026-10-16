@@ -42,6 +42,24 @@ func TestParseCIDRs(t *testing.T) {
 	empty, err := web.ParseCIDRs("")
 	require.NoError(t, err)
 	assert.Empty(t, empty)
-	_, err = web.ParseCIDRs("10.20.0.0")
-	assert.Error(t, err)
+	_, err = web.ParseCIDRs("10.20.0.300")
+	require.Error(t, err)
+	_, err = web.ParseCIDRs("nginx-1")
+	require.Error(t, err)
+}
+
+func TestBareProxyAddressesTrustOnlyThatHost(t *testing.T) {
+	trusted, err := web.ParseCIDRs("10.20.1.10, 10.20.1.11, fd00::5")
+	require.NoError(t, err)
+	require.Len(t, trusted, 3)
+	extract := web.IPExtractor(trusted)
+	req := func(remote string) *http.Request {
+		r := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+		r.RemoteAddr = remote
+		r.Header.Set("X-Forwarded-For", "203.0.113.7")
+		return r
+	}
+	assert.Equal(t, "203.0.113.7", extract(req("10.20.1.11:5000")), "a listed proxy is believed")
+	assert.Equal(t, "10.20.1.12", extract(req("10.20.1.12:5000")), "its neighbour is not")
+	assert.Equal(t, "203.0.113.7", extract(req("[fd00::5]:5000")), "IPv6 works too")
 }
