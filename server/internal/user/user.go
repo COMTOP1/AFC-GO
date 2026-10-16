@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/hex"
 	"errors"
@@ -86,10 +85,12 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 		}
 	}
 	if user.Password.Valid {
-		sha := sha512.New()
-		sha.Write([]byte(userParam.Password.String))
-		sum := sha.Sum(nil)
-		if subtle.ConstantTimeCompare(sum, []byte(user.Password.String)) == 1 {
+		var match bool
+		match, err = legacyMatches(userParam.Password.String, user.Password.String, saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
+		if err != nil {
+			return userParam, false, err
+		}
+		if match {
 			if user.ResetPassword {
 				return user, true, errors.New("password reset required")
 			}

@@ -2,9 +2,12 @@ package user_test
 
 import (
 	"context"
+	"crypto/sha512"
 	"encoding/hex"
+	"strings"
 	"testing"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/guregu/null.v4"
@@ -83,4 +86,69 @@ func TestAdminResetUserKeepsWorkingPassword(t *testing.T) {
 	assert.False(t, reset)
 	_, reset, _ = verify(t, store, "old@example.test", "Known-Pa55!")
 	assert.True(t, reset)
+}
+
+// addLegacyUser stores a user the way the old site did: only the password
+// column, no hash or salt.
+func addLegacyUser(t *testing.T, db *sqlx.DB, email, stored string) {
+	t.Helper()
+	_, err := db.ExecContext(context.Background(), `INSERT INTO users (name, email, role, password) VALUES ('Legacy', $1, 'TREASURER', $2)`, email, stored)
+	require.NoError(t, err)
+}
+
+func passwordColumn(t *testing.T, db *sqlx.DB, email string) (password, salt, hash null.String) {
+	t.Helper()
+	require.NoError(t, db.QueryRowContext(context.Background(), `SELECT password, salt, hash FROM users WHERE email = $1`, email).Scan(&password, &salt, &hash))
+	return password, salt, hash
+}
+
+func TestWrapLegacyPasswordsWrapsEachDigestOnce(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+	digest := sha512.Sum512([]byte("Legacy-Pa55!"))
+	addLegacyUser(t, db, "legacy@example.test", hex.EncodeToString(digest[:]))
+	newUserLikeSignup(t, store, "new@example.test", "Temp-Pa55!")
+
+	n, err := store.WrapLegacyPasswords(context.Background(), workFactor, blockSize, parallelism, keyLen)
+	require.NoError(t, err)
+	assert.Equal(t, 1, n, "only the legacy row is wrapped")
+
+	password, salt, _ := passwordColumn(t, db, "legacy@example.test")
+	assert.True(t, strings.HasPrefix(password.String, "scrypt-sha512:"))
+	assert.NotContains(t, password.String, hex.EncodeToString(digest[:]), "the bare digest must be gone")
+	assert.True(t, salt.Valid)
+
+	n, err = store.WrapLegacyPasswords(context.Background(), workFactor, blockSize, parallelism, keyLen)
+	require.NoError(t, err)
+	assert.Zero(t, n, "running it again does nothing")
+}
+
+func TestWrappedLegacyPasswordStillLogsInAndUpgrades(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+
+	// What WrapLegacyPasswords stores for a legacy digest.
+	digest := sha512.Sum512([]byte("Legacy-Pa55!"))
+	salt, err := utils.GenerateRandom(utils.GenerateSalt)
+	require.NoError(t, err)
+	wrapped, err := utils.HashPassScrypt(digest[:], []byte(salt), workFactor, blockSize, parallelism, keyLen)
+	require.NoError(t, err)
+	addLegacyUser(t, db, "legacy@example.test", "scrypt-sha512:"+wrapped)
+	_, err = db.ExecContext(context.Background(), `UPDATE users SET salt = $1 WHERE email = 'legacy@example.test'`, hex.EncodeToString([]byte(salt)))
+	require.NoError(t, err)
+
+	_, _, err = verify(t, store, "legacy@example.test", "wrong")
+	require.Error(t, err)
+
+	u, reset, err := verify(t, store, "legacy@example.test", "Legacy-Pa55!")
+	require.NoError(t, err)
+	assert.False(t, reset)
+	assert.Positive(t, u.ID)
+
+	password, _, hash := passwordColumn(t, db, "legacy@example.test")
+	assert.False(t, password.Valid, "the legacy column is cleared once upgraded")
+	assert.True(t, hash.Valid)
+
+	_, _, err = verify(t, store, "legacy@example.test", "Legacy-Pa55!")
+	require.NoError(t, err, "the upgraded hash keeps working")
 }
