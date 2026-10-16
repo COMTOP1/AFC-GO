@@ -44,5 +44,5 @@ psql "$DATABASE_URL" -f server/migrations/001_public_uuids.sql
 
 ### File clean-up
 
-Once a day (10 minutes after start, then every 24 hours) the server runs the same check as `checkfiles` and deletes files that have been unreferenced for 30 days. A Postgres advisory lock means only one instance runs it at a time. A file linked from article or info-page text counts as referenced. If more than half the bucket (and over 20 files) suddenly looks unreferenced, nothing is deleted and an error is logged. A table added with a `file_name` column must be added to `fileColumns` in `server/internal/filecheck/store.go`, or its files will be deleted.
+Once a day (10 minutes after start, then every 24 hours) the server runs the same check as `checkfiles` and deletes files that have been unreferenced for 30 days. A Postgres advisory lock means only one instance runs it at a time. Every table with a `file_name` column counts, including ones the code doesn't use (found from the database schema), and a file linked from any text column (an article, the info page, a team description) counts as referenced. If more than half the bucket (and over 20 files) suddenly looks unreferenced, nothing is deleted and an error is logged.
 

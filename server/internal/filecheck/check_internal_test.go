@@ -172,3 +172,31 @@ func TestMentioned(t *testing.T) {
 	assert.True(t, mentioned(texts, "news/abc.jpg"))
 	assert.False(t, mentioned(texts, "news/other.jpg"))
 }
+
+func TestCheckFindsFilesInTablesTheCodeDoesntKnow(t *testing.T) {
+	db, _ := testdb.Open(t)
+	ctx := context.Background()
+	// A table from the old site, and one with no id column.
+	_, err := db.ExecContext(ctx, `CREATE TABLE legacy_gallery (id SERIAL PRIMARY KEY, file_name TEXT);
+		INSERT INTO legacy_gallery (file_name) VALUES ('old-photo.jpg');
+		CREATE TABLE attachments (file_name VARCHAR(200));
+		INSERT INTO attachments VALUES ('attach.pdf');
+		UPDATE teams SET description = 'Kit list: https://cdn.test/bucket/team/kit%20list.pdf' WHERE id = (SELECT min(id) FROM teams)`)
+	require.NoError(t, err)
+
+	store := NewStore(db)
+	refs, err := store.References(ctx)
+	require.NoError(t, err)
+	assert.Contains(t, refs["old-photo.jpg"][0], "legacy_gallery ")
+	assert.Equal(t, []string{"attachments"}, refs["attach.pdf"])
+
+	objects := newObjects("old-photo.jpg", "attach.pdf", "team/kit list.pdf", "orphan.png")
+	for k := range refs {
+		objects.keys[k] = true
+	}
+	report, err := NewChecker(store, objects).Run(ctx, false)
+	require.NoError(t, err)
+	found := byKey(report.Differences)
+	assert.Equal(t, map[string]Discrepancy{"unreferenced:orphan.png": found["unreferenced:orphan.png"]}, found,
+		"only the orphan: legacy tables and links in any text column count as references")
+}
