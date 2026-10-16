@@ -64,6 +64,9 @@ type Config struct {
 	// TrustedProxies are the reverse proxies whose X-Forwarded-For is
 	// believed. Empty means the connecting address is the client's.
 	TrustedProxies []*net.IPNet
+	// FileRetention is how long a file may go unreferenced before the daily
+	// file check deletes it; zero means filecheck.MaxRetention (30 days).
+	FileRetention time.Duration
 }
 
 // The real file store must support the daily file check, or Build would
@@ -212,7 +215,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 
 	a := &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens, mtls: conf.MTLS}
 	if lister, ok := objects.(filecheck.Objects); ok && s.FileCheck != nil {
-		a.files = filecheck.NewJob(filecheck.NewChecker(s.FileCheck, lister), s.FileCheck)
+		a.files = filecheck.NewJob(filecheck.NewChecker(s.FileCheck, lister).WithRetention(conf.FileRetention), s.FileCheck)
 	}
 	return a
 }

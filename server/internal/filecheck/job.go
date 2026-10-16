@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Job runs the file check, with deletion, once a day. Every server instance
+// Job runs the file check, with deletion, once a day (see NewJob). Every server instance
 // runs a Job; the Postgres lock means only one of them checks at a time.
 type Job struct {
 	checker  *Checker
@@ -21,8 +21,11 @@ type Job struct {
 	stopOnce sync.Once
 }
 
+// NewJob checks once a day, or as often as the retention period when that
+// is shorter, so files are deleted close to when they fall due.
 func NewJob(checker *Checker, store *Store) *Job {
-	return &Job{checker: checker, store: store, interval: 24 * time.Hour, firstRun: 10 * time.Minute, stop: make(chan struct{})}
+	return &Job{checker: checker, store: store, interval: min(24*time.Hour, checker.retention),
+		firstRun: 10 * time.Minute, stop: make(chan struct{})}
 }
 
 // Start begins the daily checks until Stop.

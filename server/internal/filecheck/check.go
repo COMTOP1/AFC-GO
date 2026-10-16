@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/url"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,9 +18,36 @@ import (
 
 var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/server/internal/filecheck")
 
-// RetainUnreferenced is how long a file may go unreferenced before it is
-// deleted.
-const RetainUnreferenced = 30 * 24 * time.Hour
+// MaxRetention is the longest a file may go unreferenced before it is
+// deleted, and the default (FILE_RETENTION can make it shorter, e.g. on dev).
+const MaxRetention = 30 * 24 * time.Hour
+
+// ParseRetention reads a retention period: whole days ("1d", "7d") or a Go
+// duration ("12h", "90m"). "" means MaxRetention. It must be above zero and
+// at most MaxRetention.
+func ParseRetention(raw string) (time.Duration, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return MaxRetention, nil
+	}
+	var d time.Duration
+	if days, ok := strings.CutSuffix(raw, "d"); ok {
+		n, err := strconv.Atoi(days)
+		if err != nil {
+			return 0, fmt.Errorf("invalid retention %q: want e.g. 7d or 12h", raw)
+		}
+		d = time.Duration(n) * 24 * time.Hour
+	} else {
+		var err error
+		if d, err = time.ParseDuration(raw); err != nil {
+			return 0, fmt.Errorf("invalid retention %q: want e.g. 7d or 12h", raw)
+		}
+	}
+	if d <= 0 || d > MaxRetention {
+		return 0, fmt.Errorf("retention %q must be above zero and no more than 30d", raw)
+	}
+	return d, nil
+}
 
 // Objects is the file store (satisfied by *storage.Store).
 type Objects interface {
@@ -29,19 +57,33 @@ type Objects interface {
 
 // Checker runs file checks.
 type Checker struct {
-	store   *Store
-	objects Objects
-	now     func() time.Time
+	store     *Store
+	objects   Objects
+	now       func() time.Time
+	retention time.Duration
 }
 
+// NewChecker deletes files after MaxRetention unless WithRetention says
+// otherwise.
 func NewChecker(store *Store, objects Objects) *Checker {
-	return &Checker{store: store, objects: objects, now: time.Now}
+	return &Checker{store: store, objects: objects, now: time.Now, retention: MaxRetention}
+}
+
+// WithRetention sets how long a file may go unreferenced before it is
+// deleted (see ParseRetention); it is capped at MaxRetention.
+func (c *Checker) WithRetention(d time.Duration) *Checker {
+	if d > 0 && d <= MaxRetention {
+		c.retention = d
+	}
+	return c
 }
 
 // Report is what one check found and did.
 type Report struct {
 	Objects    int
 	References int
+	// Retention is how long a file may go unreferenced before it is deleted.
+	Retention time.Duration
 	// Differences are all recorded differences after the check, oldest first.
 	Differences []Discrepancy
 	// Deleted are files removed for being unreferenced for 30 days.
@@ -53,7 +95,7 @@ type Report struct {
 
 // Run compares the database with the file store and records the
 // differences. With deleteDue it also deletes files that have been
-// unreferenced for RetainUnreferenced.
+// unreferenced for the retention period.
 func (c *Checker) Run(ctx context.Context, deleteDue bool) (Report, error) {
 	ctx, span := tracer.Start(ctx, "filecheck.Run")
 	defer span.End()
@@ -92,7 +134,7 @@ func (c *Checker) Run(ctx context.Context, deleteDue bool) (Report, error) {
 		return Report{}, err
 	}
 
-	report := Report{Objects: len(keys), References: len(refs)}
+	report := Report{Objects: len(keys), References: len(refs), Retention: c.retention}
 	if deleteDue {
 		report.Deleted, report.DeletionSkipped, err = c.deleteDue(ctx, now, len(keys), unreferenced)
 		if err != nil {
@@ -105,7 +147,7 @@ func (c *Checker) Run(ctx context.Context, deleteDue bool) (Report, error) {
 	return report, nil
 }
 
-// deleteDue deletes files recorded as unreferenced for RetainUnreferenced
+// deleteDue deletes files recorded as unreferenced for the retention period
 // that this check still found unreferenced.
 func (c *Checker) deleteDue(ctx context.Context, now time.Time, objects int, unreferenced map[string]bool) ([]string, string, error) {
 	// A sudden flood of unreferenced files means something is wrong (the
@@ -122,7 +164,7 @@ func (c *Checker) deleteDue(ctx context.Context, now time.Time, objects int, unr
 	}
 	var deleted []string
 	for _, d := range recorded {
-		if d.Kind != Unreferenced || !unreferenced[d.Key] || now.Sub(d.FirstSeen) < RetainUnreferenced {
+		if d.Kind != Unreferenced || !unreferenced[d.Key] || now.Sub(d.FirstSeen) < c.retention {
 			continue
 		}
 		if err = c.objects.Delete(ctx, d.Key); err != nil {

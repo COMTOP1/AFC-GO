@@ -2,7 +2,8 @@
 // store and prints the differences: files nothing points to, and rows
 // pointing at files that aren't there. It records them in
 // file_discrepancies, like the server's daily check. With -delete it also
-// deletes files unreferenced for 30 days; otherwise it changes no files.
+// deletes files unreferenced for the retention period (-retention, else
+// FILE_RETENTION, else 30 days; never more); otherwise it changes no files.
 package main
 
 import (
@@ -13,6 +14,7 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
@@ -23,14 +25,24 @@ import (
 )
 
 func main() {
-	deleteDue := flag.Bool("delete", false, "also delete files unreferenced for 30 days")
+	deleteDue := flag.Bool("delete", false, "also delete files unreferenced for the retention period")
+	retentionFlag := flag.String("retention", "", "how long a file may go unreferenced before deletion, e.g. 1d or 12h; at most 30d (default FILE_RETENTION, else 30d)")
 	flag.Parse()
 	_ = godotenv.Load(".env")
 	_ = godotenv.Overload(".env.local")
-	os.Exit(run(context.Background(), *deleteDue))
+	raw := *retentionFlag
+	if raw == "" {
+		raw = os.Getenv("FILE_RETENTION")
+	}
+	retention, err := filecheck.ParseRetention(raw)
+	if err != nil {
+		slog.Error("invalid retention", "error", err)
+		os.Exit(1)
+	}
+	os.Exit(run(context.Background(), *deleteDue, retention))
 }
 
-func run(ctx context.Context, deleteDue bool) int {
+func run(ctx context.Context, deleteDue bool, retention time.Duration) int {
 	dbPort, err := strconv.Atoi(os.Getenv("DB_PORT"))
 	if err != nil {
 		slog.Error(fmt.Sprintf("invalid option for DB_PORT: %+v", err))
@@ -59,7 +71,7 @@ func run(ctx context.Context, deleteDue bool) int {
 	var report filecheck.Report
 	ran, err := store.WithLock(ctx, func(ctx context.Context) error {
 		var runErr error
-		report, runErr = filecheck.NewChecker(store, objects).Run(ctx, deleteDue)
+		report, runErr = filecheck.NewChecker(store, objects).WithRetention(retention).Run(ctx, deleteDue)
 		return runErr
 	})
 	if err != nil {
@@ -87,7 +99,7 @@ func printReport(w io.Writer, r filecheck.Report) {
 	_, _ = fmt.Fprintf(w, "Unreferenced files (%d): in the bucket, but nothing points to them\n", len(unreferenced)) //nolint:errcheck // stdout
 	for _, d := range unreferenced {
 		_, _ = fmt.Fprintf(w, "  %s  first seen %s, deleted from %s\n", d.Key, //nolint:errcheck // stdout
-			d.FirstSeen.Format("2 Jan 2006"), d.FirstSeen.Add(filecheck.RetainUnreferenced).Format("2 Jan 2006"))
+			d.FirstSeen.Format("2 Jan 2006"), d.FirstSeen.Add(r.Retention).Format("2 Jan 2006 15:04"))
 	}
 	_, _ = fmt.Fprintf(w, "\nMissing files (%d): the database points to them, but they aren't in the bucket\n", len(missing)) //nolint:errcheck // stdout
 	for _, d := range missing {

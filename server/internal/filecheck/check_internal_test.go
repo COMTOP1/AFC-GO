@@ -200,3 +200,53 @@ func TestCheckFindsFilesInTablesTheCodeDoesntKnow(t *testing.T) {
 	assert.Equal(t, map[string]Discrepancy{"unreferenced:orphan.png": found["unreferenced:orphan.png"]}, found,
 		"only the orphan: legacy tables and links in any text column count as references")
 }
+
+func TestParseRetention(t *testing.T) {
+	for raw, want := range map[string]time.Duration{
+		"":    MaxRetention,
+		"1d":  24 * time.Hour,
+		"7d":  7 * 24 * time.Hour,
+		"30d": MaxRetention,
+		"12h": 12 * time.Hour,
+		"90m": 90 * time.Minute,
+	} {
+		got, err := ParseRetention(raw)
+		require.NoError(t, err, raw)
+		assert.Equal(t, want, got, raw)
+	}
+	for _, bad := range []string{"31d", "721h", "0d", "-1d", "0", "a week", "1.5d"} {
+		_, err := ParseRetention(bad)
+		assert.Error(t, err, bad)
+	}
+}
+
+func TestShorterRetentionDeletesSooner(t *testing.T) {
+	db, _ := testdb.Open(t)
+	ctx := context.Background()
+	objects := newObjects("orphan.png")
+	checker := NewChecker(NewStore(db), objects).WithRetention(24 * time.Hour)
+	start := time.Date(2026, 10, 16, 3, 0, 0, 0, time.UTC)
+	clock := start
+	checker.now = func() time.Time { return clock }
+
+	report, err := checker.Run(ctx, true)
+	require.NoError(t, err)
+	assert.Equal(t, 24*time.Hour, report.Retention)
+	clock = start.Add(23 * time.Hour)
+	_, err = checker.Run(ctx, true)
+	require.NoError(t, err)
+	assert.Empty(t, objects.deleted)
+	clock = start.Add(24 * time.Hour)
+	_, err = checker.Run(ctx, true)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"orphan.png"}, objects.deleted)
+}
+
+func TestRetentionNeverExceedsThirtyDays(t *testing.T) {
+	c := NewChecker(nil, nil)
+	assert.Equal(t, MaxRetention, c.WithRetention(365*24*time.Hour).retention, "too long is ignored")
+	assert.Equal(t, MaxRetention, c.WithRetention(0).retention, "zero keeps the default")
+	assert.Equal(t, 24*time.Hour, NewJob(NewChecker(nil, nil).WithRetention(12*time.Hour).WithRetention(24*time.Hour), nil).interval)
+	assert.Equal(t, 12*time.Hour, NewJob(NewChecker(nil, nil).WithRetention(12*time.Hour), nil).interval,
+		"retention under a day checks more often")
+}
