@@ -24,6 +24,10 @@ var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/server/internal/visitors")
 const (
 	settingID  = "visitorCount"
 	cookieName = "afc_aldermaston_visited"
+	// OptOutCookie, when present, stops this browser being counted. The
+	// privacy page sets it; counting relies on PECR's statistics exemption,
+	// which requires a simple way to object.
+	OptOutCookie = "afc_no_visit_count"
 )
 
 // SettingStore persists the running total (satisfied by *setting.Store).
@@ -140,9 +144,23 @@ func (c *Counter) Flush(ctx context.Context) {
 	c.mu.Unlock()
 }
 
-// Middleware counts a visit the first time a browser is seen in 24 hours.
+// optedOut reports whether the visitor asked not to be counted, either on
+// the privacy page or with the Global Privacy Control signal.
+func optedOut(ctx echo.Context) bool {
+	if ctx.Request().Header.Get("Sec-GPC") == "1" {
+		return true
+	}
+	_, err := ctx.Cookie(OptOutCookie)
+	return err == nil
+}
+
+// Middleware counts a visit the first time a browser is seen in 24 hours,
+// unless it has opted out.
 func (c *Counter) Middleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
+		if optedOut(ctx) {
+			return next(ctx)
+		}
 		if _, err := ctx.Cookie(cookieName); errors.Is(err, http.ErrNoCookie) {
 			ctx.SetCookie(&http.Cookie{
 				Name:     cookieName,

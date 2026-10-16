@@ -27,7 +27,7 @@ export function ResetPasswordButton({
       if (!result.emailSent && result.resetUrl) {
         onSecret({
           title: `Pass this link on to ${user.name}`,
-          message: `We couldn't email ${user.name}. Send them this link to set a new password; it lasts 7 days.`,
+          message: `We couldn't email ${user.name}. Send them this link to set a new password; it lasts 48 hours.`,
           label: 'Reset link',
           value: result.resetUrl,
         });
@@ -60,7 +60,7 @@ export function ResetPasswordButton({
       <ConfirmDialog
         open={open}
         title={`Reset ${user.name}'s password?`}
-        message="They'll be emailed a link to set a new one (valid for 7 days) and must use it before they can sign in again."
+        message="They'll be emailed a link to set a new one (valid for 48 hours) and must use it before they can sign in again."
         confirmLabel="Reset password"
         onConfirm={confirm}
         onCancel={() => setOpen(false)}

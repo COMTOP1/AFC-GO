@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -10,12 +11,34 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type fakeS3 struct {
 	putInput    *s3.PutObjectInput
 	deleteInput *s3.DeleteObjectInput
 	headErr     error
+	// pages are the keys ListObjectsV2 returns, one page per call.
+	pages [][]string
+}
+
+func (f *fakeS3) ListObjectsV2(_ context.Context, params *s3.ListObjectsV2Input, _ ...func(*s3.Options)) (*s3.ListObjectsV2Output, error) {
+	page := 0
+	if params.ContinuationToken != nil {
+		page, _ = strconv.Atoi(*params.ContinuationToken)
+	}
+	out := &s3.ListObjectsV2Output{}
+	if page < len(f.pages) {
+		for _, k := range f.pages[page] {
+			out.Contents = append(out.Contents, types.Object{Key: aws.String(k)})
+		}
+	}
+	if page+1 < len(f.pages) {
+		out.IsTruncated = aws.Bool(true)
+		out.NextContinuationToken = aws.String(strconv.Itoa(page + 1))
+	}
+	return out, nil
 }
 
 func (f *fakeS3) PutObject(_ context.Context, params *s3.PutObjectInput, _ ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
@@ -155,4 +178,11 @@ func TestDeleteSendsBucketAndKey(t *testing.T) {
 	if aws.ToString(fake.deleteInput.Key) != "player/uuid-1.png" {
 		t.Errorf("Key = %q, want %q", aws.ToString(fake.deleteInput.Key), "player/uuid-1.png")
 	}
+}
+
+func TestListReadsEveryPage(t *testing.T) {
+	s := newTestStore(&fakeS3{pages: [][]string{{"user/a.png", "player/b.png"}, {"legacy.jpg"}}})
+	keys, err := s.List(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, []string{"user/a.png", "player/b.png", "legacy.jpg"}, keys)
 }

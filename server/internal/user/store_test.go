@@ -66,3 +66,19 @@ func TestEditUserRejectsEmailAlreadyUsedByAnotherUser(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, before, after, "user 1 must be completely unchanged")
 }
+
+func TestGetUserByUUID(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+	ctx := context.Background()
+	byID, err := store.GetUser(ctx, user.User{ID: 1})
+	require.NoError(t, err)
+	require.NotEmpty(t, byID.UUID, "every user gets a public UUID")
+
+	byUUID, err := store.GetUserByUUID(ctx, byID.UUID)
+	require.NoError(t, err)
+	assert.Equal(t, byID.ID, byUUID.ID)
+
+	_, err = store.GetUserByUUID(ctx, "00000000-0000-4000-8000-000000000000")
+	require.Error(t, err)
+}

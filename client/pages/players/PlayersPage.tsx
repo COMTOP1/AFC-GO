@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { deletePlayer, usePlayers, type Player } from '../../api/players';
 import { queryKeys } from '../../api/queries';
@@ -14,6 +15,7 @@ import { usePageTitle } from '../../components/page/usePageTitle';
 import { useSearchQuery } from '../../components/page/useSearchQuery';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
+import { Checkbox } from '../../components/ui/Checkbox';
 import { Select } from '../../components/ui/controls';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Field } from '../../components/ui/Field';
@@ -35,12 +37,40 @@ function born(p: Player): string {
   return `${formatDate(p.dateOfBirth)}${age}`;
 }
 
-function PlayersTable({ canEdit, onEdit }: { canEdit: boolean; onEdit: (p: Player) => void }) {
+/** The team filter value for players whose team was removed. */
+const NO_TEAM = 'none';
+
+function PlayersTable({ canManage, onEdit }: { canManage: boolean; onEdit: (p: Player) => void }) {
   const players = usePlayers();
   const teams = useTeams();
   const [params, setParams] = useSearchParams();
   const q = useSearchQuery();
   const teamFilter = params.get('team') ?? '';
+  const [selected, setSelected] = useState<ReadonlySet<number>>(new Set());
+  const queryClient = useQueryClient();
+
+  function toggle(id: number, on: boolean) {
+    const next = new Set(selected);
+    if (on) {
+      next.add(id);
+    } else {
+      next.delete(id);
+    }
+    setSelected(next);
+  }
+
+  // Deletes one at a time so a failure stops the rest. The list is refreshed
+  // either way, so whatever was deleted before a failure disappears.
+  async function deleteSelected() {
+    try {
+      for (const id of selected) {
+        await deletePlayer(id);
+      }
+    } finally {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.players });
+      void queryClient.invalidateQueries({ queryKey: ['team'] });
+    }
+  }
 
   return (
     <>
@@ -60,6 +90,7 @@ function PlayersTable({ canEdit, onEdit }: { canEdit: boolean; onEdit: (p: Playe
             }}
           >
             <option value="">All teams</option>
+            <option value={NO_TEAM}>No team</option>
             {teams.data?.map((t) => (
               <option key={t.id} value={String(t.id)}>
                 {t.name}
@@ -73,72 +104,125 @@ function PlayersTable({ canEdit, onEdit }: { canEdit: boolean; onEdit: (p: Playe
           const shown = [...list]
             .sort(byTeamThenName)
             .filter(
-              (p) => matchesQuery(p.name, q) && (!teamFilter || String(p.team?.id) === teamFilter),
+              (p) =>
+                matchesQuery(p.name, q) &&
+                (!teamFilter ||
+                  (teamFilter === NO_TEAM ? !p.team : String(p.team?.id) === teamFilter)),
             );
           if (shown.length === 0) {
             return <EmptyState title="No players match your filters" />;
           }
+          // The server leaves dates of birth out for viewers who don't need
+          // them (e.g. Programme Editors); drop the column when none came.
+          const showBorn = list.some((p) => p.dateOfBirth);
+          const shownSelected = shown.filter((p) => selected.has(p.id));
           return (
-            <Table>
-              <THead>
-                <Tr>
-                  <Th>
-                    <span className="sr-only">Photo</span>
-                  </Th>
-                  <Th>Name</Th>
-                  <Th>Position</Th>
-                  <Th>Team</Th>
-                  <Th>Date of birth</Th>
-                  {canEdit && (
+            <>
+              {canManage && selected.size > 0 && (
+                <div className="mb-3 flex items-center gap-3">
+                  <DeleteButton
+                    confirmTitle={`Delete ${selected.size} ${selected.size === 1 ? 'player' : 'players'}?`}
+                    confirmMessage="Their details and photos will be removed. This can't be undone."
+                    onDelete={deleteSelected}
+                    successMessage={`${selected.size === 1 ? 'Player' : 'Players'} deleted`}
+                    after={() => setSelected(new Set())}
+                  >
+                    {`Delete selected (${selected.size})`}
+                  </DeleteButton>
+                  <Button size="sm" variant="secondary" onClick={() => setSelected(new Set())}>
+                    Clear selection
+                  </Button>
+                </div>
+              )}
+              <Table>
+                <THead>
+                  <Tr>
+                    {canManage && (
+                      <Th>
+                        <Checkbox
+                          label={<span className="sr-only">Select all shown</span>}
+                          checked={shownSelected.length === shown.length}
+                          onChange={(e) => {
+                            const next = new Set(selected);
+                            for (const p of shown) {
+                              if (e.target.checked) {
+                                next.add(p.id);
+                              } else {
+                                next.delete(p.id);
+                              }
+                            }
+                            setSelected(next);
+                          }}
+                        />
+                      </Th>
+                    )}
                     <Th>
-                      <span className="sr-only">Actions</span>
+                      <span className="sr-only">Photo</span>
                     </Th>
-                  )}
-                </Tr>
-              </THead>
-              <TBody>
-                {shown.map((p) => (
-                  <Tr key={p.id}>
-                    <Td>
-                      <Thumb src={p.imageUrl} />
-                    </Td>
-                    <Td>
-                      <span className="font-medium">{p.name}</span>
-                      {p.isCaptain && (
-                        <Badge tone="red" className="ml-2">
-                          Captain
-                        </Badge>
-                      )}
-                    </Td>
-                    <Td>{p.position}</Td>
-                    <Td>{p.team?.name ?? 'No team'}</Td>
-                    <Td className="whitespace-nowrap">{born(p)}</Td>
-                    {canEdit && (
-                      <Td>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            aria-label={`Edit ${p.name}`}
-                            onClick={() => onEdit(p)}
-                          >
-                            Edit
-                          </Button>
-                          <DeleteButton
-                            ariaLabel={`Delete ${p.name}`}
-                            confirmTitle={`Delete ${p.name}?`}
-                            confirmMessage="This can't be undone."
-                            onDelete={() => deletePlayer(p.id)}
-                            invalidate={[queryKeys.players, ['team']]}
-                            successMessage="Player deleted"
-                          />
-                        </div>
-                      </Td>
+                    <Th>Name</Th>
+                    <Th>Position</Th>
+                    <Th>Team</Th>
+                    {showBorn && <Th>Date of birth</Th>}
+                    {canManage && (
+                      <Th>
+                        <span className="sr-only">Actions</span>
+                      </Th>
                     )}
                   </Tr>
-                ))}
-              </TBody>
-            </Table>
+                </THead>
+                <TBody>
+                  {shown.map((p) => (
+                    <Tr key={p.id}>
+                      {canManage && (
+                        <Td>
+                          <Checkbox
+                            label={<span className="sr-only">{`Select ${p.name}`}</span>}
+                            checked={selected.has(p.id)}
+                            onChange={(e) => toggle(p.id, e.target.checked)}
+                          />
+                        </Td>
+                      )}
+                      <Td>
+                        <Thumb src={p.imageUrl} />
+                      </Td>
+                      <Td>
+                        <span className="font-medium">{p.name}</span>
+                        {p.isCaptain && (
+                          <Badge tone="red" className="ml-2">
+                            Captain
+                          </Badge>
+                        )}
+                      </Td>
+                      <Td>{p.position}</Td>
+                      <Td>{p.team?.name ?? 'No team'}</Td>
+                      {showBorn && <Td className="whitespace-nowrap">{born(p)}</Td>}
+                      {canManage && (
+                        <Td>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              aria-label={`Edit ${p.name}`}
+                              onClick={() => onEdit(p)}
+                            >
+                              Edit
+                            </Button>
+                            <DeleteButton
+                              ariaLabel={`Delete ${p.name}`}
+                              confirmTitle={`Delete ${p.name}?`}
+                              confirmMessage="This can't be undone."
+                              onDelete={() => deletePlayer(p.id)}
+                              invalidate={[queryKeys.players, ['team']]}
+                              successMessage="Player deleted"
+                            />
+                          </div>
+                        </Td>
+                      )}
+                    </Tr>
+                  ))}
+                </TBody>
+              </Table>
+            </>
           );
         }}
       </QueryState>
@@ -148,17 +232,17 @@ function PlayersTable({ canEdit, onEdit }: { canEdit: boolean; onEdit: (p: Playe
 
 export default function PlayersPage() {
   usePageTitle('Players');
-  const { canEdit } = useCanEdit();
+  const { canManagePlayers } = useCanEdit();
   // null = closed; {} = adding; { player } = editing.
   const [dialog, setDialog] = useState<{ player?: Player } | null>(null);
   return (
     <>
       <PageHeader
         title="Players"
-        actions={canEdit && <Button onClick={() => setDialog({})}>Add player</Button>}
+        actions={canManagePlayers && <Button onClick={() => setDialog({})}>Add player</Button>}
       />
       <RequireSignIn title="Sign in to see the players">
-        <PlayersTable canEdit={canEdit} onEdit={(player) => setDialog({ player })} />
+        <PlayersTable canManage={canManagePlayers} onEdit={(player) => setDialog({ player })} />
       </RequireSignIn>
       <PlayerDialog
         open={dialog !== null}

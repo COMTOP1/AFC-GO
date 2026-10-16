@@ -23,7 +23,7 @@ import (
 
 const (
 	uploadCategory = "user"
-	resetTokenTTL  = 7 * 24 * time.Hour
+	resetTokenTTL  = 48 * time.Hour
 )
 
 type store interface {
@@ -32,6 +32,7 @@ type store interface {
 	AddUser(ctx context.Context, userParam User) (User, error)
 	EditUser(ctx context.Context, userParam User) (User, error)
 	DeleteUser(ctx context.Context, userParam User) error
+	EndSessions(ctx context.Context, id int) error
 }
 
 // TeamGetter checks manager teams (satisfied by *team.Store).
@@ -154,9 +155,10 @@ func conflictOnDuplicate(err error) error {
 	return err
 }
 
-// Create adds a user with a generated password they must reset on first
-// login, and emails it to them. If the email can't be sent the password is
-// returned so the admin can pass it on.
+// Create adds a user and emails them a link to set their password, valid
+// for as long as a reset link. If the email can't be sent the link is
+// returned so the admin can pass it on. The user's initial password is
+// random and never shown to anyone.
 func (s *Service) Create(ctx context.Context, in CreateInput, image *upload.File) (Created, error) {
 	ctx, span := tracer.Start(ctx, "user.Service.Create")
 	defer span.End()
@@ -178,8 +180,8 @@ func (s *Service) Create(ctx context.Context, in CreateInput, image *upload.File
 	if err != nil {
 		return Created{}, fmt.Errorf("failed to generate salt: %w", err)
 	}
-	// Same hashing as legacy UserAddFunc (raw salt string); the user must
-	// reset before this hash is ever checked.
+	// Same hashing as legacy UserAddFunc (raw salt string). Nobody knows
+	// this password: the user sets their own through the emailed link.
 	hash, err := utils.HashPassScrypt([]byte(password), []byte(salt), s.hash.WorkFactor, s.hash.BlockSize, s.hash.Parallelism, s.hash.KeyLength)
 	if err != nil {
 		return Created{}, fmt.Errorf("failed to hash password: %w", err)
@@ -201,13 +203,18 @@ func (s *Service) Create(ctx context.Context, in CreateInput, image *upload.File
 	}
 
 	out := Created{User: s.admin(added)}
-	msg, err := emails.Signup(added.Email, added.Name, password, s.domain)
+	token := uuid.NewString()
+	if err = s.tokens.Set(ctx, token, added.ID, resetTokenTTL); err != nil {
+		return out, fmt.Errorf("user %d was added but their set-password link could not be stored (use Reset password to send another): %w", added.ID, err)
+	}
+	link := fmt.Sprintf("https://%s/reset/%s", s.domain, token)
+	msg, err := emails.Signup(added.Email, added.Name, link, s.domain)
 	if err == nil {
 		err = s.mailer.Send(ctx, msg)
 	}
 	if err != nil {
 		slog.InfoContext(ctx, fmt.Sprintf("signup email not sent to user %d: %+v", added.ID, err))
-		out.TempPassword = password
+		out.SetupURL = link
 		return out, nil
 	}
 	out.EmailSent = true
@@ -284,7 +291,8 @@ func (s *Service) Delete(ctx context.Context, id int) (Admin, error) {
 	return deleted, nil
 }
 
-// ResetPassword forces a reset on next login and emails a 7-day reset link.
+// ResetPassword forces a reset on next login, signs the user out everywhere
+// and emails a 48-hour reset link.
 // If the email can't be sent, the link is returned for the admin to pass on.
 func (s *Service) ResetPassword(ctx context.Context, id int) (ResetResult, error) {
 	ctx, span := tracer.Start(ctx, "user.Service.ResetPassword")
@@ -296,6 +304,11 @@ func (s *Service) ResetPassword(ctx context.Context, id int) (ResetResult, error
 	u.ResetPassword = true
 	if _, err = s.store.EditUser(ctx, u); err != nil {
 		return ResetResult{}, fmt.Errorf("failed to flag user for reset: %w", err)
+	}
+	// An admin reset is often because the account may be compromised, so
+	// sign the user out everywhere now rather than when they next reset.
+	if err = s.store.EndSessions(ctx, u.ID); err != nil {
+		return ResetResult{}, err
 	}
 	token := uuid.NewString()
 	if err = s.tokens.Set(ctx, token, u.ID, resetTokenTTL); err != nil {

@@ -8,6 +8,7 @@ CREATE TABLE teams (
     fixtures     TEXT,
     coach        TEXT,
     physio       TEXT,
+    contact_email TEXT,
     file_name    TEXT,
     active       BOOLEAN NOT NULL DEFAULT FALSE,
     youth        BOOLEAN NOT NULL DEFAULT FALSE,
@@ -16,6 +17,7 @@ CREATE TABLE teams (
 
 CREATE TABLE users (
     id             SERIAL PRIMARY KEY,
+    uuid           UUID    NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     name           TEXT    NOT NULL,
     email          TEXT    NOT NULL UNIQUE,
     phone          TEXT,
@@ -23,13 +25,14 @@ CREATE TABLE users (
     role           TEXT    NOT NULL,
     file_name      TEXT,
     reset_password BOOLEAN NOT NULL DEFAULT FALSE,
-    password       TEXT,
+    session_version INTEGER NOT NULL DEFAULT 0,
     hash           TEXT,
     salt           TEXT
 );
 
 CREATE TABLE players (
     id            SERIAL PRIMARY KEY,
+    uuid          UUID    NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     name          TEXT    NOT NULL,
     file_name     TEXT,
     date_of_birth DATE,
@@ -99,4 +102,13 @@ CREATE TABLE programmes (
 CREATE TABLE settings (
     id           TEXT PRIMARY KEY,
     setting_text TEXT NOT NULL
+);
+
+CREATE TABLE file_discrepancies (
+    key        TEXT        NOT NULL,
+    kind       TEXT        NOT NULL CHECK (kind IN ('unreferenced', 'missing')),
+    detail     TEXT        NOT NULL DEFAULT '',
+    first_seen TIMESTAMPTZ NOT NULL,
+    last_seen  TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (key, kind)
 );

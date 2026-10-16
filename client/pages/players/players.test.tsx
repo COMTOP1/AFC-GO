@@ -2,7 +2,15 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import { anonymous, editor, manager, players, publicRoutes, youthTeam } from '../../test/fixtures';
+import {
+  anonymous,
+  editor,
+  manager,
+  players,
+  programmeEditor,
+  publicRoutes,
+  youthTeam,
+} from '../../test/fixtures';
 import { Location } from '../../test/Location';
 import type { MockRoute } from '../../test/mockFetch';
 import { mockFetch } from '../../test/mockFetch';
@@ -37,6 +45,16 @@ describe('PlayersPage', () => {
     expect(within(row).getByText('Captain')).toBeInTheDocument();
     expect(within(row).getByText('First Team')).toBeInTheDocument();
     expect(within(row).getByText('2 Apr 1998 (age 28)')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add player' })).toBeNull();
+    expect(screen.queryByRole('button', { name: `Edit ${sam.name}` })).toBeNull();
+  });
+
+  it('gives a Programme Editor the cut-down list with no controls', async () => {
+    const cutDown = players.map((p) => ({ ...p, dateOfBirth: undefined, age: undefined }));
+    renderPlayers({ '/api/v1/auth/me': programmeEditor, '/api/v1/players': { body: cutDown } });
+    const row = (await screen.findByText(sam.name)).closest('tr') as HTMLElement;
+    expect(within(row).getByText('First Team')).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Date of birth' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Add player' })).toBeNull();
     expect(screen.queryByRole('button', { name: `Edit ${sam.name}` })).toBeNull();
   });
@@ -125,5 +143,47 @@ describe('PlayersPage', () => {
     );
     expect(await screen.findByRole('button', { name: 'Player deleted' })).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'DELETE')).toBe(true);
+  });
+
+  it('filters to players with no team', async () => {
+    const leaver = { id: 32, name: 'Lee Leaver', isCaptain: false };
+    renderPlayers({ '/api/v1/players': { body: [...players, leaver] } }, '/players?team=none');
+    expect(await screen.findByText(leaver.name)).toBeInTheDocument();
+    expect(screen.queryByText(sam.name)).toBeNull();
+    const row = screen.getByText(leaver.name).closest('tr') as HTMLElement;
+    expect(within(row).getByText('No team')).toBeInTheDocument();
+  });
+
+  it('deletes several selected players at once', async () => {
+    const fetchMock = renderPlayers({
+      [`/api/v1/players/${sam.id}`]: { status: 204 },
+      [`/api/v1/players/${yan.id}`]: { status: 204 },
+    });
+    fireEvent.click(await screen.findByLabelText(`Select ${sam.name}`));
+    fireEvent.click(screen.getByLabelText(`Select ${yan.name}`));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete selected (2)' }));
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Delete 2 players?' })).getByRole('button', {
+        name: 'Delete',
+      }),
+    );
+    expect(await screen.findByRole('button', { name: 'Players deleted' })).toBeInTheDocument();
+    const deleted = fetchMock.mock.calls
+      .filter(([, i]) => i?.method === 'DELETE')
+      .map(([url]) => String(url));
+    expect(deleted).toEqual([`/api/v1/players/${sam.id}`, `/api/v1/players/${yan.id}`]);
+    expect(screen.queryByRole('button', { name: /Delete selected/ })).toBeNull();
+  });
+
+  it('selects every shown player from the header', async () => {
+    renderPlayers();
+    fireEvent.click(await screen.findByLabelText('Select all shown'));
+    expect(screen.getByRole('button', { name: 'Delete selected (2)' })).toBeInTheDocument();
+  });
+
+  it('gives a Manager no selection boxes', async () => {
+    renderPlayers({ '/api/v1/auth/me': manager });
+    await screen.findByText(sam.name);
+    expect(screen.queryByLabelText(`Select ${sam.name}`)).toBeNull();
   });
 });

@@ -9,7 +9,12 @@ const me = {
   name: 'Trea Surer',
   email: 'treasurer@example.test',
   role: 'Treasurer',
-  permissions: { canEdit: true, canManageGallery: true, canManageUsers: false },
+  permissions: {
+    canEdit: true,
+    canManageGallery: true,
+    canManagePlayers: false,
+    canManageUsers: false,
+  },
 };
 
 describe('fetchMe', () => {

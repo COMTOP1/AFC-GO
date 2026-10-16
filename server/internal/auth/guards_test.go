@@ -62,6 +62,22 @@ func TestGuardUsesFreshRole(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, rec.Code)
 }
 
+func TestGuardRejectsASessionFromBeforeAPasswordChange(t *testing.T) {
+	// The cookie was issued at version 0; the password has since changed.
+	changed := authtest.Webmaster
+	changed.SessionVersion = 1
+	s := authtest.New(changed)
+	e := apitest.NewEcho()
+	api := web.NewAPI(e, false)
+	api.GET("/me", func(c echo.Context) error { return c.NoContent(http.StatusNoContent) }, s.Guards().Login)
+
+	rec := apitest.New(e).As(authtest.Cookie(t, s, authtest.Webmaster)).Get(t, "/api/v1/me")
+	assert.Equal(t, http.StatusUnauthorized, rec.Code, "the old session is over")
+
+	rec = apitest.New(e).As(authtest.Cookie(t, s, changed)).Get(t, "/api/v1/me")
+	assert.Equal(t, http.StatusNoContent, rec.Code, "a session issued after the change works")
+}
+
 func TestIdentifyNeverRejects(t *testing.T) {
 	s := authtest.Everyone()
 	e := apitest.NewEcho()

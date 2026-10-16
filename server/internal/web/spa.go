@@ -30,7 +30,7 @@ var SPARoutes = []string{
 	"/news", "/news/new", "/news/:id", "/news/:id/edit",
 	"/whatson", "/whatson/new", "/whatson/:id", "/whatson/:id/edit",
 	"/gallery", "/documents", "/programmes", "/sponsors", "/players", "/users",
-	"/info", "/info/edit", "/contact", "/account", "/reset/:token", "/design",
+	"/info", "/info/edit", "/contact", "/account", "/reset/:token", "/privacy", "/design",
 }
 
 // IsAppRoute reports whether p matches one of SPARoutes; ":name" matches one

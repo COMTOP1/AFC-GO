@@ -76,22 +76,30 @@ func TestCreateSendsSignupEmail(t *testing.T) {
 	created, err := h.svc.Create(ctx, user.CreateInput{Name: "New", Email: "new@example.test", Role: "manager", TeamID: 1}, nil)
 	require.NoError(t, err)
 	assert.True(t, created.EmailSent)
-	assert.Empty(t, created.TempPassword, "never return the password when it was emailed")
+	assert.Empty(t, created.SetupURL, "never return the link when it was emailed")
 	require.Len(t, h.sender.sent, 1)
 	assert.Equal(t, "new@example.test", h.sender.sent[0].To)
 
+	require.Len(t, h.tokens.tokens, 1)
+	assert.Equal(t, 48*time.Hour, h.tokens.ttl)
+	for token, id := range h.tokens.tokens {
+		assert.Equal(t, created.User.ID, id)
+		assert.Contains(t, fmt.Sprint(h.sender.sent[0].TplData), "https://afc.example.test/reset/"+token)
+	}
+
 	row := h.store.row(created.User.ID)
-	assert.True(t, row.ResetPassword, "new users must reset their password on first login")
+	assert.True(t, row.ResetPassword, "new users must set their password before signing in")
 	assert.True(t, row.Hash.Valid)
 	assert.Equal(t, 1, row.TeamID)
 }
 
-func TestCreateWithoutMailerReturnsPassword(t *testing.T) {
+func TestCreateWithoutMailerReturnsSetupLink(t *testing.T) {
 	h := newHarness(emails.ErrNoMailer)
 	created, err := h.svc.Create(ctx, user.CreateInput{Name: "New", Email: "new@example.test", Role: "treasurer", TeamID: 1}, nil)
 	require.NoError(t, err)
 	assert.False(t, created.EmailSent)
-	assert.NotEmpty(t, created.TempPassword)
+	assert.True(t, strings.HasPrefix(created.SetupURL, "https://afc.example.test/reset/"))
+	assert.Len(t, h.tokens.tokens, 1)
 	assert.Zero(t, h.store.row(created.User.ID).TeamID, "only managers keep a team")
 }
 
@@ -140,8 +148,9 @@ func TestResetPassword(t *testing.T) {
 	assert.True(t, res.EmailSent)
 	assert.Empty(t, res.ResetURL)
 	assert.True(t, h.store.row(3).ResetPassword)
+	assert.Equal(t, 1, h.store.row(3).SessionVersion, "an admin reset signs the user out everywhere")
 	require.Len(t, h.tokens.tokens, 1)
-	assert.Equal(t, 7*24*time.Hour, h.tokens.ttl)
+	assert.Equal(t, 48*time.Hour, h.tokens.ttl)
 	for token, id := range h.tokens.tokens {
 		assert.Equal(t, 3, id)
 		assert.Contains(t, fmt.Sprint(h.sender.sent[0].TplData), token)

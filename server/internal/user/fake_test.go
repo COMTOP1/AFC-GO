@@ -74,6 +74,18 @@ func (f *fakeStore) EditUser(_ context.Context, u user.User) (user.User, error) 
 	return u, nil
 }
 
+func (f *fakeStore) EndSessions(_ context.Context, id int) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	r, ok := f.rows[id]
+	if !ok {
+		return errors.New("no such row")
+	}
+	r.SessionVersion++
+	f.rows[id] = r
+	return nil
+}
+
 func (f *fakeStore) DeleteUser(_ context.Context, u user.User) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()

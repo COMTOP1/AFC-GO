@@ -124,14 +124,17 @@ func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) (
 }
 
 func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
+	return s.getUserWhere(ctx, sq.Or{sq.Eq{"email": userParam.Email}, sq.Eq{"id": userParam.ID}})
+}
+
+func (s *Store) getUserWhere(ctx context.Context, where sq.Sqlizer) (User, error) {
 	ctx, span := tracer.Start(ctx, "user.getUser")
 	defer span.End()
 	var userDB User
 
-	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
+	builder := utils.PSQL().Select("id", "uuid", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "session_version").
 		From("users").
-		Where(sq.Or{sq.Eq{"email": userParam.Email},
-			sq.Eq{"id": userParam.ID}})
+		Where(where)
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -162,7 +165,7 @@ func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 	defer span.End()
 	var userDB User
 
-	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "password", "hash", "salt").
+	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "session_version", "hash", "salt").
 		From("users").
 		Where(sq.Or{sq.Eq{"email": userParam.Email},
 			sq.Eq{"id": userParam.ID}})
@@ -226,7 +229,6 @@ func (s *Store) editUser(ctx context.Context, userParam User) error {
 			"role":           userParam.Role.DBString(),
 			"file_name":      userParam.FileName,
 			"reset_password": userParam.ResetPassword,
-			"password":       userParam.Password,
 			"hash":           userParam.Hash,
 			"salt":           userParam.Salt,
 		}).

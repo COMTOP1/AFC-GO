@@ -15,6 +15,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/news"
 	"github.com/COMTOP1/AFC-GO/server/internal/player"
 	"github.com/COMTOP1/AFC-GO/server/internal/role"
+	"github.com/COMTOP1/AFC-GO/server/internal/setting"
 	"github.com/COMTOP1/AFC-GO/server/internal/site"
 	"github.com/COMTOP1/AFC-GO/server/internal/sponsor"
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
@@ -63,7 +64,7 @@ func (teams) List(_ context.Context, _ bool) ([]team.Public, error) {
 func (teams) Get(_ context.Context, id int) (team.Public, error) {
 	switch id {
 	case 1:
-		return team.Public{ID: 1, Name: "First Team", IsActive: true}, nil
+		return team.Public{ID: 1, Name: "First Team", IsActive: true, ContactEmail: "first-team@example.test"}, nil
 	case 2:
 		return team.Public{ID: 2, Name: "Under 12s", IsYouth: true}, nil
 	}
@@ -74,9 +75,24 @@ func (f *fakes) Squad(_ context.Context, t team.Team) ([]player.Member, error) {
 	return f.squadForTeam[t.ID], nil
 }
 
-type settings struct{}
+type settings struct {
+	mode      setting.TeamEmailMode
+	siteEmail *string
+}
 
-func (settings) DisplayEmail(context.Context) (string, error) { return "hello@example.test", nil }
+func (s settings) DisplayEmail(context.Context) (string, error) {
+	if s.siteEmail != nil {
+		return *s.siteEmail, nil
+	}
+	return "hello@example.test", nil
+}
+
+func (s settings) TeamEmailMode(context.Context) (setting.TeamEmailMode, error) {
+	if s.mode == "" {
+		return setting.ManagerEmails, nil
+	}
+	return s.mode, nil
+}
 
 type users struct{}
 
@@ -96,10 +112,12 @@ type visitors struct{}
 
 func (visitors) Count() int { return 42 }
 
-func newService(f *fakes) *site.Service {
+func newService(f *fakes) *site.Service { return newServiceWith(f, settings{}) }
+
+func newServiceWith(f *fakes, st settings) *site.Service {
 	return site.NewService(site.Deps{
 		News: f, WhatsOn: f, Sponsors: f, Affiliations: affiliations{}, Teams: teams{}, Players: f,
-		Settings: settings{}, Users: users{}, Visitors: visitors{},
+		Settings: st, Users: users{}, Visitors: visitors{},
 		Files: upload.New(uploadtest.New()), Version: "test",
 	})
 }
@@ -177,6 +195,27 @@ func TestTeamDetail(t *testing.T) {
 	se, ok := svcerr.As(err)
 	require.True(t, ok)
 	assert.Equal(t, svcerr.KindNotFound, se.Kind)
+}
+
+func TestTeamPageEmailFollowsTheSetting(t *testing.T) {
+	none := ""
+	for name, tc := range map[string]struct {
+		st           settings
+		managerEmail string
+		contactEmail string
+	}{
+		"managers' own":        {settings{mode: setting.ManagerEmails}, "manager@example.test", ""},
+		"team's address":       {settings{mode: setting.TeamEmail}, "", "first-team@example.test"},
+		"site-wide address":    {settings{mode: setting.SiteEmail}, "", "hello@example.test"},
+		"site-wide, but unset": {settings{mode: setting.SiteEmail, siteEmail: &none}, "", ""},
+	} {
+		detail, err := newServiceWith(&fakes{}, tc.st).Team(ctx, 1)
+		require.NoError(t, err, name)
+		require.Len(t, detail.Managers, 1, name)
+		assert.Equal(t, "Team Manager", detail.Managers[0].Name, name)
+		assert.Equal(t, tc.managerEmail, detail.Managers[0].Email, "%s: a personal email only in manager mode", name)
+		assert.Equal(t, tc.contactEmail, detail.ContactEmail, name)
+	}
 }
 
 func TestSiteRoutes(t *testing.T) {

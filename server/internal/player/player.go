@@ -18,7 +18,9 @@ type (
 	}
 
 	Player struct {
-		ID          int         `db:"id" json:"id"`
+		ID int `db:"id" json:"id"`
+		// UUID is the public ID used in file links; see migrations/001.
+		UUID        string      `db:"uuid" json:"-"`
 		Name        string      `db:"name" json:"name"`
 		FileName    null.String `db:"file_name" json:"file_name"`
 		DateOfBirth null.Time   `db:"date_of_birth" json:"date_of_birth"`

@@ -77,17 +77,27 @@ func PasswordProblems(pw string) string {
 }
 
 // Login checks credentials. A reset-flagged account (Task 21: only after a
-// correct password) gets a one-hour reset link instead of a session.
-func (s *Service) Login(ctx context.Context, email, password string) (LoginResult, error) {
+// correct password) gets a one-hour reset link instead of a session. Too
+// many failures for the email address or from ip return ErrTooManyAttempts.
+func (s *Service) Login(ctx context.Context, email, password, ip string) (LoginResult, error) {
 	ctx, span := tracer.Start(ctx, "auth.Service.Login")
 	defer span.End()
+	emailKey, ipKey := s.tokens.emailAttemptKey(email), s.tokens.ipAttemptKey(ip)
+	if s.tokens.failures(ctx, emailKey) >= maxEmailAttempt || s.tokens.failures(ctx, ipKey) >= maxIPAttempt {
+		// A security event: alert on these (see the breach plan).
+		slog.WarnContext(ctx, "sign-in throttled", "email", email, "ip", ip)
+		return LoginResult{}, ErrTooManyAttempts
+	}
 	p := s.passwords
 	u, reset, err := s.users.VerifyUser(ctx, user.User{Email: strings.TrimSpace(email), Password: null.StringFrom(password)},
 		p.Iterations, p.ScryptWorkFactor, p.ScryptBlockSize, p.ScryptParallelismFactor, p.KeyLength)
 	if err != nil && !reset {
+		s.tokens.addFailure(ctx, emailKey)
+		s.tokens.addFailure(ctx, ipKey)
 		slog.InfoContext(ctx, fmt.Sprintf("failed login for %q: %v", email, err))
 		return LoginResult{}, ErrInvalidCredentials
 	}
+	s.tokens.clearFailures(ctx, emailKey)
 	if reset {
 		token := uuid.NewString()
 		if err = s.tokens.Set(ctx, token, u.ID, loginResetTTL); err != nil {
@@ -118,20 +128,29 @@ func (s *Service) setPassword(ctx context.Context, u user.User, newPassword stri
 	return nil
 }
 
-// ChangePassword changes the logged-in user's password after re-checking the old one.
-func (s *Service) ChangePassword(ctx context.Context, u user.User, oldPassword, newPassword, confirm string) error {
+// ChangePassword changes the logged-in user's password after re-checking the
+// old one. The change signs the user out everywhere, so it returns the user
+// as they now are, for the caller to start a fresh session with.
+func (s *Service) ChangePassword(ctx context.Context, u user.User, oldPassword, newPassword, confirm string) (user.User, error) {
 	ctx, span := tracer.Start(ctx, "auth.Service.ChangePassword")
 	defer span.End()
 	p := s.passwords
 	check := u
 	check.Password = null.StringFrom(oldPassword)
 	if _, _, err := s.users.VerifyUser(ctx, check, p.Iterations, p.ScryptWorkFactor, p.ScryptBlockSize, p.ScryptParallelismFactor, p.KeyLength); err != nil {
-		return svcerr.InvalidField("oldPassword", "old password is not correct")
+		return user.User{}, svcerr.InvalidField("oldPassword", "old password is not correct")
 	}
 	if err := checkNew(newPassword, confirm); err != nil {
-		return err
+		return user.User{}, err
 	}
-	return s.setPassword(ctx, u, newPassword)
+	if err := s.setPassword(ctx, u, newPassword); err != nil {
+		return user.User{}, err
+	}
+	fresh, err := s.users.GetUser(ctx, user.User{ID: u.ID})
+	if err != nil {
+		return user.User{}, fmt.Errorf("failed to reload user after password change: %w", err)
+	}
+	return fresh, nil
 }
 
 func (s *Service) tokenUser(ctx context.Context, token string) (user.User, error) {

@@ -5,6 +5,7 @@ package app
 import (
 	"context"
 	"io/fs"
+	"net"
 	"net/url"
 	"strings"
 	"time"
@@ -21,6 +22,7 @@ import (
 	_ "github.com/COMTOP1/AFC-GO/server/internal/docs" // registers the swagger spec
 	"github.com/COMTOP1/AFC-GO/server/internal/document"
 	"github.com/COMTOP1/AFC-GO/server/internal/emails"
+	"github.com/COMTOP1/AFC-GO/server/internal/filecheck"
 	"github.com/COMTOP1/AFC-GO/server/internal/files"
 	"github.com/COMTOP1/AFC-GO/server/internal/image"
 	infradb "github.com/COMTOP1/AFC-GO/server/internal/infrastructure/db"
@@ -59,12 +61,23 @@ type Config struct {
 	UIProxy *url.URL
 	// MTLS, when set, serves over TLS and only accepts requests from allowed client certificates.
 	MTLS *mtls.Server
+	// TrustedProxies are the reverse proxies whose X-Forwarded-For is
+	// believed. Empty means the connecting address is the client's.
+	TrustedProxies []*net.IPNet
+	// FileRetention is how long a file may go unreferenced before the daily
+	// file check deletes it; zero means filecheck.MaxRetention (30 days).
+	FileRetention time.Duration
 }
+
+// The real file store must support the daily file check, or Build would
+// quietly leave it switched off.
+var _ filecheck.Objects = (*storage.Store)(nil)
 
 // Stores are the database repositories.
 type Stores struct {
 	Affiliation *affiliation.Store
 	Document    *document.Store
+	FileCheck   *filecheck.Store
 	Image       *image.Store
 	News        *news.Store
 	Player      *player.Store
@@ -81,6 +94,7 @@ func NewStores(db *sqlx.DB) Stores {
 	return Stores{
 		Affiliation: affiliation.NewAffiliationRepo(db),
 		Document:    document.NewDocumentRepo(db),
+		FileCheck:   filecheck.NewStore(db),
 		Image:       image.NewImageRepo(db),
 		News:        news.NewNewsRepo(db),
 		Player:      player.NewPlayerRepo(db),
@@ -100,6 +114,9 @@ type App struct {
 	visitors *visitors.Counter
 	tokens   *auth.Tokens
 	mtls     *mtls.Server
+	// files is the daily file check; nil when the file store can't be listed
+	// (tests).
+	files *filecheck.Job
 }
 
 // New connects to Postgres and S3 and builds the server.
@@ -120,7 +137,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	documentSvc := document.NewService(s.Document, uploads)
 	gallerySvc := image.NewService(s.Image, uploads)
 	programmeSvc := programme.NewService(s.Programme, uploads)
-	teamSvc := team.NewService(s.Team, uploads, s.Player, s.Sponsor, s.User)
+	teamSvc := team.NewService(s.Team, uploads, s.Player, s.Sponsor, s.User).WithSquadAges(s.Player)
 	playerSvc := player.NewService(s.Player, s.Team, uploads)
 	fileSvc := files.NewService(uploads, files.Resolvers(files.Sources{
 		Affiliation: s.Affiliation, Document: s.Document, Image: s.Image, News: s.News,
@@ -151,14 +168,17 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 
 	e := echo.New()
 	e.HideBanner = true
+	e.IPExtractor = web.IPExtractor(conf.TrustedProxies)
 	e.Pre(middleware.RemoveTrailingSlash())
 	if conf.MTLS != nil {
 		e.Pre(conf.MTLS.Middleware("/api/health", "/api/v1/health"))
 	}
 	e.Use(middleware.Recover())
+	e.Use(web.SecurityHeaders(conf.Session.Secure, conf.UIProxy == nil, web.Origin(conf.S3.Endpoint)))
 	e.Use(otelecho.Middleware("afc-go", otelecho.WithSkipper(func(c echo.Context) bool {
 		return c.Path() == "/api/health" || c.Path() == "/api/v1/health"
 	})))
+	e.Use(web.RedactSpanPath)
 	e.Use(middleware.BodyLimit("15M"))
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
@@ -193,12 +213,19 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	site.NewHandlers(siteSvc).Register(api, guards)
 	user.NewHandlers(userSvc).Register(api, guards)
 
-	return &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens, mtls: conf.MTLS}
+	a := &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens, mtls: conf.MTLS}
+	if lister, ok := objects.(filecheck.Objects); ok && s.FileCheck != nil {
+		a.files = filecheck.NewJob(filecheck.NewChecker(s.FileCheck, lister).WithRetention(conf.FileRetention), s.FileCheck)
+	}
+	return a
 }
 
 // Start begins background work and serves until the server stops.
 func (a *App) Start() error {
 	a.visitors.Start(context.Background())
+	if a.files != nil {
+		a.files.Start()
+	}
 	if a.mtls == nil {
 		return a.Echo.Start(a.address)
 	}
@@ -212,5 +239,8 @@ func (a *App) Start() error {
 // Stop ends background work.
 func (a *App) Stop() {
 	a.visitors.Stop()
+	if a.files != nil {
+		a.files.Stop()
+	}
 	a.tokens.Close()
 }

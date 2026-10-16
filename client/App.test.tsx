@@ -42,7 +42,8 @@ describe('App routes', () => {
     ['/contact', 'Contact'],
     ['/design', 'Design system'],
     ['/account', 'Your account'],
-    [`/reset/${resetToken}`, 'Reset your password'],
+    [`/reset/${resetToken}`, 'Set your password'],
+    ['/privacy', 'Privacy notice'],
   ])('routes %s to its page', async (path, heading) => {
     renderAt(path);
     expect(

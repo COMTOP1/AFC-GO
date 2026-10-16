@@ -59,6 +59,13 @@ func (f *fakeUsers) VerifyUser(_ context.Context, u user.User, _, _, _, _, _ int
 
 func (f *fakeUsers) EditUserPassword(_ context.Context, u user.User, _, _, _, _ int) error {
 	f.changed[u.ID] = u.Password.String
+	// Like the real store, a new password ends the user's other sessions.
+	for email, x := range f.byEmail {
+		if x.ID == u.ID {
+			x.SessionVersion++
+			f.byEmail[email] = x
+		}
+	}
 	return nil
 }
 
@@ -78,17 +85,17 @@ func TestPasswordProblems(t *testing.T) {
 func TestLogin(t *testing.T) {
 	svc, _, tokens := newAuthService()
 
-	res, err := svc.Login(ctx, "ok@example.test", "Right-Pa55")
+	res, err := svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.1")
 	require.NoError(t, err)
 	assert.Equal(t, 1, res.User.ID)
 	assert.False(t, res.ResetRequired)
 
-	_, err = svc.Login(ctx, "ok@example.test", "wrong")
+	_, err = svc.Login(ctx, "ok@example.test", "wrong", "192.0.2.1")
 	require.ErrorIs(t, err, auth.ErrInvalidCredentials)
-	_, err = svc.Login(ctx, "reset@example.test", "wrong")
+	_, err = svc.Login(ctx, "reset@example.test", "wrong", "192.0.2.1")
 	require.ErrorIs(t, err, auth.ErrInvalidCredentials, "no reset link without the password")
 
-	res, err = svc.Login(ctx, "reset@example.test", "Right-Pa55")
+	res, err = svc.Login(ctx, "reset@example.test", "Right-Pa55", "192.0.2.1")
 	require.NoError(t, err)
 	assert.True(t, res.ResetRequired)
 	require.True(t, strings.HasPrefix(res.ResetURL, "/reset/"))
@@ -97,10 +104,49 @@ func TestLogin(t *testing.T) {
 	assert.Equal(t, 2, id)
 }
 
+func TestLoginThrottlesAnEmailAfterFiveFailures(t *testing.T) {
+	svc, _, _ := newAuthService()
+	for i := range 5 {
+		_, err := svc.Login(ctx, "ok@example.test", "wrong", fmt.Sprintf("192.0.2.%d", i))
+		require.ErrorIs(t, err, auth.ErrInvalidCredentials)
+	}
+	_, err := svc.Login(ctx, " OK@example.test ", "Right-Pa55", "198.51.100.1")
+	require.ErrorIs(t, err, auth.ErrTooManyAttempts, "locked even with the right password, from a new IP, in any case")
+
+	_, err = svc.Login(ctx, "reset@example.test", "Right-Pa55", "192.0.2.1")
+	require.NoError(t, err, "other accounts are unaffected")
+}
+
+func TestLoginThrottlesAnIPAfterTwentyFailures(t *testing.T) {
+	svc, _, _ := newAuthService()
+	for i := range 20 {
+		_, err := svc.Login(ctx, fmt.Sprintf("guess%d@example.test", i), "wrong", "192.0.2.9")
+		require.ErrorIs(t, err, auth.ErrInvalidCredentials)
+	}
+	_, err := svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.9")
+	require.ErrorIs(t, err, auth.ErrTooManyAttempts)
+	_, err = svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.10")
+	require.NoError(t, err, "another IP can still sign in")
+}
+
+func TestSuccessfulLoginClearsEmailFailures(t *testing.T) {
+	svc, _, _ := newAuthService()
+	for range 4 {
+		_, _ = svc.Login(ctx, "ok@example.test", "wrong", "192.0.2.1")
+	}
+	_, err := svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.1")
+	require.NoError(t, err)
+	for range 4 {
+		_, _ = svc.Login(ctx, "ok@example.test", "wrong", "192.0.2.1")
+	}
+	_, err = svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.1")
+	require.NoError(t, err, "the count restarted after the successful sign-in")
+}
+
 func TestChangePassword(t *testing.T) {
 	svc, users, _ := newAuthService()
 	me := users.byEmail["ok@example.test"]
-	fields := func(err error) map[string]string {
+	fields := func(_ user.User, err error) map[string]string {
 		se, ok := svcerr.As(err)
 		require.True(t, ok, "want svcerr, got %v", err)
 		return se.Fields
@@ -108,8 +154,10 @@ func TestChangePassword(t *testing.T) {
 	assert.Contains(t, fields(svc.ChangePassword(ctx, me, "wrong", "Str0ng-Pass!", "Str0ng-Pass!")), "oldPassword")
 	assert.Contains(t, fields(svc.ChangePassword(ctx, me, "Right-Pa55", "Str0ng-Pass!", "different")), "confirmationPassword")
 	assert.Contains(t, fields(svc.ChangePassword(ctx, me, "Right-Pa55", "weak", "weak")), "newPassword")
-	require.NoError(t, svc.ChangePassword(ctx, me, "Right-Pa55", "Str0ng-Pass!", "Str0ng-Pass!"))
+	fresh, err := svc.ChangePassword(ctx, me, "Right-Pa55", "Str0ng-Pass!", "Str0ng-Pass!")
+	require.NoError(t, err)
 	assert.Equal(t, "Str0ng-Pass!", users.changed[1])
+	assert.Equal(t, me.SessionVersion+1, fresh.SessionVersion, "returns the user as the change left them, for a fresh session")
 }
 
 func TestResetFlow(t *testing.T) {

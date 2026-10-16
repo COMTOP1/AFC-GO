@@ -22,6 +22,7 @@ func (h *Handlers) Register(g *echo.Group, guards web.Guards) {
 	g.GET("/info", h.info)
 	g.PUT("/info", h.setInfo, guards.Editor)
 	g.PUT("/settings/display-email", h.setDisplayEmail, guards.ClubSecretaryHigher)
+	g.PUT("/settings/team-email-mode", h.setTeamEmailMode, guards.ClubSecretaryHigher)
 }
 
 // info returns the club information page HTML.
@@ -80,4 +81,26 @@ func (h *Handlers) setDisplayEmail(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, DisplayEmail{Email: saved})
+}
+
+// setTeamEmailMode chooses which email team pages show.
+//
+//	@Summary	Set which email team pages show
+//	@Tags		settings
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		setting.TeamEmailModeInput	true	"manager, team or site"
+//	@Success	200		{object}	setting.TeamEmailModeInput
+//	@Failure	422		{object}	web.ErrorResponse
+//	@Router		/settings/team-email-mode [put]
+func (h *Handlers) setTeamEmailMode(c echo.Context) error {
+	var in TeamEmailModeInput
+	if err := web.BindJSON(c, &in); err != nil {
+		return err
+	}
+	saved, err := h.svc.SetTeamEmailMode(c.Request().Context(), in.Mode)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, TeamEmailModeInput{Mode: saved})
 }

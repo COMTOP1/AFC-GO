@@ -64,6 +64,8 @@ export function SignInDialog({ open, onClose }: { open: boolean; onClose: () => 
       setPassword('');
       if (err instanceof ApiError && err.status === 401) {
         setError('Incorrect email or password.');
+      } else if (err instanceof ApiError && err.status === 429) {
+        setError('Too many sign-in attempts. Please wait 15 minutes and try again.');
       } else {
         setError(err instanceof Error ? err.message : 'Sign-in failed. Please try again.');
       }

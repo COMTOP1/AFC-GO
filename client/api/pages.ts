@@ -20,8 +20,16 @@ export interface ContactPerson {
 /** site.Contact — GET /contact */
 export interface ContactData {
   displayEmail?: string;
+  teamEmailMode: TeamEmailMode;
   people: ContactPerson[];
 }
+
+/**
+ * setting.TeamEmailMode — which email team pages show: each manager's own
+ * ("manager"), the team's shared address ("team"), or the site-wide contact
+ * email ("site").
+ */
+export type TeamEmailMode = 'manager' | 'team' | 'site';
 
 export function useInfo() {
   return useQuery({
@@ -44,4 +52,12 @@ export function setInfo(content: string): Promise<void> {
 /** Sets (or, with an empty string, removes) the public contact email. */
 export function setDisplayEmail(email: string): Promise<{ email: string }> {
   return apiFetch<{ email: string }>('/settings/display-email', { method: 'PUT', json: { email } });
+}
+
+/** Chooses which email team pages show. */
+export function setTeamEmailMode(mode: TeamEmailMode): Promise<{ mode: TeamEmailMode }> {
+  return apiFetch<{ mode: TeamEmailMode }>('/settings/team-email-mode', {
+    method: 'PUT',
+    json: { mode },
+  });
 }

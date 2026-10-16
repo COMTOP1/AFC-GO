@@ -35,16 +35,21 @@ describe('ContactPage', () => {
     expect(screen.queryByRole('link', { name: 'sam@example.test' })).toBeNull();
   });
 
-  it('shows the satnav notice and a titled, lazy map', async () => {
+  it('shows the satnav notice, and the map only once asked', async () => {
     mockFetch(publicRoutes());
     renderWithProviders(<ContactPage />);
     await screen.findByRole('heading', { name: 'Sam Sec' });
     expect(screen.getByText(/use the postcode/)).toHaveTextContent(
       "If you're using a satnav, use the postcode RG26 4QP — the postcode listed takes you some distance away.",
     );
+    expect(screen.queryByTitle('Map to Aldermaston Recreational Society')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Open in Google Maps instead' })).toHaveAttribute(
+      'target',
+      '_blank',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Show map' }));
     const map = screen.getByTitle('Map to Aldermaston Recreational Society');
     expect(map.tagName).toBe('IFRAME');
-    expect(map).toHaveAttribute('loading', 'lazy');
   });
 
   it('falls back to the crest when a contact photo is broken', async () => {

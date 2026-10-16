@@ -8,7 +8,7 @@ import { mockFetch } from '../../test/mockFetch';
 import { renderWithProviders } from '../../test/render';
 import ResetPage from './ResetPage';
 
-const invalidTitle = 'This reset link is invalid or has expired';
+const invalidTitle = 'This link is invalid or has expired';
 
 function renderReset(token: string, overrides: Record<string, MockRoute> = {}) {
   const fetchMock = mockFetch(publicRoutes(overrides));
@@ -41,7 +41,7 @@ describe('ResetPage', () => {
     expect(await screen.findByText(invalidTitle)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
     expect(screen.queryByLabelText('New password')).toBeNull();
-    expect(document.title).toBe('Reset password · AFC Aldermaston');
+    expect(document.title).toBe('Set password · AFC Aldermaston');
   });
 
   it('shows the form with the rules hint for a valid link', async () => {
@@ -51,7 +51,7 @@ describe('ResetPage', () => {
       'More than 8 characters, with a lower-case letter, an upper-case letter, a number and a special character.',
     );
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Reset your password' }),
+      screen.getByRole('heading', { level: 1, name: 'Set your password' }),
     ).toBeInTheDocument();
   });
 

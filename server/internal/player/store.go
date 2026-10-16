@@ -55,9 +55,14 @@ func (s *Store) getPlayer(ctx context.Context, playerParam Player) (Player, erro
 	ctx, span := tracer.Start(ctx, "player.getPlayer")
 	defer span.End()
 	var playerDB Player
-	builder := utils.PSQL().Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
+	// Looked up by UUID when one is given (public file links), else by ID.
+	where := sq.Eq{"id": playerParam.ID}
+	if playerParam.UUID != "" {
+		where = sq.Eq{"uuid": playerParam.UUID}
+	}
+	builder := utils.PSQL().Select("id", "uuid", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("players").
-		Where(sq.Eq{"id": playerParam.ID})
+		Where(where)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
@@ -139,6 +144,21 @@ func (s *Store) DetachTeam(ctx context.Context, teamID int) error {
 		return fmt.Errorf("failed to detach players from team: %w", err)
 	}
 	return nil
+}
+
+// HasUnder18s reports whether any player on the team is under 18 today
+// (satisfies team.SquadAges). Players with no date of birth don't count.
+func (s *Store) HasUnder18s(ctx context.Context, teamID int) (bool, error) {
+	ctx, span := tracer.Start(ctx, "player.HasUnder18s")
+	defer span.End()
+	var found bool
+	err := s.db.GetContext(ctx, &found, `SELECT EXISTS (SELECT 1 FROM players
+		WHERE team_id = $1 AND date_of_birth > CURRENT_DATE - INTERVAL '18 years')`, teamID)
+	if err != nil {
+		span.RecordError(err)
+		return false, fmt.Errorf("failed to check squad ages: %w", err)
+	}
+	return found, nil
 }
 
 func (s *Store) deletePlayer(ctx context.Context, playerParam Player) error {

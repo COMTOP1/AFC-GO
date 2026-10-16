@@ -1,6 +1,10 @@
 package player
 
-import "time"
+import (
+	"time"
+
+	"github.com/COMTOP1/AFC-GO/server/internal/role"
+)
 
 // adultAge is the age from which a player's photo may be shown.
 const adultAge = 18
@@ -36,4 +40,20 @@ func PhotoVisible(p Player, teamIsYouth bool, now time.Time) bool {
 	}
 	age, ok := Age(p.DateOfBirth.Time, now)
 	return ok && age >= adultAge
+}
+
+// DateOfBirthVisible is the rule for who sees a player's date of birth (and
+// age) in the players list: anyone who manages players, since they enter
+// it, and a Manager for players on their own team. Everyone else, such as a
+// Programme Editor, a Photographer or another team's Manager, has no need
+// for it. An unknown or empty role sees nothing: CanEdit, which
+// CanManagePlayers builds on, would let it through.
+func DateOfBirthVisible(viewer role.Role, viewerTeamID, playerTeamID int) bool {
+	if viewer.DBString() == "" {
+		return false
+	}
+	if viewer.CanManagePlayers() {
+		return true
+	}
+	return viewer == role.Manager && viewerTeamID != 0 && viewerTeamID == playerTeamID
 }

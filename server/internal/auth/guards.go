@@ -52,6 +52,7 @@ func (s *Sessions) Guards() web.Guards {
 		Login:               s.RequireLogin,
 		Editor:              s.RequireRole(role.Role.CanEdit),
 		NotManager:          s.RequireRole(role.Role.CanManageGallery),
+		Players:             s.RequireRole(role.Role.CanManagePlayers),
 		ClubSecretaryHigher: s.RequireRole(role.Role.IsClubSecretaryHigher),
 		Identify:            s.Identify,
 	}
@@ -69,10 +70,15 @@ func (s *Sessions) load(c echo.Context) (user.User, error) {
 	if err != nil || fresh.ID != u.ID {
 		return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, "login required").SetInternal(err)
 	}
+	// The password changed (or an admin reset it) since this cookie was
+	// issued: it no longer counts.
+	if fresh.SessionVersion != u.SessionVersion {
+		return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, "login required")
+	}
 	fresh.Authenticated = true
 	c.Set(contextKey, fresh)
 	c.Set(web.LoggedInKey, true)
-	c.Set(web.ActorKey, web.Actor{ID: fresh.ID, Email: fresh.Email})
+	c.Set(web.ActorKey, web.Actor{ID: fresh.ID, Email: fresh.Email, Role: fresh.Role, TeamID: fresh.TeamID})
 	return fresh, nil
 }
 

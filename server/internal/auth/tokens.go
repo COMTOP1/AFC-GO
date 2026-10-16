@@ -2,7 +2,9 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -60,7 +62,13 @@ func NewTokens(conf RedisConfig) *Tokens {
 	return t
 }
 
-func (t *Tokens) key(token string) string { return t.prefix + "reset-token:" + token }
+// key is where token is stored. Only a SHA-256 of the token is kept, so
+// someone who can read Redis (or a memory dump) can't use the links. A fast
+// hash is enough: tokens are random UUIDs, not guessable passwords.
+func (t *Tokens) key(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return t.prefix + "reset-token:" + hex.EncodeToString(sum[:])
+}
 
 // Set maps token to userID for ttl.
 func (t *Tokens) Set(ctx context.Context, token string, userID int, ttl time.Duration) error {
@@ -73,7 +81,7 @@ func (t *Tokens) Set(ctx context.Context, token string, userID int, ttl time.Dur
 		}
 		return nil
 	}
-	t.cache.Set(token, userID, ttl)
+	t.cache.Set(t.key(token), userID, ttl)
 	return nil
 }
 
@@ -91,7 +99,7 @@ func (t *Tokens) Get(ctx context.Context, token string) (int, bool) {
 		}
 		return id, true
 	}
-	v, found := t.cache.Get(token)
+	v, found := t.cache.Get(t.key(token))
 	if !found {
 		return 0, false
 	}
@@ -110,7 +118,7 @@ func (t *Tokens) Delete(ctx context.Context, token string) {
 		}
 		return
 	}
-	t.cache.Delete(token)
+	t.cache.Delete(t.key(token))
 }
 
 // Close releases the Redis client, if any.

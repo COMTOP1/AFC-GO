@@ -57,6 +57,7 @@ func (h *Handlers) list(c echo.Context) error {
 //	@Param		fixtures	formData	string	false	"Fixtures URL"
 //	@Param		coach		formData	string	false	"Coach"
 //	@Param		physio		formData	string	false	"Physio"
+//	@Param		contactEmail	formData	string	false	"Team's shared contact email"
 //	@Param		isActive	formData	bool	false	"Active"
 //	@Param		isYouth		formData	bool	false	"Youth"
 //	@Param		image		formData	file	false	"Team photo"
@@ -87,17 +88,18 @@ func (h *Handlers) create(c echo.Context) error {
 		return err
 	}
 	out, err := h.svc.Create(c.Request().Context(), CreateInput{
-		Name:        c.FormValue("name"),
-		Description: c.FormValue("description"),
-		League:      c.FormValue("league"),
-		Division:    c.FormValue("division"),
-		LeagueTable: c.FormValue("leagueTable"),
-		Fixtures:    c.FormValue("fixtures"),
-		Coach:       c.FormValue("coach"),
-		Physio:      c.FormValue("physio"),
-		IsActive:    active != nil && *active,
-		IsYouth:     youth != nil && *youth,
-		Ages:        *ages,
+		Name:         c.FormValue("name"),
+		Description:  c.FormValue("description"),
+		League:       c.FormValue("league"),
+		Division:     c.FormValue("division"),
+		LeagueTable:  c.FormValue("leagueTable"),
+		Fixtures:     c.FormValue("fixtures"),
+		Coach:        c.FormValue("coach"),
+		Physio:       c.FormValue("physio"),
+		ContactEmail: c.FormValue("contactEmail"),
+		IsActive:     active != nil && *active,
+		IsYouth:      youth != nil && *youth,
+		Ages:         *ages,
 	}, image)
 	if err != nil {
 		return err
@@ -121,6 +123,7 @@ func (h *Handlers) create(c echo.Context) error {
 //	@Param		fixtures	formData	string	false	"Fixtures URL; empty clears"
 //	@Param		coach		formData	string	false	"Coach; empty clears"
 //	@Param		physio		formData	string	false	"Physio; empty clears"
+//	@Param		contactEmail	formData	string	false	"Team's shared contact email; empty clears"
 //	@Param		isActive	formData	bool	false	"Active"
 //	@Param		isYouth		formData	bool	false	"Youth"
 //	@Param		image		formData	file	false	"Replacement photo"
@@ -138,14 +141,15 @@ func (h *Handlers) update(c echo.Context) error {
 		return err
 	}
 	in := UpdateInput{
-		Name:        web.FormString(c, "name"),
-		Description: web.FormString(c, "description"),
-		League:      web.FormString(c, "league"),
-		Division:    web.FormString(c, "division"),
-		LeagueTable: web.FormString(c, "leagueTable"),
-		Fixtures:    web.FormString(c, "fixtures"),
-		Coach:       web.FormString(c, "coach"),
-		Physio:      web.FormString(c, "physio"),
+		Name:         web.FormString(c, "name"),
+		Description:  web.FormString(c, "description"),
+		League:       web.FormString(c, "league"),
+		Division:     web.FormString(c, "division"),
+		LeagueTable:  web.FormString(c, "leagueTable"),
+		Fixtures:     web.FormString(c, "fixtures"),
+		Coach:        web.FormString(c, "coach"),
+		Physio:       web.FormString(c, "physio"),
+		ContactEmail: web.FormString(c, "contactEmail"),
 	}
 	if in.Ages, err = web.FormInt(c, "ages"); err != nil {
 		return err

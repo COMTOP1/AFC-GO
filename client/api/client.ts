@@ -1,4 +1,4 @@
-import { newTraceparent, reportEvent } from '../lib/telemetry';
+import { newTraceparent, redactPath, reportEvent } from '../lib/telemetry';
 import type { ErrorEnvelope } from './types';
 
 export const API_BASE = '/api/v1';
@@ -41,7 +41,8 @@ function isEnvelope(data: unknown): data is ErrorEnvelope {
  */
 export async function apiFetch<T>(path: string, req: ApiRequest = {}): Promise<T> {
   const method = req.method ?? (req.json === undefined && !req.form ? 'GET' : 'POST');
-  const name = `${method} ${path}`;
+  const reportedPath = redactPath(path);
+  const name = `${method} ${reportedPath}`;
   const traceparent = newTraceparent();
   const startTime = Date.now();
 
@@ -61,7 +62,11 @@ export async function apiFetch<T>(path: string, req: ApiRequest = {}): Promise<T
       startTime,
       endTime: Date.now(),
       traceparent,
-      attributes: { 'http.method': method, 'http.path': path, 'http.status_code': String(status) },
+      attributes: {
+        'http.method': method,
+        'http.path': reportedPath,
+        'http.status_code': String(status),
+      },
       message,
     });
   };

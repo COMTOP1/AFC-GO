@@ -30,8 +30,10 @@ type Home struct {
 
 // Contact is the contact page.
 type Contact struct {
-	DisplayEmail string          `json:"displayEmail,omitempty"`
-	People       []ContactPerson `json:"people"`
+	DisplayEmail string `json:"displayEmail,omitempty"`
+	// TeamEmailMode is which email team pages show, for the settings page.
+	TeamEmailMode string          `json:"teamEmailMode"`
+	People        []ContactPerson `json:"people"`
 }
 
 // ContactPerson is a club official listed on the contact page.
@@ -45,14 +47,18 @@ type ContactPerson struct {
 
 // TeamDetail is the public team page.
 type TeamDetail struct {
-	Team     team.Public      `json:"team"`
-	Managers []Manager        `json:"managers"`
-	Sponsors []sponsor.Public `json:"sponsors"`
-	Players  []player.Member  `json:"players"`
+	Team team.Public `json:"team"`
+	// ContactEmail is the address to contact the team at when managers'
+	// own emails aren't shown (setting.TeamEmailMode); "" otherwise.
+	ContactEmail string           `json:"contactEmail,omitempty"`
+	Managers     []Manager        `json:"managers"`
+	Sponsors     []sponsor.Public `json:"sponsors"`
+	Players      []player.Member  `json:"players"`
 }
 
 // Manager is a team manager's public contact.
 type Manager struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name string `json:"name"`
+	// Email is left out unless team pages show managers' own emails.
+	Email string `json:"email,omitempty"`
 }
