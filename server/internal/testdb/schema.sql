@@ -16,6 +16,7 @@ CREATE TABLE teams (
 
 CREATE TABLE users (
     id             SERIAL PRIMARY KEY,
+    uuid           UUID    NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     name           TEXT    NOT NULL,
     email          TEXT    NOT NULL UNIQUE,
     phone          TEXT,
@@ -30,6 +31,7 @@ CREATE TABLE users (
 
 CREATE TABLE players (
     id            SERIAL PRIMARY KEY,
+    uuid          UUID    NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     name          TEXT    NOT NULL,
     file_name     TEXT,
     date_of_birth DATE,

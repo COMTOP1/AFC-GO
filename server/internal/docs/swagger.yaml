@@ -729,11 +729,12 @@ paths:
         name: kind
         required: true
         type: string
-      - description: Resource ID
+      - description: 'Resource ID: a UUID for player and user, a positive integer
+          otherwise'
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       responses:
         "302":
           description: Found

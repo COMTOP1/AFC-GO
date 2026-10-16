@@ -21,26 +21,31 @@ import (
 
 var ctx = context.Background()
 
+const (
+	adultUUID = "00000000-0000-4000-8000-000000000001"
+	minorUUID = "00000000-0000-4000-8000-000000000002"
+)
+
 func newService() *files.Service {
 	objects := uploadtest.New()
 	objects.Objects["document/rules.pdf"] = "PDF"
 	objects.Objects["player/adult.png"] = "IMG"
 	return files.NewService(upload.New(objects), map[string]files.Resolver{
-		"document": func(_ context.Context, id int) (string, error) {
+		"document": func(_ context.Context, id string) (string, error) {
 			switch id {
-			case 1:
+			case "1":
 				return "document/rules.pdf", nil
-			case 2:
+			case "2":
 				return "document/missing.pdf", nil // row exists, object doesn't
-			case 3:
+			case "3":
 				return "", nil // row exists with no file
 			}
 			return "", fmt.Errorf("failed to get document: %w", sql.ErrNoRows)
 		},
 		// Stands in for player.Service.PhotoKey, which returns NotFound for
 		// youth-team and under-18 players (tested in the player package).
-		"player": func(_ context.Context, id int) (string, error) {
-			if id == 1 {
+		"player": func(_ context.Context, id string) (string, error) {
+			if id == adultUUID {
 				return "player/adult.png", nil
 			}
 			return "", svcerr.NotFound("player photo not found", nil)
@@ -57,18 +62,18 @@ func kindOf(t *testing.T, err error) svcerr.Kind {
 
 func TestURL(t *testing.T) {
 	svc := newService()
-	u, err := svc.URL(ctx, "document", 1)
+	u, err := svc.URL(ctx, "document", "1")
 	require.NoError(t, err)
 	assert.Equal(t, "https://cdn.test/document/rules.pdf", u)
 
 	for name, tc := range map[string]struct {
 		kind string
-		id   int
+		id   string
 	}{
-		"unknown kind":     {"passwords", 1},
-		"unknown row":      {"document", 99},
-		"object missing":   {"document", 2},
-		"row without file": {"document", 3},
+		"unknown kind":     {"passwords", "1"},
+		"unknown row":      {"document", "99"},
+		"object missing":   {"document", "2"},
+		"row without file": {"document", "3"},
 	} {
 		_, err = svc.URL(ctx, tc.kind, tc.id)
 		assert.Equal(t, svcerr.KindNotFound, kindOf(t, err), name)
@@ -81,13 +86,38 @@ func TestPlayerFileHiddenForMinor(t *testing.T) {
 	files.NewHandlers(newService()).Register(web.NewAPI(e, false), authtest.Everyone().Guards())
 	c := apitest.New(e)
 
-	rec := c.Get(t, "/api/v1/files/player/1")
+	rec := c.Get(t, "/api/v1/files/player/"+adultUUID)
 	assert.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, "https://cdn.test/player/adult.png", rec.Header().Get("Location"))
 
-	rec = c.Get(t, "/api/v1/files/player/2")
+	rec = c.Get(t, "/api/v1/files/player/"+minorUUID)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 	assert.Empty(t, rec.Header().Get("Location"))
+}
+
+// TestPeopleFilesNeedAUUID pins that photos of people can't be collected by
+// counting through integer IDs.
+func TestPeopleFilesNeedAUUID(t *testing.T) {
+	e := apitest.NewEcho()
+	files.NewHandlers(newService()).Register(web.NewAPI(e, false), authtest.Everyone().Guards())
+	files.NewHandlers(newService()).RegisterDownload(e)
+	c := apitest.New(e)
+	for _, path := range []string{"/api/v1/files/player/1", "/api/v1/files/user/1", "/download?s=l&id=1", "/download?s=u&id=1"} {
+		rec := c.Get(t, path)
+		assert.Equal(t, http.StatusBadRequest, rec.Code, path)
+		assert.Empty(t, rec.Header().Get("Location"), path)
+	}
+	rec := c.Get(t, "/download?s=l&id="+adultUUID)
+	assert.Equal(t, http.StatusFound, rec.Code, "old-style links work with the UUID")
+}
+
+func TestValidID(t *testing.T) {
+	assert.True(t, files.ValidID("document", "4"))
+	assert.False(t, files.ValidID("document", "0"))
+	assert.False(t, files.ValidID("document", adultUUID))
+	assert.True(t, files.ValidID("user", adultUUID))
+	assert.False(t, files.ValidID("user", "4"))
+	assert.False(t, files.ValidID("player", "not-a-uuid"))
 }
 
 // TestPlayerFileCacheIsPrivate pins the fix for stale youth-team caches: a
@@ -100,7 +130,7 @@ func TestPlayerFileCacheIsPrivate(t *testing.T) {
 	files.NewHandlers(newService()).Register(web.NewAPI(e, false), authtest.Everyone().Guards())
 	c := apitest.New(e)
 
-	rec := c.Get(t, "/api/v1/files/player/1")
+	rec := c.Get(t, "/api/v1/files/player/"+adultUUID)
 	require.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, "private, no-cache", rec.Header().Get("Cache-Control"))
 }

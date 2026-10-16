@@ -50,12 +50,23 @@ func (f *fakeStore) GetPlayersTeam(_ context.Context, t team.Team) ([]player.Pla
 func (f *fakeStore) GetPlayer(_ context.Context, p player.Player) (player.Player, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if p.UUID != "" {
+		for _, r := range f.rows {
+			if r.UUID == p.UUID {
+				return r, nil
+			}
+		}
+		return player.Player{}, fmt.Errorf("failed to get player: %w", sql.ErrNoRows)
+	}
 	r, ok := f.rows[p.ID]
 	if !ok {
 		return player.Player{}, fmt.Errorf("failed to get player: %w", sql.ErrNoRows)
 	}
 	return r, nil
 }
+
+// uuidOf is a stable, valid public UUID for test player n.
+func uuidOf(n int) string { return fmt.Sprintf("00000000-0000-4000-8000-%012d", n) }
 
 func (f *fakeStore) AddPlayer(_ context.Context, p player.Player) (player.Player, error) {
 	f.mu.Lock()

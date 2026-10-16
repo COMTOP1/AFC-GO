@@ -26,3 +26,17 @@ The classic template site has been removed. Old links still work: `/app/...` red
 ### Account pages
 
 `/account` shows the signed-in user's details and lets them change their photo and password. `/reset/<token>` is the password reset page; sign-in sends reset-flagged accounts there, and the reset email links to it.
+
+### Database migrations
+
+Schema changes live in `server/migrations/`, numbered in the order to apply them. Each is safe to run more than once. Apply a migration before deploying the server version that needs it:
+
+```sh
+psql "$DATABASE_URL" -f server/migrations/001_public_uuids.sql
+```
+
+`server/internal/testdb/schema.sql` is the schema with every migration applied; keep it in step when adding one.
+
+### One-off commands
+
+- `resetlegacypasswords` clears the old site's unsalted SHA-512 password digests and emails each affected user a link to set a new password. It needs the server's database, Redis, mail and `DOMAIN_NAME` settings, and refuses to run without Redis. Run it once after deploying.

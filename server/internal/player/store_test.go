@@ -41,3 +41,19 @@ func TestEditPlayerClearsOptionalFields(t *testing.T) {
 	assert.False(t, got.Position.Valid)
 	assert.False(t, got.IsCaptain)
 }
+
+func TestGetPlayerByUUID(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := player.NewPlayerRepo(db)
+	ctx := context.Background()
+	byID, err := store.GetPlayer(ctx, player.Player{ID: 1})
+	require.NoError(t, err)
+	require.NotEmpty(t, byID.UUID, "every player gets a public UUID")
+
+	byUUID, err := store.GetPlayer(ctx, player.Player{UUID: byID.UUID})
+	require.NoError(t, err)
+	assert.Equal(t, byID.ID, byUUID.ID)
+
+	_, err = store.GetPlayer(ctx, player.Player{UUID: "00000000-0000-4000-8000-000000000000"})
+	require.Error(t, err)
+}

@@ -124,13 +124,13 @@ func (s *Service) Squad(ctx context.Context, t team.Team) ([]Member, error) {
 	return out, nil
 }
 
-// PhotoKey returns the storage key of a player's photo, or NotFound when
-// there is none or it must not be shown.
-func (s *Service) PhotoKey(ctx context.Context, id int) (string, error) {
+// PhotoKey returns the storage key of the photo of the player with public
+// UUID id, or NotFound when there is none or it must not be shown.
+func (s *Service) PhotoKey(ctx context.Context, id string) (string, error) {
 	ctx, span := tracer.Start(ctx, "player.Service.PhotoKey")
 	defer span.End()
 	notFound := svcerr.NotFound("player photo not found", nil)
-	p, err := s.store.GetPlayer(ctx, Player{ID: id})
+	p, err := s.store.GetPlayer(ctx, Player{UUID: id})
 	if err != nil {
 		// Same error as "hidden" so a caller can't tell existing IDs apart
 		// from missing ones.

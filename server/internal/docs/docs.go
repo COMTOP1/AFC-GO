@@ -506,8 +506,8 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "description": "Resource ID",
+                        "type": "string",
+                        "description": "Resource ID: a UUID for player and user, a positive integer otherwise",
                         "name": "id",
                         "in": "path",
                         "required": true

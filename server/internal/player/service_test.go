@@ -28,10 +28,10 @@ var teams = fakeTeams{
 
 func squad() []player.Player {
 	return []player.Player{
-		{ID: 1, Name: "Adult", FileName: null.StringFrom("player/adult.png"), DateOfBirth: yearsAgo(30),
+		{ID: 1, UUID: uuidOf(1), Name: "Adult", FileName: null.StringFrom("player/adult.png"), DateOfBirth: yearsAgo(30),
 			Position: null.StringFrom("Striker"), IsCaptain: true, TeamID: 1},
-		{ID: 2, Name: "Youth", FileName: null.StringFrom("player/youth.png"), DateOfBirth: yearsAgo(11), TeamID: 2},
-		{ID: 3, Name: "Young Senior", FileName: null.StringFrom("player/young.png"), DateOfBirth: yearsAgo(16), TeamID: 1},
+		{ID: 2, UUID: uuidOf(2), Name: "Youth", FileName: null.StringFrom("player/youth.png"), DateOfBirth: yearsAgo(11), TeamID: 2},
+		{ID: 3, UUID: uuidOf(3), Name: "Young Senior", FileName: null.StringFrom("player/young.png"), DateOfBirth: yearsAgo(16), TeamID: 1},
 	}
 }
 
@@ -156,26 +156,26 @@ func TestSquadHidesPhotosWhenTeamLookupFails(t *testing.T) {
 
 func TestPhotoKey(t *testing.T) {
 	svc, _, _ := newService()
-	key, err := svc.PhotoKey(ctx, 1)
+	key, err := svc.PhotoKey(ctx, uuidOf(1))
 	require.NoError(t, err)
 	assert.Equal(t, "player/adult.png", key)
-	for _, id := range []int{2, 3, 99} {
+	for _, id := range []string{uuidOf(2), uuidOf(3), uuidOf(99)} {
 		_, err = svc.PhotoKey(ctx, id)
 		se, ok := svcerr.As(err)
 		require.True(t, ok, id)
 		assert.Equal(t, svcerr.KindNotFound, se.Kind, id)
-		assert.Equal(t, "player photo not found", se.Message, "missing and hidden players give the same error, id %d", id)
+		assert.Equal(t, "player photo not found", se.Message, "missing and hidden players give the same error, id %s", id)
 	}
 
 	// An adult with a photo on an unknown team must also be NotFound (fail
 	// closed), via the identical error a missing player would give.
 	unknownTeamStore := newFakeStore(player.Player{
-		ID: 4, Name: "Orphan", FileName: null.StringFrom("player/orphan.png"), DateOfBirth: yearsAgo(30), TeamID: 7,
+		ID: 4, UUID: uuidOf(4), Name: "Orphan", FileName: null.StringFrom("player/orphan.png"), DateOfBirth: yearsAgo(30), TeamID: 7,
 	})
 	objects := uploadtest.New()
 	objects.Objects["player/orphan.png"] = "IMG"
 	orphanSvc := player.NewService(unknownTeamStore, teams, upload.New(objects))
-	_, err = orphanSvc.PhotoKey(ctx, 4)
+	_, err = orphanSvc.PhotoKey(ctx, uuidOf(4))
 	se, ok := svcerr.As(err)
 	require.True(t, ok)
 	assert.Equal(t, svcerr.KindNotFound, se.Kind)

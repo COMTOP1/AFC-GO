@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
 
@@ -25,7 +26,9 @@ type (
 
 	// User represents relevant user fields
 	User struct {
-		ID            int         `db:"id" json:"id"`
+		ID int `db:"id" json:"id"`
+		// UUID is the public ID used in file links; see migrations/001.
+		UUID          string      `db:"uuid" json:"-"`
 		Name          string      `db:"name" json:"name"`
 		Email         string      `db:"email" json:"email"`
 		Phone         null.String `db:"phone" json:"phone"`
@@ -66,6 +69,11 @@ func (s *Store) GetUsersManagersTeam(ctx context.Context, teamParam team.Team) (
 
 func (s *Store) GetUser(ctx context.Context, userParam User) (User, error) {
 	return s.getUser(ctx, userParam)
+}
+
+// GetUserByUUID finds a user by their public ID.
+func (s *Store) GetUserByUUID(ctx context.Context, id string) (User, error) {
+	return s.getUserWhere(ctx, sq.Eq{"uuid": id})
 }
 
 func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor, blockSize, parallelismFactor, keyLen int) (User, bool, error) {

@@ -3,7 +3,6 @@ package files
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 
@@ -30,16 +29,15 @@ func (h *Handlers) Register(g *echo.Group, _ web.Guards) {
 //	@Summary	Download a file
 //	@Tags		files
 //	@Param		kind	path	string	true	"affiliation, document, gallery, news, player, programme, sponsor, team, user or whatson"
-//	@Param		id		path	int		true	"Resource ID"
+//	@Param		id		path	string	true	"Resource ID: a UUID for player and user, a positive integer otherwise"
 //	@Success	302
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/files/{kind}/{id} [get]
 func (h *Handlers) get(c echo.Context) error {
-	id, err := web.ParamID(c, "id")
-	if err != nil {
-		return err
+	kind, id := c.Param("kind"), c.Param("id")
+	if !ValidID(kind, id) {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid id")
 	}
-	kind := c.Param("kind")
 	u, err := h.svc.URL(c.Request().Context(), kind, id)
 	if err != nil {
 		return err
@@ -55,13 +53,15 @@ func (h *Handlers) RegisterDownload(e *echo.Echo) {
 }
 
 func (h *Handlers) download(c echo.Context) error {
-	id, err := strconv.Atoi(c.QueryParam("id"))
-	if err != nil || id < 1 {
-		return c.String(http.StatusBadRequest, "id must be a positive integer")
-	}
 	kind, ok := LegacyKind(c.QueryParam("s"))
 	if !ok {
 		return c.String(http.StatusBadRequest, "unknown download source")
+	}
+	// Old player and user links used integer IDs; those now need the
+	// public UUID, so they get a 400 rather than someone's photo.
+	id := c.QueryParam("id")
+	if !ValidID(kind, id) {
+		return c.String(http.StatusBadRequest, "invalid id")
 	}
 	u, err := h.svc.URL(c.Request().Context(), kind, id)
 	if err != nil {

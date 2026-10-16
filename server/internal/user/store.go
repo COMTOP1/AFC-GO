@@ -124,14 +124,17 @@ func (s *Store) getUsersManagersTeam(ctx context.Context, teamParam team.Team) (
 }
 
 func (s *Store) getUser(ctx context.Context, userParam User) (User, error) {
+	return s.getUserWhere(ctx, sq.Or{sq.Eq{"email": userParam.Email}, sq.Eq{"id": userParam.ID}})
+}
+
+func (s *Store) getUserWhere(ctx context.Context, where sq.Sqlizer) (User, error) {
 	ctx, span := tracer.Start(ctx, "user.getUser")
 	defer span.End()
 	var userDB User
 
-	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
+	builder := utils.PSQL().Select("id", "uuid", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
 		From("users").
-		Where(sq.Or{sq.Eq{"email": userParam.Email},
-			sq.Eq{"id": userParam.ID}})
+		Where(where)
 
 	sql, args, err := builder.ToSql()
 	if err != nil {

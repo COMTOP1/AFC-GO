@@ -55,9 +55,14 @@ func (s *Store) getPlayer(ctx context.Context, playerParam Player) (Player, erro
 	ctx, span := tracer.Start(ctx, "player.getPlayer")
 	defer span.End()
 	var playerDB Player
-	builder := utils.PSQL().Select("id", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
+	// Looked up by UUID when one is given (public file links), else by ID.
+	where := sq.Eq{"id": playerParam.ID}
+	if playerParam.UUID != "" {
+		where = sq.Eq{"uuid": playerParam.UUID}
+	}
+	builder := utils.PSQL().Select("id", "uuid", "name", "file_name", "date_of_birth", "position", "captain", "team_id").
 		From("players").
-		Where(sq.Eq{"id": playerParam.ID})
+		Where(where)
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		span.RecordError(err)
