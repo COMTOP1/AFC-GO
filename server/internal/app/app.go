@@ -5,6 +5,7 @@ package app
 import (
 	"context"
 	"io/fs"
+	"net"
 	"net/url"
 	"strings"
 	"time"
@@ -59,6 +60,9 @@ type Config struct {
 	UIProxy *url.URL
 	// MTLS, when set, serves over TLS and only accepts requests from allowed client certificates.
 	MTLS *mtls.Server
+	// TrustedProxies are the reverse proxies whose X-Forwarded-For is
+	// believed. Empty means the connecting address is the client's.
+	TrustedProxies []*net.IPNet
 }
 
 // Stores are the database repositories.
@@ -151,6 +155,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 
 	e := echo.New()
 	e.HideBanner = true
+	e.IPExtractor = web.IPExtractor(conf.TrustedProxies)
 	e.Pre(middleware.RemoveTrailingSlash())
 	if conf.MTLS != nil {
 		e.Pre(conf.MTLS.Middleware("/api/health", "/api/v1/health"))

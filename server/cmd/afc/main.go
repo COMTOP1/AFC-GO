@@ -25,6 +25,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mtls"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/storage"
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/telemetry"
+	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
 
 var (
@@ -191,6 +192,14 @@ func main() {
 			mtlsConf.AllowedClients = append(mtlsConf.AllowedClients, trimmed)
 		}
 	}
+	// TRUSTED_PROXIES lists the reverse proxies (CIDR ranges) allowed to
+	// set X-Forwarded-For, e.g. "10.20.0.0/16". Leave it empty when nothing
+	// sits in front of the server.
+	trustedProxies, err := web.ParseCIDRs(os.Getenv("TRUSTED_PROXIES"))
+	if err != nil {
+		fatal(fmt.Sprintf("invalid option for TRUSTED_PROXIES: %+v", err))
+	}
+
 	var mtlsServer *mtls.Server
 	if mtlsConf.Enabled() {
 		mtlsServer, err = mtls.New(mtlsConf)
@@ -201,14 +210,15 @@ func main() {
 	}
 
 	a := app.New(app.Config{
-		Address:      address,
-		DomainName:   domainName,
-		DatabaseURL:  dbConnectionString,
-		DatabaseHost: dbHost,
-		UI:           uiRoot,
-		UIProxy:      uiProxy,
-		MTLS:         mtlsServer,
-		Version:      Version,
+		Address:        address,
+		DomainName:     domainName,
+		DatabaseURL:    dbConnectionString,
+		DatabaseHost:   dbHost,
+		UI:             uiRoot,
+		UIProxy:        uiProxy,
+		MTLS:           mtlsServer,
+		TrustedProxies: trustedProxies,
+		Version:        Version,
 		Session: auth.Config{
 			CookieName:        sessionCookieName,
 			AuthenticationKey: os.Getenv("AUTHENTICATION_KEY"),
