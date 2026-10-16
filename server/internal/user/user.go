@@ -34,7 +34,9 @@ type (
 		Role          role.Role
 		FileName      null.String `db:"file_name" json:"file_name"`
 		ResetPassword bool        `db:"reset_password" json:"reset_password"`
-		Password      null.String `db:"password" json:"password"`
+		// Password is a plaintext password given to VerifyUser or
+		// EditUserPassword. It is never read from or written to the database.
+		Password      null.String `db:"-" json:"password"`
 		Hash          null.String `db:"hash" json:"hash"`
 		Salt          null.String `db:"salt" json:"salt"`
 		Authenticated bool
@@ -84,45 +86,12 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 			return userParam, false, fmt.Errorf("failed to decode hex of salt verify user: %w", err)
 		}
 	}
-	if user.Password.Valid {
-		var match bool
-		match, err = legacyMatches(userParam.Password.String, user.Password.String, saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
-		if err != nil {
-			return userParam, false, err
-		}
-		if match {
-			if user.ResetPassword {
-				return user, true, errors.New("password reset required")
-			}
-			var salt string
-			salt, err = utils.GenerateRandom(utils.GenerateSalt)
-			if err != nil {
-				return userParam, false, fmt.Errorf("failed to generate new salt: %w", err)
-			}
-			var hash string
-			hash, err = utils.HashPassScrypt([]byte(userParam.Password.String), []byte(salt), workFactor, blockSize, parallelismFactor, keyLen)
-			if err != nil {
-				return userParam, false, fmt.Errorf("failed to generate password hash: %w", err)
-			}
-			user.Password = null.NewString("", false)
-			user.Hash = null.StringFrom(hash)
-			user.Salt = null.StringFrom(hex.EncodeToString([]byte(salt)))
-			err = s.editUser(ctx, user)
-			if err != nil {
-				return userParam, false, fmt.Errorf("failed to update user password security: %w", err)
-			}
-			user.Hash = null.NewString("", false)
-			user.Salt = null.NewString("", false)
-			return user, false, nil
-		}
-		return userParam, false, errors.New("invalid credentials")
-	} else if subtle.ConstantTimeCompare(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen), hashDecode) == 1 {
+	if subtle.ConstantTimeCompare(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen), hashDecode) == 1 {
 		var hash string
 		hash, err = utils.HashPassScrypt([]byte(userParam.Password.String), saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
 		if err != nil {
 			return userParam, false, fmt.Errorf("failed to generate password hash: %w", err)
 		}
-		user.Password = null.NewString("", false)
 		user.Hash = null.StringFrom(hash)
 		user.Salt = null.StringFrom(hex.EncodeToString(saltDecode))
 		err = s.editUser(ctx, user)

@@ -74,7 +74,7 @@ func GenerateRandomLength(length int, randomType Type) (string, error) {
 			return "", fmt.Errorf("error generating random salt: %w", err)
 		}
 
-		return hex.EncodeToString(sha512.New().Sum([]byte(b))), nil
+		return hex.EncodeToString([]byte(b)), nil
 	case GenerateUsername:
 		b, err := rangeLoop(UsernameCharacters, Length(length))
 		if err != nil {
@@ -103,7 +103,7 @@ func GenerateRandom(randomType Type) (string, error) {
 			return "", fmt.Errorf("error generating random salt: %w", err)
 		}
 
-		return hex.EncodeToString(sha512.New().Sum([]byte(b))), nil
+		return hex.EncodeToString([]byte(b)), nil
 	case GenerateUsername:
 		b, err := rangeLoop(UsernameCharacters, UsernameLength)
 		if err != nil {

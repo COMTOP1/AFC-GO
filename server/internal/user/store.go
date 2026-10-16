@@ -162,7 +162,7 @@ func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 	defer span.End()
 	var userDB User
 
-	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "password", "hash", "salt").
+	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "hash", "salt").
 		From("users").
 		Where(sq.Or{sq.Eq{"email": userParam.Email},
 			sq.Eq{"id": userParam.ID}})
@@ -226,7 +226,6 @@ func (s *Store) editUser(ctx context.Context, userParam User) error {
 			"role":           userParam.Role.DBString(),
 			"file_name":      userParam.FileName,
 			"reset_password": userParam.ResetPassword,
-			"password":       userParam.Password,
 			"hash":           userParam.Hash,
 			"salt":           userParam.Salt,
 		}).

@@ -48,7 +48,7 @@ RUN echo -n "-X 'main.Version=$AFC_VERSION_ARG" > ./ldflags && \
 # Build the executable
 RUN GOOS=linux GOARCH=amd64 GOEXPERIMENT=runtimesecret go build -ldflags="$(cat ./ldflags)" -o /bin/afc ./server/cmd/afc
 RUN GOOS=linux GOARCH=amd64 go build -o /bin/migrates3 ./server/cmd/migrates3
-RUN GOOS=linux GOARCH=amd64 GOEXPERIMENT=runtimesecret go build -o /bin/wraplegacypasswords ./server/cmd/wraplegacypasswords
+RUN GOOS=linux GOARCH=amd64 go build -o /bin/resetlegacypasswords ./server/cmd/resetlegacypasswords
 
 # Run the executable
 FROM alpine:3.24 AS run
@@ -59,5 +59,5 @@ LABEL site="afc"
 # Copy binary
 COPY --from=build /bin/afc /bin/afc
 COPY --from=build /bin/migrates3 /bin/migrates3
-COPY --from=build /bin/wraplegacypasswords /bin/wraplegacypasswords
+COPY --from=build /bin/resetlegacypasswords /bin/resetlegacypasswords
 ENTRYPOINT ["/bin/afc"]
