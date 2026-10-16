@@ -25,6 +25,15 @@ export interface TelemetryEvent {
   stack?: string;
 }
 
+/**
+ * Replaces a password reset token in an API path with ":token". A token is a
+ * live credential for up to a week, so it must never reach telemetry.
+ * Mirrors RedactPath in server/internal/web/redact.go.
+ */
+export function redactPath(path: string): string {
+  return path.replace(/^(\/auth\/reset\/)[^/?#]+/, '$1:token');
+}
+
 function randomHex(bytes: number): string {
   const arr = new Uint8Array(bytes);
   crypto.getRandomValues(arr);

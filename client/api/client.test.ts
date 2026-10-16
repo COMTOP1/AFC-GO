@@ -131,6 +131,20 @@ describe('apiFetch telemetry', () => {
     expect(typeof body.endTime).toBe('number');
   });
 
+  it('never reports a reset token', async () => {
+    const beacon = stubSendBeacon();
+    mockFetch({ '/api/v1/auth/reset/secret-token': { body: {} } });
+    await apiFetch('/auth/reset/secret-token');
+
+    const [, blob] = beacon.mock.calls[0] as [string, Blob];
+    const text = await blob.text();
+    expect(text).not.toContain('secret-token');
+    expect(JSON.parse(text)).toMatchObject({
+      name: 'GET /auth/reset/:token',
+      attributes: { 'http.path': '/auth/reset/:token' },
+    });
+  });
+
   it('reports a failed call with the error message', async () => {
     const beacon = stubSendBeacon();
     mockFetch({

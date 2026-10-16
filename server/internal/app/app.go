@@ -159,6 +159,7 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	e.Use(otelecho.Middleware("afc-go", otelecho.WithSkipper(func(c echo.Context) bool {
 		return c.Path() == "/api/health" || c.Path() == "/api/v1/health"
 	})))
+	e.Use(web.RedactSpanPath)
 	e.Use(middleware.BodyLimit("15M"))
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
