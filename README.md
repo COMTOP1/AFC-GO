@@ -39,4 +39,4 @@ psql "$DATABASE_URL" -f server/migrations/001_public_uuids.sql
 
 ### One-off commands
 
-- `resetlegacypasswords` clears the old site's unsalted SHA-512 password digests and emails each affected user a link to set a new password. It needs the server's database, Redis, mail and `DOMAIN_NAME` settings, and refuses to run without Redis. Run it once after deploying.
+- `resetlegacypasswords` clears the old site's unsalted SHA-512 password digests and emails each affected user a link to set a new password. It needs the server's database, Redis, mail and `DOMAIN_NAME` settings, and refuses to run without Redis. Run it once after deploying, then apply `003_drop_legacy_password.sql`, which refuses to run until it has.

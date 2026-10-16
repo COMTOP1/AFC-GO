@@ -89,8 +89,17 @@ func TestAdminResetUserKeepsWorkingPassword(t *testing.T) {
 
 // addLegacyUser stores a user the way the old site did: only the password
 // column, no hash or salt.
+// withLegacyColumn puts back the column migration 003 drops, as it is in
+// production before resetlegacypasswords runs.
+func withLegacyColumn(t *testing.T, db *sqlx.DB) {
+	t.Helper()
+	_, err := db.ExecContext(context.Background(), `ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT`)
+	require.NoError(t, err)
+}
+
 func addLegacyUser(t *testing.T, db *sqlx.DB, email, stored string) {
 	t.Helper()
+	withLegacyColumn(t, db)
 	_, err := db.ExecContext(context.Background(), `INSERT INTO users (name, email, role, password) VALUES ('Legacy', $1, 'TREASURER', $2)`, email, stored)
 	require.NoError(t, err)
 }
@@ -99,6 +108,13 @@ func passwordColumn(t *testing.T, db *sqlx.DB, email string) (password, salt, ha
 	t.Helper()
 	require.NoError(t, db.QueryRowContext(context.Background(), `SELECT password, salt, hash FROM users WHERE email = $1`, email).Scan(&password, &salt, &hash))
 	return password, salt, hash
+}
+
+func TestClearLegacyPasswordsAfterTheColumnIsDropped(t *testing.T) {
+	db, _ := testdb.Open(t)
+	ids, err := user.NewUserRepo(db).ClearLegacyPasswords(context.Background())
+	require.NoError(t, err)
+	assert.Empty(t, ids)
 }
 
 func TestClearLegacyPasswordsForcesAReset(t *testing.T) {

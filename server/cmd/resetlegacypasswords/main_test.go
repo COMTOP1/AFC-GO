@@ -28,6 +28,8 @@ func (f *fakeResetter) ResetPassword(_ context.Context, id int) (user.ResetResul
 
 func addLegacy(t *testing.T, db *sqlx.DB, email string) int {
 	t.Helper()
+	_, err := db.ExecContext(context.Background(), `ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT`)
+	require.NoError(t, err)
 	var id int
 	require.NoError(t, db.GetContext(context.Background(), &id,
 		`INSERT INTO users (name, email, role, password) VALUES ('Legacy', $1, 'TREASURER', 'digest') RETURNING id`, email))

@@ -25,7 +25,6 @@ CREATE TABLE users (
     file_name      TEXT,
     reset_password BOOLEAN NOT NULL DEFAULT FALSE,
     session_version INTEGER NOT NULL DEFAULT 0,
-    password       TEXT,
     hash           TEXT,
     salt           TEXT
 );
