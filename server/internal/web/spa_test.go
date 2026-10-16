@@ -142,7 +142,7 @@ func TestSPADoesNotShadowOtherRoutes(t *testing.T) {
 func TestIsAppRoute(t *testing.T) {
 	for path, want := range map[string]bool{
 		"/": true, "/news": true, "/news/5": true, "/news/new": true, "/news/5/edit": true,
-		"/reset/abc": true, "/design": true,
+		"/reset/abc": true, "/privacy": true, "/design": true,
 		"/news/5/oops": false, "/team//edit": false, "/nope": false, "": false, "/teams/5": false,
 	} {
 		assert.Equal(t, want, web.IsAppRoute(path), path)

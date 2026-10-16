@@ -86,3 +86,26 @@ func TestMiddlewareSetsCookieAndRecordsOnce(t *testing.T) {
 	c.Flush(context.Background())
 	assert.Equal(t, []int{1}, store.incs)
 }
+
+func TestMiddlewareSkipsVisitorsWhoOptOut(t *testing.T) {
+	store := &fakeSettings{}
+	c := visitors.New(store, time.Hour, "afcaldermaston.co.uk")
+	e := echo.New()
+	e.Use(c.Middleware)
+	e.GET("/", func(ctx echo.Context) error { return ctx.NoContent(http.StatusOK) })
+
+	withCookie := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+	withCookie.AddCookie(&http.Cookie{Name: visitors.OptOutCookie, Value: "1", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+	withCookie.RemoteAddr = "192.0.2.1:1234"
+	withGPC := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+	withGPC.Header.Set("Sec-GPC", "1")
+	withGPC.RemoteAddr = "192.0.2.2:1234"
+
+	for _, req := range []*http.Request{withCookie, withGPC} {
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		assert.Empty(t, rec.Result().Cookies(), "no visit cookie for an opted-out visitor")
+	}
+	c.Flush(context.Background())
+	assert.Empty(t, store.incs)
+}
