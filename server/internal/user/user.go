@@ -83,6 +83,7 @@ func (s *Store) GetUserByUUID(ctx context.Context, id string) (User, error) {
 func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor, blockSize, parallelismFactor, keyLen int) (User, bool, error) {
 	user, err := s.getUserFull(ctx, userParam)
 	if err != nil {
+		equaliseTiming(userParam.Password.String, iter, workFactor, blockSize, parallelismFactor, keyLen)
 		return userParam, false, fmt.Errorf("failed to get user: %w", err)
 	}
 	var hashDecode, saltDecode []byte
@@ -141,6 +142,20 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 		return user, true, errors.New("password reset required")
 	}
 	return user, false, nil
+}
+
+// timingSalt is a fixed salt for equaliseTiming; nothing is ever checked
+// against the hashes it makes.
+var timingSalt = []byte("afc-unknown-account-timing-salt!")
+
+// equaliseTiming does the hashing a wrong password costs for a real account
+// (PBKDF2, then scrypt with both salt forms) and throws the results away, so
+// an unknown email takes as long to fail as a known one. Otherwise response
+// times would reveal which addresses have accounts.
+func equaliseTiming(password string, iter, workFactor, blockSize, parallelismFactor, keyLen int) {
+	_ = utils.HashPass([]byte(password), timingSalt, iter, keyLen)
+	_, _ = utils.HashPassScrypt([]byte(password), timingSalt, workFactor, blockSize, parallelismFactor, keyLen) //nolint:errcheck // result unused
+	_, _ = utils.HashPassScrypt([]byte(password), timingSalt, workFactor, blockSize, parallelismFactor, keyLen) //nolint:errcheck // result unused
 }
 
 func (s *Store) AddUser(ctx context.Context, userParam User) (User, error) {

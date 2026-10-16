@@ -5,6 +5,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"testing"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
@@ -173,4 +174,34 @@ func TestPasswordChangesEndOtherSessions(t *testing.T) {
 	_, err = store.EditUser(ctx, u)
 	require.NoError(t, err)
 	assert.Equal(t, 2, version(), "a profile edit leaves sessions alone")
+}
+
+// TestUnknownEmailTakesAsLongAsAWrongPassword pins that response times
+// don't reveal which email addresses have accounts.
+func TestUnknownEmailTakesAsLongAsAWrongPassword(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+	ctx := context.Background()
+	// Costly enough that hashing, not the database, dominates.
+	const it, wf, bs, p, kl = 2000, 1 << 13, 8, 1, 64
+	salt, err := utils.GenerateRandom(utils.GenerateSalt)
+	require.NoError(t, err)
+	hash, err := utils.HashPassScrypt([]byte("Real-Pa55!"), []byte(salt), wf, bs, p, kl)
+	require.NoError(t, err)
+	_, err = store.AddUser(ctx, user.User{Name: "Real", Email: "real@example.test", Role: role.Treasurer,
+		Hash: null.StringFrom(hash), Salt: null.StringFrom(salt)})
+	require.NoError(t, err)
+
+	fastest := func(email string) time.Duration {
+		best := time.Hour
+		for range 5 {
+			start := time.Now()
+			_, _, err := store.VerifyUser(ctx, user.User{Email: email, Password: null.StringFrom("a guess")}, it, wf, bs, p, kl)
+			require.Error(t, err)
+			best = min(best, time.Since(start))
+		}
+		return best
+	}
+	known, unknown := fastest("real@example.test"), fastest("nobody@example.test")
+	assert.Greater(t, float64(unknown), float64(known)*0.7, "unknown %v vs known %v", unknown, known)
 }
