@@ -132,7 +132,7 @@ func (s *Store) getUserWhere(ctx context.Context, where sq.Sqlizer) (User, error
 	defer span.End()
 	var userDB User
 
-	builder := utils.PSQL().Select("id", "uuid", "name", "email", "phone", "team_id", "role", "file_name", "reset_password").
+	builder := utils.PSQL().Select("id", "uuid", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "session_version").
 		From("users").
 		Where(where)
 
@@ -165,7 +165,7 @@ func (s *Store) getUserFull(ctx context.Context, userParam User) (User, error) {
 	defer span.End()
 	var userDB User
 
-	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "hash", "salt").
+	builder := utils.PSQL().Select("id", "name", "email", "phone", "team_id", "role", "file_name", "reset_password", "session_version", "hash", "salt").
 		From("users").
 		Where(sq.Or{sq.Eq{"email": userParam.Email},
 			sq.Eq{"id": userParam.ID}})

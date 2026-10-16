@@ -59,6 +59,13 @@ func (f *fakeUsers) VerifyUser(_ context.Context, u user.User, _, _, _, _, _ int
 
 func (f *fakeUsers) EditUserPassword(_ context.Context, u user.User, _, _, _, _ int) error {
 	f.changed[u.ID] = u.Password.String
+	// Like the real store, a new password ends the user's other sessions.
+	for email, x := range f.byEmail {
+		if x.ID == u.ID {
+			x.SessionVersion++
+			f.byEmail[email] = x
+		}
+	}
 	return nil
 }
 
@@ -139,7 +146,7 @@ func TestSuccessfulLoginClearsEmailFailures(t *testing.T) {
 func TestChangePassword(t *testing.T) {
 	svc, users, _ := newAuthService()
 	me := users.byEmail["ok@example.test"]
-	fields := func(err error) map[string]string {
+	fields := func(_ user.User, err error) map[string]string {
 		se, ok := svcerr.As(err)
 		require.True(t, ok, "want svcerr, got %v", err)
 		return se.Fields
@@ -147,8 +154,10 @@ func TestChangePassword(t *testing.T) {
 	assert.Contains(t, fields(svc.ChangePassword(ctx, me, "wrong", "Str0ng-Pass!", "Str0ng-Pass!")), "oldPassword")
 	assert.Contains(t, fields(svc.ChangePassword(ctx, me, "Right-Pa55", "Str0ng-Pass!", "different")), "confirmationPassword")
 	assert.Contains(t, fields(svc.ChangePassword(ctx, me, "Right-Pa55", "weak", "weak")), "newPassword")
-	require.NoError(t, svc.ChangePassword(ctx, me, "Right-Pa55", "Str0ng-Pass!", "Str0ng-Pass!"))
+	fresh, err := svc.ChangePassword(ctx, me, "Right-Pa55", "Str0ng-Pass!", "Str0ng-Pass!")
+	require.NoError(t, err)
 	assert.Equal(t, "Str0ng-Pass!", users.changed[1])
+	assert.Equal(t, me.SessionVersion+1, fresh.SessionVersion, "returns the user as the change left them, for a fresh session")
 }
 
 func TestResetFlow(t *testing.T) {

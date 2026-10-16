@@ -148,6 +148,7 @@ func TestResetPassword(t *testing.T) {
 	assert.True(t, res.EmailSent)
 	assert.Empty(t, res.ResetURL)
 	assert.True(t, h.store.row(3).ResetPassword)
+	assert.Equal(t, 1, h.store.row(3).SessionVersion, "an admin reset signs the user out everywhere")
 	require.Len(t, h.tokens.tokens, 1)
 	assert.Equal(t, 48*time.Hour, h.tokens.ttl)
 	for token, id := range h.tokens.tokens {

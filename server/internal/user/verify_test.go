@@ -119,6 +119,7 @@ func TestClearLegacyPasswordsForcesAReset(t *testing.T) {
 	u, err := store.GetUser(context.Background(), user.User{ID: ids[0]})
 	require.NoError(t, err)
 	assert.True(t, u.ResetPassword)
+	assert.Equal(t, 1, u.SessionVersion, "and signed out everywhere")
 
 	_, reset, err := verify(t, store, "legacy@example.test", "Legacy-Pa55!")
 	require.Error(t, err, "the old password no longer works")
@@ -130,4 +131,30 @@ func TestClearLegacyPasswordsForcesAReset(t *testing.T) {
 	ids, err = store.ClearLegacyPasswords(context.Background())
 	require.NoError(t, err)
 	assert.Empty(t, ids, "running it again does nothing")
+}
+
+func TestPasswordChangesEndOtherSessions(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+	ctx := context.Background()
+	version := func() int {
+		u, err := store.GetUser(ctx, user.User{Email: "new@example.test"})
+		require.NoError(t, err)
+		return u.SessionVersion
+	}
+	newUserLikeSignup(t, store, "new@example.test", "Temp-Pa55!")
+	u, err := store.GetUser(ctx, user.User{Email: "new@example.test"})
+	require.NoError(t, err)
+	require.Zero(t, version())
+
+	u.Password = null.StringFrom("New-Pa55word!")
+	require.NoError(t, store.EditUserPassword(ctx, u, workFactor, blockSize, parallelism, keyLen))
+	assert.Equal(t, 1, version(), "a new password bumps the version")
+
+	require.NoError(t, store.EndSessions(ctx, u.ID))
+	assert.Equal(t, 2, version())
+
+	_, err = store.EditUser(ctx, u)
+	require.NoError(t, err)
+	assert.Equal(t, 2, version(), "a profile edit leaves sessions alone")
 }

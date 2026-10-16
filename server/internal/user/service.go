@@ -32,6 +32,7 @@ type store interface {
 	AddUser(ctx context.Context, userParam User) (User, error)
 	EditUser(ctx context.Context, userParam User) (User, error)
 	DeleteUser(ctx context.Context, userParam User) error
+	EndSessions(ctx context.Context, id int) error
 }
 
 // TeamGetter checks manager teams (satisfied by *team.Store).
@@ -290,7 +291,8 @@ func (s *Service) Delete(ctx context.Context, id int) (Admin, error) {
 	return deleted, nil
 }
 
-// ResetPassword forces a reset on next login and emails a 48-hour reset link.
+// ResetPassword forces a reset on next login, signs the user out everywhere
+// and emails a 48-hour reset link.
 // If the email can't be sent, the link is returned for the admin to pass on.
 func (s *Service) ResetPassword(ctx context.Context, id int) (ResetResult, error) {
 	ctx, span := tracer.Start(ctx, "user.Service.ResetPassword")
@@ -302,6 +304,11 @@ func (s *Service) ResetPassword(ctx context.Context, id int) (ResetResult, error
 	u.ResetPassword = true
 	if _, err = s.store.EditUser(ctx, u); err != nil {
 		return ResetResult{}, fmt.Errorf("failed to flag user for reset: %w", err)
+	}
+	// An admin reset is often because the account may be compromised, so
+	// sign the user out everywhere now rather than when they next reset.
+	if err = s.store.EndSessions(ctx, u.ID); err != nil {
+		return ResetResult{}, err
 	}
 	token := uuid.NewString()
 	if err = s.tokens.Set(ctx, token, u.ID, resetTokenTTL); err != nil {

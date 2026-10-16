@@ -108,7 +108,12 @@ func (h *Handlers) password(c echo.Context) error {
 		return err
 	}
 	u, _ := Current(c)
-	if err := h.svc.ChangePassword(c.Request().Context(), u, in.OldPassword, in.NewPassword, in.ConfirmationPassword); err != nil {
+	fresh, err := h.svc.ChangePassword(c.Request().Context(), u, in.OldPassword, in.NewPassword, in.ConfirmationPassword)
+	if err != nil {
+		return err
+	}
+	// The change signed the user out everywhere; keep this browser signed in.
+	if err = h.sessions.Refresh(c.Response(), c.Request(), fresh); err != nil {
 		return err
 	}
 	return c.NoContent(http.StatusNoContent)

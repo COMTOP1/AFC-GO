@@ -37,6 +37,10 @@ type (
 		Role          role.Role
 		FileName      null.String `db:"file_name" json:"file_name"`
 		ResetPassword bool        `db:"reset_password" json:"reset_password"`
+		// SessionVersion is copied into the session cookie at sign-in; a
+		// cookie with an older version is no longer accepted. See
+		// EndSessions and migrations/002.
+		SessionVersion int `db:"session_version" json:"-"`
 		// Password is a plaintext password given to VerifyUser or
 		// EditUserPassword. It is never read from or written to the database.
 		Password      null.String `db:"-" json:"password"`
@@ -209,6 +213,27 @@ func (s *Store) EditUserPassword(ctx context.Context, userParam User, workFactor
 		return fmt.Errorf("failed to edit user for edit user password: %w", err)
 	}
 
+	// A new password signs the user out everywhere else.
+	return s.EndSessions(ctx, user.ID)
+}
+
+// EndSessions makes every session the user has stopped working, by bumping
+// the version their session cookies must match.
+func (s *Store) EndSessions(ctx context.Context, id int) error {
+	ctx, span := tracer.Start(ctx, "user.EndSessions")
+	defer span.End()
+	query, args, err := utils.PSQL().Update("users").
+		Set("session_version", sq.Expr("session_version + 1")).
+		Where(sq.Eq{"id": id}).
+		ToSql()
+	if err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to build sql for ending sessions: %w", err)
+	}
+	if _, err = s.db.ExecContext(ctx, query, args...); err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to end sessions for user %d: %w", id, err)
+	}
 	return nil
 }
 

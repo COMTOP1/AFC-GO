@@ -128,20 +128,29 @@ func (s *Service) setPassword(ctx context.Context, u user.User, newPassword stri
 	return nil
 }
 
-// ChangePassword changes the logged-in user's password after re-checking the old one.
-func (s *Service) ChangePassword(ctx context.Context, u user.User, oldPassword, newPassword, confirm string) error {
+// ChangePassword changes the logged-in user's password after re-checking the
+// old one. The change signs the user out everywhere, so it returns the user
+// as they now are, for the caller to start a fresh session with.
+func (s *Service) ChangePassword(ctx context.Context, u user.User, oldPassword, newPassword, confirm string) (user.User, error) {
 	ctx, span := tracer.Start(ctx, "auth.Service.ChangePassword")
 	defer span.End()
 	p := s.passwords
 	check := u
 	check.Password = null.StringFrom(oldPassword)
 	if _, _, err := s.users.VerifyUser(ctx, check, p.Iterations, p.ScryptWorkFactor, p.ScryptBlockSize, p.ScryptParallelismFactor, p.KeyLength); err != nil {
-		return svcerr.InvalidField("oldPassword", "old password is not correct")
+		return user.User{}, svcerr.InvalidField("oldPassword", "old password is not correct")
 	}
 	if err := checkNew(newPassword, confirm); err != nil {
-		return err
+		return user.User{}, err
 	}
-	return s.setPassword(ctx, u, newPassword)
+	if err := s.setPassword(ctx, u, newPassword); err != nil {
+		return user.User{}, err
+	}
+	fresh, err := s.users.GetUser(ctx, user.User{ID: u.ID})
+	if err != nil {
+		return user.User{}, fmt.Errorf("failed to reload user after password change: %w", err)
+	}
+	return fresh, nil
 }
 
 func (s *Service) tokenUser(ctx context.Context, token string) (user.User, error) {

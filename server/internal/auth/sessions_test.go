@@ -102,3 +102,25 @@ func TestSessionCookieAttributes(t *testing.T) {
 	assert.Equal(t, http.SameSiteLaxMode, c.SameSite)
 	assert.Equal(t, 86400*31, c.MaxAge, "remember=true keeps the session for 31 days")
 }
+
+func TestRefreshKeepsRememberMe(t *testing.T) {
+	s := authtest.Everyone()
+	for _, remember := range []bool{true, false} {
+		login := httptest.NewRecorder()
+		require.NoError(t, s.Login(login, httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/", nil), authtest.Webmaster, remember))
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/", nil)
+		for _, c := range login.Result().Cookies() {
+			req.AddCookie(c)
+		}
+
+		refreshed := httptest.NewRecorder()
+		require.NoError(t, s.Refresh(refreshed, req, authtest.Webmaster))
+		cookies := refreshed.Result().Cookies()
+		require.Len(t, cookies, 1)
+		want := 60 * 60 * 24
+		if remember {
+			want = 86400 * 31
+		}
+		assert.Equal(t, want, cookies[0].MaxAge, "remember=%v", remember)
+	}
+}

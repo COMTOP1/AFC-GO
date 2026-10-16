@@ -70,6 +70,11 @@ func (s *Sessions) load(c echo.Context) (user.User, error) {
 	if err != nil || fresh.ID != u.ID {
 		return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, "login required").SetInternal(err)
 	}
+	// The password changed (or an admin reset it) since this cookie was
+	// issued: it no longer counts.
+	if fresh.SessionVersion != u.SessionVersion {
+		return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, "login required")
+	}
 	fresh.Authenticated = true
 	c.Set(contextKey, fresh)
 	c.Set(web.LoggedInKey, true)

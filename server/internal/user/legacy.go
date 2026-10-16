@@ -10,8 +10,8 @@ import (
 )
 
 // ClearLegacyPasswords removes the old site's unsalted SHA-512 password
-// digests, along with any hash and salt on those accounts, and flags each
-// account for reset. Those users can no longer sign in until they follow a
+// digests, along with any hash and salt on those accounts, flags each
+// account for reset and signs it out everywhere. Those users can no longer sign in until they follow a
 // reset link. It returns the IDs it cleared; running it again clears nothing.
 func (s *Store) ClearLegacyPasswords(ctx context.Context) ([]int, error) {
 	ctx, span := tracer.Start(ctx, "user.ClearLegacyPasswords")
@@ -22,6 +22,7 @@ func (s *Store) ClearLegacyPasswords(ctx context.Context) ([]int, error) {
 		Set("hash", nil).
 		Set("salt", nil).
 		Set("reset_password", true).
+		Set("session_version", sq.Expr("session_version + 1")).
 		Where(sq.NotEq{"password": nil}).
 		Suffix("RETURNING id").
 		ToSql()

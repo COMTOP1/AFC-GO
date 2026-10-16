@@ -21,6 +21,10 @@ import (
 // before the cutover use the same key, so its name must not change.
 const userKey = "user"
 
+// rememberKey records whether the session was started with "remember me",
+// so Refresh can keep its length.
+const rememberKey = "remember"
+
 func init() {
 	gob.Register(user.User{})
 }
@@ -136,10 +140,22 @@ func (s *Sessions) Login(w http.ResponseWriter, r *http.Request, u user.User, re
 	u.Authenticated = true
 	u.Password, u.Hash, u.Salt = null.String{}, null.String{}, null.String{}
 	sess.Values[userKey] = u
+	sess.Values[rememberKey] = remember
 	if remember {
 		sess.Options.MaxAge = 86400 * 31
 	}
 	return sess.Save(r, w)
+}
+
+// Refresh reissues the current session for u (e.g. after the user changed
+// their own password, which bumps their session version), keeping its
+// "remember me" length.
+func (s *Sessions) Refresh(w http.ResponseWriter, r *http.Request, u user.User) error {
+	remember := false
+	if sess, err := s.store.Get(r, s.name); err == nil {
+		remember, _ = sess.Values[rememberKey].(bool)
+	}
+	return s.Login(w, r, u, remember)
 }
 
 // Logout clears the session and expires the cookie.
