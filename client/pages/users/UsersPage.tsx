@@ -22,6 +22,7 @@ import { Table, TBody, Td, Th, THead, Tr } from '../../components/ui/Table';
 import { MANAGER_ROLE, ROLES } from '../../lib/roles';
 import { matchesQuery } from '../../lib/text';
 import { DisplayEmailCard } from './DisplayEmailCard';
+import { TeamEmailCard } from './TeamEmailCard';
 import { ResetPasswordButton } from './ResetPasswordButton';
 import { SecretDialog, type Secret } from './SecretDialog';
 import { UserDialog } from './UserDialog';
@@ -169,6 +170,7 @@ export default function UsersPage() {
       />
       <RequireEditor permission="canManageUsers">
         <DisplayEmailCard />
+        <TeamEmailCard />
         <UsersTable
           currentUserId={user?.id}
           onEdit={(u) => setDialog({ user: u })}

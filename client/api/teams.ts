@@ -8,10 +8,10 @@ import type { TeamSummary } from './types';
 import { formData } from '../lib/editForm';
 import type { ImageValue } from '../lib/images';
 
-/** site.Manager */
+/** site.Manager — email only when team pages show managers' own emails. */
 export interface Manager {
   name: string;
-  email: string;
+  email?: string;
 }
 
 /** player.Member — youth teams never return any. */
@@ -26,6 +26,8 @@ export interface SquadMember {
 /** site.TeamDetail — GET /teams/:id */
 export interface TeamDetail {
   team: TeamSummary;
+  /** Where to contact the team when managers' own emails aren't shown. */
+  contactEmail?: string;
   managers: Manager[];
   sponsors: Sponsor[];
   players: SquadMember[];
@@ -61,6 +63,7 @@ export interface TeamInput {
   fixtures: string;
   coach: string;
   physio: string;
+  contactEmail: string;
   isActive: boolean;
   isYouth: boolean;
   image: ImageValue;
@@ -77,6 +80,7 @@ function teamForm(input: TeamInput, isUpdate: boolean): FormData {
     fixtures: input.fixtures,
     coach: input.coach,
     physio: input.physio,
+    contactEmail: input.contactEmail,
     isActive: input.isActive,
     isYouth: input.isYouth,
     image: input.image.file,

@@ -14,8 +14,23 @@ import (
 )
 
 const (
-	infoContentID  = "infoContent"
-	displayEmailID = "displayEmail"
+	infoContentID   = "infoContent"
+	displayEmailID  = "displayEmail"
+	teamEmailModeID = "teamEmailMode"
+)
+
+// TeamEmailMode says which email address team pages show for contacting a
+// team. In TeamEmail and SiteEmail modes managers' personal addresses are
+// never shown; when the chosen address isn't set, no email is shown.
+type TeamEmailMode string
+
+const (
+	// ManagerEmails shows each manager's own email (the default).
+	ManagerEmails TeamEmailMode = "manager"
+	// TeamEmail shows the team's own contact address.
+	TeamEmail TeamEmailMode = "team"
+	// SiteEmail shows the site-wide public contact email.
+	SiteEmail TeamEmailMode = "site"
 )
 
 type store interface {
@@ -104,4 +119,36 @@ func (s *Service) SetDisplayEmail(ctx context.Context, email string) (string, er
 		return "", err
 	}
 	return email, nil
+}
+
+// TeamEmailMode returns which email team pages show (ManagerEmails when
+// never set).
+func (s *Service) TeamEmailMode(ctx context.Context) (TeamEmailMode, error) {
+	ctx, span := tracer.Start(ctx, "setting.Service.TeamEmailMode")
+	defer span.End()
+	v, err := s.get(ctx, teamEmailModeID)
+	if err != nil {
+		return "", err
+	}
+	switch mode := TeamEmailMode(v); mode {
+	case ManagerEmails, TeamEmail, SiteEmail:
+		return mode, nil
+	default:
+		return ManagerEmails, nil // never set
+	}
+}
+
+// SetTeamEmailMode saves which email team pages show.
+func (s *Service) SetTeamEmailMode(ctx context.Context, mode TeamEmailMode) (TeamEmailMode, error) {
+	ctx, span := tracer.Start(ctx, "setting.Service.SetTeamEmailMode")
+	defer span.End()
+	switch mode {
+	case ManagerEmails, TeamEmail, SiteEmail:
+	default:
+		return "", svcerr.InvalidField("mode", "mode must be manager, team or site")
+	}
+	if err := s.put(ctx, teamEmailModeID, string(mode)); err != nil {
+		return "", err
+	}
+	return mode, nil
 }

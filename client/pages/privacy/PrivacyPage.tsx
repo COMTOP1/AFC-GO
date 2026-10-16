@@ -138,7 +138,8 @@ export default function PrivacyPage() {
             <strong>Anyone:</strong> the names, roles, photos and contact emails of the club&apos;s
             main officials (Chairperson, Club Secretary, Safeguarding Officer, Treasurer, League
             Secretary and Programme Editor) on the contact page; each team&apos;s managers&apos;
-            names and email addresses, coach and physio on its team page; senior players&apos;
+            names, coach and physio on its team page, with either the managers&apos; own email
+            addresses or a shared team or club address, as the club chooses; senior players&apos;
             names, positions, captaincy and photos on team pages.
           </li>
           <li>

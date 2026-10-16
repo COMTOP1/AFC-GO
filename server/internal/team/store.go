@@ -13,7 +13,7 @@ func (s *Store) getTeams(ctx context.Context) ([]Team, error) {
 	ctx, span := tracer.Start(ctx, "team.getTeams")
 	defer span.End()
 	var teamsDB []Team
-	builder := sq.Select("id", "name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
+	builder := sq.Select("id", "name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "contact_email", "file_name", "active", "youth", "ages").
 		From("teams").
 		OrderBy("id")
 	sql, args, err := builder.ToSql()
@@ -33,7 +33,7 @@ func (s *Store) getTeamsActive(ctx context.Context) ([]Team, error) {
 	ctx, span := tracer.Start(ctx, "team.getTeamsActive")
 	defer span.End()
 	var teamsDB []Team
-	builder := utils.PSQL().Select("id", "name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
+	builder := utils.PSQL().Select("id", "name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "contact_email", "file_name", "active", "youth", "ages").
 		From("teams").
 		Where(sq.Eq{"active": true}).
 		OrderBy("name")
@@ -54,7 +54,7 @@ func (s *Store) getTeam(ctx context.Context, teamParam Team) (Team, error) {
 	ctx, span := tracer.Start(ctx, "team.getTeam")
 	defer span.End()
 	var teamDB Team
-	builder := utils.PSQL().Select("id", "name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
+	builder := utils.PSQL().Select("id", "name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "contact_email", "file_name", "active", "youth", "ages").
 		From("teams").
 		Where(sq.Eq{"id": teamParam.ID})
 	sql, args, err := builder.ToSql()
@@ -74,8 +74,8 @@ func (s *Store) addTeam(ctx context.Context, teamParam Team) (Team, error) {
 	ctx, span := tracer.Start(ctx, "team.addTeam")
 	defer span.End()
 	builder := utils.PSQL().Insert("teams").
-		Columns("name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "file_name", "active", "youth", "ages").
-		Values(teamParam.Name, teamParam.Description, teamParam.League, teamParam.Division, teamParam.LeagueTable, teamParam.Fixtures, teamParam.Coach, teamParam.Physio, teamParam.FileName, teamParam.IsActive, teamParam.IsYouth, teamParam.Ages).
+		Columns("name", "description", "league", "division", "league_table", "fixtures", "coach", "physio", "contact_email", "file_name", "active", "youth", "ages").
+		Values(teamParam.Name, teamParam.Description, teamParam.League, teamParam.Division, teamParam.LeagueTable, teamParam.Fixtures, teamParam.Coach, teamParam.Physio, teamParam.ContactEmail, teamParam.FileName, teamParam.IsActive, teamParam.IsYouth, teamParam.Ages).
 		Suffix("RETURNING id")
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -95,18 +95,19 @@ func (s *Store) editTeam(ctx context.Context, teamParam Team) (Team, error) {
 	defer span.End()
 	builder := utils.PSQL().Update("teams").
 		SetMap(map[string]interface{}{
-			"name":         teamParam.Name,
-			"description":  teamParam.Description,
-			"league":       teamParam.League,
-			"division":     teamParam.Division,
-			"league_table": teamParam.LeagueTable,
-			"fixtures":     teamParam.Fixtures,
-			"coach":        teamParam.Coach,
-			"physio":       teamParam.Physio,
-			"file_name":    teamParam.FileName,
-			"active":       teamParam.IsActive,
-			"youth":        teamParam.IsYouth,
-			"ages":         teamParam.Ages,
+			"name":          teamParam.Name,
+			"description":   teamParam.Description,
+			"league":        teamParam.League,
+			"division":      teamParam.Division,
+			"league_table":  teamParam.LeagueTable,
+			"fixtures":      teamParam.Fixtures,
+			"coach":         teamParam.Coach,
+			"physio":        teamParam.Physio,
+			"contact_email": teamParam.ContactEmail,
+			"file_name":     teamParam.FileName,
+			"active":        teamParam.IsActive,
+			"youth":         teamParam.IsYouth,
+			"ages":          teamParam.Ages,
 		}).
 		Where(sq.Eq{"id": teamParam.ID})
 	sql, args, err := builder.ToSql()

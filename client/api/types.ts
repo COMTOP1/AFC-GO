@@ -19,6 +19,8 @@ export interface TeamSummary {
   fixturesUrl?: string;
   coach?: string;
   physio?: string;
+  /** The team's own shared contact address. */
+  contactEmail?: string;
   imageUrl?: string;
   isActive: boolean;
   isYouth: boolean;

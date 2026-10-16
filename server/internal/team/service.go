@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	emailverifier "github.com/AfterShip/email-verifier"
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
@@ -81,6 +82,7 @@ func (s *Service) public(t Team) Public {
 		FixturesURL:    t.Fixtures.String,
 		Coach:          t.Coach.String,
 		Physio:         t.Physio.String,
+		ContactEmail:   t.ContactEmail.String,
 		ImageURL:       s.files.URL(t.FileName.String),
 		IsActive:       t.IsActive,
 		IsYouth:        t.IsYouth,
@@ -105,6 +107,9 @@ func validate(t Team) error {
 	}
 	if t.Ages < 0 {
 		f.Add("ages", "ages must be zero or more")
+	}
+	if t.ContactEmail.Valid && !emailverifier.IsAddressValid(t.ContactEmail.String) {
+		f.Add("contactEmail", "contact email is not valid")
 	}
 	return f.Err()
 }
@@ -156,17 +161,18 @@ func (s *Service) Create(ctx context.Context, in CreateInput, image *upload.File
 	defer span.End()
 
 	t := Team{
-		Name:        strings.TrimSpace(in.Name),
-		Description: optional(in.Description),
-		League:      optional(in.League),
-		Division:    optional(in.Division),
-		LeagueTable: optional(in.LeagueTable),
-		Fixtures:    optional(in.Fixtures),
-		Coach:       optional(in.Coach),
-		Physio:      optional(in.Physio),
-		IsActive:    in.IsActive,
-		IsYouth:     in.IsYouth || in.Ages < youthAgeLimit,
-		Ages:        in.Ages,
+		Name:         strings.TrimSpace(in.Name),
+		Description:  optional(in.Description),
+		League:       optional(in.League),
+		Division:     optional(in.Division),
+		LeagueTable:  optional(in.LeagueTable),
+		Fixtures:     optional(in.Fixtures),
+		Coach:        optional(in.Coach),
+		Physio:       optional(in.Physio),
+		ContactEmail: optional(in.ContactEmail),
+		IsActive:     in.IsActive,
+		IsYouth:      in.IsYouth || in.Ages < youthAgeLimit,
+		Ages:         in.Ages,
 	}
 	if err := validate(t); err != nil {
 		return Public{}, err
@@ -205,6 +211,7 @@ func (s *Service) Update(ctx context.Context, id int, in UpdateInput, image *upl
 	setOptional(&t.Fixtures, in.Fixtures)
 	setOptional(&t.Coach, in.Coach)
 	setOptional(&t.Physio, in.Physio)
+	setOptional(&t.ContactEmail, in.ContactEmail)
 	if in.IsActive != nil {
 		t.IsActive = *in.IsActive
 	}

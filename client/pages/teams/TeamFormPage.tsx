@@ -22,7 +22,15 @@ import { isNotFound } from '../../lib/notFound';
 import NotFoundPage from '../NotFoundPage';
 
 type TextKey =
-  'name' | 'description' | 'league' | 'division' | 'leagueTable' | 'fixtures' | 'coach' | 'physio';
+  | 'name'
+  | 'description'
+  | 'league'
+  | 'division'
+  | 'leagueTable'
+  | 'fixtures'
+  | 'coach'
+  | 'physio'
+  | 'contactEmail';
 
 function TeamForm({ team }: { team?: TeamSummary }) {
   const heading = team ? 'Edit team' : 'New team';
@@ -38,6 +46,7 @@ function TeamForm({ team }: { team?: TeamSummary }) {
     fixtures: team?.fixturesUrl ?? '',
     coach: team?.coach ?? '',
     physio: team?.physio ?? '',
+    contactEmail: team?.contactEmail ?? '',
   });
   const [ages, setAges] = useState(team ? String(team.ages) : '');
   const [isActive, setIsActive] = useState(team?.isActive ?? true);
@@ -110,6 +119,7 @@ function TeamForm({ team }: { team?: TeamSummary }) {
         {textField('fixtures', 'Fixtures URL', 'url')}
         {textField('coach', 'Coach')}
         {textField('physio', 'Physio')}
+        {textField('contactEmail', 'Team contact email', 'email')}
         <div className="md:col-span-2">
           <ImageField
             label="Team photo"

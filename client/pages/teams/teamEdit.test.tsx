@@ -86,6 +86,7 @@ describe('Team editing', () => {
     const fd = fetchMock.mock.calls.find(([, i]) => i?.method === 'PATCH')?.[1]?.body as FormData;
     expect(fd.get('isActive')).toBe('false');
     expect(fd.get('leagueTable')).toBe(teamDetail.team.leagueTableUrl);
+    expect(fd.get('contactEmail')).toBe('');
     expect(fd.has('image')).toBe(false);
   });
 

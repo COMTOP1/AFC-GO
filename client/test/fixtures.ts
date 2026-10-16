@@ -168,6 +168,7 @@ export const programmes: Programme[] = [
 export const info: InfoContent = { content: '<h2>Welcome</h2><p>All about the club.</p>' };
 
 export const contact: ContactData = {
+  teamEmailMode: 'manager',
   people: [
     { id: 19, name: 'Sam Sec', email: 'sam@example.test', role: 'Club Secretary' },
     {

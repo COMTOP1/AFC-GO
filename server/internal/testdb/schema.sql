@@ -8,6 +8,7 @@ CREATE TABLE teams (
     fixtures     TEXT,
     coach        TEXT,
     physio       TEXT,
+    contact_email TEXT,
     file_name    TEXT,
     active       BOOLEAN NOT NULL DEFAULT FALSE,
     youth        BOOLEAN NOT NULL DEFAULT FALSE,
