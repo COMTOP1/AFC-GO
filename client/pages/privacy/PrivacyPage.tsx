@@ -103,8 +103,9 @@ export default function PrivacyPage() {
           We count unique visitors. To do this we hold your IP address in memory for up to an hour;
           it is never written to our database. Our servers also keep technical logs (which can
           include your IP address, browser type and, for a failed sign-in, the email address used)
-          to keep the site secure and working. Our lawful basis for both is our legitimate interest
-          in running a secure website.
+          to keep the site secure and working. To stop password guessing, failed sign-ins are also
+          counted against the email address and IP address for 15 minutes. Our lawful basis for all
+          of these is our legitimate interest in running a secure website.
         </p>
 
         <h2>Children</h2>
@@ -118,6 +119,7 @@ export default function PrivacyPage() {
             Dates of birth are seen only by club officials who manage player records, and by a
             team&apos;s own manager.
           </li>
+          <li>We only use photos of children with a parent or guardian&apos;s consent.</li>
           <li>A parent or guardian can make any of the requests below on a child&apos;s behalf.</li>
         </ul>
 
@@ -129,16 +131,18 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Signed-in club officials:</strong> the players list, with dates of birth limited
-            as described above.
+            as described above. Programme editors see only players&apos; names, positions, teams and
+            photos of adults.
           </li>
           <li>
             <strong>Officials who manage accounts:</strong> account details of other officials.
           </li>
         </ul>
         <p>
-          We use service providers to host the website, its database and files, to send email, and
-          to monitor the site for errors. They handle your information only on our instructions. We
-          never sell your information or use it for advertising.
+          The website is provided and run for us by BSWDI, which hosts it, its database, file
+          storage and email on servers it manages, and monitors it for errors. BSWDI handles your
+          information only on our instructions. We never sell your information or use it for
+          advertising.
         </p>
 
         <h2>How long we keep it</h2>
@@ -151,7 +155,7 @@ export default function PrivacyPage() {
           <li>
             Links to set or reset a password expire within 48 hours, or as soon as they are used.
           </li>
-          <li>Technical logs are kept only as long as needed for security and fault-finding.</li>
+          <li>Technical logs and error monitoring data are deleted after 60 days.</li>
         </ul>
 
         <h2>Cookies</h2>
@@ -184,8 +188,8 @@ export default function PrivacyPage() {
       </div>
       <div className="prose max-w-3xl">
         <p>
-          Our <Link to="/contact">contact page</Link> shows a Google map. Google may set its own
-          cookies when the map loads; see{' '}
+          Our <Link to="/contact">contact page</Link> can show a Google map. It only loads when you
+          press &ldquo;Show map&rdquo;, and Google may then set its own cookies; see{' '}
           <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">
             Google&apos;s privacy policy
           </a>
