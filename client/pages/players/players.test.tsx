@@ -144,4 +144,46 @@ describe('PlayersPage', () => {
     expect(await screen.findByRole('button', { name: 'Player deleted' })).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'DELETE')).toBe(true);
   });
+
+  it('filters to players with no team', async () => {
+    const leaver = { id: 32, name: 'Lee Leaver', isCaptain: false };
+    renderPlayers({ '/api/v1/players': { body: [...players, leaver] } }, '/players?team=none');
+    expect(await screen.findByText(leaver.name)).toBeInTheDocument();
+    expect(screen.queryByText(sam.name)).toBeNull();
+    const row = screen.getByText(leaver.name).closest('tr') as HTMLElement;
+    expect(within(row).getByText('No team')).toBeInTheDocument();
+  });
+
+  it('deletes several selected players at once', async () => {
+    const fetchMock = renderPlayers({
+      [`/api/v1/players/${sam.id}`]: { status: 204 },
+      [`/api/v1/players/${yan.id}`]: { status: 204 },
+    });
+    fireEvent.click(await screen.findByLabelText(`Select ${sam.name}`));
+    fireEvent.click(screen.getByLabelText(`Select ${yan.name}`));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete selected (2)' }));
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Delete 2 players?' })).getByRole('button', {
+        name: 'Delete',
+      }),
+    );
+    expect(await screen.findByRole('button', { name: 'Players deleted' })).toBeInTheDocument();
+    const deleted = fetchMock.mock.calls
+      .filter(([, i]) => i?.method === 'DELETE')
+      .map(([url]) => String(url));
+    expect(deleted).toEqual([`/api/v1/players/${sam.id}`, `/api/v1/players/${yan.id}`]);
+    expect(screen.queryByRole('button', { name: /Delete selected/ })).toBeNull();
+  });
+
+  it('selects every shown player from the header', async () => {
+    renderPlayers();
+    fireEvent.click(await screen.findByLabelText('Select all shown'));
+    expect(screen.getByRole('button', { name: 'Delete selected (2)' })).toBeInTheDocument();
+  });
+
+  it('gives a Manager no selection boxes', async () => {
+    renderPlayers({ '/api/v1/auth/me': manager });
+    await screen.findByText(sam.name);
+    expect(screen.queryByLabelText(`Select ${sam.name}`)).toBeNull();
+  });
 });
