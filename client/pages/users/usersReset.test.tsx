@@ -18,7 +18,7 @@ const mo = adminUsers[1];
 async function confirmReset() {
   fireEvent.click(await screen.findByRole('button', { name: `Reset password for ${mo.name}` }));
   const confirm = screen.getByRole('dialog', { name: `Reset ${mo.name}'s password?` });
-  expect(confirm).toHaveTextContent('valid for 7 days');
+  expect(confirm).toHaveTextContent('valid for 48 hours');
   fireEvent.click(within(confirm).getByRole('button', { name: 'Reset password' }));
 }
 

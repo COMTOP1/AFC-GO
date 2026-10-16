@@ -17,7 +17,7 @@ func TestSignupRendersSetupLink(t *testing.T) {
 	var body bytes.Buffer
 	require.NoError(t, m.Tpl.Execute(&body, m.TplData))
 	for _, want := range []string{"New Person", "new@example.test", "https://afc.example.test/reset/abc", "https://afc.example.test/AFC.png",
-		"https://afc.example.test/privacy", "valid for one week as of the sent time", `lang="en-gb"`} {
+		"https://afc.example.test/privacy", "valid for 48 hours from when it was sent", `lang="en-gb"`} {
 		assert.Contains(t, body.String(), want)
 	}
 	assert.NotContains(t, body.String(), "Password:")
@@ -31,7 +31,7 @@ func TestResetRendersLink(t *testing.T) {
 	require.NoError(t, m.Tpl.Execute(&body, m.TplData))
 	assert.Contains(t, body.String(), "https://afc.example.test/reset/abc")
 	assert.Contains(t, body.String(), `lang="en-gb"`)
-	assert.Contains(t, body.String(), "valid for one week as of the sent time")
+	assert.Contains(t, body.String(), "valid for 48 hours from when it was sent")
 	assert.Contains(t, body.String(), "https://afc.example.test/AFC.png")
 	assert.NotContains(t, body.String(), "github.com/COMTOP1")
 }

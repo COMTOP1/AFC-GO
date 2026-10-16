@@ -81,7 +81,7 @@ func TestCreateSendsSignupEmail(t *testing.T) {
 	assert.Equal(t, "new@example.test", h.sender.sent[0].To)
 
 	require.Len(t, h.tokens.tokens, 1)
-	assert.Equal(t, 7*24*time.Hour, h.tokens.ttl)
+	assert.Equal(t, 48*time.Hour, h.tokens.ttl)
 	for token, id := range h.tokens.tokens {
 		assert.Equal(t, created.User.ID, id)
 		assert.Contains(t, fmt.Sprint(h.sender.sent[0].TplData), "https://afc.example.test/reset/"+token)
@@ -149,7 +149,7 @@ func TestResetPassword(t *testing.T) {
 	assert.Empty(t, res.ResetURL)
 	assert.True(t, h.store.row(3).ResetPassword)
 	require.Len(t, h.tokens.tokens, 1)
-	assert.Equal(t, 7*24*time.Hour, h.tokens.ttl)
+	assert.Equal(t, 48*time.Hour, h.tokens.ttl)
 	for token, id := range h.tokens.tokens {
 		assert.Equal(t, 3, id)
 		assert.Contains(t, fmt.Sprint(h.sender.sent[0].TplData), token)

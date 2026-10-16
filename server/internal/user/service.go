@@ -23,7 +23,7 @@ import (
 
 const (
 	uploadCategory = "user"
-	resetTokenTTL  = 7 * 24 * time.Hour
+	resetTokenTTL  = 48 * time.Hour
 )
 
 type store interface {
@@ -290,7 +290,7 @@ func (s *Service) Delete(ctx context.Context, id int) (Admin, error) {
 	return deleted, nil
 }
 
-// ResetPassword forces a reset on next login and emails a 7-day reset link.
+// ResetPassword forces a reset on next login and emails a 48-hour reset link.
 // If the email can't be sent, the link is returned for the admin to pass on.
 func (s *Service) ResetPassword(ctx context.Context, id int) (ResetResult, error) {
 	ctx, span := tracer.Start(ctx, "user.Service.ResetPassword")

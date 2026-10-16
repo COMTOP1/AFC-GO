@@ -149,7 +149,7 @@ export default function PrivacyPage() {
           <li>Player records are kept while you play for the club and removed when you leave.</li>
           <li>Removing an account or player also deletes their photo.</li>
           <li>
-            Links to set or reset a password expire within 7 days, or as soon as they are used.
+            Links to set or reset a password expire within 48 hours, or as soon as they are used.
           </li>
           <li>Technical logs are kept only as long as needed for security and fault-finding.</li>
         </ul>

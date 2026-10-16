@@ -19,7 +19,7 @@
                 <mj-button align="left" font-size="22px" font-weight="bold" background-color="#4a4a4a" border-radius="10px" color="#fff" font-family="Arial, sans-serif" href="{{.URL}}">Set your password</mj-button>
                 <mj-text align="left" color="#4a4a4a" font-size="22px" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px">If this was not expected then please report this to the AFC Management Team!</mj-text>
                 <mj-text align="left" color="#4a4a4a" font-size="18px" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px">Thanks,<br />AFC Aldermaston Team</mj-text>
-                <mj-text align="left" color="#4a4a4a" font-size="13px" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px">This link is private to you and will be valid for one week as of the sent time.<br></br>If the button above doesn't work then use this link here: <a href="{{.URL}}">{{.URL}}</a><br></br>To see how we use your details, read our privacy notice: <a href="https://{{.Domain}}/privacy">https://{{.Domain}}/privacy</a></mj-text>
+                <mj-text align="left" color="#4a4a4a" font-size="13px" font-family="Arial, sans-serif" padding-left="25px" padding-right="25px">This link is private to you and will be valid for 48 hours from when it was sent.<br></br>If the button above doesn't work then use this link here: <a href="{{.URL}}">{{.URL}}</a><br></br>To see how we use your details, read our privacy notice: <a href="https://{{.Domain}}/privacy">https://{{.Domain}}/privacy</a></mj-text>
             </mj-column>
         </mj-section>
     </mj-body>

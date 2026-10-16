@@ -73,7 +73,7 @@ function UserForm({ user, isSelf, onClose, onSecret }: Omit<UserDialogProps, 'op
       if (!created.emailSent && created.setupUrl) {
         onSecret({
           title: `Pass this on to ${created.user.name}`,
-          message: `We couldn't email ${created.user.name}. Send them this link to set their password; it lasts 7 days. It won't be shown again.`,
+          message: `We couldn't email ${created.user.name}. Send them this link to set their password; it lasts 48 hours. It won't be shown again.`,
           label: 'Set-password link',
           value: created.setupUrl,
         });
