@@ -77,17 +77,27 @@ func PasswordProblems(pw string) string {
 }
 
 // Login checks credentials. A reset-flagged account (Task 21: only after a
-// correct password) gets a one-hour reset link instead of a session.
-func (s *Service) Login(ctx context.Context, email, password string) (LoginResult, error) {
+// correct password) gets a one-hour reset link instead of a session. Too
+// many failures for the email address or from ip return ErrTooManyAttempts.
+func (s *Service) Login(ctx context.Context, email, password, ip string) (LoginResult, error) {
 	ctx, span := tracer.Start(ctx, "auth.Service.Login")
 	defer span.End()
+	emailKey, ipKey := s.tokens.emailAttemptKey(email), s.tokens.ipAttemptKey(ip)
+	if s.tokens.failures(ctx, emailKey) >= maxEmailAttempt || s.tokens.failures(ctx, ipKey) >= maxIPAttempt {
+		// A security event: alert on these (see the breach plan).
+		slog.WarnContext(ctx, "sign-in throttled", "email", email, "ip", ip)
+		return LoginResult{}, ErrTooManyAttempts
+	}
 	p := s.passwords
 	u, reset, err := s.users.VerifyUser(ctx, user.User{Email: strings.TrimSpace(email), Password: null.StringFrom(password)},
 		p.Iterations, p.ScryptWorkFactor, p.ScryptBlockSize, p.ScryptParallelismFactor, p.KeyLength)
 	if err != nil && !reset {
+		s.tokens.addFailure(ctx, emailKey)
+		s.tokens.addFailure(ctx, ipKey)
 		slog.InfoContext(ctx, fmt.Sprintf("failed login for %q: %v", email, err))
 		return LoginResult{}, ErrInvalidCredentials
 	}
+	s.tokens.clearFailures(ctx, emailKey)
 	if reset {
 		token := uuid.NewString()
 		if err = s.tokens.Set(ctx, token, u.ID, loginResetTTL); err != nil {

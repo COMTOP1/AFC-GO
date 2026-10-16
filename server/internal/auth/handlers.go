@@ -53,15 +53,19 @@ func (h *Handlers) me(c echo.Context) error {
 //	@Param		request	body		auth.LoginInput	true	"Credentials"
 //	@Success	200		{object}	auth.LoginResponse
 //	@Failure	401		{object}	web.ErrorResponse
+//	@Failure	429		{object}	web.ErrorResponse
 //	@Router		/auth/login [post]
 func (h *Handlers) login(c echo.Context) error {
 	var in LoginInput
 	if err := web.BindJSON(c, &in); err != nil {
 		return err
 	}
-	res, err := h.svc.Login(c.Request().Context(), in.Email, in.Password)
+	res, err := h.svc.Login(c.Request().Context(), in.Email, in.Password, c.RealIP())
 	if errors.Is(err, ErrInvalidCredentials) {
 		return echo.NewHTTPError(http.StatusUnauthorized, ErrInvalidCredentials.Error())
+	}
+	if errors.Is(err, ErrTooManyAttempts) {
+		return echo.NewHTTPError(http.StatusTooManyRequests, ErrTooManyAttempts.Error())
 	}
 	if err != nil {
 		return err

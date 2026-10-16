@@ -78,23 +78,62 @@ func TestPasswordProblems(t *testing.T) {
 func TestLogin(t *testing.T) {
 	svc, _, tokens := newAuthService()
 
-	res, err := svc.Login(ctx, "ok@example.test", "Right-Pa55")
+	res, err := svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.1")
 	require.NoError(t, err)
 	assert.Equal(t, 1, res.User.ID)
 	assert.False(t, res.ResetRequired)
 
-	_, err = svc.Login(ctx, "ok@example.test", "wrong")
+	_, err = svc.Login(ctx, "ok@example.test", "wrong", "192.0.2.1")
 	require.ErrorIs(t, err, auth.ErrInvalidCredentials)
-	_, err = svc.Login(ctx, "reset@example.test", "wrong")
+	_, err = svc.Login(ctx, "reset@example.test", "wrong", "192.0.2.1")
 	require.ErrorIs(t, err, auth.ErrInvalidCredentials, "no reset link without the password")
 
-	res, err = svc.Login(ctx, "reset@example.test", "Right-Pa55")
+	res, err = svc.Login(ctx, "reset@example.test", "Right-Pa55", "192.0.2.1")
 	require.NoError(t, err)
 	assert.True(t, res.ResetRequired)
 	require.True(t, strings.HasPrefix(res.ResetURL, "/reset/"))
 	id, ok := tokens.Get(ctx, strings.TrimPrefix(res.ResetURL, "/reset/"))
 	assert.True(t, ok)
 	assert.Equal(t, 2, id)
+}
+
+func TestLoginThrottlesAnEmailAfterFiveFailures(t *testing.T) {
+	svc, _, _ := newAuthService()
+	for i := range 5 {
+		_, err := svc.Login(ctx, "ok@example.test", "wrong", fmt.Sprintf("192.0.2.%d", i))
+		require.ErrorIs(t, err, auth.ErrInvalidCredentials)
+	}
+	_, err := svc.Login(ctx, " OK@example.test ", "Right-Pa55", "198.51.100.1")
+	require.ErrorIs(t, err, auth.ErrTooManyAttempts, "locked even with the right password, from a new IP, in any case")
+
+	_, err = svc.Login(ctx, "reset@example.test", "Right-Pa55", "192.0.2.1")
+	require.NoError(t, err, "other accounts are unaffected")
+}
+
+func TestLoginThrottlesAnIPAfterTwentyFailures(t *testing.T) {
+	svc, _, _ := newAuthService()
+	for i := range 20 {
+		_, err := svc.Login(ctx, fmt.Sprintf("guess%d@example.test", i), "wrong", "192.0.2.9")
+		require.ErrorIs(t, err, auth.ErrInvalidCredentials)
+	}
+	_, err := svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.9")
+	require.ErrorIs(t, err, auth.ErrTooManyAttempts)
+	_, err = svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.10")
+	require.NoError(t, err, "another IP can still sign in")
+}
+
+func TestSuccessfulLoginClearsEmailFailures(t *testing.T) {
+	svc, _, _ := newAuthService()
+	for range 4 {
+		_, _ = svc.Login(ctx, "ok@example.test", "wrong", "192.0.2.1")
+	}
+	_, err := svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.1")
+	require.NoError(t, err)
+	for range 4 {
+		_, _ = svc.Login(ctx, "ok@example.test", "wrong", "192.0.2.1")
+	}
+	_, err = svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.1")
+	require.NoError(t, err, "the count restarted after the successful sign-in")
 }
 
 func TestChangePassword(t *testing.T) {

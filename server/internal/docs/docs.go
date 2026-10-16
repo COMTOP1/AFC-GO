@@ -227,6 +227,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/web.ErrorResponse"
                         }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
                     }
                 }
             }

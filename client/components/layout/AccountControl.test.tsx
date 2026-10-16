@@ -116,6 +116,23 @@ describe('AccountControl signed out', () => {
     await vi.waitFor(() => expect(goTo).toHaveBeenCalledWith('https://elsewhere.example/reset'));
   });
 
+  it('explains when sign-in is throttled', async () => {
+    mockFetch({
+      '/api/v1/auth/me': anonymous,
+      '/api/v1/auth/login': {
+        status: 429,
+        body: { error: { code: 429, message: 'too many sign-in attempts' } },
+      },
+    });
+    renderWithProviders(<AccountControl />);
+    await screen.findByRole('button', { name: 'Sign in' });
+    const dialog = openSignIn();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Sign in' }));
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'Too many sign-in attempts. Please wait 15 minutes and try again.',
+    );
+  });
+
   it('explains a wrong password, keeps the email and clears the password', async () => {
     mockFetch({
       '/api/v1/auth/me': anonymous,

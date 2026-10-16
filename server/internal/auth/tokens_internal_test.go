@@ -9,7 +9,7 @@ import (
 
 func TestTokenKeyNeverHoldsTheToken(t *testing.T) {
 	tokens := &Tokens{prefix: "afc:"}
-	token := "0b6f3c1e-8f0a-4c7d-9a43-5e2b1d7c9f10"
+	token := "0b6f3c1e-8f0a-4c7d-9a43-5e2b1d7c9f10" //nolint:gosec // a made-up test token
 	key := tokens.key(token)
 	assert.NotContains(t, key, token)
 	assert.True(t, strings.HasPrefix(key, "afc:reset-token:"))
