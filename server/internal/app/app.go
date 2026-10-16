@@ -22,6 +22,7 @@ import (
 	_ "github.com/COMTOP1/AFC-GO/server/internal/docs" // registers the swagger spec
 	"github.com/COMTOP1/AFC-GO/server/internal/document"
 	"github.com/COMTOP1/AFC-GO/server/internal/emails"
+	"github.com/COMTOP1/AFC-GO/server/internal/filecheck"
 	"github.com/COMTOP1/AFC-GO/server/internal/files"
 	"github.com/COMTOP1/AFC-GO/server/internal/image"
 	infradb "github.com/COMTOP1/AFC-GO/server/internal/infrastructure/db"
@@ -65,10 +66,15 @@ type Config struct {
 	TrustedProxies []*net.IPNet
 }
 
+// The real file store must support the daily file check, or Build would
+// quietly leave it switched off.
+var _ filecheck.Objects = (*storage.Store)(nil)
+
 // Stores are the database repositories.
 type Stores struct {
 	Affiliation *affiliation.Store
 	Document    *document.Store
+	FileCheck   *filecheck.Store
 	Image       *image.Store
 	News        *news.Store
 	Player      *player.Store
@@ -85,6 +91,7 @@ func NewStores(db *sqlx.DB) Stores {
 	return Stores{
 		Affiliation: affiliation.NewAffiliationRepo(db),
 		Document:    document.NewDocumentRepo(db),
+		FileCheck:   filecheck.NewStore(db),
 		Image:       image.NewImageRepo(db),
 		News:        news.NewNewsRepo(db),
 		Player:      player.NewPlayerRepo(db),
@@ -104,6 +111,9 @@ type App struct {
 	visitors *visitors.Counter
 	tokens   *auth.Tokens
 	mtls     *mtls.Server
+	// files is the daily file check; nil when the file store can't be listed
+	// (tests).
+	files *filecheck.Job
 }
 
 // New connects to Postgres and S3 and builds the server.
@@ -200,12 +210,19 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	site.NewHandlers(siteSvc).Register(api, guards)
 	user.NewHandlers(userSvc).Register(api, guards)
 
-	return &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens, mtls: conf.MTLS}
+	a := &App{Echo: e, address: conf.Address, visitors: counter, tokens: tokens, mtls: conf.MTLS}
+	if lister, ok := objects.(filecheck.Objects); ok && s.FileCheck != nil {
+		a.files = filecheck.NewJob(filecheck.NewChecker(s.FileCheck, lister), s.FileCheck)
+	}
+	return a
 }
 
 // Start begins background work and serves until the server stops.
 func (a *App) Start() error {
 	a.visitors.Start(context.Background())
+	if a.files != nil {
+		a.files.Start()
+	}
 	if a.mtls == nil {
 		return a.Echo.Start(a.address)
 	}
@@ -219,5 +236,8 @@ func (a *App) Start() error {
 // Stop ends background work.
 func (a *App) Stop() {
 	a.visitors.Stop()
+	if a.files != nil {
+		a.files.Stop()
+	}
 	a.tokens.Close()
 }

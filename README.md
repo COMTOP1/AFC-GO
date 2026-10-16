@@ -40,3 +40,9 @@ psql "$DATABASE_URL" -f server/migrations/001_public_uuids.sql
 ### One-off commands
 
 - `resetlegacypasswords` clears the old site's unsalted SHA-512 password digests and emails each affected user a link to set a new password. It needs the server's database, Redis, mail and `DOMAIN_NAME` settings, and refuses to run without Redis. Run it once after deploying, then apply `003_drop_legacy_password.sql`, which refuses to run until it has.
+- `checkfiles` compares the database's file references with the S3 bucket and prints the differences: files nothing points to (with the date each will be deleted), and rows pointing at files that aren't there. It records them in `file_discrepancies`. It changes no files unless run with `-delete`.
+
+### File clean-up
+
+Once a day (10 minutes after start, then every 24 hours) the server runs the same check as `checkfiles` and deletes files that have been unreferenced for 30 days. A Postgres advisory lock means only one instance runs it at a time. A file linked from article or info-page text counts as referenced. If more than half the bucket (and over 20 files) suddenly looks unreferenced, nothing is deleted and an error is logged. A table added with a `file_name` column must be added to `fileColumns` in `server/internal/filecheck/store.go`, or its files will be deleted.
+

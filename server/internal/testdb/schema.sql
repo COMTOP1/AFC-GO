@@ -103,3 +103,12 @@ CREATE TABLE settings (
     id           TEXT PRIMARY KEY,
     setting_text TEXT NOT NULL
 );
+
+CREATE TABLE file_discrepancies (
+    key        TEXT        NOT NULL,
+    kind       TEXT        NOT NULL CHECK (kind IN ('unreferenced', 'missing')),
+    detail     TEXT        NOT NULL DEFAULT '',
+    first_seen TIMESTAMPTZ NOT NULL,
+    last_seen  TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (key, kind)
+);
