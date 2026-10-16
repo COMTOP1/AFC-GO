@@ -14,7 +14,7 @@ const cookies = [
   {
     name: 'Session cookie',
     purpose: 'Keeps club officials signed in. Only set when you sign in.',
-    lasts: '24 hours',
+    lasts: '24 hours, or 31 days if you tick "Remember me"',
     kind: 'Strictly necessary',
   },
   {
@@ -86,10 +86,10 @@ export default function PrivacyPage() {
         <h3>Club officials and volunteers with a website account</h3>
         <p>
           Your name, email address, phone number (if given), role, team (for managers), photo (if
-          given) and a securely hashed password. We use these to let you manage the website and to
-          show club officials on the contact page. Our lawful basis is our legitimate interest in
-          running the club. We use your photo only with your consent; you can remove it at any time
-          from your account page.
+          given) and a securely hashed password. We use these to let you manage the website, to show
+          club officials on the contact page, and to show each team&apos;s managers on its team
+          page. Our lawful basis is our legitimate interest in running the club. We use your photo
+          only with your consent; you can remove it at any time from your account page.
         </p>
         <h3>Players</h3>
         <p>
@@ -98,41 +98,53 @@ export default function PrivacyPage() {
           is our legitimate interest in running the club and its teams. We use photos only with
           consent, given by a parent or guardian for anyone under 18.
         </p>
+        <h3>Team coaches and physios</h3>
+        <p>
+          The name of each team&apos;s coach and physio, shown on its team page. Our lawful basis is
+          our legitimate interest in letting players and families know who runs each team.
+        </p>
         <h3>Everyone who visits the site</h3>
         <p>
-          We count unique visitors. To do this we hold your IP address in memory for up to an hour;
-          it is never written to our database. Our servers also keep technical logs (which can
-          include your IP address, browser type and, for a failed sign-in, the email address used)
-          to keep the site secure and working. To stop password guessing, failed sign-ins are also
-          counted against the email address and IP address for 15 minutes. Our lawful basis for all
-          of these is our legitimate interest in running a secure website.
+          We count unique visitors. To do this we hold your IP address in memory for no more than
+          two hours; it is never written to our database. Our servers also keep technical logs
+          (which can include your IP address, browser type and, for a failed sign-in, the email
+          address used) to keep the site secure and working. To stop password guessing, failed
+          sign-ins are also counted against the email address and IP address for 15 minutes. Our
+          lawful basis for all of these is our legitimate interest in running a secure website.
         </p>
 
         <h2>Children</h2>
         <ul>
           <li>Youth team squads are never shown on public pages.</li>
+          <li>Senior teams are for adults only: nobody under 18 can be added to one.</li>
           <li>
-            Photos of youth team players, and of anyone under 18, are never shown anywhere on the
+            Player photos of youth team players, and of anyone under 18, are never shown on the
             site.
           </li>
           <li>
             Dates of birth are seen only by club officials who manage player records, and by a
             team&apos;s own manager.
           </li>
-          <li>We only use photos of children with a parent or guardian&apos;s consent.</li>
+          <li>
+            Photos of children in the gallery or news are only used with a parent or guardian&apos;s
+            consent, checked by our Safeguarding Officer before upload.
+          </li>
           <li>A parent or guardian can make any of the requests below on a child&apos;s behalf.</li>
         </ul>
 
         <h2>Who can see it</h2>
         <ul>
           <li>
-            <strong>Anyone:</strong> club officials&apos; names, roles, photos and contact emails on
-            the contact page; senior players&apos; names, positions and photos on team pages.
+            <strong>Anyone:</strong> the names, roles, photos and contact emails of the club&apos;s
+            main officials (Chairperson, Club Secretary, Safeguarding Officer, Treasurer, League
+            Secretary and Programme Editor) on the contact page; each team&apos;s managers&apos;
+            names and email addresses, coach and physio on its team page; senior players&apos;
+            names, positions, captaincy and photos on team pages.
           </li>
           <li>
             <strong>Signed-in club officials:</strong> the players list, with dates of birth limited
-            as described above. Programme editors see only players&apos; names, positions, teams and
-            photos of adults.
+            as described above. Programme editors see only players&apos; names, positions, teams,
+            captaincy and photos of adults.
           </li>
           <li>
             <strong>Officials who manage accounts:</strong> account details of other officials.
@@ -152,6 +164,11 @@ export default function PrivacyPage() {
           </li>
           <li>Player records are kept while you play for the club and removed when you leave.</li>
           <li>Removing an account or player also deletes their photo.</li>
+          <li>Emails we send are deleted from our mail server after 30 days.</li>
+          <li>
+            Backups are kept for 30 days, so anything we delete is gone from our backups within 30
+            days too.
+          </li>
           <li>
             Links to set or reset a password expire within 48 hours, or as soon as they are used.
           </li>

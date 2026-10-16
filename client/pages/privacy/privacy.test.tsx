@@ -23,6 +23,9 @@ describe('PrivacyPage', () => {
     for (const name of ['_csrf', 'afc_aldermaston_visited', OPT_OUT_COOKIE]) {
       expect(screen.getByRole('cell', { name })).toBeInTheDocument();
     }
+    expect(
+      screen.getByRole('cell', { name: '24 hours, or 31 days if you tick "Remember me"' }),
+    ).toBeInTheDocument();
     expect(document.title).toBe('Privacy notice · AFC Aldermaston');
   });
 
