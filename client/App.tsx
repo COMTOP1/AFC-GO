@@ -24,6 +24,7 @@ const InfoEditPage = lazy(() => import('./pages/info/InfoEditPage'));
 const ContactPage = lazy(() => import('./pages/contact/ContactPage'));
 const AccountPage = lazy(() => import('./pages/account/AccountPage'));
 const ResetPage = lazy(() => import('./pages/reset/ResetPage'));
+const PrivacyPage = lazy(() => import('./pages/privacy/PrivacyPage'));
 const DesignPage = lazy(() => import('./pages/DesignPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="contact" element={<ContactPage />} />
         <Route path="account" element={<AccountPage />} />
         <Route path="reset/:token" element={<ResetPage />} />
+        <Route path="privacy" element={<PrivacyPage />} />
         <Route path="design" element={<DesignPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

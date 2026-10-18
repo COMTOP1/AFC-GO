@@ -2,12 +2,12 @@ package user
 
 import (
 	"context"
-	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/hex"
 	"errors"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v4"
 
@@ -26,7 +26,9 @@ type (
 
 	// User represents relevant user fields
 	User struct {
-		ID            int         `db:"id" json:"id"`
+		ID int `db:"id" json:"id"`
+		// UUID is the public ID used in file links; see migrations/001.
+		UUID          string      `db:"uuid" json:"-"`
 		Name          string      `db:"name" json:"name"`
 		Email         string      `db:"email" json:"email"`
 		Phone         null.String `db:"phone" json:"phone"`
@@ -35,7 +37,13 @@ type (
 		Role          role.Role
 		FileName      null.String `db:"file_name" json:"file_name"`
 		ResetPassword bool        `db:"reset_password" json:"reset_password"`
-		Password      null.String `db:"password" json:"password"`
+		// SessionVersion is copied into the session cookie at sign-in; a
+		// cookie with an older version is no longer accepted. See
+		// EndSessions and migrations/002.
+		SessionVersion int `db:"session_version" json:"-"`
+		// Password is a plaintext password given to VerifyUser or
+		// EditUserPassword. It is never read from or written to the database.
+		Password      null.String `db:"-" json:"password"`
 		Hash          null.String `db:"hash" json:"hash"`
 		Salt          null.String `db:"salt" json:"salt"`
 		Authenticated bool
@@ -67,9 +75,15 @@ func (s *Store) GetUser(ctx context.Context, userParam User) (User, error) {
 	return s.getUser(ctx, userParam)
 }
 
+// GetUserByUUID finds a user by their public ID.
+func (s *Store) GetUserByUUID(ctx context.Context, id string) (User, error) {
+	return s.getUserWhere(ctx, sq.Eq{"uuid": id})
+}
+
 func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor, blockSize, parallelismFactor, keyLen int) (User, bool, error) {
 	user, err := s.getUserFull(ctx, userParam)
 	if err != nil {
+		equaliseTiming(userParam.Password.String, iter, workFactor, blockSize, parallelismFactor, keyLen)
 		return userParam, false, fmt.Errorf("failed to get user: %w", err)
 	}
 	var hashDecode, saltDecode []byte
@@ -85,43 +99,12 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 			return userParam, false, fmt.Errorf("failed to decode hex of salt verify user: %w", err)
 		}
 	}
-	if user.Password.Valid {
-		sha := sha512.New()
-		sha.Write([]byte(userParam.Password.String))
-		sum := sha.Sum(nil)
-		if subtle.ConstantTimeCompare(sum, []byte(user.Password.String)) == 1 {
-			if user.ResetPassword {
-				return user, true, errors.New("password reset required")
-			}
-			var salt string
-			salt, err = utils.GenerateRandom(utils.GenerateSalt)
-			if err != nil {
-				return userParam, false, fmt.Errorf("failed to generate new salt: %w", err)
-			}
-			var hash string
-			hash, err = utils.HashPassScrypt([]byte(userParam.Password.String), []byte(salt), workFactor, blockSize, parallelismFactor, keyLen)
-			if err != nil {
-				return userParam, false, fmt.Errorf("failed to generate password hash: %w", err)
-			}
-			user.Password = null.NewString("", false)
-			user.Hash = null.StringFrom(hash)
-			user.Salt = null.StringFrom(hex.EncodeToString([]byte(salt)))
-			err = s.editUser(ctx, user)
-			if err != nil {
-				return userParam, false, fmt.Errorf("failed to update user password security: %w", err)
-			}
-			user.Hash = null.NewString("", false)
-			user.Salt = null.NewString("", false)
-			return user, false, nil
-		}
-		return userParam, false, errors.New("invalid credentials")
-	} else if subtle.ConstantTimeCompare(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen), hashDecode) == 1 {
+	if subtle.ConstantTimeCompare(utils.HashPass([]byte(userParam.Password.String), saltDecode, iter, keyLen), hashDecode) == 1 {
 		var hash string
 		hash, err = utils.HashPassScrypt([]byte(userParam.Password.String), saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
 		if err != nil {
 			return userParam, false, fmt.Errorf("failed to generate password hash: %w", err)
 		}
-		user.Password = null.NewString("", false)
 		user.Hash = null.StringFrom(hash)
 		user.Salt = null.StringFrom(hex.EncodeToString(saltDecode))
 		err = s.editUser(ctx, user)
@@ -159,6 +142,20 @@ func (s *Store) VerifyUser(ctx context.Context, userParam User, iter, workFactor
 		return user, true, errors.New("password reset required")
 	}
 	return user, false, nil
+}
+
+// timingSalt is a fixed salt for equaliseTiming; nothing is ever checked
+// against the hashes it makes.
+var timingSalt = []byte("afc-unknown-account-timing-salt!")
+
+// equaliseTiming does the hashing a wrong password costs for a real account
+// (PBKDF2, then scrypt with both salt forms) and throws the results away, so
+// an unknown email takes as long to fail as a known one. Otherwise response
+// times would reveal which addresses have accounts.
+func equaliseTiming(password string, iter, workFactor, blockSize, parallelismFactor, keyLen int) {
+	_ = utils.HashPass([]byte(password), timingSalt, iter, keyLen)
+	_, _ = utils.HashPassScrypt([]byte(password), timingSalt, workFactor, blockSize, parallelismFactor, keyLen) //nolint:errcheck // result unused
+	_, _ = utils.HashPassScrypt([]byte(password), timingSalt, workFactor, blockSize, parallelismFactor, keyLen) //nolint:errcheck // result unused
 }
 
 func (s *Store) AddUser(ctx context.Context, userParam User) (User, error) {
@@ -231,6 +228,27 @@ func (s *Store) EditUserPassword(ctx context.Context, userParam User, workFactor
 		return fmt.Errorf("failed to edit user for edit user password: %w", err)
 	}
 
+	// A new password signs the user out everywhere else.
+	return s.EndSessions(ctx, user.ID)
+}
+
+// EndSessions makes every session the user has stopped working, by bumping
+// the version their session cookies must match.
+func (s *Store) EndSessions(ctx context.Context, id int) error {
+	ctx, span := tracer.Start(ctx, "user.EndSessions")
+	defer span.End()
+	query, args, err := utils.PSQL().Update("users").
+		Set("session_version", sq.Expr("session_version + 1")).
+		Where(sq.Eq{"id": id}).
+		ToSql()
+	if err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to build sql for ending sessions: %w", err)
+	}
+	if _, err = s.db.ExecContext(ctx, query, args...); err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to end sessions for user %d: %w", id, err)
+	}
 	return nil
 }
 

@@ -22,7 +22,15 @@ import { isNotFound } from '../../lib/notFound';
 import NotFoundPage from '../NotFoundPage';
 
 type TextKey =
-  'name' | 'description' | 'league' | 'division' | 'leagueTable' | 'fixtures' | 'coach' | 'physio';
+  | 'name'
+  | 'description'
+  | 'league'
+  | 'division'
+  | 'leagueTable'
+  | 'fixtures'
+  | 'coach'
+  | 'physio'
+  | 'contactEmail';
 
 function TeamForm({ team }: { team?: TeamSummary }) {
   const heading = team ? 'Edit team' : 'New team';
@@ -38,6 +46,7 @@ function TeamForm({ team }: { team?: TeamSummary }) {
     fixtures: team?.fixturesUrl ?? '',
     coach: team?.coach ?? '',
     physio: team?.physio ?? '',
+    contactEmail: team?.contactEmail ?? '',
   });
   const [ages, setAges] = useState(team ? String(team.ages) : '');
   const [isActive, setIsActive] = useState(team?.isActive ?? true);
@@ -110,6 +119,7 @@ function TeamForm({ team }: { team?: TeamSummary }) {
         {textField('fixtures', 'Fixtures URL', 'url')}
         {textField('coach', 'Coach')}
         {textField('physio', 'Physio')}
+        {textField('contactEmail', 'Team contact email', 'email')}
         <div className="md:col-span-2">
           <ImageField
             label="Team photo"
@@ -125,11 +135,20 @@ function TeamForm({ team }: { team?: TeamSummary }) {
           checked={isActive}
           onChange={(e) => setIsActive(e.target.checked)}
         />
-        <Checkbox
-          label="Youth team"
-          checked={isYouth}
-          onChange={(e) => setIsYouth(e.target.checked)}
-        />
+        <div>
+          <Checkbox
+            label="Youth team"
+            checked={isYouth}
+            aria-invalid={err('isYouth') ? true : undefined}
+            aria-describedby={err('isYouth') ? 'youth-error' : undefined}
+            onChange={(e) => setIsYouth(e.target.checked)}
+          />
+          {err('isYouth') && (
+            <p id="youth-error" className="mt-1 text-sm text-red">
+              {err('isYouth')}
+            </p>
+          )}
+        </div>
         <div className="flex gap-2 md:col-span-2">
           <Button type="submit" loading={save.busy}>
             Save team

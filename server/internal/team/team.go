@@ -26,10 +26,12 @@ type (
 		Fixtures    null.String `db:"fixtures" json:"fixtures"`
 		Coach       null.String `db:"coach" json:"coach"`
 		Physio      null.String `db:"physio" json:"physio"`
-		FileName    null.String `db:"file_name" json:"file_name"`
-		IsActive    bool        `db:"active" json:"is_active"`
-		IsYouth     bool        `db:"youth" json:"is_youth"`
-		Ages        int         `db:"ages" json:"ages"`
+		// ContactEmail is the team's own shared address; see setting.TeamEmailMode.
+		ContactEmail null.String `db:"contact_email" json:"contact_email"`
+		FileName     null.String `db:"file_name" json:"file_name"`
+		IsActive     bool        `db:"active" json:"is_active"`
+		IsYouth      bool        `db:"youth" json:"is_youth"`
+		Ages         int         `db:"ages" json:"ages"`
 	}
 )
 

@@ -1,3 +1,5 @@
+import { Link } from 'react-router';
+
 import { useSite } from '../../api/queries';
 import { useAuth } from '../../auth/useAuth';
 
@@ -32,7 +34,11 @@ export function Footer() {
               className="font-bold underline"
             >
               BSWDI
-            </a>
+            </a>{' '}
+            ·{' '}
+            <Link to="/privacy" className="underline">
+              Privacy notice
+            </Link>
           </p>
           {user && site.data && (
             <p className="mt-1 opacity-75">

@@ -63,6 +63,8 @@ definitions:
         type: boolean
       canManageGallery:
         type: boolean
+      canManagePlayers:
+        type: boolean
       canManageUsers:
         type: boolean
     type: object
@@ -211,6 +213,25 @@ definitions:
       content:
         type: string
     type: object
+  setting.TeamEmailMode:
+    enum:
+    - manager
+    - team
+    - site
+    type: string
+    x-enum-varnames:
+    - ManagerEmails
+    - TeamEmail
+    - SiteEmail
+  setting.TeamEmailModeInput:
+    properties:
+      mode:
+        allOf:
+        - $ref: '#/definitions/setting.TeamEmailMode'
+        description: |-
+          Mode is "manager" (each manager's own email), "team" (the team's
+          contact address) or "site" (the site-wide contact email).
+    type: object
   site.Contact:
     properties:
       displayEmail:
@@ -219,6 +240,10 @@ definitions:
         items:
           $ref: '#/definitions/site.ContactPerson'
         type: array
+      teamEmailMode:
+        description: TeamEmailMode is which email team pages show, for the settings
+          page.
+        type: string
     type: object
   site.ContactPerson:
     properties:
@@ -266,12 +291,18 @@ definitions:
   site.Manager:
     properties:
       email:
+        description: Email is left out unless team pages show managers' own emails.
         type: string
       name:
         type: string
     type: object
   site.TeamDetail:
     properties:
+      contactEmail:
+        description: |-
+          ContactEmail is the address to contact the team at when managers'
+          own emails aren't shown (setting.TeamEmailMode); "" otherwise.
+        type: string
       managers:
         items:
           $ref: '#/definitions/site.Manager'
@@ -307,6 +338,8 @@ definitions:
       ages:
         type: integer
       coach:
+        type: string
+      contactEmail:
         type: string
       description:
         type: string
@@ -356,7 +389,7 @@ definitions:
     properties:
       emailSent:
         type: boolean
-      tempPassword:
+      setupUrl:
         type: string
       user:
         $ref: '#/definitions/user.Admin'
@@ -547,6 +580,10 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/web.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
       summary: Log in
       tags:
       - auth
@@ -723,11 +760,12 @@ paths:
         name: kind
         required: true
         type: string
-      - description: Resource ID
+      - description: 'Resource ID: a UUID for player and user, a positive integer
+          otherwise'
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       responses:
         "302":
           description: Found
@@ -1308,6 +1346,31 @@ paths:
       summary: Set the public contact email
       tags:
       - settings
+  /settings/team-email-mode:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: manager, team or site
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/setting.TeamEmailModeInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/setting.TeamEmailModeInput'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/web.ErrorResponse'
+      summary: Set which email team pages show
+      tags:
+      - settings
   /site:
     get:
       produces:
@@ -1448,6 +1511,10 @@ paths:
         in: formData
         name: physio
         type: string
+      - description: Team's shared contact email
+        in: formData
+        name: contactEmail
+        type: string
       - description: Active
         in: formData
         name: isActive
@@ -1557,6 +1624,10 @@ paths:
       - description: Physio; empty clears
         in: formData
         name: physio
+        type: string
+      - description: Team's shared contact email; empty clears
+        in: formData
+        name: contactEmail
         type: string
       - description: Active
         in: formData

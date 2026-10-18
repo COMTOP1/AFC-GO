@@ -12,7 +12,12 @@ const baseUser = {
   name: 'Jo Smith',
   email: 'jo@example.test',
   role: 'Manager',
-  permissions: { canEdit: false, canManageGallery: false, canManageUsers: false },
+  permissions: {
+    canEdit: false,
+    canManageGallery: false,
+    canManagePlayers: false,
+    canManageUsers: false,
+  },
 };
 
 function renderAccount(me: MockRoute, overrides: Record<string, MockRoute> = {}) {

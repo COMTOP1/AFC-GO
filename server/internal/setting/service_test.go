@@ -55,6 +55,27 @@ func TestDisplayEmail(t *testing.T) {
 	assert.False(t, present, "empty removes the setting, as legacy does")
 }
 
+func TestTeamEmailMode(t *testing.T) {
+	svc := setting.NewService(newFakeStore(nil))
+	mode, err := svc.TeamEmailMode(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, setting.ManagerEmails, mode, "managers' own emails until it is set")
+
+	for _, m := range []setting.TeamEmailMode{setting.TeamEmail, setting.SiteEmail, setting.ManagerEmails} {
+		saved, setErr := svc.SetTeamEmailMode(ctx, m)
+		require.NoError(t, setErr)
+		assert.Equal(t, m, saved)
+		mode, err = svc.TeamEmailMode(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, m, mode)
+	}
+
+	_, err = svc.SetTeamEmailMode(ctx, "everyone")
+	se, ok := svcerr.As(err)
+	require.True(t, ok)
+	assert.Contains(t, se.Fields, "mode")
+}
+
 func TestSettingRoutes(t *testing.T) {
 	svc := setting.NewService(newFakeStore(map[string]string{"infoContent": "<div>Hi</div>"}))
 	sessions := authtest.Everyone()

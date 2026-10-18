@@ -18,7 +18,7 @@ const mo = adminUsers[1];
 async function confirmReset() {
   fireEvent.click(await screen.findByRole('button', { name: `Reset password for ${mo.name}` }));
   const confirm = screen.getByRole('dialog', { name: `Reset ${mo.name}'s password?` });
-  expect(confirm).toHaveTextContent('valid for 7 days');
+  expect(confirm).toHaveTextContent('valid for 48 hours');
   fireEvent.click(within(confirm).getByRole('button', { name: 'Reset password' }));
 }
 
@@ -123,5 +123,29 @@ describe('Public contact email', () => {
     fireEvent.change(within(dialog).getByLabelText('Email'), { target: { value: 'nope' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     expect(await within(dialog).findByText('email address is not valid')).toBeInTheDocument();
+  });
+});
+
+describe('Team page email', () => {
+  it('shows the current choice and saves a new one', async () => {
+    const fetchMock = renderUsers({
+      '/api/v1/settings/team-email-mode': { body: { mode: 'team' } },
+    });
+    expect(await screen.findByText("Each manager's own email")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit team page email' }));
+    const dialog = screen.getByRole('dialog', { name: 'Team page email' });
+    const select = within(dialog).getByLabelText('Team pages show');
+    fireEvent.change(select, { target: { value: 'team' } });
+    expect(select).toHaveAccessibleDescription(
+      "Team pages show the contact email set on each team; managers' names only.",
+    );
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(
+      await screen.findByRole('button', { name: 'Team page email saved' }),
+    ).toBeInTheDocument();
+    const put = fetchMock.mock.calls.find(
+      ([url, i]) => i?.method === 'PUT' && String(url).endsWith('/team-email-mode'),
+    );
+    expect(JSON.parse(String(put?.[1]?.body))).toEqual({ mode: 'team' });
   });
 });

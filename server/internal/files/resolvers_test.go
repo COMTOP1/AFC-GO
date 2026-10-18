@@ -91,11 +91,11 @@ func (f fakeTeams) GetTeam(_ context.Context, t team.Team) (team.Team, error) {
 	return team.Team{}, fmt.Errorf("failed to get team: %w", sql.ErrNoRows)
 }
 
-type fakeUsers map[int]user.User
+type fakeUsers map[string]user.User
 
-func (f fakeUsers) GetUser(_ context.Context, u user.User) (user.User, error) {
-	if x, ok := f[u.ID]; ok {
-		return x, nil
+func (f fakeUsers) GetUserByUUID(_ context.Context, id string) (user.User, error) {
+	if u, ok := f[id]; ok {
+		return u, nil
 	}
 	return user.User{}, fmt.Errorf("failed to get user: %w", sql.ErrNoRows)
 }
@@ -112,14 +112,19 @@ func (f fakeWhatsOn) GetWhatsOnArticle(_ context.Context, w whatson.WhatsOn) (wh
 // fakePlayerPhotos stands in for player.Service, which returns NotFound for
 // missing, youth-team and under-18 players (tested in the player package
 // itself; here we only need Resolvers() to delegate to it untouched).
-type fakePlayerPhotos map[int]string
+type fakePlayerPhotos map[string]string
 
-func (f fakePlayerPhotos) PhotoKey(_ context.Context, id int) (string, error) {
+func (f fakePlayerPhotos) PhotoKey(_ context.Context, id string) (string, error) {
 	if key, ok := f[id]; ok {
 		return key, nil
 	}
 	return "", svcerr.NotFound("player photo not found", nil)
 }
+
+const (
+	oneUUID   = "00000000-0000-4000-8000-000000000001"
+	otherUUID = "00000000-0000-4000-8000-000000000099"
+)
 
 // TestResolversMapEveryKind builds files.Resolvers() from Sources backed by
 // small in-test fakes for all ten kinds, so a broken field mapping (e.g. the
@@ -134,62 +139,48 @@ func TestResolversMapEveryKind(t *testing.T) {
 		Programme:   fakeProgrammes{1: {ID: 1, FileName: "programme/one.pdf"}},
 		Sponsor:     fakeSponsors{1: {ID: 1, FileName: null.StringFrom("sponsor/one.png")}},
 		Team:        fakeTeams{1: {ID: 1, FileName: null.StringFrom("team/one.png")}},
-		User: fakeUsers{
-			1: {ID: 1, FileName: null.StringFrom("user/one.png")},
-			// GetUser matches "email = ? OR id = ?"; a blank-email row can
-			// collide with an unrelated id, so id 2 resolves to someone
-			// else's row (ID 5) here to pin that the resolver must reject it.
-			2: {ID: 5, FileName: null.StringFrom("user/five.png")},
-		},
-		WhatsOn: fakeWhatsOn{1: {ID: 1, FileName: null.StringFrom("whatson/one.jpg")}},
-		Players: fakePlayerPhotos{1: "player/one.png"},
+		User:        fakeUsers{oneUUID: {ID: 1, FileName: null.StringFrom("user/one.png")}},
+		WhatsOn:     fakeWhatsOn{1: {ID: 1, FileName: null.StringFrom("whatson/one.jpg")}},
+		Players:     fakePlayerPhotos{oneUUID: "player/one.png"},
 	})
 
 	cases := []struct {
 		kind    string
+		id      string
+		missing string
 		wantKey string
 	}{
-		{"affiliation", "affiliation/one.png"},
-		{"document", "document/one.pdf"},
-		{"gallery", "gallery/one.jpg"},
-		{"news", "news/one.jpg"},
-		{"programme", "programme/one.pdf"},
-		{"sponsor", "sponsor/one.png"},
-		{"team", "team/one.png"},
-		{"user", "user/one.png"},
-		{"whatson", "whatson/one.jpg"},
+		{"affiliation", "1", "99", "affiliation/one.png"},
+		{"document", "1", "99", "document/one.pdf"},
+		{"gallery", "1", "99", "gallery/one.jpg"},
+		{"news", "1", "99", "news/one.jpg"},
+		{"programme", "1", "99", "programme/one.pdf"},
+		{"sponsor", "1", "99", "sponsor/one.png"},
+		{"team", "1", "99", "team/one.png"},
+		{"user", oneUUID, otherUUID, "user/one.png"},
+		{"player", oneUUID, otherUUID, "player/one.png"},
+		{"whatson", "1", "99", "whatson/one.jpg"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.kind+"/found", func(t *testing.T) {
-			key, err := resolvers[tc.kind](ctx, 1)
+			key, err := resolvers[tc.kind](ctx, tc.id)
 			require.NoError(t, err)
 			assert.Equal(t, tc.wantKey, key)
 		})
 		t.Run(tc.kind+"/missing row", func(t *testing.T) {
-			_, err := resolvers[tc.kind](ctx, 99)
+			_, err := resolvers[tc.kind](ctx, tc.missing)
 			se, ok := svcerr.As(err)
 			require.True(t, ok, "want svcerr, got %v", err)
 			assert.Equal(t, svcerr.KindNotFound, se.Kind)
 		})
 	}
 
-	t.Run("user/id-email collision is rejected", func(t *testing.T) {
-		_, err := resolvers["user"](ctx, 2)
-		se, ok := svcerr.As(err)
-		require.True(t, ok, "want svcerr, got %v", err)
-		assert.Equal(t, svcerr.KindNotFound, se.Kind)
-	})
-
-	t.Run("player/delegates to PhotoKey", func(t *testing.T) {
-		key, err := resolvers["player"](ctx, 1)
-		require.NoError(t, err)
-		assert.Equal(t, "player/one.png", key)
-	})
-
-	t.Run("player/PhotoKey NotFound passes through", func(t *testing.T) {
-		_, err := resolvers["player"](ctx, 2)
-		se, ok := svcerr.As(err)
-		require.True(t, ok, "want svcerr, got %v", err)
-		assert.Equal(t, svcerr.KindNotFound, se.Kind)
-	})
+	for _, kind := range []string{"user", "player"} {
+		t.Run(kind+"/integer id is not found", func(t *testing.T) {
+			_, err := resolvers[kind](ctx, "1")
+			se, ok := svcerr.As(err)
+			require.True(t, ok, "want svcerr, got %v", err)
+			assert.Equal(t, svcerr.KindNotFound, se.Kind)
+		})
+	}
 }

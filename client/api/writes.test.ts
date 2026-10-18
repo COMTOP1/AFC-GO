@@ -80,6 +80,7 @@ describe('write calls', () => {
       fixtures: '',
       coach: '',
       physio: '',
+      contactEmail: '',
       isActive: false,
       isYouth: false,
       image: emptyImage,

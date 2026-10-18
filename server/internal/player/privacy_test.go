@@ -8,6 +8,7 @@ import (
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/player"
+	"github.com/COMTOP1/AFC-GO/server/internal/role"
 )
 
 var now = time.Date(2026, 9, 27, 15, 0, 0, 0, time.UTC)
@@ -57,4 +58,17 @@ func TestPhotoVisible(t *testing.T) {
 	for name, tc := range cases {
 		assert.Equal(t, tc.want, player.PhotoVisible(tc.p, tc.youth, now), name)
 	}
+}
+
+func TestDateOfBirthVisible(t *testing.T) {
+	for _, r := range []role.Role{role.LeagueSecretary, role.Treasurer,
+		role.SafeguardingOfficer, role.ClubSecretary, role.Chairperson, role.Webmaster} {
+		assert.True(t, player.DateOfBirthVisible(r, 0, 5), r)
+	}
+	assert.False(t, player.DateOfBirthVisible(role.Photographer, 0, 5))
+	assert.False(t, player.DateOfBirthVisible(role.ProgrammeEditor, 0, 5), "programme editors get the cut-down list")
+	assert.True(t, player.DateOfBirthVisible(role.Manager, 5, 5))
+	assert.False(t, player.DateOfBirthVisible(role.Manager, 4, 5))
+	assert.False(t, player.DateOfBirthVisible(role.Manager, 0, 0), "an unassigned manager doesn't match a detached player")
+	assert.False(t, player.DateOfBirthVisible("", 0, 5), "no viewer")
 }

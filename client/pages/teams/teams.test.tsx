@@ -106,6 +106,24 @@ describe('TeamPage', () => {
     expect(document.title).toBe('First Team · AFC Aldermaston');
   });
 
+  it("shows the team contact email instead of managers' own when set to", async () => {
+    renderTeam(`/team/${team.id}`, {
+      [`/api/v1/teams/${team.id}`]: {
+        body: {
+          ...teamDetail,
+          contactEmail: 'first@example.test',
+          managers: [{ name: 'Jo Smith' }],
+        },
+      },
+    });
+    expect(await screen.findByText('Jo Smith')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'jo@example.test' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'first@example.test' })).toHaveAttribute(
+      'href',
+      'mailto:first@example.test',
+    );
+  });
+
   it('hides the squad entirely for youth teams and omits missing links', async () => {
     renderTeam(`/team/${youthTeam.id}`);
     expect(await screen.findByRole('heading', { level: 1, name: 'Under 12s' })).toBeInTheDocument();

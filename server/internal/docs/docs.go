@@ -227,6 +227,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/web.ErrorResponse"
                         }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
                     }
                 }
             }
@@ -500,8 +506,8 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "description": "Resource ID",
+                        "type": "string",
+                        "description": "Resource ID: a UUID for player and user, a positive integer otherwise",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1394,6 +1400,45 @@ const docTemplate = `{
                 }
             }
         },
+        "/settings/team-email-mode": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Set which email team pages show",
+                "parameters": [
+                    {
+                        "description": "manager, team or site",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/setting.TeamEmailModeInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/setting.TeamEmailModeInput"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/web.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/site": {
             "get": {
                 "produces": [
@@ -1613,6 +1658,12 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
+                        "type": "string",
+                        "description": "Team's shared contact email",
+                        "name": "contactEmail",
+                        "in": "formData"
+                    },
+                    {
                         "type": "boolean",
                         "description": "Active",
                         "name": "isActive",
@@ -1777,6 +1828,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Physio; empty clears",
                         "name": "physio",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Team's shared contact email; empty clears",
+                        "name": "contactEmail",
                         "in": "formData"
                     },
                     {
@@ -2457,6 +2514,9 @@ const docTemplate = `{
                 "canManageGallery": {
                     "type": "boolean"
                 },
+                "canManagePlayers": {
+                    "type": "boolean"
+                },
                 "canManageUsers": {
                     "type": "boolean"
                 }
@@ -2676,6 +2736,32 @@ const docTemplate = `{
                 }
             }
         },
+        "setting.TeamEmailMode": {
+            "type": "string",
+            "enum": [
+                "manager",
+                "team",
+                "site"
+            ],
+            "x-enum-varnames": [
+                "ManagerEmails",
+                "TeamEmail",
+                "SiteEmail"
+            ]
+        },
+        "setting.TeamEmailModeInput": {
+            "type": "object",
+            "properties": {
+                "mode": {
+                    "description": "Mode is \"manager\" (each manager's own email), \"team\" (the team's\ncontact address) or \"site\" (the site-wide contact email).",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/setting.TeamEmailMode"
+                        }
+                    ]
+                }
+            }
+        },
         "site.Contact": {
             "type": "object",
             "properties": {
@@ -2687,6 +2773,10 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/site.ContactPerson"
                     }
+                },
+                "teamEmailMode": {
+                    "description": "TeamEmailMode is which email team pages show, for the settings page.",
+                    "type": "string"
                 }
             }
         },
@@ -2760,6 +2850,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "email": {
+                    "description": "Email is left out unless team pages show managers' own emails.",
                     "type": "string"
                 },
                 "name": {
@@ -2770,6 +2861,10 @@ const docTemplate = `{
         "site.TeamDetail": {
             "type": "object",
             "properties": {
+                "contactEmail": {
+                    "description": "ContactEmail is the address to contact the team at when managers'\nown emails aren't shown (setting.TeamEmailMode); \"\" otherwise.",
+                    "type": "string"
+                },
                 "managers": {
                     "type": "array",
                     "items": {
@@ -2823,6 +2918,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "coach": {
+                    "type": "string"
+                },
+                "contactEmail": {
                     "type": "string"
                 },
                 "description": {
@@ -2897,7 +2995,7 @@ const docTemplate = `{
                 "emailSent": {
                     "type": "boolean"
                 },
-                "tempPassword": {
+                "setupUrl": {
                     "type": "string"
                 },
                 "user": {

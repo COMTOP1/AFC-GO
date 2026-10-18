@@ -167,7 +167,7 @@
                   
       <div
          style="font-family:Arial, sans-serif;font-size:48px;font-weight:400;line-height:1;text-align:left;color:#4a4a4a;"
-      >You have been singed up for an official login.</div>
+      >You have been signed up for an official login.</div>
     
                 </td>
               </tr>
@@ -217,7 +217,7 @@
                   
       <div
          style="font-family:Arial, sans-serif;font-size:22px;line-height:1;text-align:left;color:#4a4a4a;"
-      >Hi {{.Name}}, here are temporary details to get you started, you will be asked to change your password:</div>
+      >Hi {{.Name}}, an account has been made for you. Press the button below to choose your password.</div>
     
                 </td>
               </tr>
@@ -236,18 +236,6 @@
             
               <tr>
                 <td
-                   align="left" style="font-size:0px;padding:10px 25px;padding-right:25px;padding-left:25px;word-break:break-word;"
-                >
-                  
-      <div
-         style="font-family:Arial, sans-serif;font-size:22px;line-height:1;text-align:left;color:#4a4a4a;"
-      >Password: {{.Password}}</div>
-    
-                </td>
-              </tr>
-            
-              <tr>
-                <td
                    align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;"
                 >
                   
@@ -260,9 +248,9 @@
                align="center" bgcolor="#4a4a4a" role="presentation" style="border:none;border-radius:10px;cursor:auto;mso-padding-alt:10px 25px;background:#4a4a4a;" valign="middle"
             >
               <a
-                 href="https://{{.Domain}}" style="display:inline-block;background:#4a4a4a;color:#ffffff;font-family:Arial, sans-serif;font-size:22px;font-weight:bold;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:10px 25px;mso-padding-alt:0px;border-radius:10px;" target="_blank"
+                 href="{{.URL}}" style="display:inline-block;background:#4a4a4a;color:#ffffff;font-family:Arial, sans-serif;font-size:22px;font-weight:bold;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:10px 25px;mso-padding-alt:0px;border-radius:10px;" target="_blank"
               >
-                AFC website
+                Set your password
               </a>
             </td>
           </tr>
@@ -303,7 +291,7 @@
                   
       <div
          style="font-family:Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#4a4a4a;"
-      >This password is private to you and temporary.<br></br>If the button above doesn't work then use this link here: <a href="https://{{.Domain}}">https://{{.Domain}}</a></div>
+      >This link is private to you and will be valid for 48 hours from when it was sent.<br></br>If the button above doesn't work then use this link here: <a href="{{.URL}}">{{.URL}}</a><br></br>To see how we use your details, read our privacy notice: <a href="https://{{.Domain}}/privacy">https://{{.Domain}}/privacy</a></div>
     
                 </td>
               </tr>

@@ -11,6 +11,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/affiliation"
 	"github.com/COMTOP1/AFC-GO/server/internal/news"
 	"github.com/COMTOP1/AFC-GO/server/internal/player"
+	"github.com/COMTOP1/AFC-GO/server/internal/setting"
 	"github.com/COMTOP1/AFC-GO/server/internal/sponsor"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
@@ -43,6 +44,7 @@ type (
 	}
 	SettingSource interface {
 		DisplayEmail(ctx context.Context) (string, error)
+		TeamEmailMode(ctx context.Context) (setting.TeamEmailMode, error)
 	}
 	UserSource interface {
 		GetUsersContact(ctx context.Context) ([]user.User, error)
@@ -138,7 +140,11 @@ func (s *Service) Contact(ctx context.Context) (Contact, error) {
 	if err != nil {
 		return Contact{}, err
 	}
-	out := Contact{DisplayEmail: email, People: make([]ContactPerson, 0, len(people))}
+	mode, err := s.d.Settings.TeamEmailMode(ctx)
+	if err != nil {
+		return Contact{}, err
+	}
+	out := Contact{DisplayEmail: email, TeamEmailMode: string(mode), People: make([]ContactPerson, 0, len(people))}
 	for _, u := range people {
 		out.People = append(out.People, ContactPerson{
 			ID: u.ID, Name: u.Name, Email: u.Email, Role: u.Role.String(), ImageURL: s.d.Files.URL(u.FileName.String),
@@ -168,9 +174,28 @@ func (s *Service) Team(ctx context.Context, id int) (TeamDetail, error) {
 	if err != nil {
 		return TeamDetail{}, err
 	}
+	mode, err := s.d.Settings.TeamEmailMode(ctx)
+	if err != nil {
+		return TeamDetail{}, err
+	}
+	siteEmail, err := s.d.Settings.DisplayEmail(ctx)
+	if err != nil {
+		return TeamDetail{}, err
+	}
 	out := TeamDetail{Team: t, Managers: make([]Manager, 0, len(managers)), Sponsors: sponsors, Players: players}
+	switch mode {
+	case setting.TeamEmail:
+		out.ContactEmail = t.ContactEmail
+	case setting.SiteEmail:
+		out.ContactEmail = siteEmail
+	case setting.ManagerEmails:
+	}
 	for _, m := range managers {
-		out.Managers = append(out.Managers, Manager{Name: m.Name, Email: m.Email})
+		pub := Manager{Name: m.Name}
+		if mode == setting.ManagerEmails {
+			pub.Email = m.Email
+		}
+		out.Managers = append(out.Managers, pub)
 	}
 	return out, nil
 }

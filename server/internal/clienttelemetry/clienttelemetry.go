@@ -6,6 +6,7 @@ package clienttelemetry
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -13,6 +14,8 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 	oteltrace "go.opentelemetry.io/otel/trace"
+
+	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
 
 var tracer = otel.Tracer("github.com/COMTOP1/AFC-GO/server/internal/clienttelemetry")
@@ -57,7 +60,7 @@ func Record(ctx context.Context, ev Event) {
 		end = msToTime(ev.EndTime)
 	}
 
-	_, span := tracer.Start(ctx, ev.Name, oteltrace.WithTimestamp(start))
+	_, span := tracer.Start(ctx, redactName(ev.Name), oteltrace.WithTimestamp(start))
 	defer span.End(oteltrace.WithTimestamp(end))
 
 	n := 0
@@ -65,7 +68,7 @@ func Record(ctx context.Context, ev Event) {
 		if n >= maxAttributes {
 			break
 		}
-		span.SetAttributes(attribute.String("client."+k, truncate(v)))
+		span.SetAttributes(attribute.String("client."+k, truncate(web.RedactPath(v))))
 		n++
 	}
 
@@ -76,6 +79,16 @@ func Record(ctx context.Context, ev Event) {
 			attribute.String("exception.stacktrace", truncate(ev.Stack)),
 		))
 	}
+}
+
+// redactName strips a reset token from a "METHOD /path" event name. The
+// client redacts these itself; this covers older cached clients.
+func redactName(name string) string {
+	method, path, ok := strings.Cut(name, " ")
+	if !ok {
+		return web.RedactPath(name)
+	}
+	return method + " " + web.RedactPath(path)
 }
 
 func msToTime(ms int64) time.Time {

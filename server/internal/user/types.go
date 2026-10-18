@@ -33,12 +33,13 @@ type UpdateInput struct {
 	RemoveImage bool
 }
 
-// Created is the result of creating a user. TempPassword is set only when
-// the signup email could not be sent, so the admin can pass it on.
+// Created is the result of creating a user. SetupURL, the user's link to
+// set their password, is set only when the signup email could not be sent,
+// so the admin can pass it on.
 type Created struct {
-	User         Admin  `json:"user"`
-	EmailSent    bool   `json:"emailSent"`
-	TempPassword string `json:"tempPassword,omitempty"`
+	User      Admin  `json:"user"`
+	EmailSent bool   `json:"emailSent"`
+	SetupURL  string `json:"setupUrl,omitempty"`
 }
 
 // ResetResult is the result of an admin-triggered password reset. ResetURL

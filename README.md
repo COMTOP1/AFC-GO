@@ -26,3 +26,23 @@ The classic template site has been removed. Old links still work: `/app/...` red
 ### Account pages
 
 `/account` shows the signed-in user's details and lets them change their photo and password. `/reset/<token>` is the password reset page; sign-in sends reset-flagged accounts there, and the reset email links to it.
+
+### Database migrations
+
+Schema changes live in `server/migrations/`, numbered in the order to apply them. Each is safe to run more than once. Apply a migration before deploying the server version that needs it:
+
+```sh
+psql "$DATABASE_URL" -f server/migrations/001_public_uuids.sql
+```
+
+`server/internal/testdb/schema.sql` is the schema with every migration applied; keep it in step when adding one.
+
+### One-off commands
+
+- `resetlegacypasswords` clears the old site's unsalted SHA-512 password digests and emails each affected user a link to set a new password. It needs the server's database, Redis, mail and `DOMAIN_NAME` settings, and refuses to run without Redis. Run it once after deploying, then apply `003_drop_legacy_password.sql`, which refuses to run until it has.
+- `checkfiles` compares the database's file references with the S3 bucket and prints the differences: files nothing points to (with the date each will be deleted), and rows pointing at files that aren't there. It records them in `file_discrepancies`. It changes no files unless run with `-delete`.
+
+### File clean-up
+
+Once a day (10 minutes after start, then every 24 hours) the server runs the same check as `checkfiles` and deletes files that have been unreferenced for 30 days. `FILE_RETENTION` shortens that, e.g. `1d` or `12h` on dev; it can't be longer than `30d`, and below a day the check runs that often instead. `checkfiles -retention 1d` overrides it for one run. A Postgres advisory lock means only one instance runs it at a time. Every table with a `file_name` column counts, including ones the code doesn't use (found from the database schema), and a file linked from any text column (an article, the info page, a team description) counts as referenced. If more than half the bucket (and over 20 files) suddenly looks unreferenced, nothing is deleted and an error is logged.
+

@@ -38,6 +38,7 @@ type (
 		PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
 		DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
 		HeadObject(ctx context.Context, params *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error)
+		ListObjectsV2(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
 	}
 
 	// Store puts, deletes, checks and links objects in an S3-compatible bucket.
@@ -122,6 +123,26 @@ func (s *Store) Delete(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to delete object %q: %w", key, err)
 	}
 	return nil
+}
+
+// List returns every key in the bucket.
+func (s *Store) List(ctx context.Context) ([]string, error) {
+	ctx, span := tracer.Start(ctx, "storage.List")
+	defer span.End()
+
+	var keys []string
+	pages := s3.NewListObjectsV2Paginator(s.client, &s3.ListObjectsV2Input{Bucket: aws.String(s.bucket)})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			span.RecordError(err)
+			return nil, fmt.Errorf("failed to list objects: %w", err)
+		}
+		for _, obj := range page.Contents {
+			keys = append(keys, aws.ToString(obj.Key))
+		}
+	}
+	return keys, nil
 }
 
 // Exists reports whether key is present in the bucket.

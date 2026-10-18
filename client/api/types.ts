@@ -19,6 +19,8 @@ export interface TeamSummary {
   fixturesUrl?: string;
   coach?: string;
   physio?: string;
+  /** The team's own shared contact address. */
+  contactEmail?: string;
   imageUrl?: string;
   isActive: boolean;
   isYouth: boolean;
@@ -38,6 +40,8 @@ export interface SiteInfo {
 export interface Permissions {
   canEdit: boolean;
   canManageGallery: boolean;
+  /** Add, edit and remove players, and see their dates of birth. */
+  canManagePlayers: boolean;
   canManageUsers: boolean;
 }
 

@@ -10,6 +10,7 @@ import (
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/player"
+	"github.com/COMTOP1/AFC-GO/server/internal/role"
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
@@ -27,10 +28,10 @@ var teams = fakeTeams{
 
 func squad() []player.Player {
 	return []player.Player{
-		{ID: 1, Name: "Adult", FileName: null.StringFrom("player/adult.png"), DateOfBirth: yearsAgo(30),
+		{ID: 1, UUID: uuidOf(1), Name: "Adult", FileName: null.StringFrom("player/adult.png"), DateOfBirth: yearsAgo(30),
 			Position: null.StringFrom("Striker"), IsCaptain: true, TeamID: 1},
-		{ID: 2, Name: "Youth", FileName: null.StringFrom("player/youth.png"), DateOfBirth: yearsAgo(11), TeamID: 2},
-		{ID: 3, Name: "Young Senior", FileName: null.StringFrom("player/young.png"), DateOfBirth: yearsAgo(16), TeamID: 1},
+		{ID: 2, UUID: uuidOf(2), Name: "Youth", FileName: null.StringFrom("player/youth.png"), DateOfBirth: yearsAgo(11), TeamID: 2},
+		{ID: 3, UUID: uuidOf(3), Name: "Young Senior", FileName: null.StringFrom("player/young.png"), DateOfBirth: yearsAgo(16), TeamID: 1},
 	}
 }
 
@@ -53,7 +54,7 @@ func fieldsOf(t *testing.T, err error) map[string]string {
 // TestListHidesMinorPhotos pins Review Focus #1 for /players.
 func TestListHidesMinorPhotos(t *testing.T) {
 	svc, _, _ := newService()
-	list, err := svc.List(ctx)
+	list, err := svc.List(ctx, role.Webmaster, 0)
 	require.NoError(t, err)
 	byID := map[int]player.Public{}
 	for _, p := range list {
@@ -68,6 +69,24 @@ func TestListHidesMinorPhotos(t *testing.T) {
 	assert.Equal(t, 30, *byID[1].Age)
 }
 
+func TestListHidesDatesOfBirthFromViewersWithNoNeed(t *testing.T) {
+	svc, _, _ := newService()
+	visible := func(viewer role.Role, teamID int) map[int]bool {
+		list, err := svc.List(ctx, viewer, teamID)
+		require.NoError(t, err)
+		out := map[int]bool{}
+		for _, p := range list {
+			assert.Equal(t, p.DateOfBirth != nil, p.Age != nil, "age and date of birth go together")
+			out[p.ID] = p.DateOfBirth != nil
+		}
+		return out
+	}
+	assert.Equal(t, map[int]bool{1: true, 2: true, 3: true}, visible(role.Treasurer, 0), "editors enter dates of birth")
+	assert.Equal(t, map[int]bool{1: true, 2: false, 3: true}, visible(role.Manager, 1), "a manager sees only their own team")
+	assert.Equal(t, map[int]bool{1: false, 2: false, 3: false}, visible(role.Photographer, 0))
+	assert.Equal(t, map[int]bool{1: false, 2: false, 3: false}, visible(role.Manager, 0), "a manager with no team sees none")
+}
+
 // TestListHidesPhotoOnUnknownTeam pins Review Focus #1: a player whose team
 // can't be found (e.g. team_id 0 after DetachTeam) must not leak a photo via
 // List just because "not found" was treated as "not youth".
@@ -79,7 +98,7 @@ func TestListHidesPhotoOnUnknownTeam(t *testing.T) {
 	objects.Objects["player/orphan.png"] = "IMG"
 	svc := player.NewService(store, teams, upload.New(objects))
 
-	list, err := svc.List(ctx)
+	list, err := svc.List(ctx, role.Webmaster, 0)
 	require.NoError(t, err)
 	require.Len(t, list, 1)
 	assert.Empty(t, list[0].ImageURL, "team not found: fail closed")
@@ -137,26 +156,26 @@ func TestSquadHidesPhotosWhenTeamLookupFails(t *testing.T) {
 
 func TestPhotoKey(t *testing.T) {
 	svc, _, _ := newService()
-	key, err := svc.PhotoKey(ctx, 1)
+	key, err := svc.PhotoKey(ctx, uuidOf(1))
 	require.NoError(t, err)
 	assert.Equal(t, "player/adult.png", key)
-	for _, id := range []int{2, 3, 99} {
+	for _, id := range []string{uuidOf(2), uuidOf(3), uuidOf(99)} {
 		_, err = svc.PhotoKey(ctx, id)
 		se, ok := svcerr.As(err)
 		require.True(t, ok, id)
 		assert.Equal(t, svcerr.KindNotFound, se.Kind, id)
-		assert.Equal(t, "player photo not found", se.Message, "missing and hidden players give the same error, id %d", id)
+		assert.Equal(t, "player photo not found", se.Message, "missing and hidden players give the same error, id %s", id)
 	}
 
 	// An adult with a photo on an unknown team must also be NotFound (fail
 	// closed), via the identical error a missing player would give.
 	unknownTeamStore := newFakeStore(player.Player{
-		ID: 4, Name: "Orphan", FileName: null.StringFrom("player/orphan.png"), DateOfBirth: yearsAgo(30), TeamID: 7,
+		ID: 4, UUID: uuidOf(4), Name: "Orphan", FileName: null.StringFrom("player/orphan.png"), DateOfBirth: yearsAgo(30), TeamID: 7,
 	})
 	objects := uploadtest.New()
 	objects.Objects["player/orphan.png"] = "IMG"
 	orphanSvc := player.NewService(unknownTeamStore, teams, upload.New(objects))
-	_, err = orphanSvc.PhotoKey(ctx, 4)
+	_, err = orphanSvc.PhotoKey(ctx, uuidOf(4))
 	se, ok := svcerr.As(err)
 	require.True(t, ok)
 	assert.Equal(t, svcerr.KindNotFound, se.Kind)
@@ -170,6 +189,21 @@ func TestCreateValidates(t *testing.T) {
 	assert.Contains(t, fieldsOf(t, errOf(svc.Create(ctx, player.CreateInput{Name: "x", TeamID: 9, DateOfBirth: dob}, nil))), "teamId")
 	assert.Contains(t, fieldsOf(t, errOf(svc.Create(ctx, player.CreateInput{Name: "x", TeamID: 1}, nil))), "dateOfBirth")
 	assert.Contains(t, fieldsOf(t, errOf(svc.Create(ctx, player.CreateInput{Name: "x", TeamID: 1, DateOfBirth: time.Now().AddDate(0, 0, 1)}, nil))), "dateOfBirth")
+}
+
+func TestSeniorTeamsAreAdultsOnly(t *testing.T) {
+	svc, _, _ := newService()
+	child := time.Now().AddDate(-16, 0, 0)
+	assert.Contains(t, fieldsOf(t, errOf(svc.Create(ctx, player.CreateInput{Name: "Kid", TeamID: 1, DateOfBirth: child}, nil))), "teamId",
+		"a child can't join a senior team")
+	_, err := svc.Create(ctx, player.CreateInput{Name: "Kid", TeamID: 2, DateOfBirth: child}, nil)
+	require.NoError(t, err, "but can join a youth team")
+	_, err = svc.Create(ctx, player.CreateInput{Name: "Adult", TeamID: 1, DateOfBirth: time.Now().AddDate(-18, 0, -1)}, nil)
+	require.NoError(t, err, "18 and over is fine")
+
+	senior := 1
+	_, err = svc.Update(ctx, 2, player.UpdateInput{TeamID: &senior}, nil)
+	assert.Contains(t, fieldsOf(t, err), "teamId", "nor can a youth player be moved up")
 }
 
 func errOf(_ player.Public, err error) error { return err }

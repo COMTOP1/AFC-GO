@@ -11,6 +11,7 @@ type Public struct {
 	FixturesURL    string `json:"fixturesUrl,omitempty"`
 	Coach          string `json:"coach,omitempty"`
 	Physio         string `json:"physio,omitempty"`
+	ContactEmail   string `json:"contactEmail,omitempty"`
 	ImageURL       string `json:"imageUrl,omitempty"`
 	IsActive       bool   `json:"isActive"`
 	IsYouth        bool   `json:"isYouth"`
@@ -19,7 +20,7 @@ type Public struct {
 
 // CreateInput is a new team. Ages below 19 always make a youth team.
 type CreateInput struct {
-	Name, Description, League, Division, LeagueTable, Fixtures, Coach, Physio string
+	Name, Description, League, Division, LeagueTable, Fixtures, Coach, Physio, ContactEmail string
 
 	IsActive bool
 	IsYouth  bool
@@ -29,7 +30,7 @@ type CreateInput struct {
 // UpdateInput changes a team; nil fields are left unchanged and empty
 // strings clear optional fields.
 type UpdateInput struct {
-	Name, Description, League, Division, LeagueTable, Fixtures, Coach, Physio *string
+	Name, Description, League, Division, LeagueTable, Fixtures, Coach, Physio, ContactEmail *string
 
 	IsActive    *bool
 	IsYouth     *bool

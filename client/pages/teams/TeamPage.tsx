@@ -110,14 +110,30 @@ function TeamContent({ detail }: { detail: TeamDetail }) {
                 <dt className="text-muted">{managers.length > 1 ? 'Managers' : 'Manager'}</dt>
                 <dd className="space-y-1">
                   {managers.map((m) => (
-                    <p key={m.email}>
-                      {m.name} (
-                      <a href={`mailto:${m.email}`} className="text-red underline">
-                        {m.email}
-                      </a>
-                      )
+                    <p key={`${m.name}-${m.email ?? ''}`}>
+                      {m.name}
+                      {m.email && (
+                        <>
+                          {' '}
+                          (
+                          <a href={`mailto:${m.email}`} className="text-red underline">
+                            {m.email}
+                          </a>
+                          )
+                        </>
+                      )}
                     </p>
                   ))}
+                </dd>
+              </div>
+            )}
+            {detail.contactEmail && (
+              <div className="contents">
+                <dt className="text-muted">Contact</dt>
+                <dd>
+                  <a href={`mailto:${detail.contactEmail}`} className="text-red underline">
+                    {detail.contactEmail}
+                  </a>
                 </dd>
               </div>
             )}

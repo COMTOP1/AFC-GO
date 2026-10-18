@@ -49,8 +49,10 @@ func parse(name string) (*template.Template, error) {
 	return t, nil
 }
 
-// Signup is the welcome email carrying a new user's temporary password.
-func Signup(to, name, password, domain string) (mail.Mail, error) {
+// Signup is the welcome email carrying a new user's link to set their
+// password. It never carries a password: an emailed password stays readable
+// in the inbox for good.
+func Signup(to, name, setupURL, domain string) (mail.Mail, error) {
 	tpl, err := parse("signupEmail.tmpl")
 	if err != nil {
 		return mail.Mail{}, err
@@ -61,8 +63,8 @@ func Signup(to, name, password, domain string) (mail.Mail, error) {
 		To:      to,
 		From:    "Aldermaston AFC No-Reply <no-reply.afc@bswdi.co.uk>",
 		TplData: struct {
-			Name, Email, Password, Domain string
-		}{Name: name, Email: to, Password: password, Domain: domain},
+			Name, Email, URL, Domain string
+		}{Name: name, Email: to, URL: setupURL, Domain: domain},
 	}, nil
 }
 

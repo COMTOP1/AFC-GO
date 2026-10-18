@@ -2,9 +2,12 @@ package user_test
 
 import (
 	"context"
+	"crypto/sha512"
 	"encoding/hex"
 	"testing"
+	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/guregu/null.v4"
@@ -83,4 +86,122 @@ func TestAdminResetUserKeepsWorkingPassword(t *testing.T) {
 	assert.False(t, reset)
 	_, reset, _ = verify(t, store, "old@example.test", "Known-Pa55!")
 	assert.True(t, reset)
+}
+
+// addLegacyUser stores a user the way the old site did: only the password
+// column, no hash or salt.
+// withLegacyColumn puts back the column migration 003 drops, as it is in
+// production before resetlegacypasswords runs.
+func withLegacyColumn(t *testing.T, db *sqlx.DB) {
+	t.Helper()
+	_, err := db.ExecContext(context.Background(), `ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT`)
+	require.NoError(t, err)
+}
+
+func addLegacyUser(t *testing.T, db *sqlx.DB, email, stored string) {
+	t.Helper()
+	withLegacyColumn(t, db)
+	_, err := db.ExecContext(context.Background(), `INSERT INTO users (name, email, role, password) VALUES ('Legacy', $1, 'TREASURER', $2)`, email, stored)
+	require.NoError(t, err)
+}
+
+func passwordColumn(t *testing.T, db *sqlx.DB, email string) (password, salt, hash null.String) {
+	t.Helper()
+	require.NoError(t, db.QueryRowContext(context.Background(), `SELECT password, salt, hash FROM users WHERE email = $1`, email).Scan(&password, &salt, &hash))
+	return password, salt, hash
+}
+
+func TestClearLegacyPasswordsAfterTheColumnIsDropped(t *testing.T) {
+	db, _ := testdb.Open(t)
+	ids, err := user.NewUserRepo(db).ClearLegacyPasswords(context.Background())
+	require.NoError(t, err)
+	assert.Empty(t, ids)
+}
+
+func TestClearLegacyPasswordsForcesAReset(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+	digest := sha512.Sum512([]byte("Legacy-Pa55!"))
+	addLegacyUser(t, db, "legacy@example.test", hex.EncodeToString(digest[:]))
+	newUserLikeSignup(t, store, "new@example.test", "Temp-Pa55!")
+
+	ids, err := store.ClearLegacyPasswords(context.Background())
+	require.NoError(t, err)
+	require.Len(t, ids, 1, "only the legacy row is cleared")
+
+	password, salt, hash := passwordColumn(t, db, "legacy@example.test")
+	assert.False(t, password.Valid, "the SHA-512 digest is gone")
+	assert.False(t, salt.Valid)
+	assert.False(t, hash.Valid)
+	u, err := store.GetUser(context.Background(), user.User{ID: ids[0]})
+	require.NoError(t, err)
+	assert.True(t, u.ResetPassword)
+	assert.Equal(t, 1, u.SessionVersion, "and signed out everywhere")
+
+	_, reset, err := verify(t, store, "legacy@example.test", "Legacy-Pa55!")
+	require.Error(t, err, "the old password no longer works")
+	assert.False(t, reset)
+
+	_, _, hash = passwordColumn(t, db, "new@example.test")
+	assert.True(t, hash.Valid, "other accounts keep their hash")
+
+	ids, err = store.ClearLegacyPasswords(context.Background())
+	require.NoError(t, err)
+	assert.Empty(t, ids, "running it again does nothing")
+}
+
+func TestPasswordChangesEndOtherSessions(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+	ctx := context.Background()
+	version := func() int {
+		u, err := store.GetUser(ctx, user.User{Email: "new@example.test"})
+		require.NoError(t, err)
+		return u.SessionVersion
+	}
+	newUserLikeSignup(t, store, "new@example.test", "Temp-Pa55!")
+	u, err := store.GetUser(ctx, user.User{Email: "new@example.test"})
+	require.NoError(t, err)
+	require.Zero(t, version())
+
+	u.Password = null.StringFrom("New-Pa55word!")
+	require.NoError(t, store.EditUserPassword(ctx, u, workFactor, blockSize, parallelism, keyLen))
+	assert.Equal(t, 1, version(), "a new password bumps the version")
+
+	require.NoError(t, store.EndSessions(ctx, u.ID))
+	assert.Equal(t, 2, version())
+
+	_, err = store.EditUser(ctx, u)
+	require.NoError(t, err)
+	assert.Equal(t, 2, version(), "a profile edit leaves sessions alone")
+}
+
+// TestUnknownEmailTakesAsLongAsAWrongPassword pins that response times
+// don't reveal which email addresses have accounts.
+func TestUnknownEmailTakesAsLongAsAWrongPassword(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+	ctx := context.Background()
+	// Costly enough that hashing, not the database, dominates.
+	const it, wf, bs, p, kl = 2000, 1 << 13, 8, 1, 64
+	salt, err := utils.GenerateRandom(utils.GenerateSalt)
+	require.NoError(t, err)
+	hash, err := utils.HashPassScrypt([]byte("Real-Pa55!"), []byte(salt), wf, bs, p, kl)
+	require.NoError(t, err)
+	_, err = store.AddUser(ctx, user.User{Name: "Real", Email: "real@example.test", Role: role.Treasurer,
+		Hash: null.StringFrom(hash), Salt: null.StringFrom(salt)})
+	require.NoError(t, err)
+
+	fastest := func(email string) time.Duration {
+		best := time.Hour
+		for range 5 {
+			start := time.Now()
+			_, _, err := store.VerifyUser(ctx, user.User{Email: email, Password: null.StringFrom("a guess")}, it, wf, bs, p, kl)
+			require.Error(t, err)
+			best = min(best, time.Since(start))
+		}
+		return best
+	}
+	known, unknown := fastest("real@example.test"), fastest("nobody@example.test")
+	assert.Greater(t, float64(unknown), float64(known)*0.7, "unknown %v vs known %v", unknown, known)
 }

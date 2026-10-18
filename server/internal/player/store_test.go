@@ -41,3 +41,38 @@ func TestEditPlayerClearsOptionalFields(t *testing.T) {
 	assert.False(t, got.Position.Valid)
 	assert.False(t, got.IsCaptain)
 }
+
+func TestGetPlayerByUUID(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := player.NewPlayerRepo(db)
+	ctx := context.Background()
+	byID, err := store.GetPlayer(ctx, player.Player{ID: 1})
+	require.NoError(t, err)
+	require.NotEmpty(t, byID.UUID, "every player gets a public UUID")
+
+	byUUID, err := store.GetPlayer(ctx, player.Player{UUID: byID.UUID})
+	require.NoError(t, err)
+	assert.Equal(t, byID.ID, byUUID.ID)
+
+	_, err = store.GetPlayer(ctx, player.Player{UUID: "00000000-0000-4000-8000-000000000000"})
+	require.Error(t, err)
+}
+
+func TestHasUnder18s(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := player.NewPlayerRepo(db)
+	ctx := context.Background()
+	adult, err := store.AddPlayer(ctx, player.Player{Name: "Adult", DateOfBirth: null.TimeFrom(time.Now().AddDate(-30, 0, 0)), TeamID: 50})
+	require.NoError(t, err)
+	_, err = store.AddPlayer(ctx, player.Player{Name: "Unknown", TeamID: 50})
+	require.NoError(t, err)
+	found, err := store.HasUnder18s(ctx, adult.TeamID)
+	require.NoError(t, err)
+	assert.False(t, found, "adults and players with no date of birth don't count")
+
+	_, err = store.AddPlayer(ctx, player.Player{Name: "Kid", DateOfBirth: null.TimeFrom(time.Now().AddDate(-17, 0, 0)), TeamID: 50})
+	require.NoError(t, err)
+	found, err = store.HasUnder18s(ctx, 50)
+	require.NoError(t, err)
+	assert.True(t, found)
+}

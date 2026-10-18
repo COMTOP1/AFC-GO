@@ -53,15 +53,19 @@ func (h *Handlers) me(c echo.Context) error {
 //	@Param		request	body		auth.LoginInput	true	"Credentials"
 //	@Success	200		{object}	auth.LoginResponse
 //	@Failure	401		{object}	web.ErrorResponse
+//	@Failure	429		{object}	web.ErrorResponse
 //	@Router		/auth/login [post]
 func (h *Handlers) login(c echo.Context) error {
 	var in LoginInput
 	if err := web.BindJSON(c, &in); err != nil {
 		return err
 	}
-	res, err := h.svc.Login(c.Request().Context(), in.Email, in.Password)
+	res, err := h.svc.Login(c.Request().Context(), in.Email, in.Password, c.RealIP())
 	if errors.Is(err, ErrInvalidCredentials) {
 		return echo.NewHTTPError(http.StatusUnauthorized, ErrInvalidCredentials.Error())
+	}
+	if errors.Is(err, ErrTooManyAttempts) {
+		return echo.NewHTTPError(http.StatusTooManyRequests, ErrTooManyAttempts.Error())
 	}
 	if err != nil {
 		return err
@@ -104,7 +108,12 @@ func (h *Handlers) password(c echo.Context) error {
 		return err
 	}
 	u, _ := Current(c)
-	if err := h.svc.ChangePassword(c.Request().Context(), u, in.OldPassword, in.NewPassword, in.ConfirmationPassword); err != nil {
+	fresh, err := h.svc.ChangePassword(c.Request().Context(), u, in.OldPassword, in.NewPassword, in.ConfirmationPassword)
+	if err != nil {
+		return err
+	}
+	// The change signed the user out everywhere; keep this browser signed in.
+	if err = h.sessions.Refresh(c.Response(), c.Request(), fresh); err != nil {
 		return err
 	}
 	return c.NoContent(http.StatusNoContent)
