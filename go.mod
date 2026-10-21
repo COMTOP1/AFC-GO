@@ -1,6 +1,6 @@
 module github.com/COMTOP1/AFC-GO
 
-go 1.27.2
+go 1.27.3
 
 require (
 	github.com/AfterShip/email-verifier v1.5.0

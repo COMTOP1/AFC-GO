@@ -1,4 +1,4 @@
-FROM node:24-alpine AS client
+FROM node:24-alpine3.24 AS client
 
 WORKDIR /src/
 RUN corepack enable
@@ -13,7 +13,7 @@ COPY client ./client
 RUN BUILD_CLIENT_SKIP_LINT=true yarn build:client
 
 
-FROM golang:1.27.2-alpine3.24 AS build
+FROM golang:1.27.3-alpine3.24 AS build
 
 LABEL site="afc"
 LABEL stage="builder"
