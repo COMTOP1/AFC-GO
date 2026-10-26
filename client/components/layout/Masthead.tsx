@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 
 import crest from '../../assets/crest.png';
-import faLogo from '../../assets/fa-logo.jpeg';
+import faLogo from '../../assets/accredited-club-1-star.jpg';
 
 export function Masthead() {
   return (
