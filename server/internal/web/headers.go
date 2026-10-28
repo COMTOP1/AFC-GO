@@ -18,7 +18,7 @@ func contentSecurityPolicy(fileOrigin string) string {
 	if fileOrigin != "" {
 		connect += " " + fileOrigin
 	}
-	return "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+	return "default-src 'self'; script-src 'self'; style-src 'self'; " +
 		"img-src 'self' data: blob: https:; font-src 'self'; connect-src " + connect + "; " +
 		"frame-src https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 }
