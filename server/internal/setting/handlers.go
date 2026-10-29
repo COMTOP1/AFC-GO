@@ -3,7 +3,7 @@ package setting
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
@@ -32,7 +32,7 @@ func (h *Handlers) Register(g *echo.Group, guards web.Guards) {
 //	@Produce	json
 //	@Success	200	{object}	setting.InfoContent
 //	@Router		/info [get]
-func (h *Handlers) info(c echo.Context) error {
+func (h *Handlers) info(c *echo.Context) error {
 	content, err := h.svc.Info(c.Request().Context())
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (h *Handlers) info(c echo.Context) error {
 //	@Param		request	body		setting.InfoContent	true	"HTML content"
 //	@Success	200		{object}	setting.InfoContent
 //	@Router		/info [put]
-func (h *Handlers) setInfo(c echo.Context) error {
+func (h *Handlers) setInfo(c *echo.Context) error {
 	var in InfoContent
 	if err := web.BindJSON(c, &in); err != nil {
 		return err
@@ -71,7 +71,7 @@ func (h *Handlers) setInfo(c echo.Context) error {
 //	@Success	200		{object}	setting.DisplayEmail
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/settings/display-email [put]
-func (h *Handlers) setDisplayEmail(c echo.Context) error {
+func (h *Handlers) setDisplayEmail(c *echo.Context) error {
 	var in DisplayEmail
 	if err := web.BindJSON(c, &in); err != nil {
 		return err
@@ -93,7 +93,7 @@ func (h *Handlers) setDisplayEmail(c echo.Context) error {
 //	@Success	200		{object}	setting.TeamEmailModeInput
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/settings/team-email-mode [put]
-func (h *Handlers) setTeamEmailMode(c echo.Context) error {
+func (h *Handlers) setTeamEmailMode(c *echo.Context) error {
 	var in TeamEmailModeInput
 	if err := web.BindJSON(c, &in); err != nil {
 		return err

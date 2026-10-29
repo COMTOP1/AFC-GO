@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
@@ -36,7 +36,7 @@ func (h *Handlers) Register(g *echo.Group, guards web.Guards) {
 //	@Success	200		{array}		whatson.Event
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/whatson [get]
-func (h *Handlers) list(c echo.Context) error {
+func (h *Handlers) list(c *echo.Context) error {
 	out, err := h.svc.List(c.Request().Context(), Period(c.QueryParam("period")))
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func (h *Handlers) list(c echo.Context) error {
 //	@Success	200	{object}	whatson.Event
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/whatson/{id} [get]
-func (h *Handlers) get(c echo.Context) error {
+func (h *Handlers) get(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func (h *Handlers) get(c echo.Context) error {
 //	@Success	201			{object}	whatson.Event
 //	@Failure	422			{object}	web.ErrorResponse
 //	@Router		/whatson [post]
-func (h *Handlers) create(c echo.Context) error {
+func (h *Handlers) create(c *echo.Context) error {
 	if err := web.RequireForm(c); err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (h *Handlers) create(c echo.Context) error {
 //	@Failure	404			{object}	web.ErrorResponse
 //	@Failure	422			{object}	web.ErrorResponse
 //	@Router		/whatson/{id} [patch]
-func (h *Handlers) update(c echo.Context) error {
+func (h *Handlers) update(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err
@@ -157,7 +157,7 @@ func (h *Handlers) update(c echo.Context) error {
 //	@Success	204
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/whatson/{id} [delete]
-func (h *Handlers) remove(c echo.Context) error {
+func (h *Handlers) remove(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err

@@ -3,7 +3,7 @@ package site
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
@@ -32,7 +32,7 @@ func (h *Handlers) Register(g *echo.Group, _ web.Guards) {
 //	@Produce	json
 //	@Success	200	{object}	site.Info
 //	@Router		/site [get]
-func (h *Handlers) site(c echo.Context) error {
+func (h *Handlers) site(c *echo.Context) error {
 	out, err := h.svc.Site(c.Request().Context())
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (h *Handlers) site(c echo.Context) error {
 //	@Produce	json
 //	@Success	200	{object}	site.Home
 //	@Router		/home [get]
-func (h *Handlers) home(c echo.Context) error {
+func (h *Handlers) home(c *echo.Context) error {
 	return c.JSON(http.StatusOK, h.svc.Home(c.Request().Context()))
 }
 
@@ -58,7 +58,7 @@ func (h *Handlers) home(c echo.Context) error {
 //	@Produce	json
 //	@Success	200	{object}	site.Contact
 //	@Router		/contact [get]
-func (h *Handlers) contact(c echo.Context) error {
+func (h *Handlers) contact(c *echo.Context) error {
 	out, err := h.svc.Contact(c.Request().Context())
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (h *Handlers) contact(c echo.Context) error {
 //	@Success	200	{object}	site.TeamDetail
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/teams/{id} [get]
-func (h *Handlers) team(c echo.Context) error {
+func (h *Handlers) team(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err

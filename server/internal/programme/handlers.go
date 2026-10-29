@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
@@ -44,7 +44,7 @@ type SeasonInput struct {
 //	@Success	200		{array}		programme.Public
 //	@Failure	404		{object}	web.ErrorResponse
 //	@Router		/programmes [get]
-func (h *Handlers) list(c echo.Context) error {
+func (h *Handlers) list(c *echo.Context) error {
 	seasonID := 0
 	if raw := c.QueryParam("season"); raw != "" {
 		id, err := strconv.Atoi(raw)
@@ -73,7 +73,7 @@ func (h *Handlers) list(c echo.Context) error {
 //	@Success	201			{object}	programme.Public
 //	@Failure	422			{object}	web.ErrorResponse
 //	@Router		/programmes [post]
-func (h *Handlers) create(c echo.Context) error {
+func (h *Handlers) create(c *echo.Context) error {
 	if err := web.RequireForm(c); err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (h *Handlers) create(c echo.Context) error {
 //	@Success	204
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/programmes/{id} [delete]
-func (h *Handlers) remove(c echo.Context) error {
+func (h *Handlers) remove(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func (h *Handlers) remove(c echo.Context) error {
 //	@Produce	json
 //	@Success	200	{array}	programme.PublicSeason
 //	@Router		/seasons [get]
-func (h *Handlers) seasons(c echo.Context) error {
+func (h *Handlers) seasons(c *echo.Context) error {
 	out, err := h.svc.Seasons(c.Request().Context())
 	if err != nil {
 		return err
@@ -145,7 +145,7 @@ func (h *Handlers) seasons(c echo.Context) error {
 //	@Success	201		{object}	programme.PublicSeason
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/seasons [post]
-func (h *Handlers) createSeason(c echo.Context) error {
+func (h *Handlers) createSeason(c *echo.Context) error {
 	var in SeasonInput
 	if err := web.BindJSON(c, &in); err != nil {
 		return err
@@ -169,7 +169,7 @@ func (h *Handlers) createSeason(c echo.Context) error {
 //	@Failure	404		{object}	web.ErrorResponse
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/seasons/{id} [patch]
-func (h *Handlers) renameSeason(c echo.Context) error {
+func (h *Handlers) renameSeason(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err
@@ -193,7 +193,7 @@ func (h *Handlers) renameSeason(c echo.Context) error {
 //	@Success	204
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/seasons/{id} [delete]
-func (h *Handlers) deleteSeason(c echo.Context) error {
+func (h *Handlers) deleteSeason(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err
