@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
@@ -34,7 +34,7 @@ type ErrorResponse struct {
 // path as a small HTML page (the web client handles its own pages; this covers
 // redirects, /download and anything else the server answers directly).
 func ErrorHandler() echo.HTTPErrorHandler {
-	return func(err error, c echo.Context) {
+	return func(c *echo.Context, err error) {
 		if c.Response().Committed {
 			return
 		}

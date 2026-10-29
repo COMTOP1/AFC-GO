@@ -11,9 +11,10 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho" //nolint:staticcheck // still functional; github.com/labstack/echo-opentelemetry is its replacement but isn't part of opentelemetry-go-contrib
+	otelecho "github.com/labstack/echo-otel/v5"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
+	// "go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho" //nolint:staticcheck // still functional; github.com/labstack/echo-opentelemetry is its replacement but isn't part of opentelemetry-go-contrib
 
 	"github.com/COMTOP1/AFC-GO/server/internal/account"
 	"github.com/COMTOP1/AFC-GO/server/internal/affiliation"
@@ -167,22 +168,26 @@ func Build(conf Config, s Stores, objects upload.Storage, mailer *mail.MailerIni
 	})
 
 	e := echo.New()
-	e.HideBanner = true
 	e.IPExtractor = web.IPExtractor(conf.TrustedProxies)
 	e.Pre(middleware.RemoveTrailingSlash())
 	if conf.MTLS != nil {
 		e.Pre(conf.MTLS.Middleware("/api/health", "/api/v1/health"))
 	}
+
+	otelMiddleware := otelecho.NewMiddlewareWithConfig(otelecho.Config{
+		Skipper: func(c *echo.Context) bool {
+			return c.Path() == "/api/health" || c.Path() == "/api/v1/health"
+		},
+	})
+
 	e.Use(middleware.Recover())
 	e.Use(web.SecurityHeaders(conf.Session.Secure, conf.UIProxy == nil, web.Origin(conf.S3.Endpoint)))
-	e.Use(otelecho.Middleware("afc-go", otelecho.WithSkipper(func(c echo.Context) bool {
-		return c.Path() == "/api/health" || c.Path() == "/api/v1/health"
-	})))
+	e.Use(otelMiddleware)
 	e.Use(web.RedactSpanPath)
-	e.Use(middleware.BodyLimit("15M"))
+	e.Use(middleware.BodyLimit(15 * 1024 * 1024)) // 15MB
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
-		Skipper: func(c echo.Context) bool {
+		Skipper: func(c *echo.Context) bool {
 			// File downloads are redirects to the CDN; don't gzip them.
 			return strings.HasPrefix(c.Path(), "/download") || strings.HasPrefix(c.Path(), "/api/v1/files")
 		},
