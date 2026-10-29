@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 )
 
 //go:embed public/*
@@ -31,7 +31,6 @@ func NewRouter(conf *RouterConf) *Router {
 		router: echo.New(),
 		views:  conf.Views,
 	}
-	r.router.HideBanner = true
 
 	r.middleware()
 
@@ -41,7 +40,7 @@ func NewRouter(conf *RouterConf) *Router {
 }
 
 func (r *Router) Start() error {
-	r.router.Logger.Error(r.router.Start(r.config.Address))
+	r.router.Logger.Error("server could not start or failed", "err", r.router.Start(r.config.Address))
 	return fmt.Errorf("failed to start router on address %s", r.config.Address)
 }
 
@@ -49,7 +48,7 @@ func (r *Router) Start() error {
 func (r *Router) middleware() {
 	r.router.Pre(middleware.RemoveTrailingSlash())
 	r.router.Use(middleware.Recover())
-	r.router.Use(middleware.BodyLimit("15M"))
+	r.router.Use(middleware.BodyLimit(15 * 1024 * 1024)) // 15MB
 	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
 	}))
@@ -65,8 +64,8 @@ func (r *Router) loadRoutes() {
 	r.router.GET("*", r.views.Error404)
 }
 
-func (v *Views) Error404(c echo.Context) error {
-	return v.template.RenderTemplate(c.Response().Writer, struct {
+func (v *Views) Error404(c *echo.Context) error {
+	return v.template.RenderTemplate(c.Response(), struct {
 		Year int
 	}{
 		Year: time.Now().Year(),
