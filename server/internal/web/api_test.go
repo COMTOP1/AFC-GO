@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -18,8 +18,8 @@ import (
 func newAPI() (*echo.Echo, *echo.Group) { //nolint:unparam // returned group is part of the test fixture's shape, not every test needs it
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
-	api.GET("/thing", func(c echo.Context) error { return c.NoContent(http.StatusOK) })
-	api.POST("/thing", func(c echo.Context) error { return c.NoContent(http.StatusCreated) })
+	api.GET("/thing", func(c *echo.Context) error { return c.NoContent(http.StatusOK) })
+	api.POST("/thing", func(c *echo.Context) error { return c.NoContent(http.StatusCreated) })
 	return e, api
 }
 

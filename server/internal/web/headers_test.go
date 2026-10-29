@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
@@ -17,7 +17,7 @@ func TestSecurityHeaders(t *testing.T) {
 	serve := func(hsts, csp bool, path string) http.Header {
 		e := echo.New()
 		e.Use(web.SecurityHeaders(hsts, csp, "https://files.example.test"))
-		e.GET("/*", func(c echo.Context) error { return c.NoContent(http.StatusOK) })
+		e.GET("/*", func(c *echo.Context) error { return c.NoContent(http.StatusOK) })
 		rec := httptest.NewRecorder()
 		e.ServeHTTP(rec, httptest.NewRequestWithContext(context.Background(), http.MethodGet, path, nil))
 		return rec.Header()

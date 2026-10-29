@@ -3,8 +3,8 @@ package web
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 )
 
 // CSRF protects unsafe methods. Browsers that send Sec-Fetch-Site:
@@ -18,7 +18,7 @@ func CSRF(secureCookie bool) echo.MiddlewareFunc {
 		CookieSameSite: http.SameSiteStrictMode,
 		CookieSecure:   secureCookie,
 		CookieHTTPOnly: false,
-		ErrorHandler: func(_ error, _ echo.Context) error {
+		ErrorHandler: func(_ *echo.Context, _ error) error {
 			return echo.NewHTTPError(http.StatusForbidden, "invalid or missing CSRF token")
 		},
 	})

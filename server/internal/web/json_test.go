@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -23,7 +23,7 @@ func TestFormHelpers(t *testing.T) {
 		File    string  `json:"file"`
 		NoFile  bool    `json:"noFile"`
 	}
-	api.POST("/form", func(c echo.Context) error {
+	api.POST("/form", func(c *echo.Context) error {
 		var s seen
 		s.Title = web.FormString(c, "title")
 		s.Missing = web.FormString(c, "missing")
@@ -71,7 +71,7 @@ func TestFormStringIgnoresQueryString(t *testing.T) {
 		Title   *string `json:"title"`
 		Missing *string `json:"missing"`
 	}
-	api.POST("/form", func(c echo.Context) error {
+	api.POST("/form", func(c *echo.Context) error {
 		var s seen
 		s.Title = web.FormString(c, "title")
 		s.Missing = web.FormString(c, "missing")
@@ -94,8 +94,8 @@ func TestFormStringIgnoresQueryString(t *testing.T) {
 func TestFormBoolAndDateValidation(t *testing.T) {
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
-	api.POST("/bool", func(c echo.Context) error { _, err := web.FormBool(c, "flag"); return err })
-	api.POST("/date", func(c echo.Context) error { _, err := web.FormDate(c, "date"); return err })
+	api.POST("/bool", func(c *echo.Context) error { _, err := web.FormBool(c, "flag"); return err })
+	api.POST("/date", func(c *echo.Context) error { _, err := web.FormDate(c, "date"); return err })
 
 	rec := apitest.New(e).Multipart(t, http.MethodPost, "/api/v1/bool", map[string]string{"flag": "maybe"})
 	assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
@@ -109,13 +109,13 @@ func TestFormBoolAndDateValidation(t *testing.T) {
 func TestBindJSONRejectsUnknownFieldsAndBadIDs(t *testing.T) {
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
-	api.POST("/bind", func(c echo.Context) error {
+	api.POST("/bind", func(c *echo.Context) error {
 		var in struct {
 			Name string `json:"name"`
 		}
 		return web.BindJSON(c, &in)
 	})
-	api.GET("/items/:id", func(c echo.Context) error { _, err := web.ParamID(c, "id"); return err })
+	api.GET("/items/:id", func(c *echo.Context) error { _, err := web.ParamID(c, "id"); return err })
 
 	rec := apitest.New(e).JSON(t, http.MethodPost, "/api/v1/bind", map[string]string{"nmae": "typo"}) //nolint:misspell // deliberate typo to test unknown-field rejection
 	assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)

@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
@@ -39,7 +39,7 @@ func TestRedactSpanPathOverwritesTheRecordedPath(t *testing.T) {
 	e := echo.New()
 	// Stands in for otelecho, which records the raw path as url.path.
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(c *echo.Context) error {
 			ctx, span := tracer.Start(c.Request().Context(), "request")
 			defer span.End()
 			span.SetAttributes(attribute.String("url.path", c.Request().URL.Path))
@@ -48,7 +48,7 @@ func TestRedactSpanPathOverwritesTheRecordedPath(t *testing.T) {
 		}
 	})
 	e.Use(web.RedactSpanPath)
-	e.GET("/api/v1/auth/reset/:token", func(c echo.Context) error { return c.NoContent(http.StatusOK) })
+	e.GET("/api/v1/auth/reset/:token", func(c *echo.Context) error { return c.NoContent(http.StatusOK) })
 
 	e.ServeHTTP(httptest.NewRecorder(), httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v1/auth/reset/secret-token", nil))
 

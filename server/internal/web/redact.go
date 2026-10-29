@@ -3,7 +3,7 @@ package web
 import (
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -34,7 +34,7 @@ func RedactPath(p string) string {
 // RedactSpanPath overwrites the url.path the tracing middleware recorded
 // when it holds a reset token. Register it after the tracing middleware.
 func RedactSpanPath(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
+	return func(c *echo.Context) error {
 		p := c.Request().URL.Path
 		if redacted := RedactPath(p); redacted != p {
 			trace.SpanFromContext(c.Request().Context()).SetAttributes(attribute.String("url.path", redacted))

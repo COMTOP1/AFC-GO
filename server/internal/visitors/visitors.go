@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/patrickmn/go-cache"
 	"go.opentelemetry.io/otel"
 
@@ -146,7 +146,7 @@ func (c *Counter) Flush(ctx context.Context) {
 
 // optedOut reports whether the visitor asked not to be counted, either on
 // the privacy page or with the Global Privacy Control signal.
-func optedOut(ctx echo.Context) bool {
+func optedOut(ctx *echo.Context) bool {
 	if ctx.Request().Header.Get("Sec-GPC") == "1" {
 		return true
 	}
@@ -157,7 +157,7 @@ func optedOut(ctx echo.Context) bool {
 // Middleware counts a visit the first time a browser is seen in 24 hours,
 // unless it has opted out.
 func (c *Counter) Middleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(ctx echo.Context) error {
+	return func(ctx *echo.Context) error {
 		if optedOut(ctx) {
 			return next(ctx)
 		}

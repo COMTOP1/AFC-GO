@@ -34,7 +34,7 @@ func TestEveryLegacyActionHasAnAPIRoute(t *testing.T) {
 		"GET /api/v1/health", "GET /api/health",
 	}
 	have := map[string]bool{}
-	for _, r := range bareApp(t).Echo.Routes() {
+	for _, r := range bareApp(t).Echo.Router().Routes() {
 		have[r.Method+" "+r.Path] = true
 	}
 	for _, route := range want {

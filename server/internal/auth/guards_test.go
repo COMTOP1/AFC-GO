@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/auth/authtest"
@@ -18,7 +18,7 @@ func TestGuards(t *testing.T) {
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
 	g := s.Guards()
-	ok := func(c echo.Context) error { return c.NoContent(http.StatusNoContent) }
+	ok := func(c *echo.Context) error { return c.NoContent(http.StatusNoContent) }
 	api.GET("/login", ok, g.Login)
 	api.GET("/editor", ok, g.Editor)
 	api.GET("/gallery", ok, g.NotManager)
@@ -56,7 +56,7 @@ func TestGuardUsesFreshRole(t *testing.T) {
 	s := authtest.New(user.User{ID: demoted.ID, Name: demoted.Name, Email: demoted.Email, Role: authtest.Manager.Role})
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
-	api.GET("/editor", func(c echo.Context) error { return c.NoContent(http.StatusNoContent) }, s.Guards().Editor)
+	api.GET("/editor", func(c *echo.Context) error { return c.NoContent(http.StatusNoContent) }, s.Guards().Editor)
 
 	rec := apitest.New(e).As(authtest.Cookie(t, s, demoted)).Get(t, "/api/v1/editor")
 	assert.Equal(t, http.StatusForbidden, rec.Code)
@@ -69,7 +69,7 @@ func TestGuardRejectsASessionFromBeforeAPasswordChange(t *testing.T) {
 	s := authtest.New(changed)
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
-	api.GET("/me", func(c echo.Context) error { return c.NoContent(http.StatusNoContent) }, s.Guards().Login)
+	api.GET("/me", func(c *echo.Context) error { return c.NoContent(http.StatusNoContent) }, s.Guards().Login)
 
 	rec := apitest.New(e).As(authtest.Cookie(t, s, authtest.Webmaster)).Get(t, "/api/v1/me")
 	assert.Equal(t, http.StatusUnauthorized, rec.Code, "the old session is over")
@@ -82,7 +82,7 @@ func TestIdentifyNeverRejects(t *testing.T) {
 	s := authtest.Everyone()
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
-	api.GET("/who", func(c echo.Context) error {
+	api.GET("/who", func(c *echo.Context) error {
 		if web.LoggedIn(c) {
 			return c.String(http.StatusOK, "member")
 		}

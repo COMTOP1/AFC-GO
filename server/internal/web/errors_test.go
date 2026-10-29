@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
@@ -35,7 +35,7 @@ func TestErrorMapping(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			e := apitest.NewEcho()
 			api := web.NewAPI(e, false)
-			api.GET("/boom", func(echo.Context) error { return tc.err })
+			api.GET("/boom", func(*echo.Context) error { return tc.err })
 
 			rec := apitest.New(e).Get(t, "/api/v1/boom")
 			assert.Equal(t, tc.code, rec.Code)
@@ -50,8 +50,8 @@ func TestErrorMapping(t *testing.T) {
 func TestNonAPIErrorsGetAnHTMLPage(t *testing.T) {
 	e := apitest.NewEcho()
 	web.NewAPI(e, false)
-	e.Match([]string{http.MethodGet, http.MethodHead}, "/boom", func(echo.Context) error { return errors.New("boom") })
-	e.GET("/gone", func(echo.Context) error { return echo.ErrNotFound })
+	e.Match([]string{http.MethodGet, http.MethodHead}, "/boom", func(*echo.Context) error { return errors.New("boom") })
+	e.GET("/gone", func(*echo.Context) error { return echo.ErrNotFound })
 
 	rec := apitest.New(e).Get(t, "/boom")
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)

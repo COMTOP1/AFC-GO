@@ -1,7 +1,7 @@
 package web
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/role"
 )
@@ -23,7 +23,7 @@ type Guards struct {
 const LoggedInKey = "web.loggedIn"
 
 // LoggedIn reports whether a guard found a logged-in user for this request.
-func LoggedIn(c echo.Context) bool {
+func LoggedIn(c *echo.Context) bool {
 	ok, _ := c.Get(LoggedInKey).(bool)
 	return ok
 }
@@ -46,7 +46,7 @@ type Actor struct {
 
 // CurrentActor returns the acting user for this request, set by a guard in
 // the auth package once a session is loaded.
-func CurrentActor(c echo.Context) (Actor, bool) {
+func CurrentActor(c *echo.Context) (Actor, bool) {
 	a, ok := c.Get(ActorKey).(Actor)
 	return a, ok
 }

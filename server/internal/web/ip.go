@@ -5,7 +5,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // ParseCIDRs parses a comma-separated list of IP addresses and CIDR ranges,
