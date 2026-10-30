@@ -35,10 +35,10 @@ type ErrorResponse struct {
 // redirects, /download and anything else the server answers directly).
 func ErrorHandler() echo.HTTPErrorHandler {
 	return func(c *echo.Context, err error) {
-		// TODO: recheck the committed part and see if this is needed at all
-		// if c.Response().Committed {
-		// 	return
-		// }
+		// A handler that already wrote its response can't have a second one.
+		if r, _ := echo.UnwrapResponse(c.Response()); r != nil && r.Committed {
+			return
+		}
 		ctx := c.Request().Context()
 		trace.SpanFromContext(ctx).RecordError(err)
 
@@ -99,6 +99,14 @@ func toAPIError(err error) APIError {
 			msg = s
 		}
 		return APIError{Code: he.Code, Message: msg}
+	}
+
+	// echo's own errors (echo.ErrNotFound and friends) only expose a status code.
+	var sc echo.HTTPStatusCoder
+	if errors.As(err, &sc) {
+		if code := sc.StatusCode(); code != 0 {
+			return APIError{Code: code, Message: http.StatusText(code)}
+		}
 	}
 
 	return APIError{Code: http.StatusInternalServerError, Message: "internal server error"}

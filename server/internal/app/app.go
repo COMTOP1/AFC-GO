@@ -7,7 +7,10 @@ import (
 	"io/fs"
 	"net"
 	"net/url"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -231,14 +234,16 @@ func (a *App) Start() error {
 	if a.files != nil {
 		a.files.Start()
 	}
-	if a.mtls == nil {
-		return a.Echo.Start(a.address)
+	// Like echo.Start, shut down gracefully on Ctrl+C or SIGTERM.
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	sc := echo.StartConfig{Address: a.address}
+	if a.mtls != nil {
+		stop := a.mtls.ReloadOnSIGHUP()
+		defer stop()
+		sc.TLSConfig = a.mtls.TLSConfig()
 	}
-	stop := a.mtls.ReloadOnSIGHUP()
-	defer stop()
-	a.Echo.Server.Addr = a.address
-	a.Echo.Server.TLSConfig = a.mtls.TLSConfig()
-	return a.Echo.StartServer(a.Echo.Server)
+	return sc.Start(ctx, a.Echo)
 }
 
 // Stop ends background work.
