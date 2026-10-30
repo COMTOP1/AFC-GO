@@ -3,7 +3,7 @@ package account
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/auth"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
@@ -35,7 +35,7 @@ func (h *Handlers) Register(g *echo.Group, guards web.Guards) {
 //	@Success	200	{object}	auth.CurrentUser
 //	@Failure	401	{object}	web.ErrorResponse
 //	@Router		/account [get]
-func (h *Handlers) get(c echo.Context) error {
+func (h *Handlers) get(c *echo.Context) error {
 	u, _ := auth.Current(c)
 	return c.JSON(http.StatusOK, auth.NewCurrentUser(u, h.files))
 }
@@ -50,7 +50,7 @@ func (h *Handlers) get(c echo.Context) error {
 //	@Success	200		{object}	auth.CurrentUser
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/account/image [put]
-func (h *Handlers) setImage(c echo.Context) error {
+func (h *Handlers) setImage(c *echo.Context) error {
 	if err := web.RequireForm(c); err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (h *Handlers) setImage(c echo.Context) error {
 //	@Produce	json
 //	@Success	200	{object}	auth.CurrentUser
 //	@Router		/account/image [delete]
-func (h *Handlers) removeImage(c echo.Context) error {
+func (h *Handlers) removeImage(c *echo.Context) error {
 	u, _ := auth.Current(c)
 	updated, err := h.svc.RemoveImage(c.Request().Context(), u)
 	if err != nil {

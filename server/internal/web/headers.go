@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // contentSecurityPolicy only lets the site run its own scripts, so injected
@@ -41,7 +41,7 @@ func Origin(rawURL string) string {
 func SecurityHeaders(hsts, csp bool, fileOrigin string) echo.MiddlewareFunc {
 	policy := contentSecurityPolicy(fileOrigin)
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(c *echo.Context) error {
 			h := c.Response().Header()
 			h.Set("X-Content-Type-Options", "nosniff")
 			h.Set("X-Frame-Options", "DENY")

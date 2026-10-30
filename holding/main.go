@@ -2,8 +2,9 @@ package main
 
 import (
 	"embed"
-	"github.com/labstack/echo/v4"
 	"net/http"
+
+	"github.com/labstack/echo/v5"
 )
 
 //go:embed assets/*
@@ -18,5 +19,6 @@ func main() {
 
 	e.GET("/assets/*", echo.WrapHandler(http.StripPrefix("/assets/", assetHandler)))
 	e.GET("/*", echo.StaticFileHandler("holding.html", holdingHTML))
-	e.Logger.Fatal(e.Start(":1323"))
+	err := e.Start(":1323")
+	e.Logger.Error("server could not start or failed", "err", err)
 }

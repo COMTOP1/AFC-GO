@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // MountRedirects keeps classic-site and /app URLs working now that the web
@@ -29,14 +29,14 @@ func MountRedirects(e *echo.Echo) {
 // collapsed, and the rest is re-escaped (so a decoded tab, newline or "?"
 // can't reach the Location header), so the target can never become a
 // protocol-relative URL (//host) once a browser reads it.
-func fromApp(c echo.Context) error {
+func fromApp(c *echo.Context) error {
 	rest := strings.TrimPrefix(c.Request().URL.Path, "/app")
 	rest = "/" + strings.TrimLeft(rest, `/\`)
 	rest = (&url.URL{Path: rest}).EscapedPath()
 	return redirect(c, http.StatusMovedPermanently, rest, nil)
 }
 
-func programmeSeason(c echo.Context) error {
+func programmeSeason(c *echo.Context) error {
 	extra := url.Values{}
 	if id, err := strconv.Atoi(c.Param("id")); err == nil && id > 0 {
 		extra.Set("season", strconv.Itoa(id))
@@ -44,7 +44,7 @@ func programmeSeason(c echo.Context) error {
 	return redirect(c, http.StatusMovedPermanently, "/programmes", extra)
 }
 
-func whatsOnPeriod(c echo.Context) error {
+func whatsOnPeriod(c *echo.Context) error {
 	extra := url.Values{}
 	switch p := c.Param("period"); p {
 	case "future", "past", "all":
@@ -54,11 +54,11 @@ func whatsOnPeriod(c echo.Context) error {
 }
 
 func redirectTo(target string, code int) echo.HandlerFunc {
-	return func(c echo.Context) error { return redirect(c, code, target, nil) }
+	return func(c *echo.Context) error { return redirect(c, code, target, nil) }
 }
 
 // redirect sends code to target, keeping the request's query and adding extra.
-func redirect(c echo.Context, code int, target string, extra url.Values) error {
+func redirect(c *echo.Context, code int, target string, extra url.Values) error {
 	q := c.Request().URL.Query()
 	for k, vs := range extra {
 		q[k] = vs

@@ -25,7 +25,7 @@ var pathParam = regexp.MustCompile(`:[A-Za-z]+`)
 func TestUnsafeAPIRoutesRequireLogin(t *testing.T) {
 	a := bareApp(t)
 	checked := 0
-	for _, r := range a.Echo.Routes() {
+	for _, r := range a.Echo.Router().Routes() {
 		if !strings.HasPrefix(r.Path, "/api/v1/") {
 			continue
 		}

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
@@ -33,7 +33,7 @@ func (h *Handlers) Register(g *echo.Group, _ web.Guards) {
 //	@Success	302
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/files/{kind}/{id} [get]
-func (h *Handlers) get(c echo.Context) error {
+func (h *Handlers) get(c *echo.Context) error {
 	kind, id := c.Param("kind"), c.Param("id")
 	if !ValidID(kind, id) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid id")
@@ -52,7 +52,7 @@ func (h *Handlers) RegisterDownload(e *echo.Echo) {
 	e.GET("/download", h.download)
 }
 
-func (h *Handlers) download(c echo.Context) error {
+func (h *Handlers) download(c *echo.Context) error {
 	kind, ok := LegacyKind(c.QueryParam("s"))
 	if !ok {
 		return c.String(http.StatusBadRequest, "unknown download source")

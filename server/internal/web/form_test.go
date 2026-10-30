@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -23,7 +23,7 @@ import (
 func TestRequireFormRejectsNonFormBody(t *testing.T) {
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
-	api.POST("/form", func(c echo.Context) error {
+	api.POST("/form", func(c *echo.Context) error {
 		if err := web.RequireForm(c); err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ func TestRequireFormRejectsNonFormBody(t *testing.T) {
 func TestRequireFormRejectsMalformedMultipart(t *testing.T) {
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
-	api.POST("/form", func(c echo.Context) error {
+	api.POST("/form", func(c *echo.Context) error {
 		if err := web.RequireForm(c); err != nil {
 			return err
 		}
@@ -61,7 +61,7 @@ func TestRequireFormRejectsMalformedMultipart(t *testing.T) {
 func TestRequireFormAcceptsFormTypes(t *testing.T) {
 	e := apitest.NewEcho()
 	api := web.NewAPI(e, false)
-	api.POST("/form", func(c echo.Context) error {
+	api.POST("/form", func(c *echo.Context) error {
 		if err := web.RequireForm(c); err != nil {
 			return err
 		}

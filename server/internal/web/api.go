@@ -3,8 +3,8 @@ package web
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
-	echoSwagger "github.com/swaggo/echo-swagger"
+	"github.com/labstack/echo/v5"
+	echoSwagger "github.com/swaggo/echo-swagger/v2"
 )
 
 const swaggerIndex = "/api/v1/swagger/index.html"
@@ -15,7 +15,7 @@ func NewAPI(e *echo.Echo, secureCookies bool) *echo.Group {
 	api := e.Group("/api")
 	api.GET("", swaggerRedirect)
 	api.GET("/health", Health) // legacy alias, kept for existing monitors
-	api.RouteNotFound("/*", func(echo.Context) error { return echo.ErrNotFound })
+	api.RouteNotFound("/*", func(_ *echo.Context) error { return echo.ErrNotFound })
 
 	v1 := api.Group("/v1", CSRF(secureCookies))
 	v1.GET("", swaggerRedirect)
@@ -24,7 +24,7 @@ func NewAPI(e *echo.Echo, secureCookies bool) *echo.Group {
 	return v1
 }
 
-func swaggerRedirect(c echo.Context) error {
+func swaggerRedirect(c *echo.Context) error {
 	return c.Redirect(http.StatusFound, swaggerIndex)
 }
 
@@ -40,6 +40,6 @@ type HealthResponse struct {
 //	@Produce	json
 //	@Success	200	{object}	web.HealthResponse
 //	@Router		/health [get]
-func Health(c echo.Context) error {
+func Health(c *echo.Context) error {
 	return c.JSON(http.StatusOK, HealthResponse{Status: "ok"})
 }

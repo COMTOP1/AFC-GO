@@ -3,7 +3,7 @@ package image
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
@@ -32,7 +32,7 @@ func (h *Handlers) Register(g *echo.Group, guards web.Guards) {
 //	@Produce	json
 //	@Success	200	{array}	image.Public
 //	@Router		/gallery [get]
-func (h *Handlers) list(c echo.Context) error {
+func (h *Handlers) list(c *echo.Context) error {
 	out, err := h.svc.List(c.Request().Context())
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func (h *Handlers) list(c echo.Context) error {
 //	@Success	201		{object}	image.Public
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/gallery [post]
-func (h *Handlers) create(c echo.Context) error {
+func (h *Handlers) create(c *echo.Context) error {
 	if err := web.RequireForm(c); err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (h *Handlers) create(c echo.Context) error {
 //	@Success	204
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/gallery/{id} [delete]
-func (h *Handlers) remove(c echo.Context) error {
+func (h *Handlers) remove(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err

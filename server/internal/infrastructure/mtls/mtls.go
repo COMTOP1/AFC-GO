@@ -18,7 +18,7 @@ import (
 	"sync/atomic"
 	"syscall"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type (
@@ -138,7 +138,7 @@ func (s *Server) ReloadOnSIGHUP() (stop func()) {
 // check) are let through so the orchestrator can probe without a certificate.
 func (s *Server) Middleware(skipPaths ...string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(c *echo.Context) error {
 			r := c.Request()
 			if slices.Contains(skipPaths, r.URL.Path) || s.allowed(r) {
 				return next(c)

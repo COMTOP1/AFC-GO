@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
@@ -39,7 +39,7 @@ func (h *Handlers) Register(g *echo.Group, guards web.Guards) {
 //	@Success	200	{object}	auth.CurrentUser
 //	@Failure	401	{object}	web.ErrorResponse
 //	@Router		/auth/me [get]
-func (h *Handlers) me(c echo.Context) error {
+func (h *Handlers) me(c *echo.Context) error {
 	u, _ := Current(c)
 	return c.JSON(http.StatusOK, NewCurrentUser(u, h.files))
 }
@@ -55,7 +55,7 @@ func (h *Handlers) me(c echo.Context) error {
 //	@Failure	401		{object}	web.ErrorResponse
 //	@Failure	429		{object}	web.ErrorResponse
 //	@Router		/auth/login [post]
-func (h *Handlers) login(c echo.Context) error {
+func (h *Handlers) login(c *echo.Context) error {
 	var in LoginInput
 	if err := web.BindJSON(c, &in); err != nil {
 		return err
@@ -86,7 +86,7 @@ func (h *Handlers) login(c echo.Context) error {
 //	@Tags		auth
 //	@Success	204
 //	@Router		/auth/logout [post]
-func (h *Handlers) logout(c echo.Context) error {
+func (h *Handlers) logout(c *echo.Context) error {
 	if err := h.sessions.Logout(c.Response(), c.Request()); err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func (h *Handlers) logout(c echo.Context) error {
 //	@Success	204
 //	@Failure	422	{object}	web.ErrorResponse
 //	@Router		/auth/password [post]
-func (h *Handlers) password(c echo.Context) error {
+func (h *Handlers) password(c *echo.Context) error {
 	var in PasswordInput
 	if err := web.BindJSON(c, &in); err != nil {
 		return err
@@ -127,7 +127,7 @@ func (h *Handlers) password(c echo.Context) error {
 //	@Success	204
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/auth/reset/{token} [get]
-func (h *Handlers) checkReset(c echo.Context) error {
+func (h *Handlers) checkReset(c *echo.Context) error {
 	if err := h.svc.CheckResetToken(c.Request().Context(), c.Param("token")); err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (h *Handlers) checkReset(c echo.Context) error {
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Failure	422	{object}	web.ErrorResponse
 //	@Router		/auth/reset/{token} [post]
-func (h *Handlers) reset(c echo.Context) error {
+func (h *Handlers) reset(c *echo.Context) error {
 	var in ResetInput
 	if err := web.BindJSON(c, &in); err != nil {
 		return err

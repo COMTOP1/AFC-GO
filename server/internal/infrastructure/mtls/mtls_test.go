@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -32,7 +32,7 @@ func startServer(t *testing.T, ca mtlstest.CA) (string, *mtls.Server, string) {
 
 	e := echo.New()
 	e.Pre(s.Middleware("/api/health"))
-	e.GET("/*", func(c echo.Context) error { return c.String(http.StatusOK, "ok") })
+	e.GET("/*", func(c *echo.Context) error { return c.String(http.StatusOK, "ok") })
 
 	srv := httptest.NewUnstartedServer(e)
 	srv.TLS = s.TLSConfig()

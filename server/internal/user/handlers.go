@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/web"
 )
@@ -13,7 +13,7 @@ import (
 // auditActor identifies who is making a user-administration change, for the
 // audit trail. Anonymous is unreachable in practice (every route here is
 // behind guards.ClubSecretaryHigher), but the zero value still logs safely.
-func auditActor(c echo.Context) web.Actor {
+func auditActor(c *echo.Context) web.Actor {
 	a, _ := web.CurrentActor(c)
 	return a
 }
@@ -46,7 +46,7 @@ func (h *Handlers) Register(g *echo.Group, guards web.Guards) {
 //	@Success	200	{array}		user.Admin
 //	@Failure	403	{object}	web.ErrorResponse
 //	@Router		/users [get]
-func (h *Handlers) list(c echo.Context) error {
+func (h *Handlers) list(c *echo.Context) error {
 	out, err := h.svc.List(c.Request().Context())
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (h *Handlers) list(c echo.Context) error {
 //	@Success	200	{object}	user.Admin
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/users/{id} [get]
-func (h *Handlers) get(c echo.Context) error {
+func (h *Handlers) get(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func (h *Handlers) get(c echo.Context) error {
 //	@Failure	409		{object}	web.ErrorResponse
 //	@Failure	422		{object}	web.ErrorResponse
 //	@Router		/users [post]
-func (h *Handlers) create(c echo.Context) error {
+func (h *Handlers) create(c *echo.Context) error {
 	if err := web.RequireForm(c); err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (h *Handlers) create(c echo.Context) error {
 //	@Failure	409			{object}	web.ErrorResponse
 //	@Failure	422			{object}	web.ErrorResponse
 //	@Router		/users/{id} [patch]
-func (h *Handlers) update(c echo.Context) error {
+func (h *Handlers) update(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err
@@ -182,7 +182,7 @@ func (h *Handlers) update(c echo.Context) error {
 //	@Success	204
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/users/{id} [delete]
-func (h *Handlers) remove(c echo.Context) error {
+func (h *Handlers) remove(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err
@@ -207,7 +207,7 @@ func (h *Handlers) remove(c echo.Context) error {
 //	@Success	200	{object}	user.ResetResult
 //	@Failure	404	{object}	web.ErrorResponse
 //	@Router		/users/{id}/reset [post]
-func (h *Handlers) reset(c echo.Context) error {
+func (h *Handlers) reset(c *echo.Context) error {
 	id, err := web.ParamID(c, "id")
 	if err != nil {
 		return err

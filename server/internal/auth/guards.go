@@ -3,7 +3,7 @@ package auth
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/role"
 	"github.com/COMTOP1/AFC-GO/server/internal/user"
@@ -13,7 +13,7 @@ import (
 const contextKey = "auth.user"
 
 // Current returns the user loaded by a guard earlier in the chain.
-func Current(c echo.Context) (user.User, bool) {
+func Current(c *echo.Context) (user.User, bool) {
 	u, ok := c.Get(contextKey).(user.User)
 	return u, ok
 }
@@ -21,7 +21,7 @@ func Current(c echo.Context) (user.User, bool) {
 // RequireLogin rejects anonymous requests with 401. It reloads the user from
 // the database so role changes and deletions take effect immediately.
 func (s *Sessions) RequireLogin(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
+	return func(c *echo.Context) error {
 		if _, err := s.load(c); err != nil {
 			return err
 		}
@@ -33,7 +33,7 @@ func (s *Sessions) RequireLogin(next echo.HandlerFunc) echo.HandlerFunc {
 // allowed with 403.
 func (s *Sessions) RequireRole(allowed func(role.Role) bool) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(c *echo.Context) error {
 			u, err := s.load(c)
 			if err != nil {
 				return err
@@ -58,7 +58,7 @@ func (s *Sessions) Guards() web.Guards {
 	}
 }
 
-func (s *Sessions) load(c echo.Context) (user.User, error) {
+func (s *Sessions) load(c *echo.Context) (user.User, error) {
 	if u, ok := Current(c); ok {
 		return u, nil
 	}
@@ -68,7 +68,8 @@ func (s *Sessions) load(c echo.Context) (user.User, error) {
 	}
 	fresh, err := s.users.GetUser(c.Request().Context(), u)
 	if err != nil || fresh.ID != u.ID {
-		return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, "login required").SetInternal(err)
+		c.Logger().ErrorContext(c.Request().Context(), "failed to get user", "err", err)
+		return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, "login required")
 	}
 	// The password changed (or an admin reset it) since this cookie was
 	// issued: it no longer counts.
@@ -85,7 +86,7 @@ func (s *Sessions) load(c echo.Context) (user.User, error) {
 // Identify loads the user when a valid session is present, but lets
 // anonymous (or stale-session) requests through.
 func (s *Sessions) Identify(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
+	return func(c *echo.Context) error {
 		if _, ok := s.User(c.Request()); ok {
 			_, _ = s.load(c) //nolint:errcheck // a stale session is simply anonymous here
 		}

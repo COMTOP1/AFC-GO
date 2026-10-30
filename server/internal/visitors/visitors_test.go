@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -71,7 +71,7 @@ func TestMiddlewareSetsCookieAndRecordsOnce(t *testing.T) {
 	c := visitors.New(store, time.Hour, "afcaldermaston.co.uk")
 	e := echo.New()
 	e.Use(c.Middleware)
-	e.GET("/", func(ctx echo.Context) error { return ctx.NoContent(http.StatusOK) })
+	e.GET("/", func(ctx *echo.Context) error { return ctx.NoContent(http.StatusOK) })
 
 	first := httptest.NewRecorder()
 	e.ServeHTTP(first, httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil))
@@ -92,7 +92,7 @@ func TestMiddlewareSkipsVisitorsWhoOptOut(t *testing.T) {
 	c := visitors.New(store, time.Hour, "afcaldermaston.co.uk")
 	e := echo.New()
 	e.Use(c.Middleware)
-	e.GET("/", func(ctx echo.Context) error { return ctx.NoContent(http.StatusOK) })
+	e.GET("/", func(ctx *echo.Context) error { return ctx.NoContent(http.StatusOK) })
 
 	withCookie := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 	withCookie.AddCookie(&http.Cookie{Name: visitors.OptOutCookie, Value: "1", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})

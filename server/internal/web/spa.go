@@ -11,7 +11,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 const (
@@ -85,7 +85,7 @@ func MountSPA(e *echo.Echo, files fs.FS, proxy *url.URL) {
 			r.SetXForwarded()
 		}}
 		proxied := echo.WrapHandler(rp)
-		h = func(c echo.Context) error {
+		h = func(c *echo.Context) error {
 			if isAPI(c.Request().URL.Path) {
 				return echo.ErrNotFound
 			}
@@ -108,7 +108,7 @@ type spa struct {
 	built bool
 }
 
-func (s *spa) serve(c echo.Context) error {
+func (s *spa) serve(c *echo.Context) error {
 	p := c.Request().URL.Path
 	if isAPI(p) {
 		return echo.ErrNotFound
@@ -143,7 +143,7 @@ func (s *spa) serve(c echo.Context) error {
 // file writes name from the build with status, or a plain 404. It never
 // falls back to index.html, so a missing hashed asset is visible rather than
 // served as HTML.
-func (s *spa) file(c echo.Context, name, cacheControl string, status int) error {
+func (s *spa) file(c *echo.Context, name, cacheControl string, status int) error {
 	b, err := fs.ReadFile(s.files, name)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) || isDir(s.files, name) {

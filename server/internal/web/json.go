@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
@@ -19,7 +19,7 @@ import (
 const DateLayout = "2006-01-02"
 
 // BindJSON decodes the request body into dst, rejecting unknown fields.
-func BindJSON(c echo.Context, dst any) error {
+func BindJSON(c *echo.Context, dst any) error {
 	dec := json.NewDecoder(c.Request().Body)
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(dst); err != nil {
@@ -29,7 +29,7 @@ func BindJSON(c echo.Context, dst any) error {
 }
 
 // ParamID parses a positive integer path parameter.
-func ParamID(c echo.Context, name string) (int, error) {
+func ParamID(c *echo.Context, name string) (int, error) {
 	id, err := strconv.Atoi(c.Param(name))
 	if err != nil || id < 1 {
 		return 0, echo.NewHTTPError(http.StatusBadRequest, "invalid "+name)
@@ -42,7 +42,7 @@ func ParamID(c echo.Context, name string) (int, error) {
 // body, so a write with the wrong Content-Type would look like "no fields
 // sent" and succeed doing nothing instead of failing loudly. Handlers that
 // read multipart or urlencoded form fields must call this first.
-func RequireForm(c echo.Context) error {
+func RequireForm(c *echo.Context) error {
 	req := c.Request()
 	ct := req.Header.Get(echo.HeaderContentType)
 	switch {
@@ -61,7 +61,7 @@ func RequireForm(c echo.Context) error {
 }
 
 // FormFile returns the uploaded file for field, or nil when none was sent.
-func FormFile(c echo.Context, field string) (*upload.File, error) {
+func FormFile(c *echo.Context, field string) (*upload.File, error) {
 	fh, err := c.FormFile(field)
 	if err != nil {
 		if errors.Is(err, http.ErrMissingFile) || errors.Is(err, http.ErrNotMultipart) {
@@ -81,7 +81,7 @@ func FormFile(c echo.Context, field string) (*upload.File, error) {
 // text fields. That keeps a query parameter of the same name from
 // masquerading as a form field, which matters for PATCH's absent-vs-sent
 // semantics (FormBool and FormDate rely on this too, via FormString).
-func FormString(c echo.Context, field string) *string {
+func FormString(c *echo.Context, field string) *string {
 	req := c.Request()
 	if strings.HasPrefix(req.Header.Get(echo.HeaderContentType), echo.MIMEMultipartForm) {
 		if err := req.ParseMultipartForm(32 << 20); err != nil && !errors.Is(err, http.ErrNotMultipart) { // 32 MB, echo's own default
@@ -99,7 +99,7 @@ func FormString(c echo.Context, field string) *string {
 }
 
 // FormBool parses an optional boolean form field ("true"/"false"/"1"/"0").
-func FormBool(c echo.Context, field string) (*bool, error) {
+func FormBool(c *echo.Context, field string) (*bool, error) {
 	raw := FormString(c, field)
 	if raw == nil || *raw == "" {
 		return nil, nil
@@ -112,7 +112,7 @@ func FormBool(c echo.Context, field string) (*bool, error) {
 }
 
 // FormDate parses an optional YYYY-MM-DD form field.
-func FormDate(c echo.Context, field string) (*time.Time, error) {
+func FormDate(c *echo.Context, field string) (*time.Time, error) {
 	raw := FormString(c, field)
 	if raw == nil || *raw == "" {
 		return nil, nil
@@ -125,7 +125,7 @@ func FormDate(c echo.Context, field string) (*time.Time, error) {
 }
 
 // FormInt parses an optional integer form field.
-func FormInt(c echo.Context, field string) (*int, error) {
+func FormInt(c *echo.Context, field string) (*int, error) {
 	raw := FormString(c, field)
 	if raw == nil || *raw == "" {
 		return nil, nil

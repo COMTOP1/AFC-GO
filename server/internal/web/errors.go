@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
@@ -34,8 +34,9 @@ type ErrorResponse struct {
 // path as a small HTML page (the web client handles its own pages; this covers
 // redirects, /download and anything else the server answers directly).
 func ErrorHandler() echo.HTTPErrorHandler {
-	return func(err error, c echo.Context) {
-		if c.Response().Committed {
+	return func(c *echo.Context, err error) {
+		// A handler that already wrote its response can't have a second one.
+		if r, _ := echo.UnwrapResponse(c.Response()); r != nil && r.Committed {
 			return
 		}
 		ctx := c.Request().Context()
@@ -94,10 +95,18 @@ func toAPIError(err error) APIError {
 	var he *echo.HTTPError
 	if errors.As(err, &he) {
 		msg := http.StatusText(he.Code)
-		if s, ok := he.Message.(string); ok && s != "" && he.Code < http.StatusInternalServerError {
+		if s := he.Message; s != "" && he.Code < http.StatusInternalServerError {
 			msg = s
 		}
 		return APIError{Code: he.Code, Message: msg}
+	}
+
+	// echo's own errors (echo.ErrNotFound and friends) only expose a status code.
+	var sc echo.HTTPStatusCoder
+	if errors.As(err, &sc) {
+		if code := sc.StatusCode(); code != 0 {
+			return APIError{Code: code, Message: http.StatusText(code)}
+		}
 	}
 
 	return APIError{Code: http.StatusInternalServerError, Message: "internal server error"}
