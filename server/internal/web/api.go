@@ -15,7 +15,7 @@ func NewAPI(e *echo.Echo, secureCookies bool) *echo.Group {
 	api := e.Group("/api")
 	api.GET("", swaggerRedirect)
 	api.GET("/health", Health) // legacy alias, kept for existing monitors
-	api.RouteNotFound("/*", func(c *echo.Context) error { return echo.ErrNotFound })
+	api.RouteNotFound("/*", func(_ *echo.Context) error { return echo.ErrNotFound })
 
 	v1 := api.Group("/v1", CSRF(secureCookies))
 	v1.GET("", swaggerRedirect)

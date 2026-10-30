@@ -17,7 +17,6 @@ import (
 	otelecho "github.com/labstack/echo-otel/v5"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
-	// "go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho" //nolint:staticcheck // still functional; github.com/labstack/echo-opentelemetry is its replacement but isn't part of opentelemetry-go-contrib
 
 	"github.com/COMTOP1/AFC-GO/server/internal/account"
 	"github.com/COMTOP1/AFC-GO/server/internal/affiliation"
