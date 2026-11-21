@@ -163,6 +163,30 @@ func TestPutSendsBucketKeyContentTypeAndSize(t *testing.T) {
 	}
 }
 
+// TestPutMakesSVGsDownloads pins that an uploaded SVG, which can carry
+// script, is only ever shown as an image (<img> ignores
+// Content-Disposition) and never rendered as a page when opened directly.
+func TestPutMakesSVGsDownloads(t *testing.T) {
+	fake := &fakeS3{}
+	s := newTestStore(fake)
+
+	body := strings.NewReader(`<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>`)
+	if err := s.Put(context.Background(), "user/uuid-1.svg", body, int64(body.Len()), "image/svg+xml"); err != nil {
+		t.Fatalf("Put returned unexpected error: %v", err)
+	}
+	if got := aws.ToString(fake.putInput.ContentDisposition); got != "attachment" {
+		t.Errorf("ContentDisposition = %q, want %q", got, "attachment")
+	}
+
+	body = strings.NewReader("png")
+	if err := s.Put(context.Background(), "user/uuid-2.png", body, int64(body.Len()), "image/png"); err != nil {
+		t.Fatalf("Put returned unexpected error: %v", err)
+	}
+	if fake.putInput.ContentDisposition != nil {
+		t.Errorf("ContentDisposition = %q, want unset for other types", aws.ToString(fake.putInput.ContentDisposition))
+	}
+}
+
 func TestDeleteSendsBucketAndKey(t *testing.T) {
 	fake := &fakeS3{}
 	s := newTestStore(fake)
