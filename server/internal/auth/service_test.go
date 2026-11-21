@@ -160,6 +160,26 @@ func TestChangePassword(t *testing.T) {
 	assert.Equal(t, me.SessionVersion+1, fresh.SessionVersion, "returns the user as the change left them, for a fresh session")
 }
 
+// TestChangePasswordThrottlesOldPasswordGuesses pins that a stolen session
+// can't be used to guess the account's password through the change-password
+// form: it shares sign-in's per-email failure limit.
+func TestChangePasswordThrottlesOldPasswordGuesses(t *testing.T) {
+	svc, users, _ := newAuthService()
+	me := users.byEmail["ok@example.test"]
+	for range 5 {
+		_, err := svc.ChangePassword(ctx, me, "wrong", "Str0ng-Pass!", "Str0ng-Pass!")
+		se, ok := svcerr.As(err)
+		require.True(t, ok, "want svcerr, got %v", err)
+		require.Contains(t, se.Fields, "oldPassword")
+	}
+	_, err := svc.ChangePassword(ctx, me, "Right-Pa55", "Str0ng-Pass!", "Str0ng-Pass!")
+	require.ErrorIs(t, err, auth.ErrTooManyAttempts, "locked even with the right old password")
+	assert.Empty(t, users.changed, "nothing was changed while throttled")
+
+	_, err = svc.Login(ctx, "ok@example.test", "Right-Pa55", "192.0.2.1")
+	require.ErrorIs(t, err, auth.ErrTooManyAttempts, "the guesses count against sign-in too")
+}
+
 func TestResetFlow(t *testing.T) {
 	svc, users, tokens := newAuthService()
 	require.NoError(t, tokens.Set(ctx, "tok", 2, time.Hour))
