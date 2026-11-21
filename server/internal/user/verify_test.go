@@ -88,6 +88,61 @@ func TestAdminResetUserKeepsWorkingPassword(t *testing.T) {
 	assert.True(t, reset)
 }
 
+// TestRevokePasswordStopsTheOldPasswordWorking pins that an admin reset
+// locks the account: whoever holds the old (possibly stolen) password must
+// not be able to sign in, or be handed a reset link, with it.
+func TestRevokePasswordStopsTheOldPasswordWorking(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+	ctx := context.Background()
+	newUserLikeSignup(t, store, "old@example.test", "Known-Pa55!")
+	u, err := store.GetUser(ctx, user.User{Email: "old@example.test"})
+	require.NoError(t, err)
+
+	require.NoError(t, store.RevokePassword(ctx, u.ID))
+
+	_, reset, err := verify(t, store, "old@example.test", "Known-Pa55!")
+	require.Error(t, err)
+	assert.False(t, reset, "the old password must not earn a reset link")
+	after, err := store.GetUser(ctx, user.User{ID: u.ID})
+	require.NoError(t, err)
+	assert.True(t, after.ResetPassword)
+	assert.Equal(t, u.SessionVersion+1, after.SessionVersion, "revoking signs the user out everywhere")
+
+	// The reset link still works: setting a password brings the account back.
+	after.Password = null.StringFrom("New-Pa55word!")
+	require.NoError(t, store.EditUserPassword(ctx, after, workFactor, blockSize, parallelism, keyLen))
+	_, reset, err = verify(t, store, "old@example.test", "New-Pa55word!")
+	require.NoError(t, err)
+	assert.False(t, reset)
+}
+
+// TestEditUserPasswordUsesAFreshSalt pins that every new password gets its
+// own random salt, including on accounts whose salt was cleared (legacy
+// clean-up or an admin reset), which would otherwise be hashed unsalted.
+func TestEditUserPasswordUsesAFreshSalt(t *testing.T) {
+	db, _ := testdb.Open(t)
+	store := user.NewUserRepo(db)
+	ctx := context.Background()
+	newUserLikeSignup(t, store, "salt@example.test", "Temp-Pa55!")
+	u, err := store.GetUser(ctx, user.User{Email: "salt@example.test"})
+	require.NoError(t, err)
+	require.NoError(t, store.RevokePassword(ctx, u.ID))
+
+	salts := map[string]bool{}
+	for _, pw := range []string{"First-Pa55!", "Second-Pa55!"} {
+		u.Password = null.StringFrom(pw)
+		require.NoError(t, store.EditUserPassword(ctx, u, workFactor, blockSize, parallelism, keyLen))
+		var salt null.String
+		require.NoError(t, db.GetContext(ctx, &salt, `SELECT salt FROM users WHERE id = $1`, u.ID))
+		require.True(t, salt.Valid && salt.String != "", "a new password must be salted")
+		salts[salt.String] = true
+		_, _, err = verify(t, store, "salt@example.test", pw)
+		require.NoError(t, err)
+	}
+	assert.Len(t, salts, 2, "each password gets a fresh salt")
+}
+
 // addLegacyUser stores a user the way the old site did: only the password
 // column, no hash or salt.
 // withLegacyColumn puts back the column migration 003 drops, as it is in

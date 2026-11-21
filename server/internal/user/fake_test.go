@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"gopkg.in/guregu/null.v4"
 
 	"github.com/COMTOP1/AFC-GO/server/internal/infrastructure/mail"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
@@ -74,13 +75,15 @@ func (f *fakeStore) EditUser(_ context.Context, u user.User) (user.User, error) 
 	return u, nil
 }
 
-func (f *fakeStore) EndSessions(_ context.Context, id int) error {
+func (f *fakeStore) RevokePassword(_ context.Context, id int) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	r, ok := f.rows[id]
 	if !ok {
 		return errors.New("no such row")
 	}
+	r.Hash, r.Salt = null.String{}, null.String{}
+	r.ResetPassword = true
 	r.SessionVersion++
 	f.rows[id] = r
 	return nil
