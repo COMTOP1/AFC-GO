@@ -47,6 +47,7 @@ func TestCreateValidates(t *testing.T) {
 		"name required":   {sponsor.CreateInput{Team: "A"}, png(), "name"},
 		"image required":  {sponsor.CreateInput{Name: "x", Team: "A"}, nil, "image"},
 		"bad website":     {sponsor.CreateInput{Name: "x", Website: "not a url", Team: "A"}, png(), "website"},
+		"script website":  {sponsor.CreateInput{Name: "x", Website: "javascript:alert(1)", Team: "A"}, png(), "website"},
 		"bad team code":   {sponsor.CreateInput{Name: "x", Team: "Z"}, png(), "team"},
 		"unknown team id": {sponsor.CreateInput{Name: "x", Team: "42"}, png(), "team"},
 	}
