@@ -54,6 +54,8 @@ func TestCreateValidates(t *testing.T) {
 	assert.Contains(t, fields(t, mustErr(svc.Create(ctx, team.CreateInput{Ages: 99}, nil))), "name")
 	assert.Contains(t, fields(t, mustErr(svc.Create(ctx, team.CreateInput{Name: "x", LeagueTable: "table"}, nil))), "leagueTable")
 	assert.Contains(t, fields(t, mustErr(svc.Create(ctx, team.CreateInput{Name: "x", Fixtures: "fixtures"}, nil))), "fixtures")
+	assert.Contains(t, fields(t, mustErr(svc.Create(ctx, team.CreateInput{Name: "x", LeagueTable: "javascript:alert(1)"}, nil))), "leagueTable")
+	assert.Contains(t, fields(t, mustErr(svc.Create(ctx, team.CreateInput{Name: "x", Fixtures: "data:text/html,x"}, nil))), "fixtures")
 	assert.Contains(t, fields(t, mustErr(svc.Create(ctx, team.CreateInput{Name: "x", Ages: -1}, nil))), "ages")
 	assert.Contains(t, fields(t, mustErr(svc.Create(ctx, team.CreateInput{Name: "x", Ages: 99, ContactEmail: "not-an-email"}, nil))), "contactEmail")
 	created, err := svc.Create(ctx, team.CreateInput{Name: "x", Ages: 99, ContactEmail: " u12s@example.test "}, nil)

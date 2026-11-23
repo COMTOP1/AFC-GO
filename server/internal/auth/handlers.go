@@ -101,6 +101,7 @@ func (h *Handlers) logout(c *echo.Context) error {
 //	@Param		request	body	auth.PasswordInput	true	"Old and new passwords"
 //	@Success	204
 //	@Failure	422	{object}	web.ErrorResponse
+//	@Failure	429	{object}	web.ErrorResponse
 //	@Router		/auth/password [post]
 func (h *Handlers) password(c *echo.Context) error {
 	var in PasswordInput
@@ -109,6 +110,9 @@ func (h *Handlers) password(c *echo.Context) error {
 	}
 	u, _ := Current(c)
 	fresh, err := h.svc.ChangePassword(c.Request().Context(), u, in.OldPassword, in.NewPassword, in.ConfirmationPassword)
+	if errors.Is(err, ErrTooManyAttempts) {
+		return echo.NewHTTPError(http.StatusTooManyRequests, ErrTooManyAttempts.Error())
+	}
 	if err != nil {
 		return err
 	}

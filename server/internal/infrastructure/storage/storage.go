@@ -91,17 +91,25 @@ func NewStore(ctx context.Context, cfg Config) *Store {
 }
 
 // Put uploads body to key, setting contentType and size (Content-Length) on the object.
+//
+// SVGs are stored with Content-Disposition: attachment. An SVG can carry
+// script, which a browser runs if the file is opened directly; marked as a
+// download it is still shown by <img> but never rendered as a page.
 func (s *Store) Put(ctx context.Context, key string, body io.Reader, size int64, contentType string) error {
 	ctx, span := tracer.Start(ctx, "storage.Put")
 	defer span.End()
 
-	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
+	input := &s3.PutObjectInput{
 		Bucket:        aws.String(s.bucket),
 		Key:           aws.String(key),
 		Body:          body,
 		ContentLength: aws.Int64(size),
 		ContentType:   aws.String(contentType),
-	})
+	}
+	if strings.EqualFold(contentType, "image/svg+xml") {
+		input.ContentDisposition = aws.String("attachment")
+	}
+	_, err := s.client.PutObject(ctx, input)
 	if err != nil {
 		span.RecordError(err)
 		return fmt.Errorf("failed to put object %q: %w", key, err)

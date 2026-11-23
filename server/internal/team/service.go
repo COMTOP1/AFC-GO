@@ -3,7 +3,6 @@ package team
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strings"
 
 	emailverifier "github.com/AfterShip/email-verifier"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
+	"github.com/COMTOP1/AFC-GO/server/internal/utils"
 )
 
 const (
@@ -96,12 +96,12 @@ func validate(t Team) error {
 		f.Add("name", "name is required")
 	}
 	if t.LeagueTable.Valid {
-		if _, err := url.ParseRequestURI(t.LeagueTable.String); err != nil {
+		if !utils.IsWebURL(t.LeagueTable.String) {
 			f.Add("leagueTable", "league table must be a full URL")
 		}
 	}
 	if t.Fixtures.Valid {
-		if _, err := url.ParseRequestURI(t.Fixtures.String); err != nil {
+		if !utils.IsWebURL(t.Fixtures.String) {
 			f.Add("fixtures", "fixtures must be a full URL")
 		}
 	}

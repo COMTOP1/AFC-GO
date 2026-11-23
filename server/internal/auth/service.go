@@ -130,16 +130,26 @@ func (s *Service) setPassword(ctx context.Context, u user.User, newPassword stri
 
 // ChangePassword changes the logged-in user's password after re-checking the
 // old one. The change signs the user out everywhere, so it returns the user
-// as they now are, for the caller to start a fresh session with.
+// as they now are, for the caller to start a fresh session with. Wrong old
+// passwords count against the same per-email limit as sign-in, so a stolen
+// session can't be used to guess the password; once it is reached
+// ErrTooManyAttempts is returned.
 func (s *Service) ChangePassword(ctx context.Context, u user.User, oldPassword, newPassword, confirm string) (user.User, error) {
 	ctx, span := tracer.Start(ctx, "auth.Service.ChangePassword")
 	defer span.End()
+	emailKey := s.tokens.emailAttemptKey(u.Email)
+	if s.tokens.failures(ctx, emailKey) >= maxEmailAttempt {
+		slog.WarnContext(ctx, "password change throttled", "userID", u.ID)
+		return user.User{}, ErrTooManyAttempts
+	}
 	p := s.passwords
 	check := u
 	check.Password = null.StringFrom(oldPassword)
 	if _, _, err := s.users.VerifyUser(ctx, check, p.Iterations, p.ScryptWorkFactor, p.ScryptBlockSize, p.ScryptParallelismFactor, p.KeyLength); err != nil {
+		s.tokens.addFailure(ctx, emailKey)
 		return user.User{}, svcerr.InvalidField("oldPassword", "old password is not correct")
 	}
+	s.tokens.clearFailures(ctx, emailKey)
 	if err := checkNew(newPassword, confirm); err != nil {
 		return user.User{}, err
 	}

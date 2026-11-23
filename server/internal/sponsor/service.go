@@ -3,7 +3,6 @@ package sponsor
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/COMTOP1/AFC-GO/server/internal/svcerr"
 	"github.com/COMTOP1/AFC-GO/server/internal/team"
 	"github.com/COMTOP1/AFC-GO/server/internal/upload"
+	"github.com/COMTOP1/AFC-GO/server/internal/utils"
 )
 
 const uploadCategory = "sponsor"
@@ -105,7 +105,7 @@ func (s *Service) Create(ctx context.Context, in CreateInput, image *upload.File
 		fields.Add("image", "image is required")
 	}
 	if in.Website != "" {
-		if _, err := url.ParseRequestURI(in.Website); err != nil {
+		if !utils.IsWebURL(in.Website) {
 			fields.Add("website", "website must be a full URL, e.g. https://example.com")
 		}
 	}

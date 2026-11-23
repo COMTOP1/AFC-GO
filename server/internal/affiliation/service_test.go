@@ -42,6 +42,7 @@ func TestCreateValidates(t *testing.T) {
 		"name":    {affiliation.CreateInput{}, img, "name"},
 		"image":   {affiliation.CreateInput{Name: "x"}, nil, "image"},
 		"website": {affiliation.CreateInput{Name: "x", Website: "fa dot com"}, img, "website"},
+		"script":  {affiliation.CreateInput{Name: "x", Website: "javascript:alert(1)"}, img, "website"},
 	} {
 		_, err := svc.Create(ctx, tc.in, tc.image)
 		se, ok := svcerr.As(err)

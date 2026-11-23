@@ -206,12 +206,16 @@ func (s *Store) EditUserPassword(ctx context.Context, userParam User, workFactor
 		return fmt.Errorf("failed to get user: %w", err)
 	}
 
-	var saltDecode []byte
-	if user.Salt.Valid {
-		saltDecode, err = hex.DecodeString(user.Salt.String)
-		if err != nil {
-			return fmt.Errorf("failed to decode hex of salt verify user: %w", err)
-		}
+	// Every new password gets a fresh salt. Reusing the stored one would hash
+	// unsalted when it has been cleared (legacy clean-up, RevokePassword).
+	// Stored as hex and hashed decoded, the form VerifyUser checks first.
+	saltHex, err := utils.GenerateRandom(utils.GenerateSalt)
+	if err != nil {
+		return fmt.Errorf("failed to generate salt: %w", err)
+	}
+	saltDecode, err := hex.DecodeString(saltHex)
+	if err != nil {
+		return fmt.Errorf("failed to decode generated salt: %w", err)
 	}
 
 	scryptHash, err := utils.HashPassScrypt([]byte(userParam.Password.String), saltDecode, workFactor, blockSize, parallelismFactor, keyLen)
@@ -220,6 +224,7 @@ func (s *Store) EditUserPassword(ctx context.Context, userParam User, workFactor
 	}
 
 	user.Hash = null.StringFrom(scryptHash)
+	user.Salt = null.StringFrom(saltHex)
 	user.ResetPassword = false
 	user.Role = userParam.Role
 
@@ -248,6 +253,32 @@ func (s *Store) EndSessions(ctx context.Context, id int) error {
 	if _, err = s.db.ExecContext(ctx, query, args...); err != nil {
 		span.RecordError(err)
 		return fmt.Errorf("failed to end sessions for user %d: %w", id, err)
+	}
+	return nil
+}
+
+// RevokePassword removes the user's password, flags the account for reset
+// and signs it out everywhere, in one statement. Until they follow a reset
+// link nobody can sign in as them, not even with the old password: a
+// reset-flagged account that still had one would be handed a fresh reset
+// link by whoever knew it.
+func (s *Store) RevokePassword(ctx context.Context, id int) error {
+	ctx, span := tracer.Start(ctx, "user.RevokePassword")
+	defer span.End()
+	query, args, err := utils.PSQL().Update("users").
+		Set("hash", nil).
+		Set("salt", nil).
+		Set("reset_password", true).
+		Set("session_version", sq.Expr("session_version + 1")).
+		Where(sq.Eq{"id": id}).
+		ToSql()
+	if err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to build sql for revoking password: %w", err)
+	}
+	if _, err = s.db.ExecContext(ctx, query, args...); err != nil {
+		span.RecordError(err)
+		return fmt.Errorf("failed to revoke password for user %d: %w", id, err)
 	}
 	return nil
 }
